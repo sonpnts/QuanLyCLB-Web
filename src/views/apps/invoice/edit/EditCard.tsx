@@ -37,8 +37,15 @@ const EditCard = ({ invoiceData, id, data }: { invoiceData?: InvoiceType; id: st
   // States
   const [selectData, setSelectData] = useState<InvoiceType | null>(data?.[0] || null)
   const [count, setCount] = useState(1)
-  const [issueDate, setIssueDate] = useState(new Date(invoiceData?.issuedDate ?? ''))
-  const [dueDate, setDueDate] = useState(new Date(invoiceData?.dueDate ?? ''))
+  function safeDate(val: string | Date | undefined | null): Date | null {
+    if (!val) return null
+    const date = new Date(val)
+    return isNaN(date.getTime()) ? null : date
+  }
+
+  const [issueDate, setIssueDate] = useState<Date | null>(safeDate(invoiceData?.issuedDate))
+  const [dueDate, setDueDate] = useState<Date | null>(safeDate(invoiceData?.dueDate))
+
 
   // Hooks
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
