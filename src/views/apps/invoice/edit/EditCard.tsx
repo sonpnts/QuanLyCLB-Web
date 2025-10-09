@@ -37,11 +37,15 @@ const EditCard = ({ invoiceData, id, data }: { invoiceData?: InvoiceType; id: st
   // States
   const [selectData, setSelectData] = useState<InvoiceType | null>(data?.[0] || null)
   const [count, setCount] = useState(1)
+
   function safeDate(val: string | Date | undefined | null): Date | null {
-    if (!val) return null
-    const date = new Date(val)
-    return isNaN(date.getTime()) ? null : date
+    if (!val) return null;
+
+    const date = new Date(val);
+
+    return isNaN(date.getTime()) ? null : date;
   }
+
 
   const [issueDate, setIssueDate] = useState<Date | null>(safeDate(invoiceData?.issuedDate))
   const [dueDate, setDueDate] = useState<Date | null>(safeDate(invoiceData?.dueDate))
