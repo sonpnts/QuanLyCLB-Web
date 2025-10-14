@@ -12,9 +12,9 @@ const SecurityTab = () => {
       <Grid size={{ xs: 12 }}>
         <ChangePassword />
       </Grid>
-      <Grid size={{ xs: 12 }}>
-        <TwoStepVerification />
-      </Grid>
+      {/*<Grid size={{ xs: 12 }}>*/}
+      {/*  <TwoStepVerification />*/}
+      {/*</Grid>*/}
       <Grid size={{ xs: 12 }}>
         <RecentDevice />
       </Grid>

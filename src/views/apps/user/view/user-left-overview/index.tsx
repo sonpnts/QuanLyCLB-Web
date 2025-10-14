@@ -11,9 +11,9 @@ const UserLeftOverview = () => {
       <Grid size={{ xs: 12 }}>
         <UserDetails />
       </Grid>
-      <Grid size={{ xs: 12 }}>
-        <UserPlan />
-      </Grid>
+      {/*<Grid size={{ xs: 12 }}>*/}
+      {/*  <UserPlan />*/}
+      {/*</Grid>*/}
     </Grid>
   )
 }

@@ -22,18 +22,18 @@ const ChangePassword = () => {
 
   return (
     <Card>
-      <CardHeader title='Change Password' />
+      <CardHeader title='Thay đổi mật khẩu' />
       <CardContent className='flex flex-col gap-4'>
         <Alert icon={false} severity='warning' onClose={() => {}}>
-          <AlertTitle>Ensure that these requirements are met</AlertTitle>
-          Minimum 8 characters long, uppercase & symbol
+          <AlertTitle>Đảm bảo rằng các yêu cầu này được đáp ứng</AlertTitle>
+          Tối thiểu 8 ký tự, viết hoa và ký hiệu
         </Alert>
         <form>
           <Grid container spacing={4}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Password'
+                label='Mật khẩu mới'
                 type={isPasswordShown ? 'text' : 'password'}
                 slotProps={{
                   input: {
@@ -56,7 +56,7 @@ const ChangePassword = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Confirm Password'
+                label='Nhập lại mật khẩu mới'
                 type={isConfirmPasswordShown ? 'text' : 'password'}
                 slotProps={{
                   input: {

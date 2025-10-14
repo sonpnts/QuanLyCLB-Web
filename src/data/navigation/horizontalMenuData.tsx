@@ -12,7 +12,7 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
       {
         label: dictionary['navigation'].crm,
         icon: 'ri-pie-chart-2-line',
-        href: '/dashboards/crm'
+        href: '/dashboards/home'
       },
       {
         label: dictionary['navigation'].analytics,

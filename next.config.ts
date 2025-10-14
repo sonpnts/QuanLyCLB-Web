@@ -6,13 +6,13 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/',
-        destination: '/vi/dashboards/crm',
+        destination: '/vi/dashboards/home',
         permanent: true,
         locale: false
       },
       {
         source: '/:lang(vi|en|fr|ar)',
-        destination: '/:lang/dashboards/crm',
+        destination: '/:lang/dashboards/home',
         permanent: true,
         locale: false
       },

@@ -51,75 +51,75 @@ const UserDetails = () => {
               <Chip label='Subscriber' color='error' size='small' variant='tonal' />
             </div>
             <div className='flex items-center justify-around flex-wrap gap-4'>
-              <div className='flex items-center gap-4'>
-                <CustomAvatar variant='rounded' color='primary' skin='light'>
-                  <i className='ri-check-line' />
-                </CustomAvatar>
-                <div>
-                  <Typography variant='h5'>1.23k</Typography>
-                  <Typography>Task Done</Typography>
-                </div>
-              </div>
-              <div className='flex items-center gap-4'>
-                <CustomAvatar variant='rounded' color='primary' skin='light'>
-                  <i className='ri-star-smile-line' />
-                </CustomAvatar>
-                <div>
-                  <Typography variant='h5'>568</Typography>
-                  <Typography>Project Done</Typography>
-                </div>
-              </div>
+              {/*<div className='flex items-center gap-4'>*/}
+              {/*  <CustomAvatar variant='rounded' color='primary' skin='light'>*/}
+              {/*    <i className='ri-check-line' />*/}
+              {/*  </CustomAvatar>*/}
+              {/*  <div>*/}
+              {/*    <Typography variant='h5'>1.23k</Typography>*/}
+              {/*    <Typography>Task Done</Typography>*/}
+              {/*  </div>*/}
+              {/*</div>*/}
+              {/*<div className='flex items-center gap-4'>*/}
+              {/*  <CustomAvatar variant='rounded' color='primary' skin='light'>*/}
+              {/*    <i className='ri-star-smile-line' />*/}
+              {/*  </CustomAvatar>*/}
+              {/*  <div>*/}
+              {/*    <Typography variant='h5'>568</Typography>*/}
+              {/*    <Typography>Project Done</Typography>*/}
+              {/*  </div>*/}
+              {/*</div>*/}
             </div>
           </div>
           <div>
-            <Typography variant='h5'>Details</Typography>
+            <Typography variant='h5'>Chi tiết</Typography>
             <Divider className='mlb-4' />
             <div className='flex flex-col gap-2'>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Username:
+                  Tên người dùng:
                 </Typography>
                 <Typography>{userData.userName}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Billing Email:
+                  Email:
                 </Typography>
                 <Typography>{userData.billingEmail}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Status
+                  Trạng thái
                 </Typography>
                 <Typography color='text.primary'>{userData.status}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Role:
+                  Loại tài khoản:
                 </Typography>
                 <Typography color='text.primary'>{userData.role}</Typography>
               </div>
+              {/*<div className='flex items-center flex-wrap gap-x-1.5'>*/}
+              {/*  <Typography className='font-medium' color='text.primary'>*/}
+              {/*    Tax ID:*/}
+              {/*  </Typography>*/}
+              {/*  <Typography color='text.primary'>{userData.taxId}</Typography>*/}
+              {/*</div>*/}
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Tax ID:
-                </Typography>
-                <Typography color='text.primary'>{userData.taxId}</Typography>
-              </div>
-              <div className='flex items-center flex-wrap gap-x-1.5'>
-                <Typography className='font-medium' color='text.primary'>
-                  Contact:
+                  Số điện thoại:
                 </Typography>
                 <Typography color='text.primary'>{userData.contact}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Language:
+                  Cấp đai:
                 </Typography>
                 <Typography color='text.primary'>{userData.language}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Country:
+                  Chứng chỉ:
                 </Typography>
                 <Typography color='text.primary'>{userData.country}</Typography>
               </div>
@@ -128,13 +128,13 @@ const UserDetails = () => {
           <div className='flex gap-4 justify-center'>
             <OpenDialogOnElementClick
               element={Button}
-              elementProps={buttonProps('Edit', 'primary', 'contained')}
+              elementProps={buttonProps('Chỉnh sửa', 'primary', 'contained')}
               dialog={EditUserInfo}
               dialogProps={{ data: userData }}
             />
             <OpenDialogOnElementClick
               element={Button}
-              elementProps={buttonProps('Suspend', 'error', 'outlined')}
+              elementProps={buttonProps('Hủy kích hoạt', 'error', 'outlined')}
               dialog={ConfirmationDialog}
               dialogProps={{ type: 'suspend-account' }}
             />

@@ -208,14 +208,17 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           </div>
         )
       }),
-      columnHelper.accessor('currentPlan', {
-        header: 'Plan',
-        cell: ({ row }) => (
-          <Typography className='capitalize' color='text.primary'>
-            {row.original.currentPlan}
-          </Typography>
-        )
-      }),
+
+      // columnHelper.accessor('currentPlan', {
+      //   header: 'Plan',
+      //   cell: ({ row }) => (
+      //     <Typography className='capitalize' color='text.primary'>
+      //       {row.original.currentPlan}
+      //     </Typography>
+      //   )
+      // }),
+      //
+
       columnHelper.accessor('status', {
         header: 'Status',
         cell: ({ row }) => (

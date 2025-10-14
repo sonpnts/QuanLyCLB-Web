@@ -177,7 +177,7 @@ const DebouncedInput = ({
 // Column Definitions
 const columnHelper = createColumnHelper<ProjectListDataType>()
 
-const ProjectListTable = () => {
+const ClassListTable = () => {
   // States
   const [rowSelection, setRowSelection] = useState({})
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -188,7 +188,7 @@ const ProjectListTable = () => {
   const columns = useMemo<ColumnDef<ProjectListDataType, any>[]>(
     () => [
       columnHelper.accessor('projectTitle', {
-        header: 'Project',
+        header: 'Lớp',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
             <CustomAvatar src={row.original.img} size={34} />
@@ -202,11 +202,11 @@ const ProjectListTable = () => {
         )
       }),
       columnHelper.accessor('totalTask', {
-        header: 'Total Task',
+        header: 'Sỉ số',
         cell: ({ row }) => <Typography color='text.primary'>{row.original.totalTask}</Typography>
       }),
       columnHelper.accessor('progressValue', {
-        header: 'Progress',
+        header: 'Lịch học',
         cell: ({ row }) => (
           <>
             <Typography color='text.primary'>{`${row.original.progressValue}%`}</Typography>
@@ -220,7 +220,7 @@ const ProjectListTable = () => {
         )
       }),
       columnHelper.accessor('hours', {
-        header: 'Hours',
+        header: 'Cơ sở',
         cell: ({ row }) => <Typography>{row.original.hours}</Typography>
       })
     ],
@@ -260,7 +260,7 @@ const ProjectListTable = () => {
   return (
     <Card>
       <CardHeader
-        title='Project List'
+        title='Danh sách lớp'
         className='flex flex-wrap gap-4'
         action={
           <DebouncedInput
@@ -330,4 +330,4 @@ const ProjectListTable = () => {
   )
 }
 
-export default ProjectListTable
+export default ClassListTable

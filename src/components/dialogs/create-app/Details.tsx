@@ -26,7 +26,7 @@ type Props = {
 
 const Details = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) => {
   // States
-  const [value, setValue] = useState<string>('crm')
+  const [value, setValue] = useState<string>('home')
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setValue(event.target.value)
@@ -37,7 +37,7 @@ const Details = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) => {
       <TextField fullWidth label='Application Name' placeholder={`${themeConfig.templateName}`} />
       <div className='flex flex-col gap-4'>
         <Typography variant='h5'>Category</Typography>
-        <div onClick={() => setValue('crm')} className='flex items-center justify-between cursor-pointer gap-4'>
+        <div onClick={() => setValue('home')} className='flex items-center justify-between cursor-pointer gap-4'>
           <div className='flex items-center gap-4'>
             <CustomAvatar variant='rounded' skin='light' color='info' size={46}>
               <i className='ri-bar-chart-box-line text-3xl' />
@@ -49,7 +49,7 @@ const Details = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) => {
               <Typography variant='body2'>Scales with any business</Typography>
             </div>
           </div>
-          <Radio value='crm' onChange={handleChange} checked={value === 'crm'} />
+          <Radio value='crm' onChange={handleChange} checked={value === 'home'} />
         </div>
         <div onClick={() => setValue('eCommerce')} className='flex items-center justify-between cursor-pointer gap-4'>
           <div className='flex items-center gap-4'>

@@ -44,7 +44,7 @@ const recentDeviceData: DataType[] = [
 const RecentDevice = () => {
   return (
     <Card>
-      <CardHeader title='Recent Devices' />
+      <CardHeader title='Lịch sử đăng nhập' />
       <div className='overflow-x-auto'>
         <table className={tableStyles.table}>
           <thead>
