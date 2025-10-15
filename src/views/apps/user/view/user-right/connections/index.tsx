@@ -1,5 +1,5 @@
 // Next Imports
-import Link from 'next/link'
+// import Link from 'next/link'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -10,8 +10,8 @@ import Typography from '@mui/material/Typography'
 import Switch from '@mui/material/Switch'
 
 // Component Imports
-import CustomIconButton from '@core/components/mui/IconButton'
-
+// import CustomIconButton from '@core/components/mui/IconButton'
+//
 type ConnectedAccountsType = {
   title: string
   logo: string
@@ -19,13 +19,14 @@ type ConnectedAccountsType = {
   subtitle: string
 }
 
-type SocialAccountsType = {
-  title: string
-  logo: string
-  username?: string
-  isConnected: boolean
-  href?: string
-}
+//
+// type SocialAccountsType = {
+//   title: string
+//   logo: string
+//   username?: string
+//   isConnected: boolean
+//   href?: string
+// }
 
 // Vars
 const connectedAccountsArr: ConnectedAccountsType[] = [
@@ -35,6 +36,7 @@ const connectedAccountsArr: ConnectedAccountsType[] = [
     logo: '/images/logos/google.png',
     subtitle: 'Calendar and Contacts'
   },
+
   // {
   //   checked: false,
   //   title: 'Slack',

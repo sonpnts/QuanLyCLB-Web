@@ -3,7 +3,8 @@ import Grid from '@mui/material/Grid2'
 
 // Component Imports
 import ChangePassword from './ChangePassword'
-import TwoStepVerification from './TwoStepVerification'
+
+// import TwoStepVerification from './TwoStepVerification'
 import RecentDevice from './RecentDevice'
 
 const SecurityTab = () => {

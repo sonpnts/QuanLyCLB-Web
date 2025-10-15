@@ -3,7 +3,8 @@ import Grid from '@mui/material/Grid2'
 
 // Component Imports
 import UserDetails from './UserDetails'
-import UserPlan from './UserPlan'
+
+// import UserPlan from './UserPlan'
 
 const UserLeftOverview = () => {
   return (
