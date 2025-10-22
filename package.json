@@ -16,7 +16,6 @@
     "removeI18n": "tsx src/remove-translation-scripts/index.ts"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "2.7.4",
     "@emoji-mart/data": "1.2.1",
     "@emoji-mart/react": "1.1.1",
     "@emotion/cache": "11.14.0",
@@ -61,7 +60,6 @@
     "mapbox-gl": "3.9.0",
     "negotiator": "1.0.0",
     "next": "15.1.2",
-    "next-auth": "4.24.11",
     "react": "18.3.1",
     "react-apexcharts": "1.4.1",
     "react-colorful": "5.6.1",
