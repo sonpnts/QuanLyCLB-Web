@@ -21,14 +21,12 @@ import Divider from '@mui/material/Divider'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 
-// Third-party Imports
-import { signOut, useSession } from 'next-auth/react'
-
 // Type Imports
 import type { Locale } from '@configs/i18n'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import { useAuth } from '@/contexts/authContext'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
@@ -52,7 +50,7 @@ const UserDropdown = () => {
 
   // Hooks
   const router = useRouter()
-  const { data: session } = useSession()
+  const { auth, logout } = useAuth()
   const { settings } = useSettings()
   const { lang: locale } = useParams()
 
@@ -72,16 +70,9 @@ const UserDropdown = () => {
     setOpen(false)
   }
 
-  const handleUserLogout = async () => {
-    try {
-      // Sign out from the app
-      await signOut({ callbackUrl: process.env.NEXT_PUBLIC_APP_URL })
-    } catch (error) {
-      console.error(error)
-
-      // Show above error in a toast like following
-      // toastService.error((err as Error).message)
-    }
+  const handleUserLogout = () => {
+    logout()
+    router.replace(getLocalizedUrl('/login', locale as Locale))
   }
 
   return (
@@ -95,8 +86,8 @@ const UserDropdown = () => {
       >
         <Avatar
           ref={anchorRef}
-          alt={session?.user?.name || ''}
-          src={session?.user?.image || ''}
+          alt={auth?.user?.fullName || ''}
+          src=''
           onClick={handleDropdownOpen}
           className='cursor-pointer bs-[38px] is-[38px]'
         />
@@ -120,12 +111,12 @@ const UserDropdown = () => {
               <ClickAwayListener onClickAway={e => handleDropdownClose(e as MouseEvent | TouchEvent)}>
                 <MenuList>
                   <div className='flex items-center plb-2 pli-4 gap-2' tabIndex={-1}>
-                    <Avatar alt={session?.user?.name || ''} src={session?.user?.image || ''} />
+                    <Avatar alt={auth?.user?.fullName || ''} src='' />
                     <div className='flex items-start flex-col'>
                       <Typography className='font-medium' color='text.primary'>
-                        {session?.user?.name || ''}
+                        {auth?.user?.fullName || ''}
                       </Typography>
-                      <Typography variant='caption'>{session?.user?.email || ''}</Typography>
+                      <Typography variant='caption'>{auth?.user?.email || ''}</Typography>
                     </div>
                   </div>
                   <Divider className='mlb-1' />

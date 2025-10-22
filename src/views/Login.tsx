@@ -19,7 +19,6 @@ import Divider from '@mui/material/Divider'
 import Alert from '@mui/material/Alert'
 
 // Third-party Imports
-import { signIn } from 'next-auth/react'
 import { Controller, useForm } from 'react-hook-form'
 import { valibotResolver } from '@hookform/resolvers/valibot'
 import { object, minLength, string, email, pipe, nonEmpty } from 'valibot'
@@ -44,6 +43,7 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+import { useAuth } from '@/contexts/authContext'
 
 type ErrorType = {
   message: string[]
@@ -64,6 +64,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-dark.png'
@@ -78,6 +79,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const searchParams = useSearchParams()
   const { lang: locale } = useParams()
   const { settings } = useSettings()
+  const { login } = useAuth()
 
   const {
     control,
@@ -104,23 +106,24 @@ const Login = ({ mode }: { mode: Mode }) => {
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
-    const res = await signIn('credentials', {
-      email: data.email,
-      password: data.password,
-      redirect: false
-    })
+    setIsSubmitting(true)
+    setErrorState(null)
 
-    if (res && res.ok && res.error === null) {
-      // Vars
+    const result = await login({ email: data.email, password: data.password })
+
+    setIsSubmitting(false)
+
+    if (result.success) {
       const redirectURL = searchParams.get('redirectTo') ?? '/'
 
       router.replace(getLocalizedUrl(redirectURL, locale as Locale))
-    } else {
-      if (res?.error) {
-        const error = JSON.parse(res.error)
+    } else if (result.message) {
+      const messages = Array.isArray(result.message) ? result.message : [result.message]
+      const sanitizedMessages = (messages.filter(Boolean) as string[]).filter(message => message.trim().length > 0)
 
-        setErrorState(error)
-      }
+      setErrorState({ message: sanitizedMessages.length ? sanitizedMessages : ['Login failed.'] })
+    } else {
+      setErrorState({ message: ['Login failed.'] })
     }
   }
 
@@ -234,7 +237,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                 Forgot password?
               </Typography>
             </div>
-            <Button fullWidth variant='contained' type='submit'>
+            <Button fullWidth variant='contained' type='submit' disabled={isSubmitting}>
               Log In
             </Button>
             <div className='flex justify-center items-center flex-wrap gap-2'>
@@ -245,15 +248,15 @@ const Login = ({ mode }: { mode: Mode }) => {
             </div>
           </form>
           <Divider className='gap-3'>or</Divider>
-          <Button
-            color='secondary'
-            className='self-center text-textPrimary'
-            startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
-            sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
-            onClick={() => signIn('google')}
-          >
-            Sign in with Google
-          </Button>
+            <Button
+              color='secondary'
+              className='self-center text-textPrimary'
+              startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
+              sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
+              disabled
+            >
+              Sign in with Google
+            </Button>
         </div>
       </div>
     </div>
