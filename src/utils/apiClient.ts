@@ -3,8 +3,8 @@ import type { AxiosError, AxiosRequestConfig } from 'axios'
 
 import { authStorage } from './authStorage'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
-const REFRESH_ENDPOINT = process.env.NEXT_PUBLIC_REFRESH_ENDPOINT ?? '/auth/refresh'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?? ""
+const REFRESH_ENDPOINT = process.env.NEXT_PUBLIC_REFRESH_ENDPOINT?? ""
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL

@@ -14,7 +14,7 @@ import apiClient from '@/utils/apiClient'
 import { authStorage } from '@/utils/authStorage'
 import type { AuthSnapshot } from '@/utils/authStorage'
 
-const LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_LOGIN_ENDPOINT ?? '/auth/login'
+const LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_LOGIN_ENDPOINT ?? '/api/Auth/google'
 
 type LoginPayload = {
   email: string

@@ -56,10 +56,10 @@ export type Config = {
 const themeConfig: Config = {
   templateName: 'Materio',
   homePageUrl: '/dashboards/home',
-  settingsCookieName: 'materio-mui-next-demo-1',
+  settingsCookieName: 'quan-ly-clb',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
-  semiDark: false, // true, false
+  semiDark: true, // true, false
   layout: 'vertical', // 'vertical', 'collapsed', 'horizontal'
   layoutPadding: 24, // Common padding for header, content, footer layout components (in px)
   compactContentWidth: 1440, // in px
@@ -76,7 +76,7 @@ const themeConfig: Config = {
     contentWidth: 'compact', // 'compact', 'wide'
     detached: true //! true, false (This will not work in the Horizontal Layout)
   },
-  disableRipple: false, // true, false
+  disableRipple: true, // true, false
   toastPosition: 'top-right' // 'top-right', 'top-center', 'top-left', 'bottom-right', 'bottom-center', 'bottom-left'
 }
 

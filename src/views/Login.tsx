@@ -253,7 +253,7 @@ const Login = ({ mode }: { mode: Mode }) => {
               className='self-center text-textPrimary'
               startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
               sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
-              disabled
+
             >
               Sign in with Google
             </Button>
