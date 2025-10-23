@@ -67,8 +67,8 @@ export const getGoogleIdToken = async (): Promise<string> => {
       callback: response => {
         if (settled) return
         clearTimeout(timeoutId)
-        if (response?.credential) {
 
+        if (response?.credential) {
           settled = true
           resolve(response.credential) // ✅ ID token JWT
         } else {
