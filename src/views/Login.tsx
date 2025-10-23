@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -44,6 +44,7 @@ import { useSettings } from '@core/hooks/useSettings'
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
 import { useAuth } from '@/contexts/authContext'
+import { getGoogleIdToken, isGoogleClientAvailable } from '@/utils/googleIdentity'
 
 type ErrorType = {
   message: string[]
@@ -65,6 +66,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isGoogleReady, setIsGoogleReady] = useState(() => isGoogleClientAvailable())
 
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-dark.png'
@@ -79,7 +81,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const searchParams = useSearchParams()
   const { lang: locale } = useParams()
   const { settings } = useSettings()
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
 
   const {
     control,
@@ -105,6 +107,42 @@ const Login = ({ mode }: { mode: Mode }) => {
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
+  useEffect(() => {
+    if (isGoogleReady) {
+      return
+    }
+
+    const interval = window.setInterval(() => {
+      if (isGoogleClientAvailable()) {
+        setIsGoogleReady(true)
+        window.clearInterval(interval)
+      }
+    }, 500)
+
+    return () => {
+      window.clearInterval(interval)
+    }
+  }, [isGoogleReady])
+
+  const handleLoginResult = (result: Awaited<ReturnType<typeof login>>) => {
+    if (result.success) {
+      const redirectURL = searchParams.get('redirectTo') ?? '/'
+
+      router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+
+      return
+    }
+
+    const messages = Array.isArray(result.message) ? result.message : [result.message]
+    const sanitizedMessages = (messages.filter(Boolean) as string[]).filter(message => message.trim().length > 0)
+
+    if (sanitizedMessages.length) {
+      setErrorState({ message: sanitizedMessages })
+    } else {
+      setErrorState({ message: ['Login failed.'] })
+    }
+  }
+
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
     setIsSubmitting(true)
     setErrorState(null)
@@ -113,17 +151,24 @@ const Login = ({ mode }: { mode: Mode }) => {
 
     setIsSubmitting(false)
 
-    if (result.success) {
-      const redirectURL = searchParams.get('redirectTo') ?? '/'
+    handleLoginResult(result)
+  }
 
-      router.replace(getLocalizedUrl(redirectURL, locale as Locale))
-    } else if (result.message) {
-      const messages = Array.isArray(result.message) ? result.message : [result.message]
-      const sanitizedMessages = (messages.filter(Boolean) as string[]).filter(message => message.trim().length > 0)
+  const handleGoogleLogin = async () => {
+    setIsSubmitting(true)
+    setErrorState(null)
 
-      setErrorState({ message: sanitizedMessages.length ? sanitizedMessages : ['Login failed.'] })
-    } else {
-      setErrorState({ message: ['Login failed.'] })
+    try {
+      const idToken = await getGoogleIdToken()
+      const result = await loginWithGoogle(idToken)
+
+      handleLoginResult(result)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Google login failed.'
+
+      setErrorState({ message: [message] })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -248,15 +293,16 @@ const Login = ({ mode }: { mode: Mode }) => {
             </div>
           </form>
           <Divider className='gap-3'>or</Divider>
-            <Button
-              color='secondary'
-              className='self-center text-textPrimary'
-              startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
-              sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
-
-            >
-              Sign in with Google
-            </Button>
+          <Button
+            color='secondary'
+            className='self-center text-textPrimary'
+            startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
+            sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
+            disabled={isSubmitting || !isGoogleReady}
+            onClick={handleGoogleLogin}
+          >
+            Sign in with Google
+          </Button>
         </div>
       </div>
     </div>
