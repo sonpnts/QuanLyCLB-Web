@@ -12,13 +12,27 @@ import type { ChildrenType } from '@core/types'
 // Util Imports
 import apiClient from '@/utils/apiClient'
 import { authStorage } from '@/utils/authStorage'
-import type { AuthSnapshot } from '@/utils/authStorage'
+import type { AuthSnapshot, AuthUser } from '@/utils/authStorage'
 
 const LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_LOGIN_ENDPOINT ?? '/api/Auth/google'
+const GOOGLE_LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_GOOGLE_LOGIN_ENDPOINT ?? '/auth/google'
 
 type LoginPayload = {
   email: string
   password: string
+}
+
+type ApiAuthResponse = {
+  accessToken?: string
+  refreshToken?: string
+  expiresAtUtc?: string | null
+  roles?: string[]
+  instructor?: AuthUser
+}
+
+type ApiLoginResponse = {
+  data?: ApiAuthResponse
+  message?: string | string[]
 }
 
 type LoginResult =
@@ -35,6 +49,7 @@ type AuthContextValue = {
   isAuthenticated: boolean
   isInitialized: boolean
   login: (payload: LoginPayload) => Promise<LoginResult>
+  loginWithGoogle: (idToken: string) => Promise<LoginResult>
   logout: () => void
 }
 
@@ -62,46 +77,87 @@ export const AuthProvider = ({ children }: ChildrenType) => {
     }
   }, [])
 
-  const login = useCallback(async (payload: LoginPayload): Promise<LoginResult> => {
-    try {
-      const response = await apiClient.post(LOGIN_ENDPOINT, payload)
-      const data = response.data?.data
-
-      if (!data?.accessToken || !data?.refreshToken) {
+  const persistAuth = useCallback(
+    (
+      payload: ApiAuthResponse | undefined,
+      fallbackUser?: AuthUser,
+      errorMessage?: string | string[]
+    ): LoginResult => {
+      if (!payload?.accessToken || !payload?.refreshToken) {
         return {
           success: false,
-          message: response.data?.message ?? 'Invalid login response.'
+          message: errorMessage ?? 'Invalid login response.'
         }
       }
 
-      const instructor = data.instructor ?? {
-        id: payload.email,
-        fullName: payload.email,
-        email: payload.email
+      const user = payload.instructor ?? fallbackUser
+
+      if (!user) {
+        return {
+          success: false,
+          message: errorMessage ?? 'Missing user information in login response.'
+        }
       }
 
       const authSnapshot: AuthSnapshot = {
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        expiresAtUtc: data.expiresAtUtc,
-        user: instructor,
-        roles: Array.isArray(data.roles) ? data.roles : []
+        accessToken: payload.accessToken,
+        refreshToken: payload.refreshToken,
+        expiresAtUtc: payload.expiresAtUtc,
+        user,
+        roles: Array.isArray(payload.roles) ? payload.roles : []
       }
 
       authStorage.set(authSnapshot)
 
       return { success: true }
-    } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string | string[] }>
-      const responseMessage = axiosError.response?.data?.message
-      const fallbackMessage = axiosError.message || 'Login failed.'
+    },
+    []
+  )
 
-      return {
-        success: false,
-        message: responseMessage ?? fallbackMessage
-      }
+  const handleLoginError = useCallback((error: unknown): LoginResult => {
+    const axiosError = error as AxiosError<ApiLoginResponse>
+    const responseMessage = axiosError.response?.data?.message
+    const fallbackMessage = axiosError.message || 'Login failed.'
+
+    return {
+      success: false,
+      message: responseMessage ?? fallbackMessage
     }
   }, [])
+
+  const login = useCallback(
+    async (payload: LoginPayload): Promise<LoginResult> => {
+      try {
+        const response = await apiClient.post<ApiLoginResponse>(LOGIN_ENDPOINT, payload)
+
+        return persistAuth(
+          response.data?.data,
+          {
+            id: payload.email,
+            fullName: payload.email,
+            email: payload.email
+          },
+          response.data?.message
+        )
+      } catch (error) {
+        return handleLoginError(error)
+      }
+    },
+    [handleLoginError, persistAuth]
+  )
+
+  const loginWithGoogle = useCallback(
+    async (idToken: string): Promise<LoginResult> => {
+      try {
+        const response = await apiClient.post<ApiLoginResponse>(GOOGLE_LOGIN_ENDPOINT, { idToken })
+
+        return persistAuth(response.data?.data, undefined, response.data?.message)
+      } catch (error) {
+        return handleLoginError(error)
+      }
+    },
+    [handleLoginError, persistAuth]
+  )
 
   const logout = useCallback(() => {
     authStorage.clear()
@@ -113,9 +169,10 @@ export const AuthProvider = ({ children }: ChildrenType) => {
       isAuthenticated: Boolean(auth?.accessToken),
       isInitialized,
       login,
+      loginWithGoogle,
       logout
     }),
-    [auth, isInitialized, login, logout]
+    [auth, isInitialized, login, loginWithGoogle, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
