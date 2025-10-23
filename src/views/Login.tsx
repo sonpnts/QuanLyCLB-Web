@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 // Next Imports
 import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import Script from "next/script"
 
 // MUI Imports
 import Typography from '@mui/material/Typography'
@@ -147,7 +148,7 @@ const Login = ({ mode }: { mode: Mode }) => {
     setIsSubmitting(true)
     setErrorState(null)
 
-    const result = await login({ email: data.email, password: data.password })
+    const result = await login({ username: data.email, password: data.password })
 
     setIsSubmitting(false)
 
@@ -172,8 +173,28 @@ const Login = ({ mode }: { mode: Mode }) => {
     }
   }
 
+  const handleGoogleScriptLoad = () => {
+    if (isGoogleClientAvailable()) {
+      setIsGoogleReady(true)
+    }
+  }
+
+  const handleGoogleScriptError = () => {
+    setErrorState(prev =>
+        prev ?? {
+          message: ['Unable to load Google login. Please refresh the page.']
+        }
+    )
+  }
+
   return (
     <div className='flex bs-full justify-center'>
+      <Script
+        src='https://accounts.google.com/gsi/client'
+        strategy='afterInteractive'
+        onLoad={handleGoogleScriptLoad}
+        onError={handleGoogleScriptError}
+      />
       <div
         className={classnames(
           'flex bs-full items-center justify-center flex-1 min-bs-[100dvh] relative p-6 max-md:hidden',
@@ -298,7 +319,7 @@ const Login = ({ mode }: { mode: Mode }) => {
             className='self-center text-textPrimary'
             startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
             sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
-            disabled={isSubmitting || !isGoogleReady}
+            disabled={isSubmitting||!isGoogleReady}
             onClick={handleGoogleLogin}
           >
             Sign in with Google

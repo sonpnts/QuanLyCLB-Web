@@ -14,11 +14,11 @@ import apiClient from '@/utils/apiClient'
 import { authStorage } from '@/utils/authStorage'
 import type { AuthSnapshot, AuthUser } from '@/utils/authStorage'
 
-const LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_LOGIN_ENDPOINT ?? '/api/Auth/google'
-const GOOGLE_LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_GOOGLE_LOGIN_ENDPOINT ?? '/auth/google'
+const LOGINPASS_ENDPOINT = process.env.NEXT_PUBLIC_LOGINPASS_ENDPOINT ?? '/api/Auth/password'
+const GOOGLE_LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_LOGINGG_ENDPOINT ?? '/auth/google'
 
 type LoginPayload = {
-  email: string
+  username: string
   password: string
 }
 
@@ -34,6 +34,8 @@ type ApiLoginResponse = {
   data?: ApiAuthResponse
   message?: string | string[]
 }
+
+
 
 type LoginResult =
   | {
@@ -128,14 +130,14 @@ export const AuthProvider = ({ children }: ChildrenType) => {
   const login = useCallback(
     async (payload: LoginPayload): Promise<LoginResult> => {
       try {
-        const response = await apiClient.post<ApiLoginResponse>(LOGIN_ENDPOINT, payload)
+        const response = await apiClient.post<ApiLoginResponse>(LOGINPASS_ENDPOINT, payload)
 
         return persistAuth(
           response.data?.data,
           {
-            id: payload.email,
-            fullName: payload.email,
-            email: payload.email
+            id: payload.username,
+            fullName: payload.username,
+            email: payload.username
           },
           response.data?.message
         )
