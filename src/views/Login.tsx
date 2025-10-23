@@ -231,6 +231,13 @@ const Login = ({ mode }: { mode: Mode }) => {
               <span className='font-medium'>admin</span>
             </Typography>
           </Alert>
+          {errorState && (
+            <Alert severity="error" className="mb-4">
+              {errorState.message.map((msg, index) => (
+                <div key={index}>{msg}</div>
+              ))}
+            </Alert>
+          )}
 
           <form
             noValidate
@@ -254,7 +261,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
                   }}
-                  {...((errors.email || errorState !== null) && {
+                  {...((errors.email ) && {
                     error: true,
                     helperText: errors?.email?.message || errorState?.message[0]
                   })}
