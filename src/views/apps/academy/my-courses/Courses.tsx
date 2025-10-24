@@ -58,7 +58,8 @@ const Courses = (props: Props) => {
   const [data, setData] = useState<Course[]>([])
   const [activePage, setActivePage] = useState(0)
 
-  // HooksuseEffect(() => {
+  // Hooks
+  useEffect(() => {
     let newData =
       courseData?.filter(courseItem => {
         if (course === 'All') return !hideCompleted || courseItem.completedTasks !== courseItem.totalTasks

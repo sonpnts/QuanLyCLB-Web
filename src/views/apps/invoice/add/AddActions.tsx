@@ -28,7 +28,8 @@ const AddActions = () => {
   // States
   const [sendDrawerOpen, setSendDrawerOpen] = useState(false)
 
-  // Hooksreturn (
+  // Hooks
+  return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <Card>

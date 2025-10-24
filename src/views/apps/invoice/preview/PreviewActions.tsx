@@ -22,7 +22,8 @@ const PreviewActions = ({ id, onButtonClick }: { id: string; onButtonClick: () =
   const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false)
   const [sendDrawerOpen, setSendDrawerOpen] = useState(false)
 
-  // Hooksreturn (
+  // Hooks
+  return (
     <>
       <Card>
         <CardContent className='flex flex-col gap-4'>

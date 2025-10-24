@@ -163,6 +163,7 @@ export const AuthProvider = ({ children }: ChildrenType) => {
 
   const logout = useCallback(() => {
     authStorage.clear()
+    setAuth(null)
   }, [])
 
   const value = useMemo<AuthContextValue>(
