@@ -23,7 +23,6 @@ export type VerticalMenuItemDataType = Omit<
 > &
   MenuItemExactMatchUrlProps & {
     label: ReactNode
-    excludeLang?: boolean
     icon?: string
     prefix?: ReactNode | ChipProps
     suffix?: ReactNode | ChipProps
@@ -47,7 +46,6 @@ export type HorizontalMenuItemDataType = Omit<
 > &
   MenuItemExactMatchUrlProps & {
     label: ReactNode
-    excludeLang?: boolean
     icon?: string
     prefix?: ReactNode | ChipProps
     suffix?: ReactNode | ChipProps

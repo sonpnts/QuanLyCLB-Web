@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import Script from "next/script"
+import { useRouter, useSearchParams } from 'next/navigation'
+import Script from 'next/script'
 
 // MUI Imports
 import Typography from '@mui/material/Typography'
@@ -29,7 +29,6 @@ import type { InferInput } from 'valibot'
 
 // Type Imports
 import type { Mode } from '@core/types'
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import Logo from '@components/layout/shared/Logo'
@@ -43,7 +42,6 @@ import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 import { useAuth } from '@/contexts/authContext'
 import { getGoogleIdToken, isGoogleClientAvailable } from '@/utils/googleIdentity'
 
@@ -54,11 +52,11 @@ type ErrorType = {
 type FormData = InferInput<typeof schema>
 
 const schema = object({
-  email: pipe(string(), minLength(1, 'This field is required'), email('Please enter a valid email address')),
+  email: pipe(string(), minLength(1, 'Trường này là bắt buộc'), email('Vui lòng nhập địa chỉ email hợp lệ')),
   password: pipe(
     string(),
-    nonEmpty('This field is required'),
-    minLength(5, 'Password must be at least 5 characters long')
+    nonEmpty('Trường này là bắt buộc'),
+    minLength(5, 'Mật khẩu phải có ít nhất 5 ký tự')
   )
 })
 
@@ -80,7 +78,6 @@ const Login = ({ mode }: { mode: Mode }) => {
   // Hooks
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { lang: locale } = useParams()
   const { settings } = useSettings()
   const { login, loginWithGoogle } = useAuth()
 
@@ -129,7 +126,7 @@ const Login = ({ mode }: { mode: Mode }) => {
     if (result.success) {
       const redirectURL = searchParams.get('redirectTo') ?? '/'
 
-      router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+      router.replace(redirectURL)
 
       return
     }
@@ -140,7 +137,7 @@ const Login = ({ mode }: { mode: Mode }) => {
     if (sanitizedMessages.length) {
       setErrorState({ message: sanitizedMessages })
     } else {
-      setErrorState({ message: ['Login failed.'] })
+      setErrorState({ message: ['Đăng nhập thất bại.'] })
     }
   }
 
@@ -165,7 +162,7 @@ const Login = ({ mode }: { mode: Mode }) => {
 
       handleLoginResult(result)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Google login failed.'
+      const message = error instanceof Error ? error.message : 'Đăng nhập Google thất bại.'
 
       setErrorState({ message: [message] })
     } finally {
@@ -182,7 +179,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const handleGoogleScriptError = () => {
     setErrorState(prev =>
         prev ?? {
-          message: ['Unable to load Google login. Please refresh the page.']
+          message: ['Không thể tải Google login. Vui lòng làm mới trang.']
         }
     )
   }
@@ -222,8 +219,8 @@ const Login = ({ mode }: { mode: Mode }) => {
         </div>
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset]'>
           <div>
-            <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}!👋🏻`}</Typography>
-            <Typography>Please sign-in to your account and start the adventure</Typography>
+            <Typography variant='h4'>{`Chào mừng đến với ${themeConfig.templateName}!👋🏻`}</Typography>
+            <Typography>Vui lòng đăng nhập vào tài khoản của bạn để bắt đầu</Typography>
           </div>
           <Alert icon={false} className='bg-primaryLight'>
             <Typography variant='body2' color='primary.main'>
@@ -276,7 +273,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                 <TextField
                   {...field}
                   fullWidth
-                  label='Password'
+                  label='Mật khẩu'
                   id='login-password'
                   type={isPasswordShown ? 'text' : 'password'}
                   onChange={e => {
@@ -305,22 +302,22 @@ const Login = ({ mode }: { mode: Mode }) => {
               )}
             />
             <div className='flex justify-between items-center flex-wrap gap-x-3 gap-y-1'>
-              <FormControlLabel control={<Checkbox defaultChecked />} label='Remember me' />
+              <FormControlLabel control={<Checkbox defaultChecked />} label='Ghi nhớ đăng nhập' />
               <Typography className='text-end' color='primary.main' component={Link} href='/forgot-password'>
-                Forgot password?
+                Quên mật khẩu?
               </Typography>
             </div>
             <Button fullWidth variant='contained' type='submit' disabled={isSubmitting}>
-              Log In
+              Đăng nhập
             </Button>
             <div className='flex justify-center items-center flex-wrap gap-2'>
-              <Typography>New on our platform?</Typography>
+              <Typography>Mới sử dụng nền tảng?</Typography>
               <Typography component={Link} href='/register' color='primary.main'>
-                Create an account
+                Tạo tài khoản
               </Typography>
             </div>
           </form>
-          <Divider className='gap-3'>or</Divider>
+          <Divider className='gap-3'>hoặc</Divider>
           <Button
             color='secondary'
             className='self-center text-textPrimary'
@@ -329,7 +326,7 @@ const Login = ({ mode }: { mode: Mode }) => {
             disabled={isSubmitting||!isGoogleReady}
             onClick={handleGoogleLogin}
           >
-            Sign in with Google
+            Đăng nhập với Google
           </Button>
         </div>
       </div>

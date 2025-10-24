@@ -54,14 +54,6 @@ type CustomizerProps = {
   disableDirection?: boolean
 }
 
-const getLocalePath = (pathName: string, locale: string) => {
-  if (!pathName) return '/'
-  const segments = pathName.split('/')
-
-  segments[1] = locale
-
-  return segments.join('/')
-}
 
 type DebouncedColorPickerProps = {
   settings: Settings
@@ -438,43 +430,6 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                   </div>
                 </div>
               </div>
-              {!disableDirection && (
-                <div className='flex flex-col gap-2.5'>
-                  <p className='font-medium'>Direction</p>
-                  <div className='flex items-center gap-4'>
-                    <Link href={getLocalePath(pathName, 'en')}>
-                      <div className='flex flex-col items-start gap-0.5'>
-                        <div
-                          className={classnames(styles.itemWrapper, {
-                            [styles.active]: direction === 'ltr'
-                          })}
-                        >
-                          <DirectionLtr />
-                        </div>
-                        <p className={styles.itemLabel}>
-                          Left to Right <br />
-                          (English)
-                        </p>
-                      </div>
-                    </Link>
-                    <Link href={getLocalePath(pathName, 'ar')}>
-                      <div className='flex flex-col items-start gap-0.5'>
-                        <div
-                          className={classnames(styles.itemWrapper, {
-                            [styles.active]: direction === 'rtl'
-                          })}
-                        >
-                          <DirectionRtl />
-                        </div>
-                        <p className={styles.itemLabel}>
-                          Right to Left <br />
-                          (Arabic)
-                        </p>
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </ScrollWrapper>

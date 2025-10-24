@@ -2,7 +2,6 @@
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Typography from '@mui/material/Typography'
@@ -14,7 +13,6 @@ import classnames from 'classnames'
 
 // Type Imports
 import type { Mode } from '@core/types'
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import Logo from '@components/layout/shared/Logo'
@@ -23,9 +21,6 @@ import Illustrations from '@components/Illustrations'
 // Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
-
-// Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
   // Vars
@@ -37,7 +32,6 @@ const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
   const borderedLightIllustration = '/images/illustrations/auth/v2-forgot-password-light-border.png'
 
   // Hooks
-  const { lang: locale } = useParams()
   const authBackground = useImageVariant(mode, lightImg, darkImg)
   const { settings } = useSettings()
 
@@ -74,7 +68,7 @@ const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
       </div>
       <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
         <Link
-          href={getLocalizedUrl('/', locale as Locale)}
+          href={'/'}
           className='absolute block-start-5 sm:block-start-[38px] inline-start-6 sm:inline-start-[38px]'
         >
           <Logo />

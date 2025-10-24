@@ -54,7 +54,7 @@ export type Config = {
 }
 
 const themeConfig: Config = {
-  templateName: 'Materio',
+  templateName: 'Quản Lý CLB',
   homePageUrl: '/dashboards/home',
   settingsCookieName: 'quan-ly-clb',
   mode: 'system', // 'system', 'light', 'dark'

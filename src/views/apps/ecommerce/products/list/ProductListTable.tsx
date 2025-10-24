@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -41,7 +40,7 @@ import type { RankingInfo } from '@tanstack/match-sorter-utils'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
-import type { Locale } from '@configs/i18n'
+
 import type { ProductType } from '@/types/apps/ecommerceTypes'
 
 // Component Imports
@@ -50,7 +49,6 @@ import CustomAvatar from '@core/components/mui/Avatar'
 import OptionMenu from '@core/components/option-menu'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -151,8 +149,6 @@ const ProductListTable = ({ productData }: { productData?: ProductType[] }) => {
   const [globalFilter, setGlobalFilter] = useState('')
 
   // Hooks
-  const { lang: locale } = useParams()
-
   const columns = useMemo<ColumnDef<ProductWithActionsType, any>[]>(
     () => [
       {
@@ -316,7 +312,7 @@ const ProductListTable = ({ productData }: { productData?: ProductType[] }) => {
             <Button
               variant='contained'
               component={Link}
-              href={getLocalizedUrl('/apps/ecommerce/products/add', locale as Locale)}
+              href={'/apps/ecommerce/products/add'}
               startIcon={<i className='ri-add-line' />}
               className='max-sm:is-full is-auto'
             >

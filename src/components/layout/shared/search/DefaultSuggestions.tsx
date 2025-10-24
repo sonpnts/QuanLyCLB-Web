@@ -1,15 +1,12 @@
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // Third-party Imports
 import classnames from 'classnames'
 
 // Type Imports
-import type { Locale } from '@configs/i18n'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 type DefaultSuggestionsType = {
   sectionLabel: string
@@ -125,8 +122,6 @@ const defaultSuggestions: DefaultSuggestionsType[] = [
 
 const DefaultSuggestions = ({ setOpen }: { setOpen: (value: boolean) => void }) => {
   // Hooks
-  const { lang: locale } = useParams()
-
   return (
     <div className='flex grow flex-wrap gap-x-[48px] gap-y-8 plb-14 pli-16 overflow-y-auto overflow-x-hidden bs-full'>
       {defaultSuggestions.map((section, index) => (
@@ -141,7 +136,7 @@ const DefaultSuggestions = ({ setOpen }: { setOpen: (value: boolean) => void }) 
             {section.items.map((item, i) => (
               <li key={i} className='flex'>
                 <Link
-                  href={getLocalizedUrl(item.href, locale as Locale)}
+                  href={item.href}
                   className='flex items-center overflow-x-hidden cursor-pointer gap-2 hover:text-primary focus-visible:text-primary focus-visible:outline-0'
                   onClick={() => setOpen(false)}
                 >
@@ -158,3 +153,4 @@ const DefaultSuggestions = ({ setOpen }: { setOpen: (value: boolean) => void }) 
 }
 
 export default DefaultSuggestions
+

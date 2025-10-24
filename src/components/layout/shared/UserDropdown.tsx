@@ -5,7 +5,7 @@ import { useRef, useState } from 'react'
 import type { MouseEvent } from 'react'
 
 // Next Imports
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 // MUI Imports
 import { styled } from '@mui/material/styles'
@@ -22,14 +22,12 @@ import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 
 // Type Imports
-import type { Locale } from '@configs/i18n'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
 import { useAuth } from '@/contexts/authContext'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Styled component for badge content
 const BadgeContentSpan = styled('span')({
@@ -52,7 +50,6 @@ const UserDropdown = () => {
   const router = useRouter()
   const { auth, logout } = useAuth()
   const { settings } = useSettings()
-  const { lang: locale } = useParams()
 
   const handleDropdownOpen = () => {
     !open ? setOpen(true) : setOpen(false)
@@ -60,7 +57,7 @@ const UserDropdown = () => {
 
   const handleDropdownClose = (event?: MouseEvent<HTMLLIElement> | (MouseEvent | TouchEvent), url?: string) => {
     if (url) {
-      router.push(getLocalizedUrl(url, locale as Locale))
+      router.push(url)
     }
 
     if (anchorRef.current && anchorRef.current.contains(event?.target as HTMLElement)) {
@@ -72,7 +69,7 @@ const UserDropdown = () => {
 
   const handleUserLogout = () => {
     logout()
-    router.replace(getLocalizedUrl('/login', locale as Locale))
+    router.replace('/login')
   }
 
   return (

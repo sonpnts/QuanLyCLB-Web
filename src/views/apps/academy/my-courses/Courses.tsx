@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Grid from '@mui/material/Grid2'
@@ -24,14 +23,13 @@ import Typography from '@mui/material/Typography'
 
 // Type Imports
 import type { Course } from '@/types/apps/academyTypes'
-import type { Locale } from '@configs/i18n'
+
 import type { ThemeColor } from '@core/types'
 
 // Component Imports
 import DirectionalIcon from '@components/DirectionalIcon'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 type ChipColorType = {
   color: ThemeColor
@@ -60,10 +58,7 @@ const Courses = (props: Props) => {
   const [data, setData] = useState<Course[]>([])
   const [activePage, setActivePage] = useState(0)
 
-  // Hooks
-  const { lang: locale } = useParams()
-
-  useEffect(() => {
+  // HooksuseEffect(() => {
     let newData =
       courseData?.filter(courseItem => {
         if (course === 'All') return !hideCompleted || courseItem.completedTasks !== courseItem.totalTasks
@@ -127,7 +122,7 @@ const Courses = (props: Props) => {
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                 <div className='border rounded bs-full'>
                   <div className='pli-2 pbs-2'>
-                    <Link href={getLocalizedUrl('/apps/academy/course-details', locale as Locale)} className='flex'>
+                    <Link href={'/apps/academy/course-details'} className='flex'>
                       <img src={item.tutorImg} alt={item.courseTitle} className='is-full' />
                     </Link>
                   </div>
@@ -144,7 +139,7 @@ const Courses = (props: Props) => {
                       <Typography
                         variant='h5'
                         component={Link}
-                        href={getLocalizedUrl('/apps/academy/course-details', locale as Locale)}
+                        href={'/apps/academy/course-details'}
                         className='hover:text-primary'
                       >
                         {item.courseTitle}
@@ -175,7 +170,7 @@ const Courses = (props: Props) => {
                         variant='outlined'
                         startIcon={<i className='ri-refresh-line' />}
                         component={Link}
-                        href={getLocalizedUrl('/apps/academy/course-details', locale as Locale)}
+                        href={'/apps/academy/course-details'}
                       >
                         Start Over
                       </Button>
@@ -187,7 +182,7 @@ const Courses = (props: Props) => {
                           color='secondary'
                           startIcon={<i className='ri-refresh-line' />}
                           component={Link}
-                          href={getLocalizedUrl('/apps/academy/course-details', locale as Locale)}
+                          href={'/apps/academy/course-details'}
                           className='is-auto flex-auto'
                         >
                           Start Over
@@ -199,7 +194,7 @@ const Courses = (props: Props) => {
                             <DirectionalIcon ltrIconClass='ri-arrow-right-line' rtlIconClass='ri-arrow-left-line' />
                           }
                           component={Link}
-                          href={getLocalizedUrl('/apps/academy/course-details', locale as Locale)}
+                          href={'/apps/academy/course-details'}
                           className='is-auto flex-auto'
                         >
                           Continue
