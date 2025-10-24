@@ -67,7 +67,9 @@ const RegisterMultiSteps = () => {
 
   // Hooks
   const { settings } = useSettings()
-  const theme = useTheme()// Handle Stepper
+  const theme = useTheme()
+
+  // Handle Stepper
   const handleNext = () => {
     setActiveStep(activeStep + 1)
   }

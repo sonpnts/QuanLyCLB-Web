@@ -4,8 +4,6 @@
 import { useRef, useState } from 'react'
 
 // Next Imports
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
 
 // MUI Imports
 import Chip from '@mui/material/Chip'
@@ -25,7 +23,6 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 
 // Type Imports
 import type { Settings } from '@core/contexts/settingsContext'
-import type { Direction } from '@core/types'
 import type { PrimaryColorConfig } from '@configs/primaryColorConfig'
 
 // Icon Imports
@@ -36,8 +33,6 @@ import LayoutCollapsed from '@core/svg/LayoutCollapsed'
 import LayoutHorizontal from '@core/svg/LayoutHorizontal'
 import ContentCompact from '@core/svg/ContentCompact'
 import ContentWide from '@core/svg/ContentWide'
-import DirectionLtr from '@core/svg/DirectionLtr'
-import DirectionRtl from '@core/svg/DirectionRtl'
 
 // Config Imports
 import primaryColorConfig from '@configs/primaryColorConfig'
@@ -50,8 +45,6 @@ import styles from './styles.module.css'
 
 type CustomizerProps = {
   breakpoint?: Breakpoint | 'xxl' | `${number}px` | `${number}rem` | `${number}em`
-  dir?: Direction
-  disableDirection?: boolean
 }
 
 
@@ -88,10 +81,9 @@ const DebouncedColorPicker = (props: DebouncedColorPickerProps) => {
   )
 }
 
-const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }: CustomizerProps) => {
+const Customizer = ({ breakpoint = 'lg' }: CustomizerProps) => {
   // States
   const [isOpen, setIsOpen] = useState(false)
-  const [direction, setDirection] = useState(dir)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   // Refs
@@ -99,7 +91,6 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
 
   // Hooks
   const theme = useTheme()
-  const pathName = usePathname()
   const { settings, updateSettings, resetSettings, isSettingsChanged } = useSettings()
   const isSystemDark = useMedia('(prefers-color-scheme: dark)', false)
 
@@ -141,14 +132,9 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
   }
 
   // Update Settings
-  const handleChange = (field: keyof Settings | 'direction', value: Settings[keyof Settings] | Direction) => {
-    // Update direction state
-    if (field === 'direction') {
-      setDirection(value as Direction)
-    } else {
-      // Update settings in cookie
-      updateSettings({ [field]: value })
-    }
+  const handleChange = (field: keyof Settings, value: Settings[keyof Settings]) => {
+    // Update settings in cookie
+    updateSettings({ [field]: value })
   }
 
   const handleMenuClose = (event: MouseEvent | TouchEvent): void => {

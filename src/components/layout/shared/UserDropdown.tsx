@@ -69,6 +69,7 @@ const UserDropdown = () => {
 
   const handleUserLogout = () => {
     logout()
+
     // Use setTimeout to ensure logout state is updated before redirect
     setTimeout(() => {
       router.replace('/login')
