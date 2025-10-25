@@ -221,59 +221,59 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
               {dictionary['navigation'].notAuthorized401}
             </MenuItem>
           </SubMenu>
-          <SubMenu label={dictionary['navigation'].authPages} icon={<i className='ri-shield-keyhole-line' />}>
-            <SubMenu label={dictionary['navigation'].login}>
-              <MenuItem href={`/pages/auth/login-v1`} target='_blank'>
-                {dictionary['navigation'].loginV1}
-              </MenuItem>
-              <MenuItem href={`/pages/auth/login-v2`} target='_blank'>
-                {dictionary['navigation'].loginV2}
-              </MenuItem>
-            </SubMenu>
-            <SubMenu label={dictionary['navigation'].register}>
-              <MenuItem href={`/pages/auth/register-v1`} target='_blank'>
-                {dictionary['navigation'].registerV1}
-              </MenuItem>
-              <MenuItem href={`/pages/auth/register-v2`} target='_blank'>
-                {dictionary['navigation'].registerV2}
-              </MenuItem>
-              <MenuItem href={`/pages/auth/register-multi-steps`} target='_blank'>
-                {dictionary['navigation'].registerMultiSteps}
-              </MenuItem>
-            </SubMenu>
-            <SubMenu label={dictionary['navigation'].verifyEmail}>
-              <MenuItem href={`/pages/auth/verify-email-v1`} target='_blank'>
-                {dictionary['navigation'].verifyEmailV1}
-              </MenuItem>
-              <MenuItem href={`/pages/auth/verify-email-v2`} target='_blank'>
-                {dictionary['navigation'].verifyEmailV2}
-              </MenuItem>
-            </SubMenu>
-            <SubMenu label={dictionary['navigation'].forgotPassword}>
-              <MenuItem href={`/pages/auth/forgot-password-v1`} target='_blank'>
-                {dictionary['navigation'].forgotPasswordV1}
-              </MenuItem>
-              <MenuItem href={`/pages/auth/forgot-password-v2`} target='_blank'>
-                {dictionary['navigation'].forgotPasswordV2}
-              </MenuItem>
-            </SubMenu>
-            <SubMenu label={dictionary['navigation'].resetPassword}>
-              <MenuItem href={`/pages/auth/reset-password-v1`} target='_blank'>
-                {dictionary['navigation'].resetPasswordV1}
-              </MenuItem>
-              <MenuItem href={`/pages/auth/reset-password-v2`} target='_blank'>
-                {dictionary['navigation'].resetPasswordV2}
-              </MenuItem>
-            </SubMenu>
-            <SubMenu label={dictionary['navigation'].twoSteps}>
-              <MenuItem href={`/pages/auth/two-steps-v1`} target='_blank'>
-                {dictionary['navigation'].twoStepsV1}
-              </MenuItem>
-              <MenuItem href={`/pages/auth/two-steps-v2`} target='_blank'>
-                {dictionary['navigation'].twoStepsV2}
-              </MenuItem>
-            </SubMenu>
-          </SubMenu>
+          {/*<SubMenu label={dictionary['navigation'].authPages} icon={<i className='ri-shield-keyhole-line' />}>*/}
+          {/*  <SubMenu label={dictionary['navigation'].login}>*/}
+          {/*    <MenuItem href={`/pages/auth/login-v1`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].loginV1}*/}
+          {/*    </MenuItem>*/}
+          {/*    <MenuItem href={`/pages/auth/login-v2`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].loginV2}*/}
+          {/*    </MenuItem>*/}
+          {/*  </SubMenu>*/}
+          {/*  <SubMenu label={dictionary['navigation'].register}>*/}
+          {/*    <MenuItem href={`/pages/auth/register-v1`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].registerV1}*/}
+          {/*    </MenuItem>*/}
+          {/*    <MenuItem href={`/pages/auth/register-v2`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].registerV2}*/}
+          {/*    </MenuItem>*/}
+          {/*    <MenuItem href={`/pages/auth/register-multi-steps`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].registerMultiSteps}*/}
+          {/*    </MenuItem>*/}
+          {/*  </SubMenu>*/}
+          {/*  <SubMenu label={dictionary['navigation'].verifyEmail}>*/}
+          {/*    <MenuItem href={`/pages/auth/verify-email-v1`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].verifyEmailV1}*/}
+          {/*    </MenuItem>*/}
+          {/*    <MenuItem href={`/pages/auth/verify-email-v2`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].verifyEmailV2}*/}
+          {/*    </MenuItem>*/}
+          {/*  </SubMenu>*/}
+          {/*  <SubMenu label={dictionary['navigation'].forgotPassword}>*/}
+          {/*    <MenuItem href={`/pages/auth/forgot-password-v1`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].forgotPasswordV1}*/}
+          {/*    </MenuItem>*/}
+          {/*    <MenuItem href={`/pages/auth/forgot-password-v2`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].forgotPasswordV2}*/}
+          {/*    </MenuItem>*/}
+          {/*  </SubMenu>*/}
+          {/*  <SubMenu label={dictionary['navigation'].resetPassword}>*/}
+          {/*    <MenuItem href={`/pages/auth/reset-password-v1`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].resetPasswordV1}*/}
+          {/*    </MenuItem>*/}
+          {/*    <MenuItem href={`/pages/auth/reset-password-v2`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].resetPasswordV2}*/}
+          {/*    </MenuItem>*/}
+          {/*  </SubMenu>*/}
+          {/*  <SubMenu label={dictionary['navigation'].twoSteps}>*/}
+          {/*    <MenuItem href={`/pages/auth/two-steps-v1`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].twoStepsV1}*/}
+          {/*    </MenuItem>*/}
+          {/*    <MenuItem href={`/pages/auth/two-steps-v2`} target='_blank'>*/}
+          {/*      {dictionary['navigation'].twoStepsV2}*/}
+          {/*    </MenuItem>*/}
+          {/*  </SubMenu>*/}
+          {/*</SubMenu>*/}
           <SubMenu label={dictionary['navigation'].wizardExamples} icon={<i className='ri-git-commit-line' />}>
             <MenuItem href={`/pages/wizard-examples/checkout`}>{dictionary['navigation'].checkout}</MenuItem>
             <MenuItem href={`/pages/wizard-examples/property-listing`}>
