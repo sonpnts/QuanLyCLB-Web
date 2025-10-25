@@ -4,28 +4,31 @@
 import { useEffect, useState } from 'react'
 
 // Next Imports
-import Link from 'next/link'
+// import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 
 // MUI Imports
 import Typography from '@mui/material/Typography'
-import TextField from '@mui/material/TextField'
-import IconButton from '@mui/material/IconButton'
-import InputAdornment from '@mui/material/InputAdornment'
-import Checkbox from '@mui/material/Checkbox'
+
+// import TextField from '@mui/material/TextField'
+// import IconButton from '@mui/material/IconButton'
+// import InputAdornment from '@mui/material/InputAdornment'
+// import Checkbox from '@mui/material/Checkbox'
 import Button from '@mui/material/Button'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Divider from '@mui/material/Divider'
+
+// import FormControlLabel from '@mui/material/FormControlLabel'
+// import Divider from '@mui/material/Divider'
 import Alert from '@mui/material/Alert'
 
 // Third-party Imports
-import { Controller, useForm } from 'react-hook-form'
-import { valibotResolver } from '@hookform/resolvers/valibot'
-import { object, minLength, string, email, pipe, nonEmpty } from 'valibot'
+// import { useForm } from 'react-hook-form'
+// import { valibotResolver } from '@hookform/resolvers/valibot'
+// import { object, minLength, string, email, pipe, nonEmpty } from 'valibot'
 import classnames from 'classnames'
-import type { SubmitHandler } from 'react-hook-form'
-import type { InferInput } from 'valibot'
+
+// import type { SubmitHandler } from 'react-hook-form'
+// import type { InferInput } from 'valibot'
 
 // Type Imports
 import type { Mode } from '@core/types'
@@ -49,20 +52,20 @@ type ErrorType = {
   message: string[]
 }
 
-type FormData = InferInput<typeof schema>
-
-const schema = object({
-  email: pipe(string(), minLength(1, 'Trường này là bắt buộc'), email('Vui lòng nhập địa chỉ email hợp lệ')),
-  password: pipe(
-    string(),
-    nonEmpty('Trường này là bắt buộc'),
-    minLength(5, 'Mật khẩu phải có ít nhất 5 ký tự')
-  )
-})
+// type FormData = InferInput<typeof schema>
+//
+// const schema = object({
+//   email: pipe(string(), minLength(1, 'Trường này là bắt buộc'), email('Vui lòng nhập địa chỉ email hợp lệ')),
+//   password: pipe(
+//     string(),
+//     nonEmpty('Trường này là bắt buộc'),
+//     minLength(5, 'Mật khẩu phải có ít nhất 5 ký tự')
+//   )
+// })
 
 const Login = ({ mode }: { mode: Mode }) => {
   // States
-  const [isPasswordShown, setIsPasswordShown] = useState(false)
+  // const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleReady, setIsGoogleReady] = useState(() => isGoogleClientAvailable())
@@ -81,17 +84,17 @@ const Login = ({ mode }: { mode: Mode }) => {
   const { settings } = useSettings()
   const { login, loginWithGoogle } = useAuth()
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<FormData>({
-    resolver: valibotResolver(schema),
-    defaultValues: {
-      email: 'admin@materio.com',
-      password: 'admin'
-    }
-  })
+  // const {
+  //   // control,
+  //   // handleSubmit,
+  //   formState: {  }
+  // } = useForm<FormData>({
+  //   resolver: valibotResolver(schema),
+  //   defaultValues: {
+  //     email: 'admin@materio.com',
+  //     password: 'admin'
+  //   }
+  // })
 
   const authBackground = useImageVariant(mode, lightImg, darkImg)
 
@@ -103,7 +106,7 @@ const Login = ({ mode }: { mode: Mode }) => {
     borderedDarkIllustration
   )
 
-  const handleClickShowPassword = () => setIsPasswordShown(show => !show)
+  // const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   useEffect(() => {
     if (isGoogleReady) {
@@ -141,16 +144,16 @@ const Login = ({ mode }: { mode: Mode }) => {
     }
   }
 
-  const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
-    setIsSubmitting(true)
-    setErrorState(null)
-
-    const result = await login({ username: data.email, password: data.password })
-
-    setIsSubmitting(false)
-
-    handleLoginResult(result)
-  }
+  // const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
+  //   setIsSubmitting(true)
+  //   setErrorState(null)
+  //
+  //   const result = await login({ username: data.email, password: data.password })
+  //
+  //   setIsSubmitting(false)
+  //
+  //   handleLoginResult(result)
+  // }
 
   const handleGoogleLogin = async () => {
     setIsSubmitting(true)
