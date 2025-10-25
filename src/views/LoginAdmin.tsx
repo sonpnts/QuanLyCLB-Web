@@ -60,7 +60,7 @@ const schema = object({
   )
 })
 
-const Login = ({ mode }: { mode: Mode }) => {
+const LoginAdmin = ({ mode }: { mode: Mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
@@ -222,12 +222,12 @@ const Login = ({ mode }: { mode: Mode }) => {
             <Typography variant='h4'>{`Chào mừng đến với ${themeConfig.templateName}!👋🏻`}</Typography>
             <Typography>Vui lòng đăng nhập vào tài khoản của bạn để bắt đầu</Typography>
           </div>
-          {/*<Alert icon={false} className='bg-primaryLight'>*/}
-          {/*  <Typography variant='body2' color='primary.main'>*/}
-          {/*    Email: <span className='font-medium'>admin@materio.com</span> / Pass:{' '}*/}
-          {/*    <span className='font-medium'>admin</span>*/}
-          {/*  </Typography>*/}
-          {/*</Alert>*/}
+          <Alert icon={false} className='bg-primaryLight'>
+            <Typography variant='body2' color='primary.main'>
+              Email: <span className='font-medium'>admin@materio.com</span> / Pass:{' '}
+              <span className='font-medium'>admin</span>
+            </Typography>
+          </Alert>
           {errorState && (
             <Alert severity="error" className="mb-4">
               {errorState.message.map((msg, index) => (
@@ -236,89 +236,88 @@ const Login = ({ mode }: { mode: Mode }) => {
             </Alert>
           )}
 
-          {/*<form*/}
-          {/*  hidden*/}
-          {/*  noValidate*/}
-          {/*  action={() => {}}*/}
-          {/*  autoComplete='off'*/}
-          {/*  onSubmit={handleSubmit(onSubmit)}*/}
-          {/*  className='flex flex-col gap-5'*/}
-          {/*>*/}
-          {/*  <Controller*/}
-          {/*    name='email'*/}
-          {/*    control={control}*/}
-          {/*    rules={{ required: true }}*/}
-          {/*    render={({ field }) => (*/}
-          {/*      <TextField*/}
-          {/*        {...field}*/}
-          {/*        fullWidth*/}
-          {/*        autoFocus*/}
-          {/*        type='email'*/}
-          {/*        label='Email'*/}
-          {/*        onChange={e => {*/}
-          {/*          field.onChange(e.target.value)*/}
-          {/*          errorState !== null && setErrorState(null)*/}
-          {/*        }}*/}
-          {/*        {...((errors.email ) && {*/}
-          {/*          error: true,*/}
-          {/*          helperText: errors?.email?.message || errorState?.message[0]*/}
-          {/*        })}*/}
-          {/*      />*/}
-          {/*    )}*/}
-          {/*  />*/}
-          {/*  <Controller*/}
-          {/*    name='password'*/}
-          {/*    control={control}*/}
-          {/*    rules={{ required: true }}*/}
-          {/*    render={({ field }) => (*/}
-          {/*      <TextField*/}
-          {/*        {...field}*/}
-          {/*        fullWidth*/}
-          {/*        label='Mật khẩu'*/}
-          {/*        id='login-password'*/}
-          {/*        type={isPasswordShown ? 'text' : 'password'}*/}
-          {/*        onChange={e => {*/}
-          {/*          field.onChange(e.target.value)*/}
-          {/*          errorState !== null && setErrorState(null)*/}
-          {/*        }}*/}
-          {/*        slotProps={{*/}
-          {/*          input: {*/}
-          {/*            endAdornment: (*/}
-          {/*              <InputAdornment position='end'>*/}
-          {/*                <IconButton*/}
-          {/*                  size='small'*/}
-          {/*                  edge='end'*/}
-          {/*                  onClick={handleClickShowPassword}*/}
-          {/*                  onMouseDown={e => e.preventDefault()}*/}
-          {/*                  aria-label='toggle password visibility'*/}
-          {/*                >*/}
-          {/*                  <i className={isPasswordShown ? 'ri-eye-off-line' : 'ri-eye-line'} />*/}
-          {/*                </IconButton>*/}
-          {/*              </InputAdornment>*/}
-          {/*            )*/}
-          {/*          }*/}
-          {/*        }}*/}
-          {/*        {...(errors.password && { error: true, helperText: errors.password.message })}*/}
-          {/*      />*/}
-          {/*    )}*/}
-          {/*  />*/}
-          {/*  <div className='flex justify-between items-center flex-wrap gap-x-3 gap-y-1'>*/}
-          {/*    <FormControlLabel control={<Checkbox defaultChecked />} label='Ghi nhớ đăng nhập' />*/}
-          {/*    <Typography className='text-end' color='primary.main' component={Link} href='/forgot-password'>*/}
-          {/*      Quên mật khẩu?*/}
-          {/*    </Typography>*/}
-          {/*  </div>*/}
-          {/*  <Button fullWidth variant='contained' type='submit' disabled={isSubmitting}>*/}
-          {/*    Đăng nhập*/}
-          {/*  </Button>*/}
-          {/*  <div className='flex justify-center items-center flex-wrap gap-2'>*/}
-          {/*    <Typography>Mới sử dụng nền tảng?</Typography>*/}
-          {/*    <Typography component={Link} href='/register' color='primary.main'>*/}
-          {/*      Tạo tài khoản*/}
-          {/*    </Typography>*/}
-          {/*  </div>*/}
-          {/*</form>*/}
-          {/*<Divider className='gap-3'>hoặc</Divider>*/}
+          <form
+            noValidate
+            action={() => {}}
+            autoComplete='off'
+            onSubmit={handleSubmit(onSubmit)}
+            className='flex flex-col gap-5'
+          >
+            <Controller
+              name='email'
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  autoFocus
+                  type='email'
+                  label='Email'
+                  onChange={e => {
+                    field.onChange(e.target.value)
+                    errorState !== null && setErrorState(null)
+                  }}
+                  {...((errors.email ) && {
+                    error: true,
+                    helperText: errors?.email?.message || errorState?.message[0]
+                  })}
+                />
+              )}
+            />
+            <Controller
+              name='password'
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label='Mật khẩu'
+                  id='login-password'
+                  type={isPasswordShown ? 'text' : 'password'}
+                  onChange={e => {
+                    field.onChange(e.target.value)
+                    errorState !== null && setErrorState(null)
+                  }}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <IconButton
+                            size='small'
+                            edge='end'
+                            onClick={handleClickShowPassword}
+                            onMouseDown={e => e.preventDefault()}
+                            aria-label='toggle password visibility'
+                          >
+                            <i className={isPasswordShown ? 'ri-eye-off-line' : 'ri-eye-line'} />
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }
+                  }}
+                  {...(errors.password && { error: true, helperText: errors.password.message })}
+                />
+              )}
+            />
+            <div className='flex justify-between items-center flex-wrap gap-x-3 gap-y-1'>
+              <FormControlLabel control={<Checkbox defaultChecked />} label='Ghi nhớ đăng nhập' />
+              <Typography className='text-end' color='primary.main' component={Link} href='/forgot-password'>
+                Quên mật khẩu?
+              </Typography>
+            </div>
+            <Button fullWidth variant='contained' type='submit' disabled={isSubmitting}>
+              Đăng nhập
+            </Button>
+            <div className='flex justify-center items-center flex-wrap gap-2'>
+              <Typography>Mới sử dụng nền tảng?</Typography>
+              <Typography component={Link} href='/register' color='primary.main'>
+                Tạo tài khoản
+              </Typography>
+            </div>
+          </form>
+          <Divider className='gap-3'>hoặc</Divider>
           <Button
             color='secondary'
             className='self-center text-textPrimary'
@@ -335,4 +334,4 @@ const Login = ({ mode }: { mode: Mode }) => {
   )
 }
 
-export default Login
+export default LoginAdmin
