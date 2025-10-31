@@ -27,40 +27,40 @@ import { horizontalLayoutClasses } from '@layouts/utils/layoutClasses'
 // Vars
 const shortcuts: ShortcutsType[] = [
   {
-    url: '/apps/calendar',
+    url: '/apps/check-in',
+    icon: 'ri-checkbox-circle-line',
+    title: 'Điểm danh',
+    subtitle: 'Check-in'
+  },
+  {
+    url: '/apps/my-schedule',
     icon: 'ri-calendar-line',
-    title: 'Calendar',
-    subtitle: 'Appointments'
+    title: 'Lịch dạy',
+    subtitle: 'My Schedule'
   },
   {
-    url: '/apps/invoice/list',
-    icon: 'ri-file-list-3-line',
-    title: 'Invoice App',
-    subtitle: 'Manage Accounts'
+    url: '/apps/request-leave',
+    icon: 'ri-file-paper-2-line',
+    title: 'Xin nghỉ phép',
+    subtitle: 'Request Leave'
   },
   {
-    url: '/apps/user/list',
-    icon: 'ri-user-3-line',
-    title: 'Users',
-    subtitle: 'Manage Users'
+    url: '/apps/create-ticket',
+    icon: 'ri-file-add-line',
+    title: 'Tạo phiếu điểm danh bù',
+    subtitle: 'Create Ticket'
   },
   {
-    url: '/apps/roles',
-    icon: 'ri-computer-line',
-    title: 'Role Management',
-    subtitle: 'Permissions'
+    url: '/apps/my-tickets',
+    icon: 'ri-file-list-line',
+    title: 'Lịch sử phiếu',
+    subtitle: 'My Tickets'
   },
   {
-    url: '/dashboards/crm',
-    icon: 'ri-pie-chart-2-line',
-    title: 'Dashboard',
-    subtitle: 'User Dashboard'
-  },
-  {
-    url: '/pages/account-settings',
-    icon: 'ri-settings-4-line',
-    title: 'Settings',
-    subtitle: 'Account Settings'
+    url: '/apps/my-payroll',
+    icon: 'ri-money-dollar-circle-line',
+    title: 'Bảng lương',
+    subtitle: 'My Payroll'
   }
 ]
 

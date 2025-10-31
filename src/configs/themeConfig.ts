@@ -54,12 +54,12 @@ export type Config = {
 }
 
 const themeConfig: Config = {
-  templateName: 'Quản Lý CLB',
+  templateName: 'Hệ thống quản lý Tấn Đạt System',
   homePageUrl: '/dashboards/home',
-  settingsCookieName: 'quan-ly-clb',
+  settingsCookieName: 'quan-ly-clb-tandatsystem',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
-  semiDark: true, // true, false
+  semiDark: false, // true, false
   layout: 'vertical', // 'vertical', 'collapsed', 'horizontal'
   layoutPadding: 24, // Common padding for header, content, footer layout components (in px)
   compactContentWidth: 1440, // in px

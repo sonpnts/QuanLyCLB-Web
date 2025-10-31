@@ -175,7 +175,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'User',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
-            {getAvatar({ avatar: row.original.avatar, fullName: row.original.fullName })}
+            {getAvatar({ avatar: row.original.avatarUrl, fullName: row.original.fullName })}
             <div className='flex flex-col'>
               <Typography className='font-medium' color='text.primary'>
                 {row.original.fullName}
@@ -189,19 +189,31 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'Email',
         cell: ({ row }) => <Typography>{row.original.email}</Typography>
       }),
-      columnHelper.accessor('role', {
+      columnHelper.accessor('roles', {
         header: 'Role',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-2'>
-            <Icon
-              className={userRoleObj[row.original.role].icon}
-              sx={{ color: `var(--mui-palette-${userRoleObj[row.original.role].color}-main)`, fontSize: '1.375rem' }}
-            />
-            <Typography className='capitalize' color='text.primary'>
-              {row.original.role}
-            </Typography>
-          </div>
-        )
+        cell: ({ row }) => {
+          const rolesArr = row.original.roles || []
+
+          if (rolesArr.length === 0) {
+            return <Typography variant='body2'>-</Typography>
+          }
+
+          // Get first role for display
+          const firstRole = rolesArr[0].toLowerCase()
+          const roleObj = userRoleObj[firstRole] || userRoleObj.subscriber
+
+          return (
+            <div className='flex items-center gap-2'>
+              <Icon
+                className={roleObj.icon}
+                sx={{ color: `var(--mui-palette-${roleObj.color}-main)`, fontSize: '1.375rem' }}
+              />
+              <Typography className='capitalize' color='text.primary'>
+                {rolesArr.join(', ')}
+              </Typography>
+            </div>
+          )
+        }
       }),
 
       // columnHelper.accessor('currentPlan', {

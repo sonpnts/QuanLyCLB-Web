@@ -19,102 +19,37 @@ type DefaultSuggestionsType = {
 
 const defaultSuggestions: DefaultSuggestionsType[] = [
   {
-    sectionLabel: 'Popular Searches',
+    sectionLabel: 'Chức năng',
     items: [
       {
-        label: 'Analytics',
-        href: '/dashboards/analytics',
-        icon: 'ri-bar-chart-line'
+        label: 'Điểm danh',
+        href: '/apps/check-in',
+        icon: 'ri-checkbox-circle-line'
       },
       {
-        label: 'CRM',
-        href: '/dashboards/home',
-        icon: 'ri-pie-chart-2-line'
-      },
-      {
-        label: 'eCommerce',
-        href: '/dashboards/ecommerce',
-        icon: 'ri-shopping-bag-3-line'
-      },
-      {
-        label: 'User List',
-        href: '/apps/user/list',
-        icon: 'ri-file-user-line'
-      }
-    ]
-  },
-  {
-    sectionLabel: 'Apps',
-    items: [
-      {
-        label: 'Calendar',
-        href: '/apps/calendar',
+        label: 'Lịch dạy',
+        href: '/apps/my-schedule',
         icon: 'ri-calendar-line'
       },
       {
-        label: 'Invoice List',
-        href: '/apps/invoice/list',
-        icon: 'ri-file-list-3-line'
+        label: 'Xin nghỉ phép',
+        href: '/apps/request-leave',
+        icon: 'ri-file-paper-2-line'
       },
       {
-        label: 'User List',
-        href: '/apps/user/list',
-        icon: 'ri-file-user-line'
+        label: 'Tạo phiếu điểm danh bù',
+        href: '/apps/create-ticket',
+        icon: 'ri-file-add-line'
       },
       {
-        label: 'Roles & Permissions',
-        href: '/apps/roles',
-        icon: 'ri-lock-unlock-line'
-      }
-    ]
-  },
-  {
-    sectionLabel: 'Pages',
-    items: [
-      {
-        label: 'User Profile',
-        href: '/pages/user-profile',
-        icon: 'ri-user-3-line'
+        label: 'Lịch sử phiếu',
+        href: '/apps/my-tickets',
+        icon: 'ri-file-list-line'
       },
       {
-        label: 'Account Settings',
-        href: '/pages/account-settings',
-        icon: 'ri-settings-4-line'
-      },
-      {
-        label: 'Pricing',
-        href: '/pages/pricing',
+        label: 'Bảng lương',
+        href: '/apps/my-payroll',
         icon: 'ri-money-dollar-circle-line'
-      },
-      {
-        label: 'FAQ',
-        href: '/pages/faq',
-        icon: 'ri-question-line'
-      }
-    ]
-  },
-  {
-    sectionLabel: 'Forms & Charts',
-    items: [
-      {
-        label: 'Form Layouts',
-        href: '/forms/form-layouts',
-        icon: 'ri-file-text-line'
-      },
-      {
-        label: 'Form Validation',
-        href: '/forms/form-validation',
-        icon: 'ri-checkbox-multiple-line'
-      },
-      {
-        label: 'Form Wizard',
-        href: '/forms/form-wizard',
-        icon: 'ri-equalizer-line'
-      },
-      {
-        label: 'Apex Charts',
-        href: '/charts/apex-charts',
-        icon: 'ri-line-chart-line'
       }
     ]
   }
@@ -153,4 +88,3 @@ const DefaultSuggestions = ({ setOpen }: { setOpen: (value: boolean) => void }) 
 }
 
 export default DefaultSuggestions
-

@@ -5,7 +5,7 @@ import type { EventInput } from '@fullcalendar/core'
 // Type Imports
 import type { ThemeColor } from '@core/types'
 
-export type CalendarFiltersType = 'Personal' | 'Business' | 'Family' | 'Holiday' | 'ETC'
+export type CalendarFiltersType = 'Personal' | 'Business' | 'Family' | 'Holiday' | 'ETC' | 'Schedule'
 
 export type CalendarColors = {
   ETC: ThemeColor
@@ -13,6 +13,7 @@ export type CalendarColors = {
   Holiday: ThemeColor
   Personal: ThemeColor
   Business: ThemeColor
+  Schedule: ThemeColor
 }
 
 export type CalendarType = {
@@ -20,6 +21,7 @@ export type CalendarType = {
   filteredEvents: EventInput[]
   selectedEvent: null | any
   selectedCalendars: CalendarFiltersType[]
+  selectedClasses: string[] // Danh sách các lớp học đã chọn để filter
 }
 
 export type AddEventType = Omit<EventInput, 'id'>
@@ -41,4 +43,5 @@ export type AddEventSidebarType = {
   dispatch: Dispatch
   addEventSidebarOpen: boolean
   handleAddEventSidebarToggle: () => void
+  readOnly?: boolean // Nếu true, chỉ hiển thị thông tin, không cho phép edit/delete
 }

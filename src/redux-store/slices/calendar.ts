@@ -7,13 +7,14 @@ import type { EventInput } from '@fullcalendar/core'
 import type { CalendarFiltersType, CalendarType } from '@/types/apps/calendarTypes'
 
 // Data Imports
-import { events } from '@/fake-db/apps/calendar'
+// Remove hard-coded events; start with empty events and load from API
 
 const initialState: CalendarType = {
-  events: events,
-  filteredEvents: events,
+  events: [],
+  filteredEvents: [],
   selectedEvent: null,
-  selectedCalendars: ['Personal', 'Business', 'Family', 'Holiday', 'ETC']
+  selectedCalendars: ['Personal', 'Business', 'Family', 'Holiday', 'ETC', 'Schedule'],
+  selectedClasses: [] // Mặc định: xem tất cả (empty array = view all)
 }
 
 const filterEventsUsingCheckbox = (events: EventInput[], selectedCalendars: CalendarFiltersType[]) => {
@@ -75,8 +76,33 @@ export const calendarSlice = createSlice({
     },
 
     filterAllCalendarLabels: (state, action) => {
-      state.selectedCalendars = action.payload ? ['Personal', 'Business', 'Family', 'Holiday', 'ETC'] : []
+      state.selectedCalendars = action.payload ? ['Personal', 'Business', 'Family', 'Holiday', 'ETC', 'Schedule'] : []
       state.events = filterEventsUsingCheckbox(state.filteredEvents, state.selectedCalendars)
+    },
+
+    setScheduleEvents: (state, action: PayloadAction<EventInput[]>) => {
+      // Merge schedule events with existing events
+      // Remove old schedule events (identified by extendedProps.calendar === 'Schedule')
+      const nonScheduleEvents = state.filteredEvents.filter(event => event.extendedProps?.calendar !== 'Schedule')
+      const newEvents = [...nonScheduleEvents, ...action.payload]
+      state.events = newEvents
+      state.filteredEvents = newEvents
+    },
+
+    // Filter by class names (each filter item represents a class)
+    filterClassesSet: (state, action: PayloadAction<string[]>) => {
+      state.selectedClasses = action.payload || []
+
+      // If no selection => view all
+      if (!state.selectedClasses.length) {
+        state.events = state.filteredEvents
+        return
+      }
+
+      state.events = state.filteredEvents.filter(event => {
+        const cls = (event.extendedProps as any)?.className as string | undefined
+        return cls ? state.selectedClasses.includes(cls) : false
+      })
     }
   }
 })
@@ -88,7 +114,9 @@ export const {
   deleteEvent,
   selectedEvent,
   filterCalendarLabel,
-  filterAllCalendarLabels
+  filterAllCalendarLabels,
+  setScheduleEvents,
+  filterClassesSet
 } = calendarSlice.actions
 
 export default calendarSlice.reducer

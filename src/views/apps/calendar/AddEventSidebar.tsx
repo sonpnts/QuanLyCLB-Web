@@ -64,7 +64,7 @@ const defaultState: DefaultStateType = {
 
 const AddEventSidebar = (props: AddEventSidebarType) => {
   // Props
-  const { calendarStore, dispatch, addEventSidebarOpen, handleAddEventSidebarToggle } = props
+  const { calendarStore, dispatch, addEventSidebarOpen, handleAddEventSidebarToggle, readOnly = false } = props
 
   // States
   const [values, setValues] = useState<DefaultStateType>(defaultState)
@@ -217,22 +217,15 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
     >
       <Box className='flex justify-between items-center sidebar-header pli-5 plb-4 border-be'>
         <Typography variant='h5'>
-          {calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? 'Update Event' : 'Add Event'}
+          {readOnly
+            ? 'Chi tiết lịch học'
+            : calendarStore.selectedEvent && calendarStore.selectedEvent.title.length
+              ? 'Update Event'
+              : 'Add Event'}
         </Typography>
-        {calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? (
-          <Box className='flex items-center' sx={{ gap: calendarStore.selectedEvent !== null ? 1 : 0 }}>
-            <IconButton size='small' onClick={handleDeleteButtonClick}>
-              <i className='ri-delete-bin-7-line text-2xl' />
-            </IconButton>
-            <IconButton size='small' onClick={handleSidebarClose}>
-              <i className='ri-close-line text-2xl' />
-            </IconButton>
-          </Box>
-        ) : (
-          <IconButton size='small' onClick={handleSidebarClose}>
-            <i className='ri-close-line text-2xl' />
-          </IconButton>
-        )}
+        <IconButton size='small' onClick={handleSidebarClose}>
+          <i className='ri-close-line text-2xl' />
+        </IconButton>
       </Box>
       <ScrollWrapper
         {...(isBelowSmScreen
@@ -240,118 +233,159 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
           : { options: { wheelPropagation: false, suppressScrollX: true } })}
       >
         <Box className='sidebar-body plb-5 pli-6'>
-          <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-            <FormControl fullWidth className='mbe-6'>
-              <Controller
-                name='title'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <TextField
-                    label='Title'
-                    value={value}
-                    onChange={onChange}
-                    {...(errors.title && { error: true, helperText: 'This field is required' })}
-                  />
-                )}
+          {readOnly ? (
+            // View-only mode - chỉ hiển thị thông tin (tránh trùng lặp title/description)
+            <Box>
+              {calendarStore.selectedEvent && (
+                <Box className='mbe-4'>
+                  {calendarStore.selectedEvent.extendedProps?.className && (
+                    <Typography variant='body2' color='text.secondary' className='mbe-2'>
+                      <strong>Lớp học:</strong> {calendarStore.selectedEvent.extendedProps.className}
+                    </Typography>
+                  )}
+                  {calendarStore.selectedEvent.extendedProps?.branchName && (
+                    <Typography variant='body2' color='text.secondary' className='mbe-2'>
+                      <strong>Chi nhánh:</strong> {calendarStore.selectedEvent.extendedProps.branchName}
+                    </Typography>
+                  )}
+                  {calendarStore.selectedEvent.extendedProps?.dayName && (
+                    <Typography variant='body2' color='text.secondary' className='mbe-2'>
+                      <strong>Thứ:</strong> {calendarStore.selectedEvent.extendedProps.dayName}
+                    </Typography>
+                  )}
+                  <Typography variant='body2' color='text.secondary' className='mbe-2'>
+                    <strong>Thời gian bắt đầu:</strong>{' '}
+                    {calendarStore.selectedEvent.start
+                      ? new Date(calendarStore.selectedEvent.start).toLocaleString('vi-VN')
+                      : '-'}
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    <strong>Thời gian kết thúc:</strong>{' '}
+                    {calendarStore.selectedEvent.end
+                      ? new Date(calendarStore.selectedEvent.end).toLocaleString('vi-VN')
+                      : '-'}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          ) : (
+            // Edit mode - form có thể chỉnh sửa
+            <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
+              <FormControl fullWidth className='mbe-6'>
+                <Controller
+                  name='title'
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field: { value, onChange } }) => (
+                    <TextField
+                      label='Title'
+                      value={value}
+                      onChange={onChange}
+                      {...(errors.title && { error: true, helperText: 'This field is required' })}
+                    />
+                  )}
+                />
+              </FormControl>
+              <FormControl fullWidth className='mbe-6'>
+                <InputLabel id='event-calendar'>Calendar</InputLabel>
+                <Select
+                  label='Calendar'
+                  value={values.calendar}
+                  labelId='event-calendar'
+                  onChange={e => setValues({ ...values, calendar: e.target.value })}
+                >
+                  <MenuItem value='Personal'>Personal</MenuItem>
+                  <MenuItem value='Business'>Business</MenuItem>
+                  <MenuItem value='Family'>Family</MenuItem>
+                  <MenuItem value='Holiday'>Holiday</MenuItem>
+                  <MenuItem value='ETC'>ETC</MenuItem>
+                </Select>
+              </FormControl>
+              <div className='mbe-6'>
+                <AppReactDatepicker
+                  selectsStart
+                  id='event-start-date'
+                  endDate={values.endDate}
+                  selected={values.startDate}
+                  startDate={values.startDate}
+                  showTimeSelect={!values.allDay}
+                  dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                  customInput={<PickersComponent label='Start Date' registername='startDate' />}
+                  onChange={(date: Date | null) => date !== null && setValues({ ...values, startDate: new Date(date) })}
+                  onSelect={handleStartDate}
+                />
+              </div>
+              <div className='mbe-6'>
+                <AppReactDatepicker
+                  selectsEnd
+                  id='event-end-date'
+                  endDate={values.endDate}
+                  selected={values.endDate}
+                  minDate={values.startDate}
+                  startDate={values.startDate}
+                  showTimeSelect={!values.allDay}
+                  dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                  customInput={<PickersComponent label='End Date' registername='endDate' />}
+                  onChange={(date: Date | null) => date !== null && setValues({ ...values, endDate: new Date(date) })}
+                />
+              </div>
+              <FormControl className='mbe-6'>
+                <FormControlLabel
+                  label='All Day'
+                  control={
+                    <Switch
+                      checked={values.allDay}
+                      onChange={e => setValues({ ...values, allDay: e.target.checked })}
+                    />
+                  }
+                />
+              </FormControl>
+              <TextField
+                fullWidth
+                type='url'
+                id='event-url'
+                className='mbe-6'
+                label='Event URL'
+                value={values.url}
+                onChange={e => setValues({ ...values, url: e.target.value })}
               />
-            </FormControl>
-            <FormControl fullWidth className='mbe-6'>
-              <InputLabel id='event-calendar'>Calendar</InputLabel>
-              <Select
-                label='Calendar'
-                value={values.calendar}
-                labelId='event-calendar'
-                onChange={e => setValues({ ...values, calendar: e.target.value })}
-              >
-                <MenuItem value='Personal'>Personal</MenuItem>
-                <MenuItem value='Business'>Business</MenuItem>
-                <MenuItem value='Family'>Family</MenuItem>
-                <MenuItem value='Holiday'>Holiday</MenuItem>
-                <MenuItem value='ETC'>ETC</MenuItem>
-              </Select>
-            </FormControl>
-            <div className='mbe-6'>
-              <AppReactDatepicker
-                selectsStart
-                id='event-start-date'
-                endDate={values.endDate}
-                selected={values.startDate}
-                startDate={values.startDate}
-                showTimeSelect={!values.allDay}
-                dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                customInput={<PickersComponent label='Start Date' registername='startDate' />}
-                onChange={(date: Date | null) => date !== null && setValues({ ...values, startDate: new Date(date) })}
-                onSelect={handleStartDate}
+              <FormControl fullWidth className='mbe-6'>
+                <InputLabel id='event-guests'>Guests</InputLabel>
+                <Select
+                  multiple
+                  label='Guests'
+                  value={values.guests}
+                  labelId='event-guests'
+                  id='event-guests-select'
+                  onChange={(e: SelectChangeEvent<(typeof values)['guests']>) =>
+                    setValues({
+                      ...values,
+                      guests: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                    })
+                  }
+                >
+                  <MenuItem value='bruce'>Bruce</MenuItem>
+                  <MenuItem value='clark'>Clark</MenuItem>
+                  <MenuItem value='diana'>Diana</MenuItem>
+                  <MenuItem value='john'>John</MenuItem>
+                  <MenuItem value='barry'>Barry</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                rows={4}
+                multiline
+                fullWidth
+                className='mbe-6'
+                label='Description'
+                id='event-description'
+                value={values.description}
+                onChange={e => setValues({ ...values, description: e.target.value })}
               />
-            </div>
-            <div className='mbe-6'>
-              <AppReactDatepicker
-                selectsEnd
-                id='event-end-date'
-                endDate={values.endDate}
-                selected={values.endDate}
-                minDate={values.startDate}
-                startDate={values.startDate}
-                showTimeSelect={!values.allDay}
-                dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                customInput={<PickersComponent label='End Date' registername='endDate' />}
-                onChange={(date: Date | null) => date !== null && setValues({ ...values, endDate: new Date(date) })}
-              />
-            </div>
-            <FormControl className='mbe-6'>
-              <FormControlLabel
-                label='All Day'
-                control={
-                  <Switch checked={values.allDay} onChange={e => setValues({ ...values, allDay: e.target.checked })} />
-                }
-              />
-            </FormControl>
-            <TextField
-              fullWidth
-              type='url'
-              id='event-url'
-              className='mbe-6'
-              label='Event URL'
-              value={values.url}
-              onChange={e => setValues({ ...values, url: e.target.value })}
-            />
-            <FormControl fullWidth className='mbe-6'>
-              <InputLabel id='event-guests'>Guests</InputLabel>
-              <Select
-                multiple
-                label='Guests'
-                value={values.guests}
-                labelId='event-guests'
-                id='event-guests-select'
-                onChange={(e: SelectChangeEvent<(typeof values)['guests']>) =>
-                  setValues({
-                    ...values,
-                    guests: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
-                  })
-                }
-              >
-                <MenuItem value='bruce'>Bruce</MenuItem>
-                <MenuItem value='clark'>Clark</MenuItem>
-                <MenuItem value='diana'>Diana</MenuItem>
-                <MenuItem value='john'>John</MenuItem>
-                <MenuItem value='barry'>Barry</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              rows={4}
-              multiline
-              fullWidth
-              className='mbe-6'
-              label='Description'
-              id='event-description'
-              value={values.description}
-              onChange={e => setValues({ ...values, description: e.target.value })}
-            />
-            <div className='flex items-center'>
-              <RenderSidebarFooter />
-            </div>
-          </form>
+              <div className='flex items-center'>
+                <RenderSidebarFooter />
+              </div>
+            </form>
+          )}
         </Box>
       </ScrollWrapper>
     </Drawer>

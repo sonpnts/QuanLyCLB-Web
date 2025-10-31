@@ -1,102 +1,136 @@
+'use client'
+
 // React Imports
 import { useState } from 'react'
+
+import { useForm } from 'react-hook-form'
 
 // MUI Imports
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
-import FormControl from '@mui/material/FormControl'
 import IconButton from '@mui/material/IconButton'
-import InputLabel from '@mui/material/InputLabel'
-import MenuItem from '@mui/material/MenuItem'
-import Select from '@mui/material/Select'
-import TextField from '@mui/material/TextField'
-import FormHelperText from '@mui/material/FormHelperText'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
+import TextField from '@mui/material/TextField'
+import Grid from '@mui/material/Grid2'
+import Box from '@mui/material/Box'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
 
-// Third-party Imports
-import { useForm, Controller } from 'react-hook-form'
+// Type Imports
+import type { UsersType, CreateUserRequest } from '@/services/userService'
 
-// Types Imports
-import type { UsersType } from '@/types/apps/userTypes'
+import type { RoleType } from '@/services/roleService'
+
+// Service Imports
+import userService from '@/services/userService'
+
+// Context Imports
+import { useNotification } from '@/contexts/notificationContext'
 
 type Props = {
   open: boolean
   handleClose: () => void
   userData?: UsersType[]
-  setData: (data: UsersType[]) => void
+  setData: React.Dispatch<React.SetStateAction<UsersType[]>>
+  setFilteredData: React.Dispatch<React.SetStateAction<UsersType[]>>
+  roles: RoleType[]
 }
 
 type FormValidateType = {
   fullName: string
-  username: string
   email: string
-  role: string
-  plan: string
-  status: string
-}
-
-type FormNonValidateType = {
-  company: string
-  country: string
-  contact: string
-}
-
-// Vars
-const initialData = {
-  company: '',
-  country: '',
-  contact: ''
+  username?: string
+  role: string // Role ID
+  password?: string
+  phoneNumber?: string
+  skillLevel?: string
+  certification?: string
+  isActive: boolean
 }
 
 const AddUserDrawer = (props: Props) => {
-  // Props
-  const { open, handleClose, userData, setData } = props
+  const { open, handleClose, userData, setData, setFilteredData, roles } = props
 
   // States
-  const [formData, setFormData] = useState<FormNonValidateType>(initialData)
+  const [loading, setLoading] = useState(false)
 
-  // Hooks
+  // Notification Hook
+  const { showNotification } = useNotification()
+
+  // Form
   const {
-    control,
-    reset: resetForm,
+    register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    reset,
+    setValue,
+    watch
   } = useForm<FormValidateType>({
     defaultValues: {
       fullName: '',
-      username: '',
       email: '',
+      username: '',
       role: '',
-      plan: '',
-      status: ''
+      password: '',
+      phoneNumber: '',
+      skillLevel: '',
+      certification: '',
+      isActive: true
     }
   })
 
-  const onSubmit = (data: FormValidateType) => {
-    const newUser: UsersType = {
-      id: (userData?.length && userData?.length + 1) || 1,
-      avatar: `/images/avatars/${Math.floor(Math.random() * 8) + 1}.png`,
-      fullName: data.fullName,
-      username: data.username,
-      email: data.email,
-      role: data.role,
-      currentPlan: data.plan,
-      status: data.status,
-      company: formData.company,
-      country: formData.country,
-      contact: formData.contact
-    }
-
-    setData([...(userData ?? []), newUser])
+  // Handle close
+  const handleCloseDrawer = () => {
+    reset()
     handleClose()
-    setFormData(initialData)
-    resetForm({ fullName: '', username: '', email: '', role: '', plan: '', status: '' })
   }
 
-  const handleReset = () => {
-    handleClose()
-    setFormData(initialData)
+  // Handle submit
+  const onSubmit = async (data: FormValidateType) => {
+    try {
+      setLoading(true)
+
+      // Get role name from roleId
+      const selectedRole = roles.find(r => r.id === data.role)
+      const roleName = selectedRole?.name
+
+      if (!roleName) {
+        showNotification('Vui lòng chọn vai trò.', 'error')
+
+        return
+      }
+
+      const createData: CreateUserRequest = {
+        fullName: data.fullName,
+        email: data.email,
+        username: data.username || undefined,
+        roles: [roleName], // Send as array of role names
+        password: data.password || undefined,
+        phoneNumber: data.phoneNumber || undefined,
+        skillLevel: data.skillLevel || undefined,
+        certification: data.certification || undefined,
+        isActive: data.isActive
+      }
+
+      const response = await userService.createUser(createData)
+
+      if (response.success && response.data) {
+        setData([response.data, ...(userData || [])])
+        setFilteredData([response.data, ...(userData || [])])
+        showNotification(response.message || 'Tạo người dùng thành công.', 'success')
+        handleCloseDrawer()
+      } else {
+        showNotification(response.message || 'Không thể tạo người dùng.', 'error')
+      }
+    } catch (error) {
+      console.error('Error creating user:', error)
+      showNotification('Đã có lỗi khi tạo người dùng.', 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -104,160 +138,123 @@ const AddUserDrawer = (props: Props) => {
       open={open}
       anchor='right'
       variant='temporary'
-      onClose={handleReset}
+      onClose={handleCloseDrawer}
       ModalProps={{ keepMounted: true }}
-      sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
+      sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 500, md: 600 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Add New User</Typography>
-        <IconButton size='small' onClick={handleReset}>
+        <Typography variant='h5'>Thêm người dùng mới</Typography>
+        <IconButton size='small' onClick={handleCloseDrawer}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
       </div>
       <Divider />
-      <div className='p-5'>
-        <form onSubmit={handleSubmit(data => onSubmit(data))} className='flex flex-col gap-5'>
-          <Controller
-            name='fullName'
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label='Full Name'
-                placeholder='John Doe'
-                {...(errors.fullName && { error: true, helperText: 'This field is required.' })}
-              />
-            )}
-          />
-          <Controller
-            name='username'
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label='Username'
-                placeholder='johndoe'
-                {...(errors.username && { error: true, helperText: 'This field is required.' })}
-              />
-            )}
-          />
-          <Controller
-            name='email'
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                fullWidth
-                type='email'
-                label='Email'
-                placeholder='johndoe@gmail.com'
-                {...(errors.email && { error: true, helperText: 'This field is required.' })}
-              />
-            )}
-          />
-          <FormControl fullWidth>
-            <InputLabel id='country' error={Boolean(errors.role)}>
-              Select Role
-            </InputLabel>
-            <Controller
-              name='role'
-              control={control}
-              rules={{ required: true }}
-              render={({ field }) => (
-                <Select label='Select Role' {...field} error={Boolean(errors.role)}>
-                  <MenuItem value='admin'>Admin</MenuItem>
-                  <MenuItem value='author'>Author</MenuItem>
-                  <MenuItem value='editor'>Editor</MenuItem>
-                  <MenuItem value='maintainer'>Maintainer</MenuItem>
-                  <MenuItem value='subscriber'>Subscriber</MenuItem>
-                </Select>
-              )}
-            />
-            {errors.role && <FormHelperText error>This field is required.</FormHelperText>}
-          </FormControl>
-          <FormControl fullWidth>
-            <InputLabel id='country' error={Boolean(errors.plan)}>
-              Select Plan
-            </InputLabel>
-            <Controller
-              name='plan'
-              control={control}
-              rules={{ required: true }}
-              render={({ field }) => (
-                <Select label='Select Plan' {...field} error={Boolean(errors.plan)}>
-                  <MenuItem value='basic'>Basic</MenuItem>
-                  <MenuItem value='company'>Company</MenuItem>
-                  <MenuItem value='enterprise'>Enterprise</MenuItem>
-                  <MenuItem value='team'>Team</MenuItem>
-                </Select>
-              )}
-            />
-            {errors.plan && <FormHelperText error>This field is required.</FormHelperText>}
-          </FormControl>
-          <FormControl fullWidth>
-            <InputLabel id='country' error={Boolean(errors.status)}>
-              Select Status
-            </InputLabel>
-            <Controller
-              name='status'
-              control={control}
-              rules={{ required: true }}
-              render={({ field }) => (
-                <Select label='Select Status' {...field} error={Boolean(errors.status)}>
-                  <MenuItem value='pending'>Pending</MenuItem>
-                  <MenuItem value='active'>Active</MenuItem>
-                  <MenuItem value='inactive'>Inactive</MenuItem>
-                </Select>
-              )}
-            />
-            {errors.status && <FormHelperText error>This field is required.</FormHelperText>}
-          </FormControl>
-          <TextField
-            label='Company'
-            fullWidth
-            placeholder='Company PVT LTD'
-            value={formData.company}
-            onChange={e => setFormData({ ...formData, company: e.target.value })}
-          />
-          <FormControl fullWidth>
-            <InputLabel id='country'>Select Country</InputLabel>
-            <Select
+      <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-4 p-5'>
+        <Grid container spacing={4}>
+          <Grid size={{ xs: 12 }}>
+            <TextField
               fullWidth
-              id='country'
-              value={formData.country}
-              onChange={e => setFormData({ ...formData, country: e.target.value })}
-              label='Select Country'
-              labelId='country'
-            >
-              <MenuItem value='India'>India</MenuItem>
-              <MenuItem value='USA'>USA</MenuItem>
-              <MenuItem value='Australia'>Australia</MenuItem>
-              <MenuItem value='Germany'>Germany</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            label='Contact'
-            type='number'
-            fullWidth
-            placeholder='(397) 294-5153'
-            value={formData.contact}
-            onChange={e => setFormData({ ...formData, contact: e.target.value })}
-          />
-          <div className='flex items-center gap-4'>
-            <Button variant='contained' type='submit'>
-              Submit
-            </Button>
-            <Button variant='outlined' color='error' type='reset' onClick={() => handleReset()}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </div>
+              label='Họ và tên'
+              {...register('fullName', { required: 'Họ và tên là bắt buộc' })}
+              error={!!errors.fullName}
+              helperText={errors.fullName?.message}
+            />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              fullWidth
+              label='Email'
+              type='email'
+              {...register('email', {
+                required: 'Email là bắt buộc',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Email không hợp lệ'
+                }
+              })}
+              error={!!errors.email}
+              helperText={errors.email?.message}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              label='Tên đăng nhập'
+              {...register('username')}
+              error={!!errors.username}
+              helperText={errors.username?.message}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              label='Mật khẩu'
+              type='password'
+              {...register('password')}
+              error={!!errors.password}
+              helperText={errors.password?.message}
+            />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <FormControl fullWidth error={!!errors.role}>
+              <InputLabel>Vai trò</InputLabel>
+              <Select value={watch('role')} label='Vai trò' onChange={e => setValue('role', e.target.value)}>
+                {roles && roles.length > 0 ? (
+                  Array.from(new Map(roles.map(r => [r.id, r])).values()).map(role => (
+                    <MenuItem key={role.id} value={role.id}>
+                      {role.name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem value='' disabled>
+                    Đang tải vai trò...
+                  </MenuItem>
+                )}
+              </Select>
+              {errors.role && (
+                <Typography variant='caption' color='error' className='mt-1 ml-3'>
+                  {errors.role.message}
+                </Typography>
+              )}
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              label='Số điện thoại'
+              {...register('phoneNumber')}
+              error={!!errors.phoneNumber}
+              helperText={errors.phoneNumber?.message}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              label='Trình độ'
+              {...register('skillLevel')}
+              error={!!errors.skillLevel}
+              helperText={errors.skillLevel?.message}
+            />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              fullWidth
+              label='Chứng chỉ'
+              {...register('certification')}
+              error={!!errors.certification}
+              helperText={errors.certification?.message}
+            />
+          </Grid>
+        </Grid>
+        <Box className='flex gap-2 justify-end'>
+          <Button variant='outlined' onClick={handleCloseDrawer}>
+            Hủy
+          </Button>
+          <Button type='submit' variant='contained' disabled={loading}>
+            {loading ? 'Đang tạo...' : 'Tạo người dùng'}
+          </Button>
+        </Box>
+      </form>
     </Drawer>
   )
 }
