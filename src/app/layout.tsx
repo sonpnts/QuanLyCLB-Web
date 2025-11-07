@@ -34,7 +34,9 @@ const RootLayout = async (props: ChildrenType) => {
     <html id='__next' lang='vi' dir='ltr' suppressHydrationWarning>
       <body className='flex is-full min-bs-full flex-auto flex-col'>
         <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )
