@@ -10,7 +10,7 @@ import type { AxiosError } from 'axios'
 import type { ChildrenType } from '@core/types'
 
 // Util Imports
-import apiClient from '@/utils/apiClient'
+import { apiClient } from '@/utils/apiClient'
 import { authStorage } from '@/utils/authStorage'
 import type { AuthSnapshot, AuthUser } from '@/utils/authStorage'
 

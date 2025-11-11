@@ -2,7 +2,7 @@
 import Grid from '@mui/material/Grid2'
 
 // Type Imports
-import type { UsersType } from '@/services/userService'
+import type { UsersType } from '@/types/apps/userTypes'
 
 // Component Imports
 import UserManagementTable from './UserManagementTable'

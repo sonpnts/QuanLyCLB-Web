@@ -17,7 +17,6 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import TextField from '@mui/material/TextField'
 import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 
@@ -327,10 +326,13 @@ const AttendanceTicketsTable = () => {
         <DialogContent>
           <Box className='flex flex-col gap-4 pt-4'>
             <FormControl fullWidth>
-              <InputLabel>Quyết định</InputLabel>
-              <Select value={approve} label='Quyết định' onChange={e => setApprove(e.target.value as boolean)}>
-                <MenuItem value={true}>Duyệt</MenuItem>
-                <MenuItem value={false}>Từ chối</MenuItem>
+              <Select
+                label='Quyết định'
+                value={approve ? 'true' : 'false'}
+                onChange={e => setApprove(e.target.value === 'true')}
+              >
+                <MenuItem value='true'>Duyệt</MenuItem>
+                <MenuItem value='false'>Từ chối</MenuItem>
               </Select>
             </FormControl>
             <TextField fullWidth label='Người duyệt' value={approver} onChange={e => setApprover(e.target.value)} />

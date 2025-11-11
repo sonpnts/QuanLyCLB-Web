@@ -300,7 +300,7 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
 
               if (res.success && res.data) {
                 showNotification(res.message || Messages.schedule.success.restore, 'success')
-                setSchedules(x => x.map(s => (s.id === selectedRestore.id ? res.data : s)))
+                setSchedules(x => x.map(s => (s.id === selectedRestore.id ? res.data! : s)))
                 setRestoreDialogOpen(false)
                 setSelectedRestore(null)
               } else {

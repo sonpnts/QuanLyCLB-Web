@@ -1,4 +1,4 @@
-import apiClient from '@/utils/apiClient'
+import { apiClient } from '@/utils/apiClient'
 import type { UsersType, ApiUserResponse } from '@/types/apps/userTypes'
 
 // API Types

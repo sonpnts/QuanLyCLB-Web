@@ -29,6 +29,11 @@ import { setScheduleEvents } from '@/redux-store/slices/calendar'
 
 // CalendarColors Object - chỉ hiển thị Schedule
 const calendarsColor: CalendarColors = {
+  ETC: 'secondary',
+  Family: 'warning',
+  Holiday: 'error',
+  Personal: 'primary',
+  Business: 'success',
   Schedule: 'info'
 }
 

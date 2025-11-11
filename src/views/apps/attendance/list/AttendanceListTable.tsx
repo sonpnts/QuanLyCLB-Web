@@ -20,7 +20,7 @@ import type { FilterFn } from '@tanstack/react-table'
 import { AttendanceStatus } from '@/services/attendanceService'
 
 // Type Imports
-import { GetUserAttendanceParams } from '@/services/attendanceService'
+import type { GetUserAttendanceParams } from '@/services/attendanceService'
 
 // Service Imports
 import attendanceService from '@/services/attendanceService'

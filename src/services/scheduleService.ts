@@ -1,4 +1,4 @@
-import apiClient from '@/utils/apiClient'
+import { apiClient } from '@/utils/apiClient'
 import type { BranchType } from './branchService'
 import type { ClassInfo } from '@/services/classService'
 

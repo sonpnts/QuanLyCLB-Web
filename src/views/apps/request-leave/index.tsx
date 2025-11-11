@@ -88,44 +88,42 @@ const RequestLeaveView = () => {
       const dateStr = startDate.toLocaleDateString('vi-VN')
       const timeStr = allDay ? '' : ` (${startTime} - ${endTime})`
 
-      
-return `${dateStr}${timeStr}`
+      return `${dateStr}${timeStr}`
     }
 
     const startStr = startDate.toLocaleDateString('vi-VN')
     const endStr = endDate.toLocaleDateString('vi-VN')
     const timeStr = allDay ? '' : ` (${startTime} - ${endTime})`
 
-    
-return `${startStr} đến ${endStr}${timeStr}`
+    return `${startStr} đến ${endStr}${timeStr}`
   }
 
   // Handle request leave
   const handleRequestLeave = useCallback(async () => {
     if (!auth?.user?.id) {
       showNotification('Bạn chưa đăng nhập.', 'error')
-      
-return
+
+      return
     }
 
     if (useSchedule) {
       if (!selectedScheduleId) {
         showNotification('Vui lòng chọn lịch học.', 'error')
-        
-return
+
+        return
       }
     } else {
       if (!startDate) {
         showNotification('Vui lòng chọn ngày bắt đầu.', 'error')
-        
-return
+
+        return
       }
     }
 
     if (!reason.trim()) {
       showNotification('Vui lòng nhập lý do xin nghỉ.', 'error')
-      
-return
+
+      return
     }
 
     setLoading(true)
@@ -175,7 +173,20 @@ return
     } finally {
       setLoading(false)
     }
-  }, [auth?.user, useSchedule, selectedScheduleId, startDate, endDate, startTime, endTime, allDay, reason, schedules, showNotification, formatDateRange])
+  }, [
+    auth?.user,
+    useSchedule,
+    selectedScheduleId,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    allDay,
+    reason,
+    schedules,
+    showNotification,
+    formatDateRange
+  ])
 
   // Get selected schedule
   const selectedSchedule = schedules.find(s => s.id === selectedScheduleId)
@@ -188,7 +199,8 @@ return
           <CardContent className='p-4 sm:p-6'>
             <Box className='flex flex-col gap-4 sm:gap-6'>
               <Alert severity='info' className='text-xs sm:text-sm'>
-                Bạn có thể tạo đơn xin nghỉ phép cho một hoặc nhiều ngày với thời gian cụ thể. Đơn xin nghỉ sẽ được gửi đến quản lý để phê duyệt.
+                Bạn có thể tạo đơn xin nghỉ phép cho một hoặc nhiều ngày với thời gian cụ thể. Đơn xin nghỉ sẽ được gửi
+                đến quản lý để phê duyệt.
               </Alert>
 
               {/* Toggle: Chọn theo schedule hoặc tự chọn ngày */}
@@ -243,9 +255,9 @@ return
                   {/* Date Range Picker */}
                   <AppReactDatepicker
                     selectsRange
-                    startDate={startDate}
-                    endDate={endDate}
-                    selected={startDate}
+                    startDate={startDate ?? undefined}
+                    endDate={endDate ?? undefined}
+                    selected={startDate ?? undefined}
                     onChange={(dates: [Date | null, Date | null]) => {
                       const [start, end] = dates
 
@@ -260,9 +272,7 @@ return
 
                   {/* All Day Toggle */}
                   <FormControlLabel
-                    control={
-                      <Switch checked={allDay} onChange={e => setAllDay(e.target.checked)} />
-                    }
+                    control={<Switch checked={allDay} onChange={e => setAllDay(e.target.checked)} />}
                     label='Cả ngày'
                   />
 

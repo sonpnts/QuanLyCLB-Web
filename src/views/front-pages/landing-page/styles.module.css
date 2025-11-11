@@ -17,7 +17,7 @@
 .heroSectionElements {
   inset-block-start: 18%;
   inset-inline-end: 3%;
-  img {
+  & img {
     inline-size: 100%;
   }
 }
@@ -31,7 +31,7 @@
 
   & > div:hover {
     background-color: var(--mui-palette-primary-mainOpacity);
-    svg {
+    :global(svg) {
       pointer-events: none;
     }
   }

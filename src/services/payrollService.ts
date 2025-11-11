@@ -1,7 +1,7 @@
 
 import type { ResponseResult } from '@/types/common'
 
-import apiClient from '@/utils/apiClient'
+import { apiClient } from '@/utils/apiClient'
 
 export interface GetPayrollParams {
   CoachId?: string

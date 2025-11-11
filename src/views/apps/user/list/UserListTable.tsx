@@ -43,7 +43,6 @@ import type { ThemeColor } from '@core/types'
 import type { UsersType } from '@/types/apps/userTypes'
 
 // Component Imports
-import TableFilters from './TableFilters'
 import AddUserDrawer from './AddUserDrawer'
 import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -142,8 +141,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
-  const [data, setData] = useState(...[tableData])
-  const [filteredData, setFilteredData] = useState(data)
+  const [data, setData] = useState<UsersType[]>(tableData || [])
+  const [filteredData, setFilteredData] = useState<UsersType[]>(data)
   const [globalFilter, setGlobalFilter] = useState('')
 
   // Hooks
@@ -175,7 +174,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'User',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
-            {getAvatar({ avatar: row.original.avatarUrl, fullName: row.original.fullName })}
+            {getAvatar({ avatarUrl: row.original.avatarUrl, fullName: row.original.fullName })}
             <div className='flex flex-col'>
               <Typography className='font-medium' color='text.primary'>
                 {row.original.fullName}
@@ -226,19 +225,25 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       // }),
       //
 
-      columnHelper.accessor('status', {
+      columnHelper.display({
+        id: 'status',
         header: 'Status',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-3'>
-            <Chip
-              variant='tonal'
-              label={row.original.status}
-              size='small'
-              color={userStatusObj[row.original.status]}
-              className='capitalize'
-            />
-          </div>
-        )
+        cell: ({ row }) => {
+          const status = row.original.isActive ? 'active' : 'inactive'
+          const statusKey = status as keyof typeof userStatusObj
+
+          return (
+            <div className='flex items-center gap-3'>
+              <Chip
+                variant='tonal'
+                label={status}
+                size='small'
+                color={userStatusObj[statusKey]}
+                className='capitalize'
+              />
+            </div>
+          )
+        }
       }),
       columnHelper.accessor('action', {
         header: 'Action',
@@ -306,11 +311,11 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-  const getAvatar = (params: Pick<UsersType, 'avatar' | 'fullName'>) => {
-    const { avatar, fullName } = params
+  const getAvatar = (params: Pick<UsersType, 'avatarUrl' | 'fullName'>) => {
+    const { avatarUrl, fullName } = params
 
-    if (avatar) {
-      return <CustomAvatar src={avatar} skin='light' size={34} />
+    if (avatarUrl) {
+      return <CustomAvatar src={avatarUrl} skin='light' size={34} />
     } else {
       return (
         <CustomAvatar skin='light' size={34}>
@@ -324,7 +329,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     <>
       <Card>
         <CardHeader title='Filters' />
-        <TableFilters setData={setFilteredData} tableData={data} />
+        {/* TableFilters removed - using different filtering approach */}
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <Button
@@ -420,6 +425,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         handleClose={() => setAddUserOpen(!addUserOpen)}
         userData={data}
         setData={setData}
+        setFilteredData={setFilteredData}
+        roles={[]}
       />
     </>
   )

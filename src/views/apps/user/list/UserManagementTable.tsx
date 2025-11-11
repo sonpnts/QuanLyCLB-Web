@@ -16,8 +16,10 @@ import Box from '@mui/material/Box'
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import type { FilterFn } from '@tanstack/react-table'
 
+import type { UsersType } from '@/types/apps/userTypes'
+
 // Type Imports
-import type { UsersType, GetUsersParams } from '@/services/userService'
+import type {  GetUsersParams } from '@/services/userService'
 import type { RoleType } from '@/services/roleService'
 
 // Component Imports
@@ -195,7 +197,8 @@ const UserManagementTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'Họ tên',
         cell: ({ row }) => (
           <Box className='flex items-center gap-3'>
-            <CustomAvatar skin='light' color='primary' src={row.original.avatarUrl}></CustomAvatar>
+            <CustomAvatar skin='light' color='primary' src={row.original.avatarUrl ?? "public/images/avatars/1.png"}
+            ></CustomAvatar>
             <Box className='flex flex-col'>
               <Typography className='font-medium' color='text.primary'>
                 {row.original.fullName}

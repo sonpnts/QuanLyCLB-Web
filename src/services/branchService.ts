@@ -1,42 +1,13 @@
-import apiClient from '@/utils/apiClient'
+import { apiClient } from '@/utils/apiClient'
 import type { ResponseResult } from '@/types/common'
 
+// Type Imports
+import type { BranchType, GetBranchesParams, CreateBranchRequest, UpdateBranchRequest } from '@/types/apps/branchTypes'
+
+// Re-export types for backward compatibility
+export type { BranchType, GetBranchesParams, CreateBranchRequest, UpdateBranchRequest }
 
 // API Types
-export interface GetBranchesParams {
-  MinLatitude?: number
-  MaxLatitude?: number
-  MinLongitude?: number
-  MaxLongitude?: number
-  CreatedDate?: string // DateTime format
-  CreatedBy?: string
-  UpdatedDate?: string // DateTime format
-  UpdatedBy?: string
-  IsActive?: boolean
-  Keyword?: string
-  PageSize?: number
-  PageNumber?: number
-}
-
-export interface CreateBranchRequest {
-  name?: string
-  address?: string
-  latitude: number
-  longitude: number
-  allowedRadiusMeters: number
-  googleMapsEmbedUrl?: string
-}
-
-export interface UpdateBranchRequest {
-  name?: string
-  address?: string
-  latitude?: number
-  longitude?: number
-  allowedRadiusMeters?: number
-  googleMapsEmbedUrl?: string
-  isActive?: boolean
-}
-
 export interface ApiBranchResponse {
   id: string
   name?: string
@@ -51,22 +22,6 @@ export interface ApiBranchResponse {
   createdByUserId?: string | null
   updatedByUserId?: string | null
 }
-
-export interface BranchType {
-  id: string
-  name: string
-  address?: string
-  latitude: number
-  longitude: number
-  allowedRadiusMeters: number
-  googleMapsEmbedUrl?: string
-  isActive: boolean
-  createdDate?: string
-  createdBy?: string
-  updatedDate?: string
-  updatedBy?: string
-}
-
 
 class BranchService {
   private mapApiBranchToBranchType(apiBranch: ApiBranchResponse): BranchType {
@@ -205,8 +160,3 @@ class BranchService {
 }
 
 export default new BranchService()
-
-
-
-
-

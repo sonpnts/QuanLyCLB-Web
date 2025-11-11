@@ -141,7 +141,7 @@ const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
 const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
   // States
-  const [role, setRole] = useState<UsersType['role']>('')
+  const [role, setRole] = useState<string>('')
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState(...[tableData])
   const [filteredData, setFilteredData] = useState(data)
@@ -176,7 +176,7 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'User',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
-            {getAvatar({ avatar: row.original.avatar, fullName: row.original.fullName })}
+            {getAvatar({ avatarUrl: row.original.avatarUrl, fullName: row.original.fullName })}
             <div className='flex flex-col'>
               <Typography className='font-medium' color='text.primary'>
                 {row.original.fullName}
@@ -190,41 +190,46 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'Email',
         cell: ({ row }) => <Typography>{row.original.email}</Typography>
       }),
-      columnHelper.accessor('role', {
+      columnHelper.display({
+        id: 'roles',
         header: 'Role',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-2'>
-            <Icon
-              className={userRoleObj[row.original.role].icon}
-              sx={{ color: `var(--mui-palette-${userRoleObj[row.original.role].color}-main)`, fontSize: '1.375rem' }}
-            />
-            <Typography className='capitalize' color='text.primary'>
-              {row.original.role}
-            </Typography>
-          </div>
-        )
+        cell: ({ row }) => {
+          const firstRole = row.original.roles?.[0] || 'N/A'
+          const roleKey = firstRole.toLowerCase() as keyof typeof userRoleObj
+          const roleInfo = userRoleObj[roleKey] || userRoleObj.author
+
+          return (
+            <div className='flex items-center gap-2'>
+              <Icon
+                className={roleInfo.icon}
+                sx={{ color: `var(--mui-palette-${roleInfo.color}-main)`, fontSize: '1.375rem' }}
+              />
+              <Typography className='capitalize' color='text.primary'>
+                {firstRole}
+              </Typography>
+            </div>
+          )
+        }
       }),
-      columnHelper.accessor('currentPlan', {
-        header: 'Plan',
-        cell: ({ row }) => (
-          <Typography className='capitalize' color='text.primary'>
-            {row.original.currentPlan}
-          </Typography>
-        )
-      }),
-      columnHelper.accessor('status', {
+      columnHelper.display({
+        id: 'status',
         header: 'Status',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-3'>
-            <Chip
-              variant='tonal'
-              label={row.original.status}
-              size='small'
-              color={userStatusObj[row.original.status]}
-              className='capitalize'
-            />
-          </div>
-        )
+        cell: ({ row }) => {
+          const status = row.original.isActive ? 'active' : 'inactive'
+          const statusKey = status as keyof typeof userStatusObj
+
+          return (
+            <div className='flex items-center gap-3'>
+              <Chip
+                variant='tonal'
+                label={status}
+                size='small'
+                color={userStatusObj[statusKey]}
+                className='capitalize'
+              />
+            </div>
+          )
+        }
       }),
       columnHelper.accessor('action', {
         header: 'Actions',
@@ -292,11 +297,11 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-  const getAvatar = (params: Pick<UsersType, 'avatar' | 'fullName'>) => {
-    const { avatar, fullName } = params
+  const getAvatar = (params: Pick<UsersType, 'avatarUrl' | 'fullName'>) => {
+    const { avatarUrl, fullName } = params
 
-    if (avatar) {
-      return <CustomAvatar src={avatar} skin='light' size={34} />
+    if (avatarUrl) {
+      return <CustomAvatar src={avatarUrl} skin='light' size={34} />
     } else {
       return (
         <CustomAvatar skin='light' size={34}>
@@ -308,7 +313,7 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   useEffect(() => {
     const filteredData = data?.filter(user => {
-      if (role && user.role !== role) return false
+      if (role && !user.roles?.includes(role)) return false
 
       return true
     })

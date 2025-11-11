@@ -1,4 +1,4 @@
-import apiClient from '@/utils/apiClient'
+import { apiClient } from '@/utils/apiClient'
 import type { ResponseResult } from '@/types/common'
 
 export interface CheckInRequest {

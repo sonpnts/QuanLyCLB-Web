@@ -13,12 +13,32 @@ import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import { useForm, Controller } from 'react-hook-form'
 
+// Type Imports
+import type { ScheduleType } from '@/services/scheduleService'
+import type { BranchType } from '@/types/apps/branchTypes'
+
+// Service Imports
 import scheduleService from '@/services/scheduleService'
 import { useNotification } from '@/contexts/notificationContext'
 import { DAY_OF_WEEK_OPTIONS } from '@/utils/constants'
 import { Messages } from '@/utils/messages'
 
-function formatTimeForBackend(time) {
+type FormData = {
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  branchId: string
+}
+
+type Props = {
+  open: boolean
+  onClose: () => void
+  schedule: ScheduleType | null
+  branches: BranchType[]
+  onUpdated?: (data: ScheduleType) => void
+}
+
+function formatTimeForBackend(time: string): string {
   if (!time) return ''
   const parts = time.split(':')
 
@@ -27,7 +47,7 @@ function formatTimeForBackend(time) {
   return time
 }
 
-export default function EditScheduleDialog({ open, onClose, schedule, branches, onUpdated }) {
+export default function EditScheduleDialog({ open, onClose, schedule, branches, onUpdated }: Props) {
   const { showNotification } = useNotification()
 
   const {
@@ -78,7 +98,13 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
     }
   }, [schedule, reset])
 
-  const onSubmit = async data => {
+  const onSubmit = async (data: FormData) => {
+    if (!schedule) {
+      showNotification('Không tìm thấy lịch học để cập nhật', 'error')
+
+      return
+    }
+
     try {
       // Chỉ gửi các field có thay đổi hoặc có giá trị
       const payload: any = {}
@@ -130,16 +156,12 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
     // Ưu tiên thông tin từ schedule.branch nếu có đầy đủ, nếu không thì dùng thông tin tối thiểu
     const currentBranch = schedule.branch
       ? {
+          ...schedule.branch,
           id: schedule.branchId,
           name: schedule.branch.name || 'Chi nhánh không xác định',
-          address: schedule.branch.address || '',
-          ...schedule.branch
+          address: schedule.branch.address || ''
         }
-      : {
-          id: schedule.branchId,
-          name: 'Chi nhánh đã bị xóa',
-          address: ''
-        }
+      : { id: schedule.branchId, name: 'Chi nhánh đã bị xóa', address: '' }
 
     return [currentBranch, ...branchesList]
   }, [branches, schedule])
@@ -150,15 +172,15 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
       <DialogContent>
         <form id='edit-schedule-form' onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Controller
                 name='dayOfWeek'
                 control={control}
                 rules={{ required: 'Chọn ngày trong tuần' }}
                 render={({ field }) => (
                   <FormControl fullWidth error={!!errors.dayOfWeek}>
-                    <InputLabel>Ngày</InputLabel>
-                    <Select label='Ngày' {...field}>
+                    <InputLabel id='day-select-label'>Ngày</InputLabel>
+                    <Select labelId='day-select-label' {...field}>
                       {DAY_OF_WEEK_OPTIONS.map(opt => (
                         <MenuItem key={opt.value} value={opt.value}>
                           {opt.label}
@@ -170,7 +192,7 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
               />
             </Grid>
 
-            <Grid xs={6}>
+            <Grid size={{ xs: 6 }}>
               <Controller
                 name='startTime'
                 control={control}
@@ -191,7 +213,7 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
                 )}
               />
             </Grid>
-            <Grid xs={6}>
+            <Grid size={{ xs: 6 }}>
               <Controller
                 name='endTime'
                 control={control}
@@ -212,7 +234,7 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
                 )}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               {/*{schedule?.branch && (*/}
               {/*  <Box sx={{ mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>*/}
               {/*    <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>*/}
@@ -236,6 +258,7 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
                 control={control}
 
                 // Không bắt buộc vì branchId là optional trong UpdateClassScheduleRequest
+
                 // Nhưng đảm bảo luôn có giá trị từ schedule nếu form không có
                 render={({ field }) => {
                   // Ưu tiên field.value (giá trị từ form), sau đó fallback về schedule.branchId
