@@ -49,7 +49,7 @@ const convertScheduleToEvent = (schedule: ScheduleType, year: number, month: num
   const endDate = new Date(year, month + 1, 0) // Last day of month
 
   // Find first occurrence of this day of week in the month
-  let currentDate = new Date(startDate)
+  const currentDate = new Date(startDate)
 
   // Calculate days to add to get to the first occurrence of the target day
   // JavaScript Date.getDay() returns: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -74,9 +74,11 @@ const convertScheduleToEvent = (schedule: ScheduleType, year: number, month: num
     const endMinute = parseInt(endTimeParts[1] || '0', 10)
 
     const startDateTime = new Date(currentDate)
+
     startDateTime.setHours(startHour, startMinute, 0, 0)
 
     const endDateTime = new Date(currentDate)
+
     endDateTime.setHours(endHour, endMinute, 0, 0)
 
     // If end time is earlier than start time, it means it goes to next day
@@ -120,7 +122,8 @@ const AppCalendar = () => {
   const [calendarApi, setCalendarApi] = useState<null | any>(null)
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
-  const [loadingSchedules, setLoadingSchedules] = useState<boolean>(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_loadingSchedules, setLoadingSchedules] = useState<boolean>(false)
 
   // Hooks
   const dispatch = useDispatch()
@@ -144,12 +147,14 @@ const AppCalendar = () => {
 
         // Generate events for current month and next 2 months
         const events: EventInput[] = []
+
         for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
           const year = currentMonth + monthOffset >= 12 ? currentYear + 1 : currentYear
           const month = (currentMonth + monthOffset) % 12
 
           response.data.forEach(schedule => {
             const scheduleEvents = convertScheduleToEvent(schedule, year, month)
+
             events.push(...scheduleEvents)
           })
         }

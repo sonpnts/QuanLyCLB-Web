@@ -6,7 +6,7 @@
  * File này chỉ là ví dụ, xóa đi nếu không cần
  */
 
-import { useState } from 'react'
+// MUI Imports
 import Button from '@mui/material/Button'
 import Stack from '@mui/material/Stack'
 import Paper from '@mui/material/Paper'
@@ -98,10 +98,3 @@ export default NotificationExample
  *    import { showSuccess } from '@/utils/notifications'
  *    showSuccess(showNotification, 'Thành công!')
  */
-
-
-
-
-
-
-

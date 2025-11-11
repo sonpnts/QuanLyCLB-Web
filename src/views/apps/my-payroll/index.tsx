@@ -33,20 +33,25 @@ const MyPayrollView = () => {
 
     try {
       setLoading(true)
+
       // Get payrolls for the current user (coach)
       const response = await payrollService.getPayrollByCoach(auth.user.id)
 
       if (response.success && response.data) {
         // Get the latest payroll (most recent month)
         const payrolls = response.data
+
         if (payrolls && payrolls.length > 0) {
           // Sort by month/year descending and get the first one
           const sorted = payrolls.sort((a: any, b: any) => {
             // Sort by generated date or month/year
             const dateA = a.generatedAt || a.createdDate || ''
             const dateB = b.generatedAt || b.createdDate || ''
-            return dateB.localeCompare(dateA)
+
+            
+return dateB.localeCompare(dateA)
           })
+
           setPayroll(sorted[0])
         }
       } else {
@@ -95,7 +100,8 @@ const MyPayrollView = () => {
   // Format currency
   const formatCurrency = (amount: number | undefined) => {
     if (amount === undefined || amount === null) return '0'
-    return new Intl.NumberFormat('vi-VN', {
+    
+return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
     }).format(amount)
@@ -104,6 +110,7 @@ const MyPayrollView = () => {
   // Format date
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return '-'
+
     try {
       return new Date(dateString).toLocaleDateString('vi-VN', {
         year: 'numeric',

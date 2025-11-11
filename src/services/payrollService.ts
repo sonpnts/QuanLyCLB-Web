@@ -1,3 +1,6 @@
+
+import type { ResponseResult } from '@/types/common'
+
 import apiClient from '@/utils/apiClient'
 
 export interface GetPayrollParams {
@@ -22,13 +25,6 @@ export interface GeneratePayrollRequest {
   coachId: string
   year: number
   month: number
-}
-
-export interface ResponseResult<T = any> {
-  success: boolean
-  data?: T
-  message?: string
-  errors?: string[]
 }
 
 class PayrollService {

@@ -1,6 +1,6 @@
 import apiClient from '@/utils/apiClient'
 import type { BranchType } from './branchService'
-import { ClassInfo } from '@/services/classService'
+import type { ClassInfo } from '@/services/classService'
 
 export interface GetSchedulesParams {
   ClassId?: string

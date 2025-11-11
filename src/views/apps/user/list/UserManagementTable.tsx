@@ -14,6 +14,7 @@ import Box from '@mui/material/Box'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import type { FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { UsersType, GetUsersParams } from '@/services/userService'
@@ -31,9 +32,6 @@ import roleService from '@/services/roleService'
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
 
-// Utils Imports
-import { getInitials } from '@/utils/getInitials'
-
 // Styled Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
 
@@ -45,7 +43,8 @@ const UserManagementTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [addUserOpen, setAddUserOpen] = useState(false)
   const [data, setData] = useState<UsersType[]>(tableData || [])
   const [filteredData, setFilteredData] = useState<UsersType[]>([])
-  const [loading, setLoading] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetUsersParams>({})
   const [roles, setRoles] = useState<RoleType[]>([])
   const [selectedUser, setSelectedUser] = useState<UsersType | null>(null)
@@ -181,9 +180,11 @@ const UserManagementTable = ({ tableData }: { tableData?: UsersType[] }) => {
   // Get user type color
   const getUserTypeColor = (roleNameRaw: string) => {
     const roleName = roleNameRaw.toLowerCase()
+
     if (roleName.includes('admin')) return 'error'
     if (roleName.includes('coach') || roleName.includes('instructor')) return 'primary'
     if (roleName.includes('student') || roleName.includes('member')) return 'success'
+
     return 'default'
   }
 
@@ -210,7 +211,9 @@ const UserManagementTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'Vai trò',
         cell: ({ row }) => {
           const rolesArr = row.original.roles || []
+
           if (rolesArr.length === 0) return <Typography variant='body2'>-</Typography>
+
           return (
             <Box className='flex flex-wrap gap-1'>
               {rolesArr.map((r, idx) => (
@@ -267,9 +270,14 @@ const UserManagementTable = ({ tableData }: { tableData?: UsersType[] }) => {
   )
 
   // Table
+  const fuzzyFilter: FilterFn<any> = () => true
+
   const table = useReactTable({
     data: filteredData,
     columns,
+    filterFns: {
+      fuzzy: fuzzyFilter
+    },
     getCoreRowModel: getCoreRowModel()
   })
 

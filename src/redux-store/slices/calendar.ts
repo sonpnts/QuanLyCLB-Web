@@ -84,7 +84,9 @@ export const calendarSlice = createSlice({
       // Merge schedule events with existing events
       // Remove old schedule events (identified by extendedProps.calendar === 'Schedule')
       const nonScheduleEvents = state.filteredEvents.filter(event => event.extendedProps?.calendar !== 'Schedule')
+
       const newEvents = [...nonScheduleEvents, ...action.payload]
+
       state.events = newEvents
       state.filteredEvents = newEvents
     },
@@ -96,11 +98,13 @@ export const calendarSlice = createSlice({
       // If no selection => view all
       if (!state.selectedClasses.length) {
         state.events = state.filteredEvents
+
         return
       }
 
       state.events = state.filteredEvents.filter(event => {
         const cls = (event.extendedProps as any)?.className as string | undefined
+
         return cls ? state.selectedClasses.includes(cls) : false
       })
     }

@@ -21,7 +21,6 @@ import ScrollToTop from '@core/components/scroll-to-top'
 import AuthGuard from '@/hocs/AuthGuard'
 
 // Util Imports
-import { getDictionary } from '@/utils/getDictionary'
 import { getMode, getSystemMode } from '@core/utils/serverHelpers'
 
 const Layout = async (props: ChildrenType) => {
@@ -29,7 +28,6 @@ const Layout = async (props: ChildrenType) => {
 
   // Vars
   const direction = 'ltr' // Fixed to LTR for Vietnamese
-  const dictionary = await getDictionary()
   const mode = await getMode()
   const systemMode = await getSystemMode()
 
@@ -39,16 +37,12 @@ const Layout = async (props: ChildrenType) => {
         <LayoutWrapper
           systemMode={systemMode}
           verticalLayout={
-            <VerticalLayout
-              navigation={<Navigation dictionary={dictionary} mode={mode} />}
-              navbar={<Navbar />}
-              footer={<VerticalFooter />}
-            >
+            <VerticalLayout navigation={<Navigation mode={mode} />} navbar={<Navbar />} footer={<VerticalFooter />}>
               {children}
             </VerticalLayout>
           }
           horizontalLayout={
-            <HorizontalLayout header={<Header dictionary={dictionary} />} footer={<HorizontalFooter />}>
+            <HorizontalLayout header={<Header />} footer={<HorizontalFooter />}>
               {children}
             </HorizontalLayout>
           }

@@ -11,19 +11,13 @@ import FormGroup from '@mui/material/FormGroup'
 import classnames from 'classnames'
 
 // Types Imports
-import type { SidebarLeftProps, CalendarFiltersType } from '@/types/apps/calendarTypes'
-import type { ThemeColor } from '@core/types'
+import type { SidebarLeftProps } from '@/types/apps/calendarTypes'
 
 // Styled Component Imports
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 // Slice Imports
-import {
-  filterAllCalendarLabels,
-  filterCalendarLabel,
-  selectedEvent,
-  filterClassesSet
-} from '@/redux-store/slices/calendar'
+import { selectedEvent, filterClassesSet } from '@/redux-store/slices/calendar'
 
 const SidebarLeft = (props: SidebarLeftProps) => {
   // Props
@@ -31,15 +25,11 @@ const SidebarLeft = (props: SidebarLeftProps) => {
     mdAbove,
     leftSidebarOpen,
     calendarStore,
-    calendarsColor,
     calendarApi,
     dispatch,
     handleLeftSidebarToggle,
     handleAddEventSidebarToggle
   } = props
-
-  // Vars
-  const colorsArr = calendarsColor ? Object.entries(calendarsColor) : []
 
   // Build class filters from events (unique class names)
   const availableClasses = Array.from(

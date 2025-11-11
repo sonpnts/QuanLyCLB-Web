@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -20,6 +20,7 @@ import Grid from '@mui/material/Grid2'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import type { FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { RoleType, GetRolesParams } from '@/services/roleService'
@@ -84,6 +85,7 @@ const RoleManagementTable = () => {
   const handleCreateRole = async () => {
     try {
       setLoading(true)
+
       const response = await roleService.createRole({
         name: roleName,
         description: roleDescription || undefined
@@ -113,6 +115,7 @@ const RoleManagementTable = () => {
 
     try {
       setLoading(true)
+
       const response = await roleService.updateRole(selectedRole.id, {
         name: roleName,
         description: roleDescription || undefined
@@ -254,9 +257,14 @@ const RoleManagementTable = () => {
   )
 
   // Table
+  const fuzzyFilter: FilterFn<any> = () => true
+
   const table = useReactTable({
     data: filteredData,
     columns,
+    filterFns: {
+      fuzzy: fuzzyFilter
+    },
     getCoreRowModel: getCoreRowModel()
   })
 
@@ -403,8 +411,3 @@ const RoleManagementTable = () => {
 }
 
 export default RoleManagementTable
-
-
-
-
-

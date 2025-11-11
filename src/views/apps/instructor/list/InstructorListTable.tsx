@@ -14,6 +14,7 @@ import Box from '@mui/material/Box'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import type { FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { InstructorType, GetInstructorsParams } from '@/services/instructorService'
@@ -42,7 +43,8 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
   const [addInstructorOpen, setAddInstructorOpen] = useState(false)
   const [data, setData] = useState<InstructorType[]>(tableData || [])
   const [filteredData, setFilteredData] = useState<InstructorType[]>([])
-  const [loading, setLoading] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetInstructorsParams>({})
 
   // Notification Hook
@@ -202,9 +204,14 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
   )
 
   // Table
+  const fuzzyFilter: FilterFn<any> = () => true
+
   const table = useReactTable({
     data: filteredData,
     columns,
+    filterFns: {
+      fuzzy: fuzzyFilter
+    },
     getCoreRowModel: getCoreRowModel()
   })
 

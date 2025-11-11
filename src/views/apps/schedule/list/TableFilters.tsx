@@ -46,6 +46,7 @@ const TableFilters = ({ onFilterChange }: Props) => {
     const loadClasses = async () => {
       try {
         const response = await classService.getClasses({})
+
         if (response.success && response.data) {
           setClasses(response.data)
         }
@@ -57,6 +58,7 @@ const TableFilters = ({ onFilterChange }: Props) => {
     const loadBranches = async () => {
       try {
         const response = await branchService.getBranches({})
+
         if (response.success && response.data) {
           setBranches(response.data)
         }
@@ -76,15 +78,19 @@ const TableFilters = ({ onFilterChange }: Props) => {
     if (isActive !== '') {
       params.IsActive = isActive === 'true'
     }
+
     if (keyword) {
       params.Keyword = keyword
     }
+
     if (classId) {
       params.ClassId = classId
     }
+
     if (branchId) {
       params.BranchId = branchId
     }
+
     if (dayOfWeek) {
       params.DayOfWeek = parseInt(dayOfWeek)
     }

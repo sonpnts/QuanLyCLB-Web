@@ -37,15 +37,19 @@ const TableFilters = ({ onFilterChange }: Props) => {
     if (isActive !== '') {
       params.IsActive = isActive === 'true'
     }
+
     if (keyword) {
       params.Keyword = keyword
     }
+
     if (skillLevel) {
       params.SkillLevel = skillLevel
     }
+
     if (certification) {
       params.Certification = certification
     }
+
     if (isLeadCoach !== '') {
       params.IsLeadCoach = isLeadCoach === 'true'
     }

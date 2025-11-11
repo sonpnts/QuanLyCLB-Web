@@ -1,8 +1,7 @@
 // Type Imports
 import type { VerticalMenuDataType } from '@/types/menuTypes'
-import type { getDictionary } from '@/utils/getDictionary'
 
-const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>): VerticalMenuDataType[] => [
+const verticalMenuData = (): VerticalMenuDataType[] => [
   // End-user menu for instructors and teaching assistants
   {
     label: 'Chức năng',

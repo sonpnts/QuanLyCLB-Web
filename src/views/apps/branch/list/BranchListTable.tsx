@@ -14,6 +14,7 @@ import Box from '@mui/material/Box'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import type { FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { BranchType, GetBranchesParams } from '@/services/branchService'
@@ -42,7 +43,8 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
   const [addBranchOpen, setAddBranchOpen] = useState(false)
   const [data, setData] = useState<BranchType[]>(tableData || [])
   const [filteredData, setFilteredData] = useState<BranchType[]>([])
-  const [loading, setLoading] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetBranchesParams>({})
 
   // Notification Hook
@@ -200,9 +202,14 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
   )
 
   // Table
+  const fuzzyFilter: FilterFn<any> = () => true
+
   const table = useReactTable({
     data: filteredData,
     columns,
+    filterFns: {
+      fuzzy: fuzzyFilter
+    },
     getCoreRowModel: getCoreRowModel()
   })
 

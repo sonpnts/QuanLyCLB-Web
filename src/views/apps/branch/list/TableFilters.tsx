@@ -38,18 +38,23 @@ const TableFilters = ({ onFilterChange }: Props) => {
     if (isActive !== '') {
       params.IsActive = isActive === 'true'
     }
+
     if (keyword) {
       params.Keyword = keyword
     }
+
     if (minLatitude) {
       params.MinLatitude = parseFloat(minLatitude)
     }
+
     if (maxLatitude) {
       params.MaxLatitude = parseFloat(maxLatitude)
     }
+
     if (minLongitude) {
       params.MinLongitude = parseFloat(minLongitude)
     }
+
     if (maxLongitude) {
       params.MaxLongitude = parseFloat(maxLongitude)
     }

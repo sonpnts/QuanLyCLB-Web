@@ -5,7 +5,6 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import Chip from '@mui/material/Chip'
@@ -176,77 +175,75 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
           </Box>
         ) : schedules && schedules.length > 0 ? (
           <Grid container spacing={3}>
-            {(schedules.filter(sch => !branchFilter || sch.branch?.id === branchFilter) || []).map(
-              (schedule, index) => (
-                <Grid key={schedule.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                  <Card variant='outlined' className='p-4'>
-                    <Box className='flex items-center justify-between mb-2'>
-                      <Typography variant='h6' className='font-medium'>
-                        {getDayName(schedule.dayOfWeek)}
-                      </Typography>
-                      <Box className='flex items-center gap-2'>
-                        {schedule.isActive ? (
-                          <IconButton
-                            size='small'
-                            onClick={() => {
-                              setSelectedScheduleEdit(schedule)
-                              setShowEdit(true)
-                            }}
-                            color='primary'
-                            title='Sửa'
-                          >
-                            <i className='ri-edit-box-line text-sm' />
-                          </IconButton>
-                        ) : (
-                          <IconButton
-                            size='small'
-                            onClick={() => {
-                              setSelectedRestore(schedule)
-                              setRestoreDialogOpen(true)
-                            }}
-                            color='success'
-                            title='Khôi phục'
-                          >
-                            <i className='ri-restart-line text-sm' />
-                          </IconButton>
-                        )}
+            {(schedules.filter(sch => !branchFilter || sch.branch?.id === branchFilter) || []).map(schedule => (
+              <Grid key={schedule.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                <Card variant='outlined' className='p-4'>
+                  <Box className='flex items-center justify-between mb-2'>
+                    <Typography variant='h6' className='font-medium'>
+                      {getDayName(schedule.dayOfWeek)}
+                    </Typography>
+                    <Box className='flex items-center gap-2'>
+                      {schedule.isActive ? (
                         <IconButton
                           size='small'
                           onClick={() => {
-                            setSelectedSchedule(schedule)
-                            setDeleteDialogOpen(true)
+                            setSelectedScheduleEdit(schedule)
+                            setShowEdit(true)
                           }}
-                          color='error'
-                          title='Xóa lịch học'
+                          color='primary'
+                          title='Sửa'
                         >
-                          <i className='ri-delete-bin-7-line text-sm' />
+                          <i className='ri-edit-box-line text-sm' />
                         </IconButton>
-                      </Box>
-                    </Box>
-                    <Box className='space-y-2'>
-                      <Box className='flex items-center gap-2'>
-                        <i className='ri-time-line text-sm text-textSecondary' />
-                        <Typography variant='body2'>
-                          {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
-                        </Typography>
-                      </Box>
-                      <Box className='flex items-center gap-2'>
-                        <i className='ri-building-line text-sm text-textSecondary' />
-                        <Typography variant='body2'>{schedule.branch?.name || 'Chi nhánh không xác định'}</Typography>
-                      </Box>
-                      <Box className='flex items-center gap-2'>
-                        <Chip
-                          label={schedule.isActive ? 'Hoạt động' : 'Không hoạt động'}
-                          color={schedule.isActive ? 'success' : 'error'}
-                          variant='tonal'
+                      ) : (
+                        <IconButton
                           size='small'
-                        />
-                      </Box>
+                          onClick={() => {
+                            setSelectedRestore(schedule)
+                            setRestoreDialogOpen(true)
+                          }}
+                          color='success'
+                          title='Khôi phục'
+                        >
+                          <i className='ri-restart-line text-sm' />
+                        </IconButton>
+                      )}
+                      <IconButton
+                        size='small'
+                        onClick={() => {
+                          setSelectedSchedule(schedule)
+                          setDeleteDialogOpen(true)
+                        }}
+                        color='error'
+                        title='Xóa lịch học'
+                      >
+                        <i className='ri-delete-bin-7-line text-sm' />
+                      </IconButton>
                     </Box>
-                  </Card>
-                </Grid>
-              )
-            )}
+                  </Box>
+                  <Box className='space-y-2'>
+                    <Box className='flex items-center gap-2'>
+                      <i className='ri-time-line text-sm text-textSecondary' />
+                      <Typography variant='body2'>
+                        {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+                      </Typography>
+                    </Box>
+                    <Box className='flex items-center gap-2'>
+                      <i className='ri-building-line text-sm text-textSecondary' />
+                      <Typography variant='body2'>{schedule.branch?.name || 'Chi nhánh không xác định'}</Typography>
+                    </Box>
+                    <Box className='flex items-center gap-2'>
+                      <Chip
+                        label={schedule.isActive ? 'Hoạt động' : 'Không hoạt động'}
+                        color={schedule.isActive ? 'success' : 'error'}
+                        variant='tonal'
+                        size='small'
+                      />
+                    </Box>
+                  </Box>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
         ) : (
           <Box className='text-center py-8'>
@@ -298,7 +295,9 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
               if (!selectedRestore) return
               setLoading(true)
               const res = await scheduleService.restoreSchedule(selectedRestore.id)
+
               setLoading(false)
+
               if (res.success && res.data) {
                 showNotification(res.message || Messages.schedule.success.restore, 'success')
                 setSchedules(x => x.map(s => (s.id === selectedRestore.id ? res.data : s)))

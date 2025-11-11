@@ -23,6 +23,7 @@ import MenuItem from '@mui/material/MenuItem'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import type { FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { CreateTicketRequest, TicketApprovalRequest } from '@/services/attendanceService'
@@ -38,7 +39,6 @@ const columnHelper = createColumnHelper<any>()
 
 const AttendanceTicketsTable = () => {
   // States
-  const [data, setData] = useState<any[]>([])
   const [filteredData, setFilteredData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [createTicketOpen, setCreateTicketOpen] = useState(false)
@@ -60,6 +60,7 @@ const AttendanceTicketsTable = () => {
   const loadTickets = useCallback(async () => {
     try {
       setLoading(true)
+
       // Mock data - replace with actual API call when available
       const mockData = [
         {
@@ -71,7 +72,7 @@ const AttendanceTicketsTable = () => {
           createdAt: new Date().toISOString()
         }
       ]
-      setData(mockData)
+
       setFilteredData(mockData)
     } catch (error) {
       console.error('Error loading tickets:', error)
@@ -89,6 +90,7 @@ const AttendanceTicketsTable = () => {
   const handleCreateTicket = async () => {
     try {
       setLoading(true)
+
       const createData: CreateTicketRequest = {
         classScheduleId,
         userId,
@@ -123,6 +125,7 @@ const AttendanceTicketsTable = () => {
 
     try {
       setLoading(true)
+
       const approvalData: TicketApprovalRequest = {
         approve,
         approver: approver || undefined,
@@ -157,6 +160,7 @@ const AttendanceTicketsTable = () => {
       approved: { label: 'Đã duyệt', color: 'success' },
       rejected: { label: 'Từ chối', color: 'error' }
     }
+
     return statusMap[status] || { label: 'Không xác định', color: 'default' }
   }
 
@@ -183,6 +187,7 @@ const AttendanceTicketsTable = () => {
         header: 'Trạng thái',
         cell: ({ row }) => {
           const statusInfo = getStatusLabel(row.original.status)
+
           return <Chip label={statusInfo.label} color={statusInfo.color} variant='tonal' size='small' />
         }
       }),
@@ -217,9 +222,14 @@ const AttendanceTicketsTable = () => {
   )
 
   // Table
+  const fuzzyFilter: FilterFn<any> = () => true
+
   const table = useReactTable({
     data: filteredData,
     columns,
+    filterFns: {
+      fuzzy: fuzzyFilter
+    },
     getCoreRowModel: getCoreRowModel()
   })
 
@@ -346,8 +356,3 @@ const AttendanceTicketsTable = () => {
 }
 
 export default AttendanceTicketsTable
-
-
-
-
-

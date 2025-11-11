@@ -1,9 +1,11 @@
+
 'use client'
 
 // React Imports
 import { useState } from 'react'
 
 import { useForm } from 'react-hook-form'
+
 
 // MUI Imports
 import Button from '@mui/material/Button'
@@ -19,8 +21,10 @@ import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 
+import type { UsersType } from '@/types/apps/userTypes'
+
 // Type Imports
-import type { UsersType, CreateUserRequest } from '@/services/userService'
+import type { CreateUserRequest } from '@/services/userService'
 
 import type { RoleType } from '@/services/roleService'
 

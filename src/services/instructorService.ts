@@ -1,4 +1,5 @@
 import apiClient from '@/utils/apiClient'
+import type { ResponseResult } from '@/types/common'
 
 export interface GetInstructorsParams {
   SkillLevel?: string
@@ -56,13 +57,6 @@ export interface InstructorType {
   createdBy?: string
   updatedDate?: string
   updatedBy?: string
-}
-
-export interface ResponseResult<T = any> {
-  success: boolean
-  data?: T
-  message?: string
-  errors?: string[]
 }
 
 class InstructorService {

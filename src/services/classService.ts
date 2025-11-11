@@ -1,5 +1,7 @@
 import apiClient from '@/utils/apiClient'
 import type { ClassType } from '@/types/apps/classTypes'
+import type { ResponseResult } from '@/types/common'
+
 
 // API Types
 // Query parameters for GET /api/Classes
@@ -51,14 +53,6 @@ export interface BulkCreateScheduleRequest {
     endTime: string
     room?: string
   }>
-}
-
-// Response type for all API endpoints
-export interface ResponseResult<T = any> {
-  success: boolean
-  data?: T
-  message?: string
-  errors?: string[]
 }
 
 export interface ClassInfo {

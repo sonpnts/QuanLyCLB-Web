@@ -4,14 +4,15 @@
 import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
 import AlertTitle from '@mui/material/AlertTitle'
-import IconButton from '@mui/material/IconButton'
-import Slide, { SlideProps } from '@mui/material/Slide'
+import Slide from '@mui/material/Slide'
+
+// Type Imports
+import type { SlideProps } from '@mui/material/Slide'
+
+import type { NotificationSeverity } from '@/contexts/notificationContext'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
-
-// Type Imports
-import type { NotificationSeverity } from '@/contexts/notificationContext'
 
 function SlideTransition(props: SlideProps) {
   return <Slide {...props} direction='down' />
@@ -69,9 +70,3 @@ const getSeverityTitle = (severity: string): string => {
 }
 
 export default Notification
-
-
-
-
-
-

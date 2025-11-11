@@ -83,9 +83,11 @@ const EditUserDrawer = (props: Props) => {
   useEffect(() => {
     if (user) {
       reset(defaultValues)
+
       const currentRoleIds = (user.roles || [])
         .map(rn => roles.find(r => r.name === rn)?.id)
         .filter((id): id is string => Boolean(id))
+
       setValue('roleIds', currentRoleIds)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -93,8 +95,10 @@ const EditUserDrawer = (props: Props) => {
 
   const onSubmit = async (values: FormValues) => {
     if (!user) return
+
     try {
       setSubmitting(true)
+
       const payload: any = {
         fullName: values.fullName,
         phoneNumber: values.phoneNumber || undefined,
@@ -104,7 +108,9 @@ const EditUserDrawer = (props: Props) => {
         certification: values.certification || undefined,
         roleIds: values.roleIds
       }
+
       const res = await userService.updateUser(user.id, payload)
+
       if (res.success && res.data) {
         showNotification(res.message || 'Cập nhật người dùng thành công.', 'success')
         onSaved(res.data as UsersType)

@@ -234,6 +234,7 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
               <Controller
                 name='branchId'
                 control={control}
+
                 // Không bắt buộc vì branchId là optional trong UpdateClassScheduleRequest
                 // Nhưng đảm bảo luôn có giá trị từ schedule nếu form không có
                 render={({ field }) => {

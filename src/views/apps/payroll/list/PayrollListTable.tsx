@@ -23,6 +23,7 @@ import DialogActions from '@mui/material/DialogActions'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import type { FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { GetPayrollParams, GeneratePayrollRequest } from '@/services/payrollService'
@@ -80,6 +81,7 @@ const PayrollListTable = () => {
   const handleGeneratePayroll = async () => {
     try {
       setLoading(true)
+
       const generateData: GeneratePayrollRequest = {
         coachId,
         year,
@@ -162,9 +164,14 @@ const PayrollListTable = () => {
   )
 
   // Table
+  const fuzzyFilter: FilterFn<any> = () => true
+
   const table = useReactTable({
     data: filteredData,
     columns,
+    filterFns: {
+      fuzzy: fuzzyFilter
+    },
     getCoreRowModel: getCoreRowModel()
   })
 
@@ -307,8 +314,3 @@ const PayrollListTable = () => {
 }
 
 export default PayrollListTable
-
-
-
-
-

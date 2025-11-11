@@ -1,5 +1,5 @@
 import apiClient from '@/utils/apiClient'
-import type { UsersType, ApiUserResponse, ApiUsersListResponse } from '@/types/apps/userTypes'
+import type { UsersType, ApiUserResponse } from '@/types/apps/userTypes'
 
 // API Types
 // Query parameters for GET /api/Users
@@ -201,6 +201,7 @@ class UserService {
       }
     } catch (error) {
       console.error('Error in getCoaches:', error)
+
       return {
         success: false,
         data: [],
@@ -225,6 +226,7 @@ class UserService {
     }
 
     const user = this.mapApiUserToUsersType(apiResponse.data)
+
     return {
       success: true,
       data: user,
@@ -269,6 +271,7 @@ class UserService {
     }
 
     const user = this.mapApiUserToUsersType(apiResponse.data)
+
     return {
       success: true,
       data: user,

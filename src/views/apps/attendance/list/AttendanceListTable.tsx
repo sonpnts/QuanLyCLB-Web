@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -12,16 +12,15 @@ import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid2'
 import TextField from '@mui/material/TextField'
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
-import Select from '@mui/material/Select'
-import MenuItem from '@mui/material/MenuItem'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import type { FilterFn } from '@tanstack/react-table'
+
+import { AttendanceStatus } from '@/services/attendanceService'
 
 // Type Imports
-import type { GetUserAttendanceParams, AttendanceStatus } from '@/services/attendanceService'
+import { GetUserAttendanceParams } from '@/services/attendanceService'
 
 // Service Imports
 import attendanceService from '@/services/attendanceService'
@@ -34,7 +33,6 @@ const columnHelper = createColumnHelper<any>()
 
 const AttendanceListTable = () => {
   // States
-  const [data, setData] = useState<any[]>([])
   const [filteredData, setFilteredData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [userId, setUserId] = useState<string>('')
@@ -50,6 +48,7 @@ const AttendanceListTable = () => {
 
     try {
       setLoading(true)
+
       const params: GetUserAttendanceParams = {
         userId,
         fromDate: fromDate || undefined,
@@ -59,7 +58,6 @@ const AttendanceListTable = () => {
       const response = await attendanceService.getUserAttendance(params)
 
       if (response.success && response.data) {
-        setData(response.data)
         setFilteredData(response.data)
       } else {
         showNotification(response.message || 'Không thể tải dữ liệu điểm danh.', 'error')
@@ -86,6 +84,7 @@ const AttendanceListTable = () => {
       [AttendanceStatus.Excused]: { label: 'Có phép', color: 'info' as const },
       [AttendanceStatus.Pending]: { label: 'Chờ duyệt', color: 'default' as const }
     }
+
     return statusMap[status] || { label: 'Không xác định', color: 'default' as const }
   }
 
@@ -114,6 +113,7 @@ const AttendanceListTable = () => {
         header: 'Trạng thái',
         cell: ({ row }) => {
           const statusInfo = getStatusLabel(row.original.status)
+
           return <Chip label={statusInfo.label} color={statusInfo.color} variant='tonal' size='small' />
         }
       }),
@@ -126,9 +126,14 @@ const AttendanceListTable = () => {
   )
 
   // Table
+  const fuzzyFilter: FilterFn<any> = () => true
+
   const table = useReactTable({
     data: filteredData,
     columns,
+    filterFns: {
+      fuzzy: fuzzyFilter
+    },
     getCoreRowModel: getCoreRowModel()
   })
 
@@ -213,8 +218,3 @@ const AttendanceListTable = () => {
 }
 
 export default AttendanceListTable
-
-
-
-
-

@@ -1,14 +1,21 @@
 // MUI Imports
 import Grid from '@mui/material/Grid2'
 
+// Type Imports
+import type { UsersType } from '@/services/userService'
+
 // Component Imports
 import UserManagementTable from './UserManagementTable'
 
-const UserList = () => {
+type Props = {
+  userData?: UsersType[]
+}
+
+const UserList = ({ userData }: Props) => {
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
-        <UserManagementTable />
+        <UserManagementTable tableData={userData} />
       </Grid>
     </Grid>
   )

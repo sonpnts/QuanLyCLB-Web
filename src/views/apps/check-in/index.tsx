@@ -51,9 +51,11 @@ const CheckInView = () => {
 
     if (!navigator.geolocation) {
       const errorMsg = 'Trình duyệt của bạn không hỗ trợ định vị.'
+
       setLocationError(errorMsg)
       showNotification(errorMsg, 'error')
       setIsRequestingLocation(false)
+
       return null
     }
 
@@ -66,6 +68,7 @@ const CheckInView = () => {
         try {
           // @ts-ignore - TS cannot narrow names union here cleanly
           const status: PermissionStatus = await navigator.permissions.query({ name: 'geolocation' as PermissionName })
+
           if (status.state === 'denied') {
             // Still attempt a request (most browsers won't reprompt), then show guidance
           }
@@ -89,15 +92,14 @@ const CheckInView = () => {
       setPermissionDenied(false)
       showNotification('Đã lấy vị trí thành công.', 'success')
       setIsRequestingLocation(false)
+
       return locationData
     } catch (error: any) {
       let errorMessage = 'Không thể lấy vị trí.'
-      let isDenied = false
 
       if (error.code === 1) {
         // Permission denied - user từ chối quyền
         errorMessage = 'Bạn đã từ chối quyền truy cập vị trí. Vui lòng cấp quyền trong cài đặt trình duyệt và thử lại.'
-        isDenied = true
         setPermissionDenied(true)
       } else if (error.code === 2) {
         errorMessage = 'Không thể xác định vị trí. Vui lòng kiểm tra kết nối mạng và thử lại.'
@@ -108,6 +110,7 @@ const CheckInView = () => {
       setLocationError(errorMessage)
       showNotification(errorMessage, 'error')
       setIsRequestingLocation(false)
+
       return null
     }
   }, [showNotification])
@@ -116,6 +119,7 @@ const CheckInView = () => {
   const handleCheckIn = useCallback(async () => {
     if (!auth?.user?.id) {
       showNotification('Bạn chưa đăng nhập.', 'error')
+
       return
     }
 
@@ -127,6 +131,7 @@ const CheckInView = () => {
 
     // Tự động request location nếu chưa có hoặc đã bị từ chối
     let currentLocation = location
+
     if (!currentLocation || permissionDenied) {
       currentLocation = await requestLocation()
 
@@ -152,6 +157,7 @@ const CheckInView = () => {
 
       if (response.success) {
         showNotification('Điểm danh thành công!', 'success')
+
         // Giữ location để user có thể điểm danh lại nếu cần
       } else {
         showNotification(response.message || 'Điểm danh thất bại.', 'error')

@@ -1,4 +1,6 @@
 import apiClient from '@/utils/apiClient'
+import type { ResponseResult } from '@/types/common'
+
 
 // API Types
 export interface GetBranchesParams {
@@ -65,12 +67,6 @@ export interface BranchType {
   updatedBy?: string
 }
 
-export interface ResponseResult<T = any> {
-  success: boolean
-  data?: T
-  message?: string
-  errors?: string[]
-}
 
 class BranchService {
   private mapApiBranchToBranchType(apiBranch: ApiBranchResponse): BranchType {

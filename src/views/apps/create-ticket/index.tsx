@@ -63,6 +63,7 @@ const CreateTicketView = () => {
   const loadSchedules = useCallback(async () => {
     try {
       setLoadingSchedules(true)
+
       // Get all active schedules for the user
       const response = await scheduleService.getSchedules({ IsActive: true })
 
@@ -87,17 +88,20 @@ const CreateTicketView = () => {
   const handleCreateTicket = useCallback(async () => {
     if (!auth?.user?.id) {
       showNotification('Bạn chưa đăng nhập.', 'error')
-      return
+      
+return
     }
 
     if (!selectedScheduleId) {
       showNotification('Vui lòng chọn lịch học.', 'error')
-      return
+      
+return
     }
 
     if (!ticketType) {
       showNotification('Vui lòng chọn loại phiếu.', 'error')
-      return
+      
+return
     }
 
     setLoading(true)
@@ -123,6 +127,7 @@ const CreateTicketView = () => {
 
       if (response.success) {
         showNotification('Tạo phiếu thành công.', 'success')
+
         // Reset form
         setSelectedScheduleId('')
         setTicketType('compensatory')

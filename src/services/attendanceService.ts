@@ -1,4 +1,5 @@
 import apiClient from '@/utils/apiClient'
+import type { ResponseResult } from '@/types/common'
 
 export interface CheckInRequest {
   userId: string
@@ -45,12 +46,6 @@ export enum AttendanceStatus {
   Pending = 4
 }
 
-export interface ResponseResult<T = any> {
-  success: boolean
-  data?: T
-  message?: string
-  errors?: string[]
-}
 
 class AttendanceService {
   async checkIn(data: CheckInRequest): Promise<ResponseResult<any>> {

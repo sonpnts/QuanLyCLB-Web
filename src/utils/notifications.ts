@@ -56,6 +56,7 @@ export const NotificationMessages = {
     submit: 'Gửi thành công!',
     upload: 'Tải lên thành công!'
   },
+
   // Error messages
   error: {
     create: 'Không thể tạo. Vui lòng thử lại.',
@@ -67,12 +68,14 @@ export const NotificationMessages = {
     load: 'Không thể tải dữ liệu. Vui lòng thử lại.',
     generic: 'Đã có lỗi xảy ra. Vui lòng thử lại.'
   },
+
   // Warning messages
   warning: {
     unsavedChanges: 'Bạn có thay đổi chưa lưu.',
     confirmAction: 'Vui lòng xác nhận hành động này.',
     validationFailed: 'Vui lòng kiểm tra lại thông tin nhập vào.'
   },
+
   // Info messages
   info: {
     loading: 'Đang tải dữ liệu...',
@@ -80,10 +83,3 @@ export const NotificationMessages = {
     saving: 'Đang lưu...'
   }
 }
-
-
-
-
-
-
-

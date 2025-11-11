@@ -2,6 +2,7 @@
 
 // React Imports
 import { useState } from 'react'
+
 import { useForm } from 'react-hook-form'
 
 // MUI Imports
@@ -54,8 +55,7 @@ const AddBranchDrawer = (props: Props) => {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
-    watch
+    reset
   } = useForm<FormValidateType>({
     defaultValues: {
       name: '',

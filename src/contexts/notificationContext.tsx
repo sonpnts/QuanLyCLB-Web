@@ -1,10 +1,12 @@
 'use client'
 
 // React Imports
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
 
 // Type Imports
-type NotificationSeverity = 'success' | 'error' | 'warning' | 'info'
+import type { ReactNode } from 'react'
+
+export type NotificationSeverity = 'success' | 'error' | 'warning' | 'info'
 
 interface Notification {
   id: string
@@ -70,9 +72,3 @@ export const notificationHelper = {
   warning: (message: string) => ({ message, severity: 'warning' as NotificationSeverity }),
   info: (message: string) => ({ message, severity: 'info' as NotificationSeverity })
 }
-
-
-
-
-
-

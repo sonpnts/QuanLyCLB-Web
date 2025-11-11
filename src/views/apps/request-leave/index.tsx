@@ -59,6 +59,7 @@ const RequestLeaveView = () => {
   const loadSchedules = useCallback(async () => {
     try {
       setLoadingSchedules(true)
+
       // Get all active schedules for the user
       const response = await scheduleService.getSchedules({ IsActive: true })
 
@@ -82,39 +83,49 @@ const RequestLeaveView = () => {
   // Format date range string
   const formatDateRange = () => {
     if (!startDate) return ''
+
     if (!endDate || startDate.toDateString() === endDate.toDateString()) {
       const dateStr = startDate.toLocaleDateString('vi-VN')
       const timeStr = allDay ? '' : ` (${startTime} - ${endTime})`
-      return `${dateStr}${timeStr}`
+
+      
+return `${dateStr}${timeStr}`
     }
+
     const startStr = startDate.toLocaleDateString('vi-VN')
     const endStr = endDate.toLocaleDateString('vi-VN')
     const timeStr = allDay ? '' : ` (${startTime} - ${endTime})`
-    return `${startStr} đến ${endStr}${timeStr}`
+
+    
+return `${startStr} đến ${endStr}${timeStr}`
   }
 
   // Handle request leave
   const handleRequestLeave = useCallback(async () => {
     if (!auth?.user?.id) {
       showNotification('Bạn chưa đăng nhập.', 'error')
-      return
+      
+return
     }
 
     if (useSchedule) {
       if (!selectedScheduleId) {
         showNotification('Vui lòng chọn lịch học.', 'error')
-        return
+        
+return
       }
     } else {
       if (!startDate) {
         showNotification('Vui lòng chọn ngày bắt đầu.', 'error')
-        return
+        
+return
       }
     }
 
     if (!reason.trim()) {
       showNotification('Vui lòng nhập lý do xin nghỉ.', 'error')
-      return
+      
+return
     }
 
     setLoading(true)
@@ -122,8 +133,10 @@ const RequestLeaveView = () => {
     try {
       // Format reason with date/time information
       let dateTimeInfo = ''
+
       if (useSchedule && selectedScheduleId) {
         const schedule = schedules.find(s => s.id === selectedScheduleId)
+
         if (schedule) {
           dateTimeInfo = ` - Lịch: ${schedule.class?.name || schedule.class?.code || 'N/A'} (${schedule.startTime} - ${schedule.endTime})`
         }
@@ -143,6 +156,7 @@ const RequestLeaveView = () => {
 
       if (response.success) {
         showNotification('Gửi đơn xin nghỉ phép thành công.', 'success')
+
         // Reset form
         setUseSchedule(false)
         setSelectedScheduleId('')
@@ -184,6 +198,7 @@ const RequestLeaveView = () => {
                     checked={useSchedule}
                     onChange={e => {
                       setUseSchedule(e.target.checked)
+
                       if (e.target.checked) {
                         setStartDate(null)
                         setEndDate(null)
@@ -197,6 +212,7 @@ const RequestLeaveView = () => {
               />
 
               {useSchedule ? (
+
                 /* Schedule Selection */
                 <FormControl fullWidth required>
                   <InputLabel>Chọn lịch học</InputLabel>
@@ -221,6 +237,7 @@ const RequestLeaveView = () => {
                   </Select>
                 </FormControl>
               ) : (
+
                 /* Date Range Selection với thời gian */
                 <Box className='flex flex-col gap-4'>
                   {/* Date Range Picker */}
@@ -231,6 +248,7 @@ const RequestLeaveView = () => {
                     selected={startDate}
                     onChange={(dates: [Date | null, Date | null]) => {
                       const [start, end] = dates
+
                       setStartDate(start)
                       setEndDate(end)
                     }}

@@ -14,6 +14,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import type { FilterFn } from '@tanstack/react-table'
 
 // Service Imports
 import attendanceService, { type GetUserAttendanceParams } from '@/services/attendanceService'
@@ -25,7 +26,8 @@ const columnHelper = createColumnHelper<any>()
 
 const MyTicketsView = () => {
   // States
-  const [data, setData] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_data, setData] = useState<any[]>([])
   const [filteredData, setFilteredData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -39,6 +41,7 @@ const MyTicketsView = () => {
 
     try {
       setLoading(true)
+
       // Get attendance records for the user
       // Filter those that have tickets
       const params: GetUserAttendanceParams = {
@@ -88,6 +91,7 @@ const MyTicketsView = () => {
       3: { label: 'Có phép', color: 'info' },
       4: { label: 'Chờ duyệt', color: 'default' }
     }
+
     return statusMap[status] || { label: 'Không xác định', color: 'default' }
   }
 
@@ -110,6 +114,7 @@ const MyTicketsView = () => {
         header: 'Trạng thái',
         cell: ({ row }) => {
           const statusInfo = getStatusLabel(row.original.status)
+
           return <Chip label={statusInfo.label} color={statusInfo.color} variant='tonal' size='small' />
         }
       }),
@@ -126,9 +131,14 @@ const MyTicketsView = () => {
   )
 
   // Table
+  const fuzzyFilter: FilterFn<any> = () => true
+
   const table = useReactTable({
     data: filteredData,
     columns,
+    filterFns: {
+      fuzzy: fuzzyFilter
+    },
     getCoreRowModel: getCoreRowModel()
   })
 

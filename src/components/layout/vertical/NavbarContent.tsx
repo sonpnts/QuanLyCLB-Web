@@ -1,107 +1,14 @@
 // Third-party Imports
 import classnames from 'classnames'
 
-// Type Imports
-import type { ShortcutsType } from '@components/layout/shared/ShortcutsDropdown'
-import type { NotificationsType } from '@components/layout/shared/NotificationsDropdown'
-
 // Component Imports
 import NavToggle from './NavToggle'
 import NavSearch from '@components/layout/shared/search'
 import ModeDropdown from '@components/layout/shared/ModeDropdown'
-import ShortcutsDropdown from '@components/layout/shared/ShortcutsDropdown'
-import NotificationsDropdown from '@components/layout/shared/NotificationsDropdown'
 import UserDropdown from '@components/layout/shared/UserDropdown'
 
 // Util Imports
 import { verticalLayoutClasses } from '@layouts/utils/layoutClasses'
-
-// Vars
-const shortcuts: ShortcutsType[] = [
-  {
-    url: '/apps/check-in',
-    icon: 'ri-checkbox-circle-line',
-    title: 'Điểm danh',
-    subtitle: 'Check-in'
-  },
-  {
-    url: '/apps/my-schedule',
-    icon: 'ri-calendar-line',
-    title: 'Lịch dạy',
-    subtitle: 'My Schedule'
-  },
-  {
-    url: '/apps/request-leave',
-    icon: 'ri-file-paper-2-line',
-    title: 'Xin nghỉ phép',
-    subtitle: 'Request Leave'
-  },
-  {
-    url: '/apps/create-ticket',
-    icon: 'ri-file-add-line',
-    title: 'Tạo phiếu điểm danh bù',
-    subtitle: 'Create Ticket'
-  },
-  {
-    url: '/apps/my-tickets',
-    icon: 'ri-file-list-line',
-    title: 'Lịch sử phiếu',
-    subtitle: 'My Tickets'
-  },
-  {
-    url: '/apps/my-payroll',
-    icon: 'ri-money-dollar-circle-line',
-    title: 'Bảng lương',
-    subtitle: 'My Payroll'
-  }
-]
-
-const notifications: NotificationsType[] = [
-  {
-    avatarImage: '/images/avatars/2.png',
-    title: 'Congratulations Flora 🎉',
-    subtitle: 'Won the monthly bestseller gold badge',
-    time: '1h ago',
-    read: false
-  },
-  {
-    title: 'Cecilia Becker',
-    subtitle: 'Accepted your connection',
-    time: '12h ago',
-    read: false
-  },
-  {
-    avatarImage: '/images/avatars/3.png',
-    title: 'Bernard Woods',
-    subtitle: 'You have new message from Bernard Woods',
-    time: 'May 18, 8:26 AM',
-    read: true
-  },
-  {
-    avatarIcon: 'ri-bar-chart-line',
-    avatarColor: 'info',
-    title: 'Monthly report generated',
-    subtitle: 'July month financial report is generated',
-    time: 'Apr 24, 10:30 AM',
-    read: true
-  },
-  {
-    avatarText: 'MG',
-    avatarColor: 'success',
-    title: 'Application has been approved 🚀',
-    subtitle: 'Your Meta Gadgets project application has been approved.',
-    time: 'Feb 17, 12:17 PM',
-    read: true
-  },
-  {
-    avatarIcon: 'ri-mail-line',
-    avatarColor: 'error',
-    title: 'New message from Harry',
-    subtitle: 'You have new message from Harry',
-    time: 'Jan 6, 1:48 PM',
-    read: true
-  }
-]
 
 const NavbarContent = () => {
   return (

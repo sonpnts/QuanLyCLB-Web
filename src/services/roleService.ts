@@ -101,6 +101,7 @@ class RoleService {
     }
 
     const roleData = this.mapApiRoleToRoleType(apiResponse.data)
+
     return {
       success: true,
       data: roleData,
@@ -124,6 +125,7 @@ class RoleService {
     }
 
     const roleData = this.mapApiRoleToRoleType(apiResponse.data)
+
     return {
       success: true,
       data: roleData
@@ -146,6 +148,7 @@ class RoleService {
     }
 
     const roleData = this.mapApiRoleToRoleType(apiResponse.data)
+
     return {
       success: true,
       data: roleData,
@@ -190,6 +193,7 @@ class RoleService {
     }
 
     const roleData = this.mapApiRoleToRoleType(apiResponse.data)
+
     return {
       success: true,
       data: roleData,
@@ -199,9 +203,5 @@ class RoleService {
 }
 
 const roleService = new RoleService()
+
 export default roleService
-
-
-
-
-
