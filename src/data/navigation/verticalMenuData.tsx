@@ -2,40 +2,156 @@
 import type { VerticalMenuDataType } from '@/types/menuTypes'
 
 const verticalMenuData = (): VerticalMenuDataType[] => [
-  // End-user menu for instructors and teaching assistants
   {
-    label: 'Chức năng',
+    label: 'Trang chủ',
     isSection: true,
     children: [
       {
-        label: 'Điểm danh',
-        icon: 'ri-checkbox-circle-line',
-        href: '/apps/check-in'
+        label: 'Dashboard',
+        icon: 'ri-dashboard-line',
+        href: '/dashboards/home'
+      }
+    ]
+  },
+  {
+    label: 'Quản lý cơ bản',
+    isSection: true,
+    children: [
+      {
+        label: 'Chi nhánh',
+        icon: 'ri-building-line',
+        href: '/apps/branch/list'
       },
+      {
+        label: 'Lớp học',
+        icon: 'ri-group-line',
+        href: '/apps/class/list'
+      },
+      {
+        label: 'Huấn luyện viên',
+        icon: 'ri-user-star-line',
+        href: '/apps/instructor/list'
+      },
+      {
+        label: 'Học viên',
+        icon: 'ri-user-line',
+        href: '/apps/user/list'
+      }
+    ]
+  },
+  {
+    label: 'Lịch & Điểm danh',
+    isSection: true,
+    children: [
       {
         label: 'Lịch dạy',
+        icon: 'ri-calendar-schedule-line',
+        href: '/apps/schedule/list'
+      },
+      {
+        label: 'Lịch tổng quan',
         icon: 'ri-calendar-line',
-        href: '/apps/my-schedule'
+        href: '/apps/calendar'
       },
       {
-        label: 'Xin nghỉ phép',
-        icon: 'ri-file-paper-2-line',
-        href: '/apps/request-leave'
+        label: 'Điểm danh',
+        icon: 'ri-checkbox-circle-line',
+        href: '/apps/attendance/list'
       },
       {
-        label: 'Tạo phiếu điểm danh bù',
-        icon: 'ri-file-add-line',
-        href: '/apps/create-ticket'
-      },
-      {
-        label: 'Lịch sử phiếu',
-        icon: 'ri-file-list-line',
-        href: '/apps/my-tickets'
-      },
+        label: 'Phiếu điểm danh',
+        icon: 'ri-file-list-3-line',
+        href: '/apps/attendance/tickets'
+      }
+    ]
+  },
+  {
+    label: 'Tài chính & Lương',
+    isSection: true,
+    children: [
       {
         label: 'Bảng lương',
         icon: 'ri-money-dollar-circle-line',
-        href: '/apps/my-payroll'
+        href: '/apps/payroll/list'
+      },
+      {
+        label: 'Hóa đơn',
+        icon: 'ri-file-paper-2-line',
+        href: '/apps/invoice/list'
+      }
+    ]
+  },
+  {
+    label: 'Phân quyền',
+    isSection: true,
+    children: [
+      {
+        label: 'Vai trò',
+        icon: 'ri-shield-user-line',
+        href: '/apps/roles'
+      },
+      {
+        label: 'Quyền hạn',
+        icon: 'ri-lock-line',
+        href: '/apps/permissions'
+      }
+    ]
+  },
+  {
+    label: 'Học viện',
+    isSection: true,
+    children: [
+      {
+        label: 'Dashboard',
+        icon: 'ri-dashboard-3-line',
+        href: '/apps/academy/dashboard'
+      },
+      {
+        label: 'Khóa học',
+        icon: 'ri-book-open-line',
+        href: '/apps/academy/my-courses'
+      }
+    ]
+  },
+  {
+    label: 'Tiện ích',
+    isSection: true,
+    children: [
+      {
+        label: 'Chat',
+        icon: 'ri-message-3-line',
+        href: '/apps/chat'
+      },
+      {
+        label: 'Email',
+        icon: 'ri-mail-line',
+        href: '/apps/email'
+      },
+      {
+        label: 'Kanban',
+        icon: 'ri-layout-grid-line',
+        href: '/apps/kanban'
+      }
+    ]
+  },
+  {
+    label: 'Báo cáo & Thống kê',
+    isSection: true,
+    children: [
+      {
+        label: 'Phân tích',
+        icon: 'ri-bar-chart-line',
+        href: '/dashboards/analytics'
+      },
+      {
+        label: 'E-commerce',
+        icon: 'ri-shopping-cart-line',
+        href: '/dashboards/ecommerce'
+      },
+      {
+        label: 'Logistics',
+        icon: 'ri-truck-line',
+        href: '/dashboards/logistics'
       }
     ]
   }
