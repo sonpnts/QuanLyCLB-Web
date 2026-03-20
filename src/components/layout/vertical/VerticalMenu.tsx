@@ -1,3 +1,6 @@
+// React Imports
+import { useEffect, useState } from 'react'
+
 // MUI Imports
 import { useTheme } from '@mui/material/styles'
 
@@ -24,6 +27,8 @@ import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 
 // Menu Data Imports
 import menuData from '@/data/navigation/verticalMenuData'
+import menuService from '@/services/menuService'
+import type { VerticalMenuDataType } from '@/types/menuTypes'
 
 type RenderExpandIconProps = {
   open?: boolean
@@ -45,6 +50,31 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
   const theme = useTheme()
   const verticalNavOptions = useVerticalNav()
 
+  // State
+  const [dynamicMenu, setDynamicMenu] = useState<VerticalMenuDataType[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const response = await menuService.getMenuByRole()
+        if (response.success && response.data) {
+          setDynamicMenu(response.data)
+        } else {
+          // Fallback to static menu if API fails or returns no data
+          setDynamicMenu(menuData())
+        }
+      } catch (error) {
+        console.error('Failed to fetch menu:', error)
+        setDynamicMenu(menuData())
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchMenu()
+  }, [])
+
   // Vars
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
 
@@ -56,13 +86,13 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
     <ScrollWrapper
       {...(isBreakpointReached
         ? {
-            className: 'bs-full overflow-y-auto overflow-x-hidden',
-            onScroll: container => scrollMenu(container, false)
-          }
+          className: 'bs-full overflow-y-auto overflow-x-hidden',
+          onScroll: container => scrollMenu(container, false)
+        }
         : {
-            options: { wheelPropagation: false, suppressScrollX: true },
-            onScrollY: container => scrollMenu(container, true)
-          })}
+          options: { wheelPropagation: false, suppressScrollX: true },
+          onScrollY: container => scrollMenu(container, true)
+        })}
     >
       {/* Incase you also want to scroll NavHeader to scroll with Vertical Menu, remove NavHeader from above and paste it below this comment */}
       {/* Vertical Menu */}
@@ -73,7 +103,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='ri-circle-line' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <GenerateVerticalMenu menuData={menuData()} />
+        {!isLoading && <GenerateVerticalMenu menuData={dynamicMenu} />}
       </Menu>
     </ScrollWrapper>
   )

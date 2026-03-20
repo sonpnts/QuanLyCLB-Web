@@ -42,7 +42,7 @@ class BranchService {
   }
 
   async getBranches(params?: GetBranchesParams): Promise<ResponseResult<BranchType[]>> {
-    const response = await apiClient.get<any>('/api/Branches', { params })
+    const response = await apiClient.get<any>('/Branches', { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -82,7 +82,7 @@ class BranchService {
   }
 
   async createBranch(data: CreateBranchRequest): Promise<ResponseResult<BranchType>> {
-    const response = await apiClient.post<any>('/api/Branches', data)
+    const response = await apiClient.post<any>('/Branches', data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

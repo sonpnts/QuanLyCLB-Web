@@ -1,14 +1,14 @@
 .tableHead {
-  :global(tr th:not(:first-child)) {
+  tr th:not(:first-child) {
     text-align: center;
   }
 }
 
 .tableBody {
-  :global(tr td:not(:first-child)) {
+  tr td:not(:first-child) {
     text-align: center;
   }
-  :global(tr:nth-child(even)) {
+  tr:nth-child(even) {
     background-color: var(--mui-palette-action-hover);
   }
 }

@@ -2,78 +2,45 @@ import { apiClient } from '@/utils/apiClient'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { ResponseResult } from '@/types/common'
 
-
-// API Types
-// Query parameters for GET /api/Classes
+// Query parameters for GET /api/Classes - Theo API Documentation
 export interface GetClassesParams {
-  StartDateFrom?: string // Date format: YYYY-MM-DD
-  StartDateTo?: string // Date format: YYYY-MM-DD
-  EndDateFrom?: string // Date format: YYYY-MM-DD
-  EndDateTo?: string // Date format: YYYY-MM-DD
-  MinMaxStudents?: number // Integer
-  MaxMaxStudents?: number // Integer
-  CreatedDate?: string // DateTime format
-  CreatedBy?: string
-  UpdatedDate?: string // DateTime format
-  UpdatedBy?: string
-  IsActive?: boolean
-  Keyword?: string
-  PageSize?: number // Integer
-  PageNumber?: number // Integer
-  Code?: string
+  pageNumber?: number
+  pageSize?: number
+  keyword?: string
 }
 
 // Request body for POST /api/Classes
 export interface CreateClassRequest {
-  name: string
   code: string
+  name: string
   description?: string
-  startDate: string // Date format
-  endDate: string // Date format
-  maxStudents: number // Integer
-  coachIds?: string[] // Array of UUIDs
-  isActive?: boolean
+  maxStudents: number
+  userIds?: string[] // Array of instructor UUIDs
 }
 
 // Request body for PUT /api/Classes/{id}
 export interface UpdateClassRequest {
   name?: string
   description?: string
-  startDate?: string // Date format
-  endDate?: string // Date format
-  maxStudents?: number // Integer
-  instructorId?: string // UUID
-  isActive?: boolean
+  maxStudents?: number
+  userIds?: string[]
 }
 
+// Request body for bulk create schedules
 export interface BulkCreateScheduleRequest {
-  schedules: Array<{
-    date: string
-    startTime: string
-    endTime: string
-    room?: string
-  }>
+  branchId: string
+  daysOfWeek: number[]
+  startTime: string
+  endTime: string
 }
 
 export interface ClassInfo {
-  startDateFrom?: string
-  startDateTo?: string
-  endDateFrom?: string
-  endDateTo?: string
-  minMaxStudents?: number
-  maxMaxStudents?: number
-  createdDate?: string
-  createdBy?: string
-  updatedDate?: string
-  updatedBy?: string
-  isActive?: boolean
+  id?: string
   code?: string
-  name : string
-}
-
-// Path parameters for endpoints with ID
-export interface ClassPathParams {
-  id: string // UUID
+  name: string
+  description?: string
+  maxStudents?: number
+  isActive?: boolean
 }
 
 // API response type from /api/Classes
@@ -82,10 +49,8 @@ export interface ApiClassResponse {
   code: string
   name: string
   description?: string
-  startDate: string
-  endDate: string
   maxStudents: number
-  coachIds?: string[]
+  userIds?: string[] // API trả về userIds thay vì coachIds
   isActive?: boolean
   createdAt?: string
   updatedAt?: string | null
@@ -94,34 +59,25 @@ export interface ApiClassResponse {
 }
 
 class ClassService {
-  // Helper function to map API class to ClassType
   private mapApiClassToClassType(apiClass: ApiClassResponse): ClassType {
     return {
       id: apiClass.id,
+      code: apiClass.code,
       name: apiClass.name,
       description: apiClass.description,
-      startDate: apiClass.startDate,
-      endDate: apiClass.endDate,
       maxStudents: apiClass.maxStudents,
-      instructorId: apiClass.coachIds?.[0],
-      code: apiClass.code,
+      instructorId: apiClass.userIds?.[0],
       isActive: apiClass.isActive !== undefined ? apiClass.isActive : true,
       createdDate: apiClass.createdAt,
       createdBy: apiClass.createdByUserId || undefined,
       updatedDate: apiClass.updatedAt || undefined,
       updatedBy: apiClass.updatedByUserId || undefined,
-      coachIds: apiClass.coachIds || []
+      coachIds: apiClass.userIds || [] // Map userIds sang coachIds cho frontend
     }
   }
 
-  /**
-   * GET /api/Classes
-   * Get a list of classes with optional filtering and pagination
-   * @param params - Query parameters for filtering classes
-   * @returns ResponseResult with an array of ClassType
-   */
   async getClasses(params?: GetClassesParams): Promise<ResponseResult<ClassType[]>> {
-    const response = await apiClient.get<any>('/api/Classes', { params })
+    const response = await apiClient.get<any>('/Classes', { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -132,7 +88,6 @@ class ClassService {
       }
     }
 
-    // Extract records from response.data.records
     const records: ApiClassResponse[] = apiResponse.data?.records || []
     const classes = records.map(this.mapApiClassToClassType)
 
@@ -142,14 +97,8 @@ class ClassService {
     }
   }
 
-  /**
-   * GET /api/Classes/{id}
-   * Get a specific class by ID
-   * @param id - Class ID (UUID)
-   * @returns ResponseResult with ClassType
-   */
   async getClassById(id: string): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.get<any>(`/api/Classes/${id}`)
+    const response = await apiClient.get<any>(`/Classes/${id}`)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -167,17 +116,10 @@ class ClassService {
     }
   }
 
-  /**
-   * POST /api/Classes
-   * Create a new training class
-   * @param data - Class creation data
-   * @returns ResponseResult with created ClassType
-   */
   async createClass(data: CreateClassRequest): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.post('/api/Classes', data)
+    const response = await apiClient.post('/Classes', data)
     const apiResponse = response.data
 
-    // Map API response structure (isSuccess) to service response structure (success)
     if (!apiResponse.isSuccess) {
       return {
         success: false,
@@ -192,18 +134,10 @@ class ClassService {
     }
   }
 
-  /**
-   * PUT /api/Classes/{id}
-   * Update an existing training class
-   * @param id - Class ID (UUID)
-   * @param data - Class update data
-   * @returns ResponseResult with updated ClassType
-   */
   async updateClass(id: string, data: UpdateClassRequest): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.put<any>(`/api/Classes/${id}`, data)
+    const response = await apiClient.put<any>(`/Classes/${id}`, data)
     const apiResponse = response.data
 
-    // Map API response structure (isSuccess) to service response structure (success)
     if (!apiResponse.isSuccess) {
       return {
         success: false,
@@ -220,17 +154,10 @@ class ClassService {
     }
   }
 
-  /**
-   * DELETE /api/Classes/{id}
-   * Delete a training class
-   * @param id - Class ID (UUID)
-   * @returns ResponseResult
-   */
   async deleteClass(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/api/Classes/${id}`)
+    const response = await apiClient.delete<any>(`/Classes/${id}`)
     const apiResponse = response.data
 
-    // Map API response structure (isSuccess) to service response structure (success)
     if (!apiResponse.isSuccess) {
       return {
         success: false,
@@ -244,17 +171,10 @@ class ClassService {
     }
   }
 
-  /**
-   * POST /api/Classes/{id}/restore
-   * Restore an inactive training class
-   * @param id - Class ID (UUID)
-   * @returns ResponseResult with restored ClassType
-   */
   async restoreClass(id: string): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.post<any>(`/api/Classes/${id}/restore`)
+    const response = await apiClient.post<any>(`/Classes/${id}/restore`)
     const apiResponse = response.data
 
-    // Map API response structure (isSuccess) to service response structure (success)
     if (!apiResponse.isSuccess) {
       return {
         success: false,
@@ -271,29 +191,76 @@ class ClassService {
     }
   }
 
-  /**
-   * GET /api/Classes/{classId}/schedules
-   * Get schedules for a specific class
-   * @param classId - Class ID (UUID)
-   * @returns ResponseResult with an array of schedules
-   */
   async getClassSchedules(classId: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get(`/api/Classes/${classId}/schedules`)
+    const response = await apiClient.get<any>(`/Classes/${classId}/schedules`)
+    const apiResponse = response.data
 
-    return response.data
+    if (!apiResponse.isSuccess) {
+      return { success: false, data: [], message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data || [] }
   }
 
-  /**
-   * POST /api/Classes/{classId}/schedules
-   * Create schedules for a class in bulk
-   * @param classId - Class ID (UUID)
-   * @param schedules - Bulk schedule creation data
-   * @returns ResponseResult with created schedules
-   */
-  async createClassSchedules(classId: string, schedules: BulkCreateScheduleRequest): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.post(`/api/Classes/${classId}/schedules`, schedules)
+  async createClassSchedules(classId: string, data: BulkCreateScheduleRequest): Promise<ResponseResult<any[]>> {
+    const response = await apiClient.post<any>(`/Classes/${classId}/schedules`, data)
+    const apiResponse = response.data
 
-    return response.data
+    if (!apiResponse.isSuccess) {
+      return { success: false, data: [], message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data || [], message: apiResponse.message }
+  }
+
+  async getClassStudents(classId: string): Promise<ResponseResult<any[]>> {
+    const response = await apiClient.get<any>(`/Classes/${classId}/students`)
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, data: [], message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data || [] }
+  }
+
+  async getClassAttendance(
+    classId: string,
+    params?: { fromDate?: string; toDate?: string }
+  ): Promise<ResponseResult<any[]>> {
+    const response = await apiClient.get<any>(`/Classes/${classId}/attendance`, { params })
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, data: [], message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data || [] }
+  }
+
+  async getClassPayments(classId: string): Promise<ResponseResult<any[]>> {
+    const response = await apiClient.get<any>(`/Classes/${classId}/payments`)
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, data: [], message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data || [] }
+  }
+
+  async duplicateClass(
+    classId: string,
+    data: { newCode: string; newName: string; copySchedules?: boolean; copyInstructors?: boolean }
+  ): Promise<ResponseResult<ClassType>> {
+    const response = await apiClient.post<any>(`/Classes/${classId}/duplicate`, data)
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 }
 

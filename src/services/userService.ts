@@ -85,7 +85,7 @@ class UserService {
    * @returns ResponseResult with an array of UsersType
    */
   async getUsers(params?: GetUsersParams): Promise<ResponseResult<UsersType[]>> {
-    const response = await apiClient.get<any>('/api/Users', { params })
+    const response = await apiClient.get<any>('/Users', { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -138,7 +138,7 @@ class UserService {
    * @returns ResponseResult with created UsersType
    */
   async createUser(data: CreateUserRequest): Promise<ResponseResult<UsersType>> {
-    const response = await apiClient.post<any>('/api/Users', data)
+    const response = await apiClient.post<any>('/Users', data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -163,7 +163,7 @@ class UserService {
    */
   async getCoaches(): Promise<ResponseResult<UsersType[]>> {
     try {
-      const response = await apiClient.get<any>('/api/Users', {
+      const response = await apiClient.get<any>('/Users', {
         params: {
           Role: 'Coach',
           IsActive: true
@@ -215,7 +215,7 @@ class UserService {
    * Update a user
    */
   async updateUser(id: string, data: UpdateUserRequest): Promise<ResponseResult<UsersType>> {
-    const response = await apiClient.put<any>(`/api/Users/${id}`, data)
+    const response = await apiClient.put<any>(`/Users/${id}`, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

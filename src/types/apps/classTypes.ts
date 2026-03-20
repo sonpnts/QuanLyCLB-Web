@@ -3,15 +3,13 @@ import type { ThemeColor } from '@core/types'
 
 export type ClassType = {
   id: string
+  code: string
   name: string
   description?: string
-  startDate: string
-  endDate: string
   maxStudents: number
   currentStudents?: number
   instructorId?: string
   instructorName?: string
-  code?: string
   isActive: boolean
   createdDate?: string
   createdBy?: string

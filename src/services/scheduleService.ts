@@ -2,29 +2,19 @@ import { apiClient } from '@/utils/apiClient'
 import type { BranchType } from './branchService'
 import type { ClassInfo } from '@/services/classService'
 
+// Query parameters for GET /api/Schedules - Theo API Documentation
 export interface GetSchedulesParams {
   ClassId?: string
   BranchId?: string
-  DayOfWeek?: number
-  StartTimeFrom?: string
-  StartTimeTo?: string
-  EndTimeFrom?: string
-  EndTimeTo?: string
-  CreatedDate?: string
-  CreatedBy?: string
-  UpdatedDate?: string
-  UpdatedBy?: string
+  DayOfWeek?: number // 0=Sunday, 1=Monday...
   IsActive?: boolean
-  Keyword?: string
-  PageSize?: number
-  PageNumber?: number
 }
 
 export interface CreateClassScheduleRequest {
   classId: string
-  dayOfWeek: number // 0-6 (Sunday-Saturday)
-  startTime: string // time format
-  endTime: string // time format
+  dayOfWeek: number
+  startTime: string
+  endTime: string
   branchId: string
 }
 
@@ -55,8 +45,8 @@ export interface ApiScheduleResponse {
   updatedAt?: string | null
   createdByUserId?: string | null
   updatedByUserId?: string | null
-  branch?: BranchType // Added for mapping
-  class?: ClassInfo // Added for mapping
+  branch?: BranchType
+  class?: ClassInfo
 }
 
 export interface ScheduleType {
@@ -67,7 +57,7 @@ export interface ScheduleType {
   startTime: string
   endTime: string
   branchId: string
-  branch: BranchType // Thêm dòng này
+  branch: BranchType
   isActive: boolean
   createdDate?: string
   createdBy?: string
@@ -102,7 +92,7 @@ class ScheduleService {
   }
 
   async getSchedules(params?: GetSchedulesParams): Promise<ResponseResult<ScheduleType[]>> {
-    const response = await apiClient.get<any>('/api/Schedules', { params })
+    const response = await apiClient.get<any>('/Schedules', { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -123,7 +113,7 @@ class ScheduleService {
   }
 
   async getScheduleById(id: string): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.get<any>(`/api/Schedules/${id}`)
+    const response = await apiClient.get<any>(`/Schedules/${id}`)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -142,7 +132,7 @@ class ScheduleService {
   }
 
   async createSchedule(data: CreateClassScheduleRequest): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.post<any>('/api/Schedules', data)
+    const response = await apiClient.post<any>('/Schedules', data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -162,7 +152,7 @@ class ScheduleService {
   }
 
   async updateSchedule(id: string, data: UpdateClassScheduleRequest): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.put<any>(`/api/Schedules/${id}`, data)
+    const response = await apiClient.put<any>(`/Schedules/${id}`, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -182,7 +172,7 @@ class ScheduleService {
   }
 
   async deleteSchedule(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/api/Schedules/${id}`)
+    const response = await apiClient.delete<any>(`/Schedules/${id}`)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -199,7 +189,7 @@ class ScheduleService {
   }
 
   async restoreSchedule(id: string): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.post<any>(`/api/Schedules/${id}/restore`)
+    const response = await apiClient.post<any>(`/Schedules/${id}/restore`)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -222,8 +212,7 @@ class ScheduleService {
     classId: string,
     data: BulkCreateScheduleRequest
   ): Promise<ResponseResult<ScheduleType[]>> {
-    console.log(data)
-    const response = await apiClient.post(`/api/Classes/${classId}/schedules`, data)
+    const response = await apiClient.post(`/Classes/${classId}/schedules`, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -234,7 +223,6 @@ class ScheduleService {
       }
     }
 
-    // Nếu API trả về danh sách lịch vừa tạo, map lại về ScheduleType (nếu muốn)
     const records: ApiScheduleResponse[] = Array.isArray(apiResponse.data)
       ? apiResponse.data
       : apiResponse.data?.records || []
@@ -246,6 +234,34 @@ class ScheduleService {
       data: schedules,
       message: apiResponse.message
     }
+  }
+
+  async getSchedulesByDate(date: string): Promise<ResponseResult<ScheduleType[]>> {
+    const response = await apiClient.get<any>('/Schedules/by-date', { params: { date } })
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, data: [], message: apiResponse.message }
+    }
+
+    const records: ApiScheduleResponse[] = apiResponse.data || []
+    const schedules = records.map(this.mapApiScheduleToScheduleType)
+
+    return { success: true, data: schedules }
+  }
+
+  async getSchedulesByInstructor(instructorId: string): Promise<ResponseResult<ScheduleType[]>> {
+    const response = await apiClient.get<any>(`/Schedules/by-instructor/${instructorId}`)
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, data: [], message: apiResponse.message }
+    }
+
+    const records: ApiScheduleResponse[] = apiResponse.data || []
+    const schedules = records.map(this.mapApiScheduleToScheduleType)
+
+    return { success: true, data: schedules }
   }
 }
 

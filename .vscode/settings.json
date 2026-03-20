@@ -49,5 +49,6 @@
     "customizer",
     "iconify",
     "tanstack"
-  ]
+  ],
+  "typescript.autoClosingTags": false
 }

@@ -178,9 +178,9 @@ const LoginAdmin = ({ mode }: { mode: Mode }) => {
 
   const handleGoogleScriptError = () => {
     setErrorState(prev =>
-        prev ?? {
-          message: ['Không thể tải Google login. Vui lòng làm mới trang.']
-        }
+      prev ?? {
+        message: ['Không thể tải Google login. Vui lòng làm mới trang.']
+      }
     )
   }
 
@@ -238,7 +238,7 @@ const LoginAdmin = ({ mode }: { mode: Mode }) => {
 
           <form
             noValidate
-            action={() => {}}
+            action={() => { }}
             autoComplete='off'
             onSubmit={handleSubmit(onSubmit)}
             className='flex flex-col gap-5'
@@ -258,7 +258,7 @@ const LoginAdmin = ({ mode }: { mode: Mode }) => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
                   }}
-                  {...((errors.email ) && {
+                  {...((errors.email) && {
                     error: true,
                     helperText: errors?.email?.message || errorState?.message[0]
                   })}
@@ -323,7 +323,7 @@ const LoginAdmin = ({ mode }: { mode: Mode }) => {
             className='self-center text-textPrimary'
             startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
             sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
-            disabled={isSubmitting||!isGoogleReady}
+            disabled={isSubmitting || !isGoogleReady}
             onClick={handleGoogleLogin}
           >
             Đăng nhập với Google

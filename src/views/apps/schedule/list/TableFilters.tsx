@@ -1,13 +1,12 @@
 'use client'
 
 // React Imports
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, memo } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Grid from '@mui/material/Grid2'
-import TextField from '@mui/material/TextField'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
@@ -25,83 +24,62 @@ import classService from '@/services/classService'
 import branchService from '@/services/branchService'
 
 // Utils Imports
-import { DAY_OF_WEEK_OPTIONS, STATUS_OPTIONS } from '@/utils/constants'
+import { DAY_OF_WEEK_OPTIONS } from '@/utils/constants'
 
 type Props = {
   onFilterChange: (params: GetSchedulesParams) => void
 }
 
-const TableFilters = ({ onFilterChange }: Props) => {
-  // States
-  const [isActive, setIsActive] = useState<string>('')
-  const [keyword, setKeyword] = useState<string>('')
+const TableFilters = memo(({ onFilterChange }: Props) => {
   const [classId, setClassId] = useState<string>('')
   const [branchId, setBranchId] = useState<string>('')
   const [dayOfWeek, setDayOfWeek] = useState<string>('')
   const [classes, setClasses] = useState<ClassType[]>([])
   const [branches, setBranches] = useState<BranchType[]>([])
 
-  // Load classes and branches
+  const isFirstRender = useRef(true)
+  const dataLoaded = useRef(false)
+
+  // Load classes and branches - chỉ 1 lần
   useEffect(() => {
-    const loadClasses = async () => {
-      try {
-        const response = await classService.getClasses({})
+    if (dataLoaded.current) return
 
-        if (response.success && response.data) {
-          setClasses(response.data)
+    const loadData = async () => {
+      try {
+        dataLoaded.current = true
+        const [classRes, branchRes] = await Promise.all([classService.getClasses({}), branchService.getBranches({})])
+
+        if (classRes.success && classRes.data) {
+          setClasses(classRes.data)
+        }
+
+        if (branchRes.success && branchRes.data) {
+          setBranches(branchRes.data)
         }
       } catch (error) {
-        console.error('Error loading classes:', error)
+        console.error('Error loading data:', error)
+        dataLoaded.current = false
       }
     }
 
-    const loadBranches = async () => {
-      try {
-        const response = await branchService.getBranches({})
-
-        if (response.success && response.data) {
-          setBranches(response.data)
-        }
-      } catch (error) {
-        console.error('Error loading branches:', error)
-      }
-    }
-
-    loadClasses()
-    loadBranches()
+    loadData()
   }, [])
 
   // Handle filter change
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+
     const params: GetSchedulesParams = {}
-
-    if (isActive !== '') {
-      params.IsActive = isActive === 'true'
-    }
-
-    if (keyword) {
-      params.Keyword = keyword
-    }
-
-    if (classId) {
-      params.ClassId = classId
-    }
-
-    if (branchId) {
-      params.BranchId = branchId
-    }
-
-    if (dayOfWeek) {
-      params.DayOfWeek = parseInt(dayOfWeek)
-    }
-
+    if (classId) params.ClassId = classId
+    if (branchId) params.BranchId = branchId
+    if (dayOfWeek !== '') params.DayOfWeek = parseInt(dayOfWeek)
     onFilterChange(params)
-  }, [isActive, keyword, classId, branchId, dayOfWeek, onFilterChange])
+  }, [classId, branchId, dayOfWeek, onFilterChange])
 
-  // Handle reset
   const handleReset = () => {
-    setIsActive('')
-    setKeyword('')
     setClassId('')
     setBranchId('')
     setDayOfWeek('')
@@ -110,29 +88,7 @@ const TableFilters = ({ onFilterChange }: Props) => {
   return (
     <Card>
       <CardContent>
-        <Grid container spacing={4}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <FormControl fullWidth>
-              <InputLabel>Trạng thái</InputLabel>
-              <Select value={isActive} label='Trạng thái' onChange={e => setIsActive(e.target.value)}>
-                <MenuItem value=''>Tất cả</MenuItem>
-                {STATUS_OPTIONS.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <TextField
-              fullWidth
-              label='Từ khóa'
-              value={keyword}
-              onChange={e => setKeyword(e.target.value)}
-              placeholder='Tìm kiếm...'
-            />
-          </Grid>
+        <Grid container spacing={4} alignItems='center'>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <FormControl fullWidth>
               <InputLabel>Lớp học</InputLabel>
@@ -172,9 +128,9 @@ const TableFilters = ({ onFilterChange }: Props) => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Box className='flex gap-2'>
-              <Button variant='outlined' onClick={handleReset}>
+              <Button variant='outlined' onClick={handleReset} fullWidth>
                 Đặt lại bộ lọc
               </Button>
             </Box>
@@ -183,6 +139,8 @@ const TableFilters = ({ onFilterChange }: Props) => {
       </CardContent>
     </Card>
   )
-}
+})
+
+TableFilters.displayName = 'ScheduleTableFilters'
 
 export default TableFilters

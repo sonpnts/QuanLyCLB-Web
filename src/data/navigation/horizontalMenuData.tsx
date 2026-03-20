@@ -28,8 +28,18 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
       },
       {
         label: 'Học viên',
-        icon: 'ri-user-line',
+        icon: 'ri-graduation-cap-line',
+        href: '/apps/student/list'
+      },
+      {
+        label: 'Người dùng',
+        icon: 'ri-user-settings-line',
         href: '/apps/user/list'
+      },
+      {
+        label: 'Chuyển lớp',
+        icon: 'ri-arrow-left-right-line',
+        href: '/apps/class-transfer/list'
       }
     ]
   },
@@ -56,6 +66,11 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
         label: 'Phiếu điểm danh',
         icon: 'ri-file-list-3-line',
         href: '/apps/attendance/tickets'
+      },
+      {
+        label: 'Xin nghỉ phép',
+        icon: 'ri-calendar-close-line',
+        href: '/apps/leave-request/list'
       }
     ]
   },
@@ -63,6 +78,11 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
     label: 'Tài chính',
     icon: 'ri-money-dollar-circle-line',
     children: [
+      {
+        label: 'Thanh toán',
+        icon: 'ri-wallet-line',
+        href: '/apps/payment/list'
+      },
       {
         label: 'Bảng lương',
         icon: 'ri-money-dollar-circle-line',
@@ -72,6 +92,22 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
         label: 'Hóa đơn',
         icon: 'ri-file-paper-2-line',
         href: '/apps/invoice/list'
+      }
+    ]
+  },
+  {
+    label: 'Học viện',
+    icon: 'ri-graduation-cap-line',
+    children: [
+      {
+        label: 'Cấp đai',
+        icon: 'ri-award-line',
+        href: '/apps/belt-level/list'
+      },
+      {
+        label: 'Thi cấp đai',
+        icon: 'ri-medal-line',
+        href: '/apps/belt-exam/list'
       }
     ]
   },
@@ -88,6 +124,11 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
         label: 'Quyền hạn',
         icon: 'ri-lock-line',
         href: '/apps/permissions'
+      },
+      {
+        label: 'Nhật ký hệ thống',
+        icon: 'ri-file-history-line',
+        href: '/apps/audit-log/list'
       }
     ]
   },

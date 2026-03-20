@@ -1,4 +1,3 @@
-
 import type { ResponseResult } from '@/types/common'
 
 import { apiClient } from '@/utils/apiClient'
@@ -29,7 +28,7 @@ export interface GeneratePayrollRequest {
 
 class PayrollService {
   async getPayrolls(params?: GetPayrollParams): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>('/api/Payroll', { params })
+    const response = await apiClient.get<any>('/Payroll', { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -84,7 +83,7 @@ class PayrollService {
   }
 
   async generatePayroll(data: GeneratePayrollRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>('/api/Payroll/generate', data)
+    const response = await apiClient.post<any>('/Payroll/generate', data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -103,8 +102,3 @@ class PayrollService {
 }
 
 export default new PayrollService()
-
-
-
-
-

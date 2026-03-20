@@ -36,7 +36,7 @@ const Details = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) => {
     <div className='flex flex-col gap-6'>
       <TextField fullWidth label='Application Name' placeholder={`${themeConfig.templateName}`} />
       <div className='flex flex-col gap-4'>
-        <Typography variant='h5'>Category</Typography>
+        <Typography variant='h5'>Danh mục</Typography>
         <div onClick={() => setValue('home')} className='flex items-center justify-between cursor-pointer gap-4'>
           <div className='flex items-center gap-4'>
             <CustomAvatar variant='rounded' skin='light' color='info' size={46}>

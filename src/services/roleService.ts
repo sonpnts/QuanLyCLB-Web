@@ -65,7 +65,7 @@ class RoleService {
    * Get a list of roles with optional filtering and pagination
    */
   async getRoles(params?: GetRolesParams): Promise<ResponseResult<RoleType[]>> {
-    const response = await apiClient.get<any>('/api/Roles', { params })
+    const response = await apiClient.get<any>('/Roles', { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -90,7 +90,7 @@ class RoleService {
    * Create a new role
    */
   async createRole(data: CreateRoleRequest): Promise<ResponseResult<RoleType>> {
-    const response = await apiClient.post('/api/Roles', data)
+    const response = await apiClient.post('/Roles', data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

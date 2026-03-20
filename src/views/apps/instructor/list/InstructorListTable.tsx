@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -50,6 +50,12 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
   // Notification Hook
   const { showNotification } = useNotification()
 
+  // Refs để tránh duplicate calls
+  const showNotificationRef = useRef(showNotification)
+  showNotificationRef.current = showNotification
+  const dataLoadedRef = useRef(false)
+  const currentFilterRef = useRef<string>('')
+
   // Handle filter change
   const handleFilterChange = useCallback((params: GetInstructorsParams) => {
     setFilterParams(params)
@@ -57,29 +63,38 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
 
   // Load instructors when filter params change
   useEffect(() => {
+    const filterKey = JSON.stringify(filterParams)
+
+    if (dataLoadedRef.current && currentFilterRef.current === filterKey) {
+      return
+    }
+
     const loadInstructors = async () => {
+      if (tableData && tableData.length > 0) return
+
       try {
         setLoading(true)
+        currentFilterRef.current = filterKey
+        dataLoadedRef.current = true
+
         const response = await instructorService.getInstructors(filterParams)
 
         if (response.success && response.data) {
           setData(response.data)
           setFilteredData(response.data)
         } else {
-          showNotification(response.message || 'Không thể tải danh sách huấn luyện viên.', 'error')
+          showNotificationRef.current(response.message || 'Không thể tải danh sách huấn luyện viên.', 'error')
         }
       } catch (error) {
         console.error('Error loading instructors:', error)
-        showNotification('Đã có lỗi khi tải huấn luyện viên.', 'error')
+        showNotificationRef.current('Đã có lỗi khi tải huấn luyện viên.', 'error')
       } finally {
         setLoading(false)
       }
     }
 
-    if (!tableData || tableData.length === 0) {
-      loadInstructors()
-    }
-  }, [filterParams, tableData, showNotification])
+    loadInstructors()
+  }, [filterParams, tableData])
 
   // Update filtered data when data changes
   useEffect(() => {
@@ -87,52 +102,46 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
   }, [data])
 
   // Handle delete instructor
-  const handleDelete = useCallback(
-    async (id: string) => {
-      try {
-        setLoading(true)
-        const response = await instructorService.deleteInstructor(id)
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      setLoading(true)
+      const response = await instructorService.deleteInstructor(id)
 
-        if (response.success) {
-          setData(prevData => prevData.filter(instructor => instructor.id !== id))
-          setFilteredData(prevData => prevData.filter(instructor => instructor.id !== id))
-          showNotification(response.message || 'Xóa huấn luyện viên thành công.', 'success')
-        } else {
-          showNotification(response.message || 'Không thể xóa huấn luyện viên.', 'error')
-        }
-      } catch (error) {
-        console.error('Error deleting instructor:', error)
-        showNotification('Đã có lỗi khi xóa huấn luyện viên.', 'error')
-      } finally {
-        setLoading(false)
+      if (response.success) {
+        setData(prevData => prevData.filter(instructor => instructor.id !== id))
+        setFilteredData(prevData => prevData.filter(instructor => instructor.id !== id))
+        showNotificationRef.current(response.message || 'Xóa huấn luyện viên thành công.', 'success')
+      } else {
+        showNotificationRef.current(response.message || 'Không thể xóa huấn luyện viên.', 'error')
       }
-    },
-    [showNotification]
-  )
+    } catch (error) {
+      console.error('Error deleting instructor:', error)
+      showNotificationRef.current('Đã có lỗi khi xóa huấn luyện viên.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   // Handle restore instructor
-  const handleRestore = useCallback(
-    async (id: string) => {
-      try {
-        setLoading(true)
-        const response = await instructorService.restoreInstructor(id)
+  const handleRestore = useCallback(async (id: string) => {
+    try {
+      setLoading(true)
+      const response = await instructorService.restoreInstructor(id)
 
-        if (response.success && response.data) {
-          setData(prevData => prevData.map(instructor => (instructor.id === id ? response.data! : instructor)))
-          setFilteredData(prevData => prevData.map(instructor => (instructor.id === id ? response.data! : instructor)))
-          showNotification(response.message || 'Khôi phục huấn luyện viên thành công.', 'success')
-        } else {
-          showNotification(response.message || 'Không thể khôi phục huấn luyện viên.', 'error')
-        }
-      } catch (error) {
-        console.error('Error restoring instructor:', error)
-        showNotification('Đã có lỗi khi khôi phục huấn luyện viên.', 'error')
-      } finally {
-        setLoading(false)
+      if (response.success && response.data) {
+        setData(prevData => prevData.map(instructor => (instructor.id === id ? response.data! : instructor)))
+        setFilteredData(prevData => prevData.map(instructor => (instructor.id === id ? response.data! : instructor)))
+        showNotificationRef.current(response.message || 'Khôi phục huấn luyện viên thành công.', 'success')
+      } else {
+        showNotificationRef.current(response.message || 'Không thể khôi phục huấn luyện viên.', 'error')
       }
-    },
-    [showNotification]
-  )
+    } catch (error) {
+      console.error('Error restoring instructor:', error)
+      showNotificationRef.current('Đã có lỗi khi khôi phục huấn luyện viên.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   // Columns
   const columns = useMemo(

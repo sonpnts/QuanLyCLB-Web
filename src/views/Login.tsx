@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // Next Imports
 // import Link from 'next/link'
@@ -46,7 +46,7 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { useAuth } from '@/contexts/authContext'
-import { getGoogleIdToken, isGoogleClientAvailable } from '@/utils/googleIdentity'
+import { getGoogleAuthCode } from '@/utils/googleIdentity'
 
 type ErrorType = {
   message: string[]
@@ -68,7 +68,11 @@ const Login = ({ mode }: { mode: Mode }) => {
   // const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isGoogleReady, setIsGoogleReady] = useState(() => isGoogleClientAvailable())
+
+  const [isGoogleReady, setIsGoogleReady] = useState(() => {
+    // Check if Google script is already loaded
+    return typeof window !== 'undefined' && typeof (window as any).google !== 'undefined'
+  })
 
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-dark.png'
@@ -106,28 +110,45 @@ const Login = ({ mode }: { mode: Mode }) => {
     borderedDarkIllustration
   )
 
-  // const handleClickShowPassword = () => setIsPasswordShown(show => !show)
-
+  // Check if Google script is already loaded on mount
   useEffect(() => {
-    if (isGoogleReady) {
+    const checkGoogleReady = () => {
+      if (typeof window !== 'undefined' && typeof (window as any).google !== 'undefined') {
+        setIsGoogleReady(true)
+
+        return true
+      }
+
+      return false
+    }
+
+    // Check immediately
+    if (checkGoogleReady()) {
       return
     }
 
-    const interval = window.setInterval(() => {
-      if (isGoogleClientAvailable()) {
-        setIsGoogleReady(true)
-        window.clearInterval(interval)
+    // If not ready, check periodically for up to 5 seconds
+    const interval = setInterval(() => {
+      if (checkGoogleReady()) {
+        clearInterval(interval)
       }
-    }, 500)
+    }, 100)
+
+    const timeout = setTimeout(() => {
+      clearInterval(interval)
+    }, 5000)
 
     return () => {
-      window.clearInterval(interval)
+      clearInterval(interval)
+      clearTimeout(timeout)
     }
-  }, [isGoogleReady])
+  }, [])
+
+  // const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const handleLoginResult = (result: Awaited<ReturnType<typeof login>>) => {
     if (result.success) {
-      const redirectURL = searchParams.get('redirectTo') ?? '/'
+      const redirectURL = searchParams.get('redirectTo') ?? '/check-in'
 
       router.replace(redirectURL)
 
@@ -160,8 +181,8 @@ const Login = ({ mode }: { mode: Mode }) => {
     setErrorState(null)
 
     try {
-      const idToken = await getGoogleIdToken()
-      const result = await loginWithGoogle(idToken)
+      const authorizationCode = await getGoogleAuthCode()
+      const result = await loginWithGoogle(authorizationCode)
 
       handleLoginResult(result)
     } catch (error) {
@@ -174,13 +195,12 @@ const Login = ({ mode }: { mode: Mode }) => {
   }
 
   const handleGoogleScriptLoad = () => {
-    if (isGoogleClientAvailable()) {
-      setIsGoogleReady(true)
-    }
+    setIsGoogleReady(true)
   }
 
   const handleGoogleScriptError = () => {
-    setErrorState(prev =>
+    setErrorState(
+      prev =>
         prev ?? {
           message: ['Không thể tải Google login. Vui lòng làm mới trang.']
         }
@@ -232,7 +252,7 @@ const Login = ({ mode }: { mode: Mode }) => {
           {/*  </Typography>*/}
           {/*</Alert>*/}
           {errorState && (
-            <Alert severity="error" className="mb-4">
+            <Alert severity='error' className='mb-4'>
               {errorState.message.map((msg, index) => (
                 <div key={index}>{msg}</div>
               ))}
@@ -327,7 +347,7 @@ const Login = ({ mode }: { mode: Mode }) => {
             className='self-center text-textPrimary'
             startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
             sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
-            disabled={isSubmitting||!isGoogleReady}
+            disabled={isSubmitting || !isGoogleReady}
             onClick={handleGoogleLogin}
           >
             Đăng nhập với Google

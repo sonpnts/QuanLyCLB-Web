@@ -34,8 +34,18 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
       },
       {
         label: 'Học viên',
-        icon: 'ri-user-line',
+        icon: 'ri-graduation-cap-line',
+        href: '/apps/student/list'
+      },
+      {
+        label: 'Người dùng',
+        icon: 'ri-user-settings-line',
         href: '/apps/user/list'
+      },
+      {
+        label: 'Chuyển lớp',
+        icon: 'ri-arrow-left-right-line',
+        href: '/apps/class-transfer/list'
       }
     ]
   },
@@ -62,6 +72,11 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
         label: 'Phiếu điểm danh',
         icon: 'ri-file-list-3-line',
         href: '/apps/attendance/tickets'
+      },
+      {
+        label: 'Xin nghỉ phép',
+        icon: 'ri-calendar-close-line',
+        href: '/apps/leave-request/list'
       }
     ]
   },
@@ -69,6 +84,11 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
     label: 'Tài chính & Lương',
     isSection: true,
     children: [
+      {
+        label: 'Thanh toán',
+        icon: 'ri-wallet-line',
+        href: '/apps/payment/list'
+      },
       {
         label: 'Bảng lương',
         icon: 'ri-money-dollar-circle-line',
@@ -94,6 +114,11 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
         label: 'Quyền hạn',
         icon: 'ri-lock-line',
         href: '/apps/permissions'
+      },
+      {
+        label: 'Nhật ký hệ thống',
+        icon: 'ri-file-history-line',
+        href: '/apps/audit-log/list'
       }
     ]
   },
@@ -110,6 +135,16 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
         label: 'Khóa học',
         icon: 'ri-book-open-line',
         href: '/apps/academy/my-courses'
+      },
+      {
+        label: 'Cấp đai',
+        icon: 'ri-award-line',
+        href: '/apps/belt-level/list'
+      },
+      {
+        label: 'Thi cấp đai',
+        icon: 'ri-medal-line',
+        href: '/apps/belt-exam/list'
       }
     ]
   },

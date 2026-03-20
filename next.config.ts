@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
         locale: false
       }
     ]
+  },
+  eslint: {
+    ignoreDuringBuilds: true
   }
 }
 

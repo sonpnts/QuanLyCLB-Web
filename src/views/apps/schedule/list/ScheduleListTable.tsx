@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -56,10 +56,20 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
   // Notification Hook
   const { showNotification } = useNotification()
 
-  // Load branches
+  // Refs để tránh duplicate calls
+  const showNotificationRef = useRef(showNotification)
+  showNotificationRef.current = showNotification
+  const dataLoadedRef = useRef(false)
+  const currentFilterRef = useRef<string>('')
+  const branchesLoadedRef = useRef(false)
+
+  // Load branches - chỉ 1 lần
   useEffect(() => {
+    if (branchesLoadedRef.current) return
+
     const loadBranches = async () => {
       try {
+        branchesLoadedRef.current = true
         const response = await branchService.getBranches({})
 
         if (response.success && response.data) {
@@ -67,6 +77,7 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
         }
       } catch (error) {
         console.error('Error loading branches:', error)
+        branchesLoadedRef.current = false
       }
     }
 
@@ -80,29 +91,38 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
 
   // Load schedules when filter params change
   useEffect(() => {
+    const filterKey = JSON.stringify(filterParams)
+
+    if (dataLoadedRef.current && currentFilterRef.current === filterKey) {
+      return
+    }
+
     const loadSchedules = async () => {
+      if (tableData && tableData.length > 0) return
+
       try {
         setLoading(true)
+        currentFilterRef.current = filterKey
+        dataLoadedRef.current = true
+
         const response = await scheduleService.getSchedules(filterParams)
 
         if (response.success && response.data) {
           setData(response.data)
           setFilteredData(response.data)
         } else {
-          showNotification(response.message || Messages.schedule.error.load, 'error')
+          showNotificationRef.current(response.message || Messages.schedule.error.load, 'error')
         }
       } catch (error) {
         console.error('Error loading schedules:', error)
-        showNotification(Messages.schedule.error.loadGeneric, 'error')
+        showNotificationRef.current(Messages.schedule.error.loadGeneric, 'error')
       } finally {
         setLoading(false)
       }
     }
 
-    if (!tableData || tableData.length === 0) {
-      loadSchedules()
-    }
-  }, [filterParams, tableData, showNotification])
+    loadSchedules()
+  }, [filterParams, tableData])
 
   // Update filtered data when data changes
   useEffect(() => {

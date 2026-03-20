@@ -1,3 +1,6 @@
+// React Imports
+import { useEffect, useState } from 'react'
+
 // MUI Imports
 import { useTheme } from '@mui/material/styles'
 
@@ -27,6 +30,8 @@ import verticalMenuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 
 // Menu Data Imports
 import menuData from '@/data/navigation/horizontalMenuData'
+import menuService from '@/services/menuService'
+import type { HorizontalMenuDataType } from '@/types/menuTypes'
 
 type RenderExpandIconProps = {
   level?: number
@@ -54,6 +59,31 @@ const HorizontalMenu = () => {
   const verticalNavOptions = useVerticalNav()
   const theme = useTheme()
   const { settings } = useSettings()
+
+  // State
+  const [dynamicMenu, setDynamicMenu] = useState<HorizontalMenuDataType[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const response = await menuService.getMenuByRole()
+        if (response.success && response.data) {
+          // Assuming horizontal menu uses the same structure or requires mapping. For now casting.
+          setDynamicMenu(response.data as unknown as HorizontalMenuDataType[])
+        } else {
+          setDynamicMenu(menuData())
+        }
+      } catch (error) {
+        console.error('Failed to fetch horizontal menu:', error)
+        setDynamicMenu(menuData())
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchMenu()
+  }, [])
 
   // Vars
   const { skin } = settings
@@ -87,7 +117,7 @@ const HorizontalMenu = () => {
           menuSectionStyles: verticalMenuSectionStyles(verticalNavOptions, theme)
         }}
       >
-        <GenerateHorizontalMenu menuData={menuData()} />
+        {!isLoading && <GenerateHorizontalMenu menuData={dynamicMenu} />}
       </Menu>
     </HorizontalNav>
   )

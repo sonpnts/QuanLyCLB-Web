@@ -19,7 +19,7 @@ import type { FilterFn } from '@tanstack/react-table'
 import type { UsersType } from '@/types/apps/userTypes'
 
 // Type Imports
-import type {  GetUsersParams } from '@/services/userService'
+import type { GetUsersParams } from '@/services/userService'
 import type { RoleType } from '@/services/roleService'
 
 // Component Imports
@@ -40,10 +40,10 @@ import CustomAvatar from '@core/components/mui/Avatar'
 // Column Helper
 const columnHelper = createColumnHelper<UsersType>()
 
-const UserManagementTable = ({ tableData }: { tableData?: UsersType[] }) => {
+const UserManagementTable = () => {
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
-  const [data, setData] = useState<UsersType[]>(tableData || [])
+  const [data, setData] = useState<UsersType[]>([])
   const [filteredData, setFilteredData] = useState<UsersType[]>([])
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_loading, setLoading] = useState(false)
@@ -97,15 +97,13 @@ const UserManagementTable = ({ tableData }: { tableData?: UsersType[] }) => {
       }
     }
 
-    if (!tableData || tableData.length === 0) {
-      loadUsers()
-    }
+    loadUsers()
 
     // Cleanup function to cancel request if component unmounts or params change
     return () => {
       isCancelled = true
     }
-  }, [filterParams, tableData, showNotification])
+  }, [filterParams, showNotification])
 
   // Load roles for filter
   useEffect(() => {
@@ -197,7 +195,10 @@ const UserManagementTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'Họ tên',
         cell: ({ row }) => (
           <Box className='flex items-center gap-3'>
-            <CustomAvatar skin='light' color='primary' src={row.original.avatarUrl ?? "public/images/avatars/1.png"}
+            <CustomAvatar
+              skin='light'
+              color='primary'
+              src={row.original.avatarUrl ?? 'public/images/avatars/1.png'}
             ></CustomAvatar>
             <Box className='flex flex-col'>
               <Typography className='font-medium' color='text.primary'>
@@ -269,6 +270,7 @@ const UserManagementTable = ({ tableData }: { tableData?: UsersType[] }) => {
         )
       })
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, filteredData, showNotification, setData, setLoading, handleDelete, handleRestore]
   )
 

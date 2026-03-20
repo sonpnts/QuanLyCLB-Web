@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -50,6 +50,12 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
   // Notification Hook
   const { showNotification } = useNotification()
 
+  // Refs để tránh duplicate calls
+  const showNotificationRef = useRef(showNotification)
+  showNotificationRef.current = showNotification
+  const dataLoadedRef = useRef(false)
+  const currentFilterRef = useRef<string>('')
+
   // Handle filter change
   const handleFilterChange = useCallback((params: GetBranchesParams) => {
     setFilterParams(params)
@@ -57,29 +63,38 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
 
   // Load branches when filter params change
   useEffect(() => {
+    const filterKey = JSON.stringify(filterParams)
+
+    if (dataLoadedRef.current && currentFilterRef.current === filterKey) {
+      return
+    }
+
     const loadBranches = async () => {
+      if (tableData && tableData.length > 0) return
+
       try {
         setLoading(true)
+        currentFilterRef.current = filterKey
+        dataLoadedRef.current = true
+
         const response = await branchService.getBranches(filterParams)
 
         if (response.success && response.data) {
           setData(response.data)
           setFilteredData(response.data)
         } else {
-          showNotification(response.message || 'Không thể tải danh sách chi nhánh.', 'error')
+          showNotificationRef.current(response.message || 'Không thể tải danh sách chi nhánh.', 'error')
         }
       } catch (error) {
         console.error('Error loading branches:', error)
-        showNotification('Đã có lỗi khi tải chi nhánh.', 'error')
+        showNotificationRef.current('Đã có lỗi khi tải chi nhánh.', 'error')
       } finally {
         setLoading(false)
       }
     }
 
-    if (!tableData || tableData.length === 0) {
-      loadBranches()
-    }
-  }, [filterParams, tableData, showNotification])
+    loadBranches()
+  }, [filterParams, tableData])
 
   // Update filtered data when data changes
   useEffect(() => {

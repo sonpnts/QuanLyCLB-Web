@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -44,15 +44,17 @@ import type { ClassType } from '@/types/apps/classTypes'
 // Component Imports
 import TableFilters from './TableFilters'
 import AddClassDrawer from './AddClassDrawer'
+import EditClassDrawer from './EditClassDrawer'
 import AddClassScheduleDrawer from './AddClassScheduleDrawer'
 import ClassScheduleView from './ClassScheduleView'
+import AddStudentsToClassDrawer from './AddStudentsToClassDrawer'
 import OptionMenu from '@core/components/option-menu'
 
 // Util Imports
 
 // Service Imports
 import classService from '@/services/classService'
-import instructorService from '@/services/instructorService'
+import userService from '@/services/userService'
 import type { GetClassesParams } from '@/services/classService'
 
 // Context Imports
@@ -124,8 +126,10 @@ const columnHelper = createColumnHelper<ClassTypeWithAction>()
 const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   // States
   const [addClassOpen, setAddClassOpen] = useState(false)
+  const [editClassOpen, setEditClassOpen] = useState(false)
   const [addScheduleOpen, setAddScheduleOpen] = useState(false)
   const [viewScheduleOpen, setViewScheduleOpen] = useState(false)
+  const [addStudentsOpen, setAddStudentsOpen] = useState(false)
   const [selectedClass, setSelectedClass] = useState<ClassType | null>(null)
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<ClassType[]>(tableData || [])
@@ -133,10 +137,17 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const [, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetClassesParams>({})
-  const [instructors, setInstructors] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
 
   // Notification Hook
   const { showNotification } = useNotification()
+
+  // Refs để tránh duplicate calls
+  const showNotificationRef = useRef(showNotification)
+  showNotificationRef.current = showNotification
+  const dataLoadedRef = useRef(false)
+  const currentFilterRef = useRef<string>('')
+  const usersLoadedRef = useRef(false)
 
   // Handle filter change from TableFilters
   const handleFilterChange = useCallback((params: GetClassesParams) => {
@@ -145,9 +156,24 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
 
   // Load classes when filter params change
   useEffect(() => {
+    const filterKey = JSON.stringify(filterParams)
+
+    // Tránh load lại nếu filter không đổi
+    if (dataLoadedRef.current && currentFilterRef.current === filterKey) {
+      return
+    }
+
     const loadClasses = async () => {
+      // Only load if tableData is not provided or empty
+      if (tableData && tableData.length > 0) {
+        return
+      }
+
       try {
         setLoading(true)
+        currentFilterRef.current = filterKey
+        dataLoadedRef.current = true
+
         const response = await classService.getClasses(filterParams)
 
         if (response.success && response.data) {
@@ -155,42 +181,43 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
           setFilteredData(response.data)
         } else {
           console.error('Failed to load classes:', response.message)
-          showNotification(response.message || 'Không thể tải danh sách lớp học.', 'error')
+          showNotificationRef.current(response.message || 'Không thể tải danh sách lớp học.', 'error')
         }
       } catch (error) {
         console.error('Error loading classes:', error)
-        showNotification('Đã có lỗi khi tải lớp học.', 'error')
+        showNotificationRef.current('Đã có lỗi khi tải lớp học.', 'error')
       } finally {
         setLoading(false)
       }
     }
 
-    // Only load if tableData is not provided or empty
-    if (!tableData || tableData.length === 0) {
-      loadClasses()
-    }
-  }, [filterParams, tableData, showNotification])
+    loadClasses()
+  }, [filterParams, tableData])
 
   // Update filteredData when data changes
   useEffect(() => {
     setFilteredData(data)
   }, [data])
 
-  // Load instructors for display
+  // Load users for display (coaches/instructors) - chỉ load 1 lần
   useEffect(() => {
-    const loadInstructors = async () => {
+    if (usersLoadedRef.current) return
+
+    const loadUsers = async () => {
       try {
-        const response = await instructorService.getInstructors({})
+        usersLoadedRef.current = true
+        const response = await userService.getUsers({})
 
         if (response.success && response.data) {
-          setInstructors(response.data)
+          setUsers(response.data)
         }
       } catch (error) {
-        console.error('Error loading instructors:', error)
+        console.error('Error loading users:', error)
+        usersLoadedRef.current = false
       }
     }
 
-    loadInstructors()
+    loadUsers()
   }, [])
 
   // Hooks
@@ -242,14 +269,6 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
           </Typography>
         )
       }),
-      columnHelper.accessor('startDate', {
-        header: 'Ngày bắt đầu',
-        cell: ({ row }) => <Typography>{new Date(row.original.startDate).toLocaleDateString('vi-VN')}</Typography>
-      }),
-      columnHelper.accessor('endDate', {
-        header: 'Ngày kết thúc',
-        cell: ({ row }) => <Typography>{new Date(row.original.endDate).toLocaleDateString('vi-VN')}</Typography>
-      }),
       columnHelper.accessor('coachIds', {
         header: 'Huấn luyện viên & Trợ giảng',
         cell: ({ row }) => {
@@ -262,16 +281,15 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
           return (
             <Box className='flex flex-wrap gap-1'>
               {coachIds.map((coachId: string, index: number) => {
-                const instructor = instructors.find(inst => inst.id === coachId)
-                const isLead = instructor?.isLeadCoach || false
-                const displayName = instructor ? instructor.fullName : coachId
+                const user = users.find(u => u.id === coachId)
+                const displayName = user ? user.fullName : coachId
 
                 return (
                   <Chip
                     key={`${coachId}-${index}`}
                     label={displayName}
                     size='small'
-                    color={isLead ? 'primary' : 'secondary'}
+                    color='primary'
                     variant='tonal'
                     className='text-xs'
                   />
@@ -363,6 +381,16 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
               <IconButton
                 onClick={() => {
                   setSelectedClass(row.original)
+                  setAddStudentsOpen(true)
+                }}
+                title='Thêm học viên'
+                color='success'
+              >
+                <i className='ri-user-add-line' />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  setSelectedClass(row.original)
                   setAddScheduleOpen(true)
                 }}
                 title='Thêm lịch học'
@@ -398,15 +426,16 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                 iconButtonProps={{ size: 'medium' }}
                 iconClassName='text-textSecondary'
                 options={[
-                  // {
-                  //   text: 'Tải xuống',
-                  //   icon: 'ri-download-line',
-                  //   menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
-                  // },
                   {
                     text: 'Chỉnh sửa',
                     icon: 'ri-edit-box-line',
-                    menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
+                    menuItemProps: {
+                      className: 'flex items-center gap-2 text-textSecondary',
+                      onClick: () => {
+                        setSelectedClass(row.original)
+                        setEditClassOpen(true)
+                      }
+                    }
                   }
                 ]}
               />
@@ -417,7 +446,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
       })
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, filteredData, showNotification, setData, setLoading, instructors]
+    [data, filteredData, showNotification, setData, setLoading, users]
   )
 
   const table = useReactTable({
@@ -551,6 +580,18 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
       />
       {selectedClass && (
         <>
+          <EditClassDrawer
+            open={editClassOpen}
+            handleClose={() => {
+              setEditClassOpen(false)
+              setSelectedClass(null)
+            }}
+            classData={selectedClass}
+            onClassUpdated={updatedClass => {
+              setData(prevData => prevData.map(c => (c.id === updatedClass.id ? updatedClass : c)))
+              setFilteredData(prevData => prevData.map(c => (c.id === updatedClass.id ? updatedClass : c)))
+            }}
+          />
           <AddClassScheduleDrawer
             open={addScheduleOpen}
             handleClose={() => {
@@ -572,6 +613,20 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
               }}
             />
           )}
+          <AddStudentsToClassDrawer
+            open={addStudentsOpen}
+            onClose={() => {
+              setAddStudentsOpen(false)
+              setSelectedClass(null)
+            }}
+            classData={selectedClass}
+            onStudentsAdded={() => {
+              // Refresh data
+              dataLoadedRef.current = false
+              currentFilterRef.current = ''
+              setFilterParams(prev => ({ ...prev }))
+            }}
+          />
         </>
       )}
     </>

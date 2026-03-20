@@ -46,10 +46,9 @@ export enum AttendanceStatus {
   Pending = 4
 }
 
-
 class AttendanceService {
   async checkIn(data: CheckInRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>('/api/Attendance/check-in', data)
+    const response = await apiClient.post<any>('/Attendance/check-in', data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -67,7 +66,7 @@ class AttendanceService {
   }
 
   async createManualAttendance(data: ManualAttendanceRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>('/api/Attendance/manual', data)
+    const response = await apiClient.post<any>('/Attendance/manual', data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -109,7 +108,7 @@ class AttendanceService {
   }
 
   async createTicket(data: CreateTicketRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>('/api/Attendance/tickets', data)
+    const response = await apiClient.post<any>('/Attendance/tickets', data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -146,8 +145,3 @@ class AttendanceService {
 }
 
 export default new AttendanceService()
-
-
-
-
-

@@ -39,19 +39,19 @@ type ApiLoginResponse = {
 
 type LoginResult =
   | {
-      success: true
-    }
+  success: true
+}
   | {
-      success: false
-      message?: string | string[]
-    }
+  success: false
+  message?: string | string[]
+}
 
 type AuthContextValue = {
   auth: AuthSnapshot | null
   isAuthenticated: boolean
   isInitialized: boolean
   login: (payload: LoginPayload) => Promise<LoginResult>
-  loginWithGoogle: (idToken: string) => Promise<LoginResult>
+  loginWithGoogle: (authorizationCode: string) => Promise<LoginResult>
   logout: () => void
 }
 
@@ -149,9 +149,9 @@ export const AuthProvider = ({ children }: ChildrenType) => {
   )
 
   const loginWithGoogle = useCallback(
-    async (idToken: string): Promise<LoginResult> => {
+    async (authorizationCode: string): Promise<LoginResult> => {
       try {
-        const response = await apiClient.post<ApiLoginResponse>(GOOGLE_LOGIN_ENDPOINT, { idToken })
+        const response = await apiClient.post<ApiLoginResponse>(GOOGLE_LOGIN_ENDPOINT, { authorizationCode })
 
         return persistAuth(response.data?.data, undefined, response.data?.message)
       } catch (error) {
