@@ -1,5 +1,6 @@
 import { apiClient } from '@/utils/apiClient'
 import type { ResponseResult } from '@/types/common'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // API Types
 export interface GetRolesParams {
@@ -65,7 +66,7 @@ class RoleService {
    * Get a list of roles with optional filtering and pagination
    */
   async getRoles(params?: GetRolesParams): Promise<ResponseResult<RoleType[]>> {
-    const response = await apiClient.get<any>('/Roles', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.roles.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -90,7 +91,7 @@ class RoleService {
    * Create a new role
    */
   async createRole(data: CreateRoleRequest): Promise<ResponseResult<RoleType>> {
-    const response = await apiClient.post('/Roles', data)
+    const response = await apiClient.post(API_ENDPOINTS.roles.root, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -114,7 +115,7 @@ class RoleService {
    * Get a role by ID
    */
   async getRoleById(id: string): Promise<ResponseResult<RoleType>> {
-    const response = await apiClient.get<any>(`/api/Roles/${id}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.roles.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -137,7 +138,7 @@ class RoleService {
    * Update a role
    */
   async updateRole(id: string, data: UpdateRoleRequest): Promise<ResponseResult<RoleType>> {
-    const response = await apiClient.put<any>(`/api/Roles/${id}`, data)
+    const response = await apiClient.put<any>(API_ENDPOINTS.roles.byId(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -161,7 +162,7 @@ class RoleService {
    * Delete a role
    */
   async deleteRole(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/api/Roles/${id}`)
+    const response = await apiClient.delete<any>(API_ENDPOINTS.roles.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -182,7 +183,7 @@ class RoleService {
    * Restore a deleted role
    */
   async restoreRole(id: string): Promise<ResponseResult<RoleType>> {
-    const response = await apiClient.post<any>(`/api/Roles/${id}/restore`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.roles.restore(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

@@ -75,7 +75,6 @@ const HorizontalMenu = () => {
           setDynamicMenu(menuData())
         }
       } catch (error) {
-        console.error('Failed to fetch horizontal menu:', error)
         setDynamicMenu(menuData())
       } finally {
         setIsLoading(false)

@@ -10,12 +10,10 @@ import type { AxiosError } from 'axios'
 import type { ChildrenType } from '@core/types'
 
 // Util Imports
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 import { apiClient } from '@/utils/apiClient'
 import { authStorage } from '@/utils/authStorage'
 import type { AuthSnapshot, AuthUser } from '@/utils/authStorage'
-
-const LOGINPASS_ENDPOINT = process.env.NEXT_PUBLIC_LOGINPASS_ENDPOINT ?? '/api/Auth/password'
-const GOOGLE_LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_LOGINGG_ENDPOINT ?? '/auth/google'
 
 type LoginPayload = {
   username: string
@@ -130,7 +128,7 @@ export const AuthProvider = ({ children }: ChildrenType) => {
   const login = useCallback(
     async (payload: LoginPayload): Promise<LoginResult> => {
       try {
-        const response = await apiClient.post<ApiLoginResponse>(LOGINPASS_ENDPOINT, payload)
+        const response = await apiClient.post<ApiLoginResponse>(API_ENDPOINTS.auth.password, payload)
 
         return persistAuth(
           response.data?.data,
@@ -151,7 +149,7 @@ export const AuthProvider = ({ children }: ChildrenType) => {
   const loginWithGoogle = useCallback(
     async (authorizationCode: string): Promise<LoginResult> => {
       try {
-        const response = await apiClient.post<ApiLoginResponse>(GOOGLE_LOGIN_ENDPOINT, { authorizationCode })
+        const response = await apiClient.post<ApiLoginResponse>(API_ENDPOINTS.auth.google, { authorizationCode })
 
         return persistAuth(response.data?.data, undefined, response.data?.message)
       } catch (error) {

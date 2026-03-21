@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 // MUI Imports
 import Button from '@mui/material/Button'
@@ -27,6 +27,7 @@ import studentService from '@/services/studentService'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
+import { useAuth } from '@/contexts/authContext'
 
 type Props = {
   open: boolean
@@ -35,6 +36,10 @@ type Props = {
 }
 
 const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
+  const { auth } = useAuth()
+  const isAdmin = auth?.roles?.some(role => role.toLowerCase() === 'admin') ?? false
+  const currentUserId = auth?.user.id
+
   const [formData, setFormData] = useState({
     studentId: '',
     fromClassId: '',
@@ -47,6 +52,15 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
 
   const { showNotification } = useNotification()
+
+  const fromClassOptions = useMemo(() => {
+    if (isAdmin) return classes
+    if (!currentUserId) return []
+
+    return classes.filter(
+      item => item.instructorId === currentUserId || (Array.isArray(item.coachIds) && item.coachIds.includes(currentUserId))
+    )
+  }, [classes, isAdmin, currentUserId])
 
   useEffect(() => {
     const loadData = async () => {
@@ -74,6 +88,15 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
       return
     }
 
+    if (!isAdmin) {
+      const canCreateFromClass = fromClassOptions.some(item => item.id === formData.fromClassId)
+
+      if (!canCreateFromClass) {
+        showNotification('Bạn chỉ có thể tạo yêu cầu từ lớp mình đang phụ trách.', 'error')
+        return
+      }
+    }
+
     try {
       setLoading(true)
       const response = await classTransferService.createClassTransfer({
@@ -91,7 +114,13 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
         showNotification(response.message || 'Không thể tạo yêu cầu.', 'error')
       }
     } catch (error) {
-      showNotification('Đã có lỗi khi tạo yêu cầu.', 'error')
+      const responseStatus = (error as { response?: { status?: number } })?.response?.status
+
+      if (responseStatus === 403) {
+        showNotification('Không có quyền tạo yêu cầu chuyển lớp từ lớp nguồn này.', 'error')
+      } else {
+        showNotification('Đã có lỗi khi tạo yêu cầu.', 'error')
+      }
     } finally {
       setLoading(false)
     }
@@ -121,6 +150,11 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
       <Divider />
       <div className='p-5'>
         <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
+          {!isAdmin && (
+            <Typography variant='body2' color='warning.main'>
+              Chỉ hiển thị lớp bạn đang được phân công để tạo yêu cầu chuyển lớp.
+            </Typography>
+          )}
           <Autocomplete
             options={students}
             getOptionLabel={option => option.fullName}
@@ -138,7 +172,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
               value={formData.fromClassId}
               onChange={e => setFormData({ ...formData, fromClassId: e.target.value })}
             >
-              {classes.map(cls => (
+              {fromClassOptions.map(cls => (
                 <MenuItem key={cls.id} value={cls.id}>
                   {cls.name}
                 </MenuItem>
@@ -152,11 +186,13 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
               value={formData.toClassId}
               onChange={e => setFormData({ ...formData, toClassId: e.target.value })}
             >
-              {classes.map(cls => (
+              {classes
+                .filter(cls => cls.id !== formData.fromClassId)
+                .map(cls => (
                 <MenuItem key={cls.id} value={cls.id}>
                   {cls.name}
                 </MenuItem>
-              ))}
+                ))}
             </Select>
           </FormControl>
           <TextField

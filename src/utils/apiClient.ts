@@ -1,10 +1,27 @@
 import axios from 'axios'
 import type { AxiosError, AxiosRequestConfig } from 'axios'
 
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 import { authStorage } from './authStorage'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?? ""
-const REFRESH_ENDPOINT = process.env.NEXT_PUBLIC_REFRESH_ENDPOINT?? ""
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
+
+const baseUrlWithoutTrailingSlash = API_BASE_URL.replace(/\/+$/, '')
+const baseUrlHasApiSuffix = baseUrlWithoutTrailingSlash.toLowerCase().endsWith('/api')
+
+const normalizeEndpoint = (endpoint: string) => {
+  const trimmed = endpoint.trim()
+
+  if (!trimmed) return trimmed
+
+  if (baseUrlHasApiSuffix && /^\/api(\/|$)/i.test(trimmed)) {
+    return trimmed.replace(/^\/api/i, '')
+  }
+
+  return trimmed
+}
+
+const REFRESH_ENDPOINT = normalizeEndpoint(API_ENDPOINTS.auth.refresh)
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL
@@ -42,7 +59,14 @@ const fetchNewTokens = async () => {
   })
 }
 
+refreshClient.interceptors.request.use(config => {
+  config.url = normalizeEndpoint(config.url ?? '')
+  return config
+})
+
 apiClient.interceptors.request.use(config => {
+  config.url = normalizeEndpoint(config.url ?? '')
+
   const auth = authStorage.get()
 
   if (auth?.accessToken) {
@@ -60,12 +84,8 @@ apiClient.interceptors.response.use(
     const originalRequest = (error.config || {}) as RetryConfig
 
     if (response?.status === 401 && !originalRequest._retry) {
-
-      const requestUrl = originalRequest.url ?? ''
-
-      const isRefreshRequest =
-        requestUrl === REFRESH_ENDPOINT ||
-        requestUrl === `${API_BASE_URL}${REFRESH_ENDPOINT}`
+      const requestUrl = normalizeEndpoint(originalRequest.url ?? '')
+      const isRefreshRequest = requestUrl === REFRESH_ENDPOINT
 
       if (!isRefreshRequest) {
         originalRequest._retry = true

@@ -1,5 +1,6 @@
 import { apiClient } from '@/utils/apiClient'
 import type { ResponseResult } from '@/types/common'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // Type Imports
 import type { BranchType, GetBranchesParams, CreateBranchRequest, UpdateBranchRequest } from '@/types/apps/branchTypes'
@@ -42,7 +43,7 @@ class BranchService {
   }
 
   async getBranches(params?: GetBranchesParams): Promise<ResponseResult<BranchType[]>> {
-    const response = await apiClient.get<any>('/Branches', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.branches.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -63,7 +64,7 @@ class BranchService {
   }
 
   async getBranchById(id: string): Promise<ResponseResult<BranchType>> {
-    const response = await apiClient.get<any>(`/api/Branches/${id}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.branches.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -82,7 +83,7 @@ class BranchService {
   }
 
   async createBranch(data: CreateBranchRequest): Promise<ResponseResult<BranchType>> {
-    const response = await apiClient.post<any>('/Branches', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.branches.root, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -102,7 +103,7 @@ class BranchService {
   }
 
   async updateBranch(id: string, data: UpdateBranchRequest): Promise<ResponseResult<BranchType>> {
-    const response = await apiClient.put<any>(`/api/Branches/${id}`, data)
+    const response = await apiClient.put<any>(API_ENDPOINTS.branches.byId(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -122,7 +123,7 @@ class BranchService {
   }
 
   async deleteBranch(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/api/Branches/${id}`)
+    const response = await apiClient.delete<any>(API_ENDPOINTS.branches.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -139,7 +140,7 @@ class BranchService {
   }
 
   async restoreBranch(id: string): Promise<ResponseResult<BranchType>> {
-    const response = await apiClient.post<any>(`/api/Branches/${id}/restore`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.branches.restore(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

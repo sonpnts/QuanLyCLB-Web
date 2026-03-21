@@ -1,6 +1,7 @@
 import type { ResponseResult } from '@/types/common'
 
 import { apiClient } from '@/utils/apiClient'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 export interface GetPayrollParams {
   CoachId?: string
@@ -28,7 +29,7 @@ export interface GeneratePayrollRequest {
 
 class PayrollService {
   async getPayrolls(params?: GetPayrollParams): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>('/Payroll', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.payroll.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -48,7 +49,7 @@ class PayrollService {
   }
 
   async getPayrollById(payrollId: string): Promise<ResponseResult<any>> {
-    const response = await apiClient.get<any>(`/api/Payroll/${payrollId}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.payroll.byId(payrollId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -65,7 +66,7 @@ class PayrollService {
   }
 
   async getPayrollByCoach(coachId: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(`/api/Payroll/coach/${coachId}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.payroll.byCoach(coachId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -83,7 +84,25 @@ class PayrollService {
   }
 
   async generatePayroll(data: GeneratePayrollRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>('/Payroll/generate', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.payroll.calculate, data)
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return {
+        success: false,
+        message: apiResponse.message
+      }
+    }
+
+    return {
+      success: true,
+      data: apiResponse.data,
+      message: apiResponse.message
+    }
+  }
+
+  async createPayroll(data: GeneratePayrollRequest): Promise<ResponseResult<any>> {
+    const response = await apiClient.post<any>(API_ENDPOINTS.payroll.root, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

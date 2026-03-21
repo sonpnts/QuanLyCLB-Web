@@ -1,5 +1,6 @@
 import { apiClient } from '@/utils/apiClient'
 import type { ResponseResult } from '@/types/common'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // Query parameters for GET /api/Instructors - Theo API Documentation
 export interface GetInstructorsParams {
@@ -68,7 +69,7 @@ class InstructorService {
   }
 
   async getInstructors(params?: GetInstructorsParams): Promise<ResponseResult<InstructorType[]>> {
-    const response = await apiClient.get<any>('/Instructors', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.instructors.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -89,7 +90,7 @@ class InstructorService {
   }
 
   async getInstructorById(id: string): Promise<ResponseResult<InstructorType>> {
-    const response = await apiClient.get<any>(`/Instructors/${id}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.instructors.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -108,7 +109,7 @@ class InstructorService {
   }
 
   async createInstructor(data: CreateInstructorRequest): Promise<ResponseResult<InstructorType>> {
-    const response = await apiClient.post<any>('/Instructors', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.instructors.root, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -128,7 +129,7 @@ class InstructorService {
   }
 
   async updateInstructor(id: string, data: UpdateInstructorRequest): Promise<ResponseResult<InstructorType>> {
-    const response = await apiClient.put<any>(`/Instructors/${id}`, data)
+    const response = await apiClient.put<any>(API_ENDPOINTS.instructors.byId(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -148,7 +149,7 @@ class InstructorService {
   }
 
   async deleteInstructor(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/Instructors/${id}`)
+    const response = await apiClient.delete<any>(API_ENDPOINTS.instructors.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -165,7 +166,7 @@ class InstructorService {
   }
 
   async restoreInstructor(id: string): Promise<ResponseResult<InstructorType>> {
-    const response = await apiClient.post<any>(`/Instructors/${id}/restore`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.instructors.restore(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -185,7 +186,7 @@ class InstructorService {
   }
 
   async getInstructorStatistics(id: string, params?: { month?: number; year?: number }): Promise<ResponseResult<any>> {
-    const response = await apiClient.get<any>(`/Instructors/${id}/statistics`, { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.instructors.statistics(id), { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -196,7 +197,7 @@ class InstructorService {
   }
 
   async getInstructorSchedules(id: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(`/Instructors/${id}/schedules`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.instructors.schedules(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -207,7 +208,7 @@ class InstructorService {
   }
 
   async getInstructorClasses(id: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(`/Instructors/${id}/classes`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.instructors.classes(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

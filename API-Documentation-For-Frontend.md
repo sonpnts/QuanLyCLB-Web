@@ -1326,3 +1326,216 @@ API cho phép HLV và trợ giảng chấm công cho học viên trong lớp.
 ---
 
 _Cập nhật: December 2025_
+
+---
+
+## API Bo Sung Thang 03/2026 (Cho Client Web)
+
+### 1) Rule moi cho Chuyen Lop
+
+- Endpoint van giu nguyen: `POST /api/class-transfers`
+- Rule nghiep vu moi: chi HLV dang duoc phan cong vao `fromClassId` (hoac Admin) moi tao duoc request.
+- Neu user khong dung lop nguon, API tra ve `403 Forbidden`.
+
+### 2) Product APIs
+
+#### Danh sach san pham
+
+**GET** `/api/products`
+
+Query ho tro:
+- `pageNumber`, `pageSize`, `keyword`
+- `code`, `category`
+- `minUnitPrice`, `maxUnitPrice`
+- `isActive`
+
+#### Tao san pham (Admin)
+
+**POST** `/api/products`
+
+```json
+{
+  "code": "SP-VO-PHUC-01",
+  "name": "Vo phuc tre em",
+  "category": "Vo phuc",
+  "unitPrice": 350000,
+  "description": "Size 140"
+}
+```
+
+#### Cap nhat / Xoa mem / Khoi phuc
+
+- `PUT /api/products/{id}`
+- `DELETE /api/products/{id}`
+- `POST /api/products/{id}/restore`
+
+### 3) Product Sales APIs
+
+#### Danh sach giao dich ban san pham
+
+**GET** `/api/product-sales`
+
+Query ho tro:
+- `productId`, `classId`, `soldByUserId`
+- `saleDateFrom`, `saleDateTo`
+- `minTotalAmount`, `maxTotalAmount`
+- `keyword`, `pageNumber`, `pageSize`, `isActive`
+
+#### Tao giao dich ban san pham
+
+**POST** `/api/product-sales`
+
+```json
+{
+  "productId": "guid-product",
+  "classId": "guid-class",
+  "quantity": 2,
+  "unitPrice": 180000,
+  "soldByUserId": "guid-coach",
+  "buyerName": "Nguyen Van A",
+  "notes": "Ban sau buoi hoc"
+}
+```
+
+Rule nghiep vu:
+- `soldByUserId` neu bo qua thi he thong lay user dang dang nhap.
+- Nguoi thu tien phai duoc phan cong vao lop do.
+- `totalAmount` duoc tinh tu dong = `quantity * unitPrice`.
+
+#### Cap nhat / Xoa mem / Khoi phuc giao dich
+
+- `PUT /api/product-sales/{id}`
+- `DELETE /api/product-sales/{id}`
+- `POST /api/product-sales/{id}/restore`
+
+### 4) Finance Summary APIs
+
+#### Tong hoc phi 1 lop
+
+**GET** `/api/finance/summary/class/{classId}/tuition?fromDate={date?}&toDate={date?}`
+
+#### Tong doanh thu ban san pham
+
+**GET** `/api/finance/summary/product-sales?classId={guid?}&branchId={guid?}&instructorId={guid?}&fromDate={date?}&toDate={date?}`
+
+#### Tong tien HLV thu duoc theo lop
+
+**GET** `/api/finance/summary/class/{classId}/instructor/{instructorId}?fromDate={date?}&toDate={date?}`
+
+Response mau:
+
+```json
+{
+  "instructorId": "guid",
+  "instructorName": "Tran Van Coach",
+  "classId": "guid",
+  "className": "Lop Thieu Nhi A",
+  "tuitionCollected": 30000000,
+  "otherPaymentsCollected": 5000000,
+  "productSalesCollected": 7000000,
+  "totalCollected": 42000000
+}
+```
+
+#### Tong doanh thu 1 chi nhanh
+
+**GET** `/api/finance/summary/branch/{branchId}?fromDate={date?}&toDate={date?}`
+
+#### Danh sach tong thu theo tung lop cua HLV (ho tro HLV nhieu lop)
+
+- `GET /api/finance/instructors/{instructorId}/class-collections?asOfDate={date?}`
+- `GET /api/finance/me/class-collections?asOfDate={date?}`
+
+Response mau (array):
+
+```json
+[
+  {
+    "instructorId": "guid-hlv",
+    "instructorName": "Tran Van Coach",
+    "classId": "guid-lop-1",
+    "className": "Lop Thieu Nhi A",
+    "tuitionCollectedToDate": 12000000,
+    "productSalesCollectedToDate": 3000000,
+    "totalCollectedToDate": 15000000,
+    "totalHandedOver": 8000000,
+    "availableToHandover": 7000000,
+    "asOf": "2026-03-20T09:30:00Z"
+  },
+  {
+    "instructorId": "guid-hlv",
+    "instructorName": "Tran Van Coach",
+    "classId": "guid-lop-2",
+    "className": "Lop Co Ban Toi",
+    "tuitionCollectedToDate": 9000000,
+    "productSalesCollectedToDate": 1500000,
+    "totalCollectedToDate": 10500000,
+    "totalHandedOver": 4000000,
+    "availableToHandover": 6500000,
+    "asOf": "2026-03-20T09:30:00Z"
+  }
+]
+```
+
+### 5) Cash Handover APIs (Ban giao tien)
+
+#### Tao phieu ban giao
+
+**POST** `/api/cash-handovers`
+
+```json
+{
+  "classId": "guid-class",
+  "instructorId": "guid-coach",
+  "amountHandedOver": 5000000,
+  "notes": "Nop tien dot 1"
+}
+```
+
+Nghiep vu khi tao phieu:
+- Luu nguoi tao phieu qua `CreatedByUserId`.
+- Tinh snapshot tai thoi diem tao:
+  - `snapshotTuitionAmount`
+  - `snapshotProductSalesAmount`
+  - `snapshotTotalAmount`
+- Tinh `previousHandedOverAmount` tu lich su truoc do.
+- Validate so tien nop khong vuot so tien con co the ban giao.
+- Luu lich su day du de web truy vet theo thoi gian.
+
+#### Lich su ban giao
+
+**GET** `/api/cash-handovers?classId={guid?}&instructorId={guid?}&handoverFrom={date?}&handoverTo={date?}`
+
+#### Chi tiet phieu ban giao
+
+**GET** `/api/cash-handovers/{id}`
+
+Response mau:
+
+```json
+{
+  "id": "guid",
+  "classId": "guid-class",
+  "className": "Lop Thieu Nhi A",
+  "instructorId": "guid-coach",
+  "instructorName": "Tran Van Coach",
+  "handoverAt": "2026-03-20T10:05:20Z",
+  "snapshotTuitionAmount": 12000000,
+  "snapshotProductSalesAmount": 3000000,
+  "snapshotTotalAmount": 15000000,
+  "previousHandedOverAmount": 8000000,
+  "amountHandedOver": 5000000,
+  "remainingAmountAfterHandover": 2000000,
+  "notes": "Nop tien dot 1",
+  "createdByUserId": "guid-user-tao-phieu",
+  "createdByUserName": "Admin A"
+}
+```
+
+### 6) Update nho trong Payment API
+
+Khi tao payment (`POST /api/payments`) co them field:
+
+- `collectedByUserId` (optional)
+
+Neu bo qua, he thong tu lay user dang dang nhap de phuc vu thong ke va doi soat ban giao tien.

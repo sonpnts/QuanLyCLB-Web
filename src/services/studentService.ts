@@ -1,6 +1,7 @@
 import { apiClient } from '@/utils/apiClient'
 import type { StudentType, EnrollmentType, TuitionStatusType, ExamHistoryType } from '@/types/apps/studentTypes'
 import type { ResponseResult } from '@/types/common'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // Query parameters for GET /api/Students - Theo API Documentation
 export interface GetStudentsParams {
@@ -36,7 +37,7 @@ export interface EnrollStudentRequest {
 
 class StudentService {
   async getStudents(params?: GetStudentsParams): Promise<ResponseResult<StudentType[]>> {
-    const response = await apiClient.get<any>('/Students', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.students.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -50,7 +51,7 @@ class StudentService {
   }
 
   async getStudentById(id: string): Promise<ResponseResult<StudentType>> {
-    const response = await apiClient.get<any>(`/Students/${id}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.students.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -61,7 +62,7 @@ class StudentService {
   }
 
   async createStudent(data: CreateStudentRequest): Promise<ResponseResult<StudentType>> {
-    const response = await apiClient.post<any>('/Students', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.students.root, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -72,7 +73,7 @@ class StudentService {
   }
 
   async updateStudent(id: string, data: Partial<CreateStudentRequest>): Promise<ResponseResult<StudentType>> {
-    const response = await apiClient.put<any>(`/Students/${id}`, data)
+    const response = await apiClient.put<any>(API_ENDPOINTS.students.byId(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -83,7 +84,7 @@ class StudentService {
   }
 
   async deleteStudent(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/Students/${id}`)
+    const response = await apiClient.delete<any>(API_ENDPOINTS.students.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -94,7 +95,7 @@ class StudentService {
   }
 
   async restoreStudent(id: string): Promise<ResponseResult<StudentType>> {
-    const response = await apiClient.post<any>(`/Students/${id}/restore`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.students.restore(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -105,7 +106,7 @@ class StudentService {
   }
 
   async getStudentEnrollments(studentId: string): Promise<ResponseResult<EnrollmentType[]>> {
-    const response = await apiClient.get<any>(`/Students/${studentId}/enrollments`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.students.enrollments(studentId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -116,7 +117,7 @@ class StudentService {
   }
 
   async enrollStudent(data: EnrollStudentRequest): Promise<ResponseResult<EnrollmentType>> {
-    const response = await apiClient.post<any>('/Students/enroll', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.students.enroll, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -127,7 +128,7 @@ class StudentService {
   }
 
   async getStudentsByClass(classId: string): Promise<ResponseResult<StudentType[]>> {
-    const response = await apiClient.get<any>(`/Students/by-class/${classId}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.students.byClass(classId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -143,7 +144,7 @@ class StudentService {
     month: number,
     year: number
   ): Promise<ResponseResult<TuitionStatusType>> {
-    const response = await apiClient.get<any>(`/Students/${studentId}/tuition-status`, {
+    const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionStatus(studentId), {
       params: { classId, month, year }
     })
     const apiResponse = response.data
@@ -156,7 +157,7 @@ class StudentService {
   }
 
   async getExamHistory(studentId: string): Promise<ResponseResult<ExamHistoryType[]>> {
-    const response = await apiClient.get<any>(`/Students/${studentId}/exam-history`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.students.examHistory(studentId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -170,7 +171,7 @@ class StudentService {
     studentId: string,
     params?: { fromDate?: string; toDate?: string }
   ): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(`/Students/${studentId}/payments`, { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.students.payments(studentId), { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -184,7 +185,7 @@ class StudentService {
     studentId: string,
     params?: { fromDate?: string; toDate?: string }
   ): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(`/Students/${studentId}/attendance`, { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.students.attendance(studentId), { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

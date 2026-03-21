@@ -1,6 +1,7 @@
 import { apiClient } from '@/utils/apiClient'
 import type { BranchType } from './branchService'
 import type { ClassInfo } from '@/services/classService'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // Query parameters for GET /api/Schedules - Theo API Documentation
 export interface GetSchedulesParams {
@@ -92,7 +93,7 @@ class ScheduleService {
   }
 
   async getSchedules(params?: GetSchedulesParams): Promise<ResponseResult<ScheduleType[]>> {
-    const response = await apiClient.get<any>('/Schedules', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.schedules.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -113,7 +114,7 @@ class ScheduleService {
   }
 
   async getScheduleById(id: string): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.get<any>(`/Schedules/${id}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.schedules.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -132,7 +133,7 @@ class ScheduleService {
   }
 
   async createSchedule(data: CreateClassScheduleRequest): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.post<any>('/Schedules', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.schedules.root, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -152,7 +153,7 @@ class ScheduleService {
   }
 
   async updateSchedule(id: string, data: UpdateClassScheduleRequest): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.put<any>(`/Schedules/${id}`, data)
+    const response = await apiClient.put<any>(API_ENDPOINTS.schedules.byId(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -172,7 +173,7 @@ class ScheduleService {
   }
 
   async deleteSchedule(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/Schedules/${id}`)
+    const response = await apiClient.delete<any>(API_ENDPOINTS.schedules.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -189,7 +190,7 @@ class ScheduleService {
   }
 
   async restoreSchedule(id: string): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.post<any>(`/Schedules/${id}/restore`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.schedules.restore(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -212,7 +213,7 @@ class ScheduleService {
     classId: string,
     data: BulkCreateScheduleRequest
   ): Promise<ResponseResult<ScheduleType[]>> {
-    const response = await apiClient.post(`/Classes/${classId}/schedules`, data)
+    const response = await apiClient.post(API_ENDPOINTS.classes.schedules(classId), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -237,7 +238,7 @@ class ScheduleService {
   }
 
   async getSchedulesByDate(date: string): Promise<ResponseResult<ScheduleType[]>> {
-    const response = await apiClient.get<any>('/Schedules/by-date', { params: { date } })
+    const response = await apiClient.get<any>(API_ENDPOINTS.schedules.byDate, { params: { date } })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -251,7 +252,7 @@ class ScheduleService {
   }
 
   async getSchedulesByInstructor(instructorId: string): Promise<ResponseResult<ScheduleType[]>> {
-    const response = await apiClient.get<any>(`/Schedules/by-instructor/${instructorId}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.schedules.byInstructor(instructorId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

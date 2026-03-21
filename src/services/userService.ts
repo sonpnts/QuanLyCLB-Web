@@ -1,5 +1,6 @@
 import { apiClient } from '@/utils/apiClient'
 import type { UsersType, ApiUserResponse } from '@/types/apps/userTypes'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // API Types
 // Query parameters for GET /api/Users
@@ -85,7 +86,7 @@ class UserService {
    * @returns ResponseResult with an array of UsersType
    */
   async getUsers(params?: GetUsersParams): Promise<ResponseResult<UsersType[]>> {
-    const response = await apiClient.get<any>('/Users', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.users.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -113,7 +114,7 @@ class UserService {
    * @returns ResponseResult with UsersType
    */
   async getUserById(id: string): Promise<ResponseResult<UsersType>> {
-    const response = await apiClient.get<any>(`/api/Users/${id}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.users.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -138,7 +139,7 @@ class UserService {
    * @returns ResponseResult with created UsersType
    */
   async createUser(data: CreateUserRequest): Promise<ResponseResult<UsersType>> {
-    const response = await apiClient.post<any>('/Users', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.users.root, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -163,7 +164,7 @@ class UserService {
    */
   async getCoaches(): Promise<ResponseResult<UsersType[]>> {
     try {
-      const response = await apiClient.get<any>('/Users', {
+      const response = await apiClient.get<any>(API_ENDPOINTS.users.root, {
         params: {
           Role: 'Coach',
           IsActive: true
@@ -215,7 +216,7 @@ class UserService {
    * Update a user
    */
   async updateUser(id: string, data: UpdateUserRequest): Promise<ResponseResult<UsersType>> {
-    const response = await apiClient.put<any>(`/Users/${id}`, data)
+    const response = await apiClient.put<any>(API_ENDPOINTS.users.byId(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -239,7 +240,7 @@ class UserService {
    * Delete a user (soft delete)
    */
   async deleteUser(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/api/Users/${id}`)
+    const response = await apiClient.delete<any>(API_ENDPOINTS.users.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -260,7 +261,27 @@ class UserService {
    * Restore a deleted user
    */
   async restoreUser(id: string): Promise<ResponseResult<UsersType>> {
-    const response = await apiClient.post<any>(`/api/Users/${id}/restore`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.users.restore(id))
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return {
+        success: false,
+        message: apiResponse.message
+      }
+    }
+
+    const user = this.mapApiUserToUsersType(apiResponse.data)
+
+    return {
+      success: true,
+      data: user,
+      message: apiResponse.message
+    }
+  }
+
+  async updateUserRoles(id: string, roles: string[]): Promise<ResponseResult<UsersType>> {
+    const response = await apiClient.put<any>(API_ENDPOINTS.users.updateRoles(id), { roles })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

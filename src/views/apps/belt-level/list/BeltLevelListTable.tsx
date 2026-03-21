@@ -142,7 +142,7 @@ const BeltLevelListTable = () => {
   const columns = useMemo(
     () => [
       columnHelper.accessor('order', {
-        header: 'Thứ tự',
+        header: 'Cấp',
         cell: ({ row }) => <Chip label={row.original.order} size='small' color='primary' variant='tonal' />
       }),
       columnHelper.accessor('name', {

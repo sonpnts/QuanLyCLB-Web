@@ -1,6 +1,7 @@
 import { apiClient } from '@/utils/apiClient'
 import type { ExamSessionType, ExamRegistrationType, BeltLevelType } from '@/types/apps/beltExamTypes'
 import type { ResponseResult } from '@/types/common'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // Request body for POST /belt-exams/sessions
 export interface CreateExamSessionRequest {
@@ -34,7 +35,7 @@ export interface UpdateExamResultRequest {
 class BeltExamService {
   // Exam Sessions
   async getExamSessions(): Promise<ResponseResult<ExamSessionType[]>> {
-    const response = await apiClient.get<any>('/belt-exams/sessions')
+    const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.sessions)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -48,7 +49,7 @@ class BeltExamService {
   }
 
   async createExamSession(data: CreateExamSessionRequest): Promise<ResponseResult<ExamSessionType>> {
-    const response = await apiClient.post<any>('/belt-exams/sessions', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessions, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -59,7 +60,7 @@ class BeltExamService {
   }
 
   async submitExamSession(id: string): Promise<ResponseResult<ExamSessionType>> {
-    const response = await apiClient.post<any>(`/belt-exams/sessions/${id}/submit`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionSubmit(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -70,7 +71,7 @@ class BeltExamService {
   }
 
   async approveExamSession(id: string): Promise<ResponseResult<ExamSessionType>> {
-    const response = await apiClient.post<any>(`/belt-exams/sessions/${id}/approve`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionApprove(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -81,7 +82,7 @@ class BeltExamService {
   }
 
   async rejectExamSession(id: string): Promise<ResponseResult<ExamSessionType>> {
-    const response = await apiClient.post<any>(`/belt-exams/sessions/${id}/reject`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionReject(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -93,7 +94,7 @@ class BeltExamService {
 
   // Exam Registrations
   async getExamRegistrations(): Promise<ResponseResult<ExamRegistrationType[]>> {
-    const response = await apiClient.get<any>('/belt-exams/registrations')
+    const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.registrations)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -107,7 +108,7 @@ class BeltExamService {
   }
 
   async createExamRegistration(data: CreateExamRegistrationRequest): Promise<ResponseResult<ExamRegistrationType>> {
-    const response = await apiClient.post<any>('/belt-exams/registrations', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrations, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -118,7 +119,7 @@ class BeltExamService {
   }
 
   async batchExamRegistration(data: BatchExamRegistrationRequest): Promise<ResponseResult<ExamRegistrationType[]>> {
-    const response = await apiClient.post<any>('/belt-exams/registrations/batch', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationBatch, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -129,7 +130,7 @@ class BeltExamService {
   }
 
   async approveExamRegistration(id: string): Promise<ResponseResult<ExamRegistrationType>> {
-    const response = await apiClient.post<any>(`/belt-exams/registrations/${id}/approve`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationApprove(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -140,7 +141,7 @@ class BeltExamService {
   }
 
   async rejectExamRegistration(id: string): Promise<ResponseResult<ExamRegistrationType>> {
-    const response = await apiClient.post<any>(`/belt-exams/registrations/${id}/reject`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationReject(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -151,7 +152,7 @@ class BeltExamService {
   }
 
   async updateExamResult(id: string, data: UpdateExamResultRequest): Promise<ResponseResult<ExamRegistrationType>> {
-    const response = await apiClient.put<any>(`/belt-exams/registrations/${id}/result`, data)
+    const response = await apiClient.put<any>(API_ENDPOINTS.beltExams.registrationResult(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -164,7 +165,7 @@ class BeltExamService {
   // Belt Levels - NOTE: API chưa có, cần backend bổ sung
   async getBeltLevels(): Promise<ResponseResult<BeltLevelType[]>> {
     try {
-      const response = await apiClient.get<any>('/belt-levels')
+      const response = await apiClient.get<any>(API_ENDPOINTS.beltLevels.root)
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {

@@ -84,6 +84,26 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
         href: '/apps/payment/list'
       },
       {
+        label: 'Sản phẩm',
+        icon: 'ri-price-tag-3-line',
+        href: '/apps/product/list'
+      },
+      {
+        label: 'Bán sản phẩm',
+        icon: 'ri-shopping-bag-3-line',
+        href: '/apps/product-sale/list'
+      },
+      {
+        label: 'Thống kê tài chính',
+        icon: 'ri-bar-chart-grouped-line',
+        href: '/apps/finance/summary'
+      },
+      {
+        label: 'Bàn giao tiền',
+        icon: 'ri-hand-coin-line',
+        href: '/apps/cash-handover/list'
+      },
+      {
         label: 'Bảng lương',
         icon: 'ri-money-dollar-circle-line',
         href: '/apps/payroll/list'

@@ -1,34 +1,69 @@
 import { apiClient } from '@/utils/apiClient'
 import type { PaymentRecordType, PaymentSummaryType, MonthlyReportType } from '@/types/apps/paymentTypes'
 import type { ResponseResult } from '@/types/common'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
-// Query parameters for GET /api/payments - Theo API Documentation
 export interface GetPaymentsParams {
   pageNumber?: number
   pageSize?: number
   studentId?: string
   classId?: string
-  type?: number // 0=Tuition, 1=ExamFee, 2=Registration, 3=Other
+  type?: number
   fromDate?: string
   toDate?: string
 }
 
-// Request body for POST /api/payments
 export interface CreatePaymentRequest {
   studentId: string
   classId?: string
+  productId?: string
+  examRegistrationId?: string
   type: number
-  amount: number
+  amount?: number
+  discountAmount?: number
+  discountReason?: string
+  studentDiscountConfigId?: string
   paymentDate: string
-  method: number // 0=Cash, 1=BankTransfer, 2=Card
+  method: number
+  transferProofImageUrl?: string
   forMonth?: number
   forYear?: number
   description?: string
 }
 
+export interface TuitionQuoteType {
+  classId: string
+  studentId: string
+  forMonth: number
+  forYear: number
+  monthlyFee: number
+  suggestedDiscountAmount: number
+  alreadyPaid: boolean
+  finalAmount: number
+  message?: string
+}
+
+export interface ExamFeeOptionType {
+  registrationId: string
+  examSessionId: string
+  examSessionName: string
+  targetBeltLevelId: string
+  targetBeltLevelName: string
+  feeAmount: number
+  isFeePaid: boolean
+}
+
+const unwrapList = (payload: any): any[] => {
+  if (Array.isArray(payload?.records)) return payload.records
+  if (Array.isArray(payload?.items)) return payload.items
+  if (Array.isArray(payload)) return payload
+
+  return []
+}
+
 class PaymentService {
   async getPayments(params?: GetPaymentsParams): Promise<ResponseResult<PaymentRecordType[]>> {
-    const response = await apiClient.get<any>('/payments', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -37,12 +72,12 @@ class PaymentService {
 
     return {
       success: true,
-      data: apiResponse.data?.items || apiResponse.data?.records || []
+      data: unwrapList(apiResponse.data)
     }
   }
 
   async getPaymentById(id: string): Promise<ResponseResult<PaymentRecordType>> {
-    const response = await apiClient.get<any>(`/payments/${id}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -53,7 +88,7 @@ class PaymentService {
   }
 
   async createPayment(data: CreatePaymentRequest): Promise<ResponseResult<PaymentRecordType>> {
-    const response = await apiClient.post<any>('/payments', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.payments.root, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -64,7 +99,7 @@ class PaymentService {
   }
 
   async updatePayment(id: string, data: Partial<CreatePaymentRequest>): Promise<ResponseResult<PaymentRecordType>> {
-    const response = await apiClient.put<any>(`/payments/${id}`, data)
+    const response = await apiClient.put<any>(API_ENDPOINTS.payments.byId(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -75,7 +110,7 @@ class PaymentService {
   }
 
   async deletePayment(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/payments/${id}`)
+    const response = await apiClient.delete<any>(API_ENDPOINTS.payments.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -86,7 +121,7 @@ class PaymentService {
   }
 
   async restorePayment(id: string): Promise<ResponseResult<PaymentRecordType>> {
-    const response = await apiClient.post<any>(`/payments/${id}/restore`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.payments.restore(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -97,33 +132,29 @@ class PaymentService {
   }
 
   async getPaymentsByStudent(studentId: string): Promise<ResponseResult<PaymentRecordType[]>> {
-    const response = await apiClient.get<any>(`/payments/by-student/${studentId}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.byStudent(studentId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
       return { success: false, data: [], message: apiResponse.message }
     }
 
-    return { success: true, data: apiResponse.data || [] }
+    return { success: true, data: unwrapList(apiResponse.data) }
   }
 
   async getPaymentsByClass(classId: string): Promise<ResponseResult<PaymentRecordType[]>> {
-    const response = await apiClient.get<any>(`/payments/by-class/${classId}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.byClass(classId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
       return { success: false, data: [], message: apiResponse.message }
     }
 
-    return { success: true, data: apiResponse.data || [] }
+    return { success: true, data: unwrapList(apiResponse.data) }
   }
 
-  async getClassSummary(
-    classId: string,
-    fromDate: string,
-    toDate: string
-  ): Promise<ResponseResult<PaymentSummaryType>> {
-    const response = await apiClient.get<any>(`/payments/summary/class/${classId}`, {
+  async getClassSummary(classId: string, fromDate: string, toDate: string): Promise<ResponseResult<PaymentSummaryType>> {
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.classSummary(classId), {
       params: { fromDate, toDate }
     })
     const apiResponse = response.data
@@ -136,7 +167,7 @@ class PaymentService {
   }
 
   async getMonthlyReport(year: number, month: number): Promise<ResponseResult<MonthlyReportType>> {
-    const response = await apiClient.get<any>('/payments/reports/monthly', {
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.monthlyReport, {
       params: { year, month }
     })
     const apiResponse = response.data
@@ -149,7 +180,7 @@ class PaymentService {
   }
 
   async getClassStatistics(classId: string, month: number, year: number): Promise<ResponseResult<any>> {
-    const response = await apiClient.get<any>(`/payments/statistics/class/${classId}`, {
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.classStatistics(classId), {
       params: { month, year }
     })
     const apiResponse = response.data
@@ -162,14 +193,68 @@ class PaymentService {
   }
 
   async getOverduePayments(): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>('/payments/overdue')
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.overdue)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
       return { success: false, data: [], message: apiResponse.message }
     }
 
-    return { success: true, data: apiResponse.data?.items || apiResponse.data || [] }
+    return { success: true, data: unwrapList(apiResponse.data) }
+  }
+
+  async getTuitionQuote(
+    classId: string,
+    studentId: string,
+    month: number,
+    year: number,
+    paymentDate?: string
+  ): Promise<ResponseResult<TuitionQuoteType>> {
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.tuitionQuote, {
+      params: { classId, studentId, month, year, paymentDate }
+    })
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data }
+  }
+
+  async getExamFeeOptions(classId: string, studentId: string): Promise<ResponseResult<ExamFeeOptionType[]>> {
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.examFeeOptions, {
+      params: { classId, studentId }
+    })
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, data: [], message: apiResponse.message }
+    }
+
+    return { success: true, data: unwrapList(apiResponse.data) as ExamFeeOptionType[] }
+  }
+
+  async uploadTransferProof(file: File): Promise<ResponseResult<{ imageUrl: string; storedImageId: string }>> {
+    const formData = new FormData()
+
+    formData.append('file', file)
+
+    const response = await apiClient.post<any>(API_ENDPOINTS.payments.uploadTransferProof, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, message: apiResponse.message }
+    }
+
+    return {
+      success: true,
+      data: apiResponse.data,
+      message: apiResponse.message
+    }
   }
 }
 

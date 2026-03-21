@@ -1,6 +1,7 @@
 import { apiClient } from '@/utils/apiClient'
 import type { LeaveRequestType } from '@/types/apps/leaveRequestTypes'
 import type { ResponseResult } from '@/types/common'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // Query parameters for GET /leave-requests
 export interface GetLeaveRequestsParams {
@@ -41,7 +42,7 @@ export interface RejectLeaveRequestRequest {
 
 class LeaveRequestService {
   async getLeaveRequests(params?: GetLeaveRequestsParams): Promise<ResponseResult<LeaveRequestType[]>> {
-    const response = await apiClient.get<any>('/leave-requests', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -55,7 +56,7 @@ class LeaveRequestService {
   }
 
   async getLeaveRequestById(id: string): Promise<ResponseResult<LeaveRequestType>> {
-    const response = await apiClient.get<any>(`/leave-requests/${id}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -66,7 +67,7 @@ class LeaveRequestService {
   }
 
   async createLeaveRequest(data: CreateLeaveRequestRequest): Promise<ResponseResult<LeaveRequestType>> {
-    const response = await apiClient.post<any>('/leave-requests', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.leaveRequests.root, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -77,7 +78,7 @@ class LeaveRequestService {
   }
 
   async updateLeaveRequest(id: string, data: UpdateLeaveRequestRequest): Promise<ResponseResult<LeaveRequestType>> {
-    const response = await apiClient.put<any>(`/leave-requests/${id}`, data)
+    const response = await apiClient.put<any>(API_ENDPOINTS.leaveRequests.byId(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -88,7 +89,7 @@ class LeaveRequestService {
   }
 
   async deleteLeaveRequest(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/leave-requests/${id}`)
+    const response = await apiClient.delete<any>(API_ENDPOINTS.leaveRequests.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -99,7 +100,7 @@ class LeaveRequestService {
   }
 
   async approveLeaveRequest(id: string, data: ApproveLeaveRequestRequest): Promise<ResponseResult<LeaveRequestType>> {
-    const response = await apiClient.post<any>(`/leave-requests/${id}/approve`, data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.leaveRequests.approve(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -110,7 +111,7 @@ class LeaveRequestService {
   }
 
   async rejectLeaveRequest(id: string, data: RejectLeaveRequestRequest): Promise<ResponseResult<LeaveRequestType>> {
-    const response = await apiClient.post<any>(`/leave-requests/${id}/reject`, data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.leaveRequests.reject(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -121,7 +122,7 @@ class LeaveRequestService {
   }
 
   async getPendingRequests(): Promise<ResponseResult<LeaveRequestType[]>> {
-    const response = await apiClient.get<any>('/leave-requests/pending')
+    const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.pending)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -132,7 +133,7 @@ class LeaveRequestService {
   }
 
   async getMyRequests(): Promise<ResponseResult<LeaveRequestType[]>> {
-    const response = await apiClient.get<any>('/leave-requests/my-requests')
+    const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.myRequests)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

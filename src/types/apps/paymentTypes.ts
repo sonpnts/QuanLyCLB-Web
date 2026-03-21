@@ -13,13 +13,19 @@ export type PaymentRecordType = {
   studentName?: string
   classId?: string
   className?: string
+  productId?: string
+  productName?: string
   type: PaymentType
   amount: number
+  originalAmount?: number
+  discountAmount?: number
+  discountReason?: string
   paymentDate: string
   method: PaymentMethod
   forMonth?: number
   forYear?: number
   description?: string
+  transferProofImageUrl?: string
   createdAt?: string
   createdBy?: string
 }
@@ -52,13 +58,15 @@ export const PaymentTypeColors: { [key: number]: ThemeColor } = {
 
 export const paymentTypeLabels: { [key: number]: string } = {
   0: 'Học phí',
-  1: 'Phí thi cấp',
+  1: 'Lệ phí thi cấp',
   2: 'Phí đăng ký',
-  3: 'Khác'
+  3: 'Mua sản phẩm/khác'
 }
 
 export const paymentMethodLabels: { [key: number]: string } = {
   0: 'Tiền mặt',
   1: 'Chuyển khoản',
-  2: 'Thẻ'
+  2: 'Khác'
 }
+
+

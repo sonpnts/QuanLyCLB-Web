@@ -1,6 +1,7 @@
 import { apiClient } from '@/utils/apiClient'
 import type { AuditLogType } from '@/types/apps/auditLogTypes'
 import type { ResponseResult } from '@/types/common'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // Query parameters for GET /audit-logs
 export interface GetAuditLogsParams {
@@ -18,7 +19,7 @@ export interface GetAuditLogsParams {
 
 class AuditLogService {
   async getAuditLogs(params?: GetAuditLogsParams): Promise<ResponseResult<AuditLogType[]>> {
-    const response = await apiClient.get<any>('/audit-logs', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.auditLogs.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -32,7 +33,7 @@ class AuditLogService {
   }
 
   async getAuditLogById(id: string): Promise<ResponseResult<AuditLogType>> {
-    const response = await apiClient.get<any>(`/audit-logs/${id}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.auditLogs.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -43,7 +44,7 @@ class AuditLogService {
   }
 
   async getAuditLogsByUser(userId: string): Promise<ResponseResult<AuditLogType[]>> {
-    const response = await apiClient.get<any>(`/audit-logs/user/${userId}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.auditLogs.byUser(userId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -54,7 +55,7 @@ class AuditLogService {
   }
 
   async getAuditLogsByEntity(entityType: string, entityId: string): Promise<ResponseResult<AuditLogType[]>> {
-    const response = await apiClient.get<any>(`/audit-logs/entity/${entityType}/${entityId}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.auditLogs.byEntity(entityType, entityId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

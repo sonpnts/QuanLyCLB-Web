@@ -65,7 +65,6 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
           setDynamicMenu(menuData())
         }
       } catch (error) {
-        console.error('Failed to fetch menu:', error)
         setDynamicMenu(menuData())
       } finally {
         setIsLoading(false)

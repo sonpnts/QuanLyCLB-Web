@@ -1,6 +1,7 @@
 import { apiClient } from '@/utils/apiClient'
 import type { BeltLevelType } from '@/types/apps/beltExamTypes'
 import type { ResponseResult } from '@/types/common'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // Query parameters for GET /api/belt-levels
 export interface GetBeltLevelsParams {
@@ -28,7 +29,7 @@ export interface UpdateBeltLevelRequest {
 class BeltLevelService {
   async getBeltLevels(params?: GetBeltLevelsParams): Promise<ResponseResult<BeltLevelType[]>> {
     try {
-      const response = await apiClient.get<any>('/belt-levels', { params })
+      const response = await apiClient.get<any>(API_ENDPOINTS.beltLevels.root, { params })
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -52,7 +53,7 @@ class BeltLevelService {
 
   async getBeltLevelById(id: string): Promise<ResponseResult<BeltLevelType>> {
     try {
-      const response = await apiClient.get<any>(`/belt-levels/${id}`)
+      const response = await apiClient.get<any>(API_ENDPOINTS.beltLevels.byId(id))
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -69,7 +70,7 @@ class BeltLevelService {
 
   async createBeltLevel(data: CreateBeltLevelRequest): Promise<ResponseResult<BeltLevelType>> {
     try {
-      const response = await apiClient.post<any>('/belt-levels', data)
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltLevels.root, data)
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -86,7 +87,7 @@ class BeltLevelService {
 
   async updateBeltLevel(id: string, data: UpdateBeltLevelRequest): Promise<ResponseResult<BeltLevelType>> {
     try {
-      const response = await apiClient.put<any>(`/belt-levels/${id}`, data)
+      const response = await apiClient.put<any>(API_ENDPOINTS.beltLevels.byId(id), data)
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -103,7 +104,7 @@ class BeltLevelService {
 
   async deleteBeltLevel(id: string): Promise<ResponseResult<void>> {
     try {
-      const response = await apiClient.delete<any>(`/belt-levels/${id}`)
+      const response = await apiClient.delete<any>(API_ENDPOINTS.beltLevels.byId(id))
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {

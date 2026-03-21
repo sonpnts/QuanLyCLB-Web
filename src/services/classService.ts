@@ -1,6 +1,7 @@
 import { apiClient } from '@/utils/apiClient'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { ResponseResult } from '@/types/common'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // Query parameters for GET /api/Classes - Theo API Documentation
 export interface GetClassesParams {
@@ -77,7 +78,7 @@ class ClassService {
   }
 
   async getClasses(params?: GetClassesParams): Promise<ResponseResult<ClassType[]>> {
-    const response = await apiClient.get<any>('/Classes', { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.classes.root, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -98,7 +99,7 @@ class ClassService {
   }
 
   async getClassById(id: string): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.get<any>(`/Classes/${id}`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.classes.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -117,7 +118,7 @@ class ClassService {
   }
 
   async createClass(data: CreateClassRequest): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.post('/Classes', data)
+    const response = await apiClient.post(API_ENDPOINTS.classes.root, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -135,7 +136,7 @@ class ClassService {
   }
 
   async updateClass(id: string, data: UpdateClassRequest): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.put<any>(`/Classes/${id}`, data)
+    const response = await apiClient.put<any>(API_ENDPOINTS.classes.byId(id), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -155,7 +156,7 @@ class ClassService {
   }
 
   async deleteClass(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(`/Classes/${id}`)
+    const response = await apiClient.delete<any>(API_ENDPOINTS.classes.byId(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -172,7 +173,7 @@ class ClassService {
   }
 
   async restoreClass(id: string): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.post<any>(`/Classes/${id}/restore`)
+    const response = await apiClient.post<any>(API_ENDPOINTS.classes.restore(id))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -192,7 +193,7 @@ class ClassService {
   }
 
   async getClassSchedules(classId: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(`/Classes/${classId}/schedules`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.classes.schedules(classId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -203,7 +204,7 @@ class ClassService {
   }
 
   async createClassSchedules(classId: string, data: BulkCreateScheduleRequest): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.post<any>(`/Classes/${classId}/schedules`, data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.classes.schedules(classId), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -214,21 +215,21 @@ class ClassService {
   }
 
   async getClassStudents(classId: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(`/Classes/${classId}/students`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.classes.students(classId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
       return { success: false, data: [], message: apiResponse.message }
     }
 
-    return { success: true, data: apiResponse.data || [] }
+    return { success: true, data: apiResponse.data?.records || apiResponse.data?.items || apiResponse.data || [] }
   }
 
   async getClassAttendance(
     classId: string,
     params?: { fromDate?: string; toDate?: string }
   ): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(`/Classes/${classId}/attendance`, { params })
+    const response = await apiClient.get<any>(API_ENDPOINTS.classes.attendance(classId), { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -239,7 +240,7 @@ class ClassService {
   }
 
   async getClassPayments(classId: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(`/Classes/${classId}/payments`)
+    const response = await apiClient.get<any>(API_ENDPOINTS.classes.payments(classId))
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -253,7 +254,7 @@ class ClassService {
     classId: string,
     data: { newCode: string; newName: string; copySchedules?: boolean; copyInstructors?: boolean }
   ): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.post<any>(`/Classes/${classId}/duplicate`, data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.classes.duplicate(classId), data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
