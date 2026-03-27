@@ -44,7 +44,8 @@ export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataT
 
       // Check if the current item is a sub menu
       if (subMenuItem.children) {
-        const { children, icon, prefix, suffix, ...rest } = subMenuItem
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { children, icon, prefix, suffix, isSection, ...rest } = subMenuItem as any
         const Icon = icon ? <i className={icon} /> : null
 
         const subMenuPrefix: ReactNode =
@@ -75,7 +76,8 @@ export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataT
       }
 
       // Default: render as MenuItem
-      const { label, icon, prefix, suffix, ...rest } = menuItem
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { label, icon, prefix, suffix, isSection, ...rest } = menuItem as any
       const href = rest.href
       const Icon = icon ? <i className={icon} /> : null
 
@@ -121,7 +123,7 @@ export const GenerateHorizontalMenu = ({ menuData }: { menuData: HorizontalMenuD
 
       // SubMenu
       if (subMenuItem.children) {
-        const { children, icon, prefix, suffix, ...rest } = subMenuItem
+        const { children, icon, prefix, suffix, isSection, ...rest } = subMenuItem as any
         const Icon = icon ? <i className={icon} /> : null
 
         const subMenuPrefix: ReactNode =
@@ -152,7 +154,7 @@ export const GenerateHorizontalMenu = ({ menuData }: { menuData: HorizontalMenuD
       }
 
       // Default: MenuItem
-      const { label, icon, prefix, suffix, ...rest } = menuItem
+      const { label, icon, prefix, suffix, isSection, ...rest } = menuItem as any
       const href = rest.href
       const Icon = icon ? <i className={icon} /> : null
 

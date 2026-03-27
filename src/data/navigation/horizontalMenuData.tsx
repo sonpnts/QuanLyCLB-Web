@@ -79,6 +79,11 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
     icon: 'ri-money-dollar-circle-line',
     children: [
       {
+        label: 'Thu tiền',
+        icon: 'ri-money-cny-circle-line',
+        href: '/apps/finance/payments/collect'
+      },
+      {
         label: 'Thanh toán',
         icon: 'ri-wallet-line',
         href: '/apps/payment/list'

@@ -7,8 +7,9 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
 import CircularProgress from '@mui/material/CircularProgress'
+import Divider from '@mui/material/Divider'
 import FormControl from '@mui/material/FormControl'
-import Grid from '@mui/material/Grid'
+import Grid from '@mui/material/Grid2'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
@@ -32,20 +33,20 @@ import tableStyles from '@core/styles/table.module.css'
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 
-const SummaryCard = ({ title, amount }: { title: string; amount: number }) => {
-  return (
-    <Card variant='outlined'>
-      <CardContent>
-        <Typography variant='body2' color='text.secondary'>
-          {title}
-        </Typography>
-        <Typography variant='h5' color='success.main' className='mt-2'>
-          {formatCurrency(amount)}
-        </Typography>
-      </CardContent>
-    </Card>
-  )
-}
+type SummaryCardProps = { title: string; amount: number; color?: string }
+
+const SummaryCard = ({ title, amount, color = 'success.main' }: SummaryCardProps) => (
+  <Card variant='outlined' sx={{ height: '100%' }}>
+    <CardContent>
+      <Typography variant='body2' color='text.secondary' gutterBottom>
+        {title}
+      </Typography>
+      <Typography variant='h5' color={color} sx={{ mt: 1 }}>
+        {formatCurrency(amount)}
+      </Typography>
+    </CardContent>
+  </Card>
+)
 
 const FinanceSummaryView = () => {
   const { auth } = useAuth()
@@ -88,7 +89,8 @@ const FinanceSummaryView = () => {
         setBranches(nextBranches)
         setInstructors(nextInstructors)
 
-        const defaultInstructorId = nextInstructors.find(item => item.id === auth?.user.id)?.id || nextInstructors[0]?.id || ''
+        const defaultInstructorId =
+          nextInstructors.find(item => item.id === auth?.user.id)?.id || nextInstructors[0]?.id || ''
 
         setFilters(prev => ({
           ...prev,
@@ -132,10 +134,14 @@ const FinanceSummaryView = () => {
       }
 
       if (filters.classId && filters.instructorId) {
-        const instructorRes = await financeService.getClassInstructorSummary(filters.classId, filters.instructorId, {
-          fromDate: filters.fromDate || undefined,
-          toDate: filters.toDate || undefined
-        })
+        const instructorRes = await financeService.getClassInstructorSummary(
+          filters.classId,
+          filters.instructorId,
+          {
+            fromDate: filters.fromDate || undefined,
+            toDate: filters.toDate || undefined
+          }
+        )
 
         if (instructorRes.success && instructorRes.data) {
           setInstructorSummary(instructorRes.data)
@@ -189,10 +195,11 @@ const FinanceSummaryView = () => {
   return (
     <Stack spacing={5}>
       <Card>
-        <CardHeader title='Thống kê tài chính theo API bổ sung 03/2026' />
+        <CardHeader title='Thống kê tài chính' />
+        <Divider />
         <CardContent>
           <Grid container spacing={4}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth>
                 <InputLabel>Lớp</InputLabel>
                 <Select
@@ -200,6 +207,7 @@ const FinanceSummaryView = () => {
                   value={filters.classId}
                   onChange={event => setFilters(prev => ({ ...prev, classId: event.target.value }))}
                 >
+                  <MenuItem value=''>-- Tất cả --</MenuItem>
                   {classes.map(item => (
                     <MenuItem key={item.id} value={item.id}>
                       {item.name}
@@ -208,7 +216,7 @@ const FinanceSummaryView = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth>
                 <InputLabel>Chi nhánh</InputLabel>
                 <Select
@@ -216,6 +224,7 @@ const FinanceSummaryView = () => {
                   value={filters.branchId}
                   onChange={event => setFilters(prev => ({ ...prev, branchId: event.target.value }))}
                 >
+                  <MenuItem value=''>-- Tất cả --</MenuItem>
                   {branches.map(item => (
                     <MenuItem key={item.id} value={item.id}>
                       {item.name}
@@ -224,7 +233,7 @@ const FinanceSummaryView = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth>
                 <InputLabel>Huấn luyện viên</InputLabel>
                 <Select
@@ -232,7 +241,7 @@ const FinanceSummaryView = () => {
                   value={filters.instructorId}
                   onChange={event => setFilters(prev => ({ ...prev, instructorId: event.target.value }))}
                 >
-                  <MenuItem value=''>Tôi (API /finance/me/class-collections)</MenuItem>
+                  <MenuItem value=''>Của tôi</MenuItem>
                   {instructors.map(item => (
                     <MenuItem key={item.id} value={item.id}>
                       {item.fullName}
@@ -241,32 +250,32 @@ const FinanceSummaryView = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type='date'
                 label='Từ ngày'
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
                 value={filters.fromDate}
                 onChange={event => setFilters(prev => ({ ...prev, fromDate: event.target.value }))}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type='date'
                 label='Đến ngày'
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
                 value={filters.toDate}
                 onChange={event => setFilters(prev => ({ ...prev, toDate: event.target.value }))}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type='date'
-                label='As of date (Class Collections)'
-                InputLabelProps={{ shrink: true }}
+                label='Tính đến ngày (bàn giao)'
+                slotProps={{ inputLabel: { shrink: true } }}
                 value={filters.asOfDate}
                 onChange={event => setFilters(prev => ({ ...prev, asOfDate: event.target.value }))}
               />
@@ -290,34 +299,35 @@ const FinanceSummaryView = () => {
       ) : (
         <>
           <Grid container spacing={4}>
-            <Grid item xs={12} md={3}>
-              <SummaryCard title='Tổng học phí 1 lớp' amount={classTuitionAmount} />
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <SummaryCard title='Tổng học phí (lớp đã chọn)' amount={classTuitionAmount} />
             </Grid>
-            <Grid item xs={12} md={3}>
-              <SummaryCard title='Tổng doanh thu bán sản phẩm' amount={productSalesAmount} />
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <SummaryCard title='Tổng doanh thu bán sản phẩm' amount={productSalesAmount} color='info.main' />
             </Grid>
-            <Grid item xs={12} md={3}>
-              <SummaryCard title='Tổng tiền HLV thu theo lớp' amount={instructorTotal} />
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <SummaryCard title='Tổng tiền HLV đã thu (lớp)' amount={instructorTotal} color='warning.main' />
             </Grid>
-            <Grid item xs={12} md={3}>
-              <SummaryCard title='Tổng doanh thu chi nhánh' amount={branchAmount} />
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <SummaryCard title='Tổng doanh thu chi nhánh' amount={branchAmount} color='secondary.main' />
             </Grid>
           </Grid>
 
           <Card>
-            <CardHeader title='Danh sách tổng thu theo từng lớp của HLV' />
+            <CardHeader title='Chi tiết thu theo lớp của huấn luyện viên' />
+            <Divider />
             <CardContent>
               <div className='overflow-x-auto'>
                 <table className={tableStyles.table}>
                   <thead>
                     <tr>
                       <th>Lớp</th>
-                      <th>Học phí</th>
+                      <th>Học phí thu được</th>
                       <th>Bán sản phẩm</th>
                       <th>Tổng thu</th>
                       <th>Đã bàn giao</th>
-                      <th>Còn có thể bàn giao</th>
-                      <th>As Of</th>
+                      <th>Còn lại</th>
+                      <th>Tính đến</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -330,13 +340,32 @@ const FinanceSummaryView = () => {
                     ) : (
                       collections.map(item => (
                         <tr key={`${item.instructorId}-${item.classId}`}>
-                          <td>{item.className || item.classId}</td>
+                          <td>
+                            <Typography variant='body2' className='font-medium'>
+                              {item.className || item.classId}
+                            </Typography>
+                          </td>
                           <td>{formatCurrency(item.tuitionCollectedToDate)}</td>
                           <td>{formatCurrency(item.productSalesCollectedToDate)}</td>
-                          <td>{formatCurrency(item.totalCollectedToDate)}</td>
+                          <td>
+                            <Typography variant='body2' color='success.main' className='font-medium'>
+                              {formatCurrency(item.totalCollectedToDate)}
+                            </Typography>
+                          </td>
                           <td>{formatCurrency(item.totalHandedOver)}</td>
-                          <td>{formatCurrency(item.availableToHandover)}</td>
-                          <td>{item.asOf ? new Date(item.asOf).toLocaleString('vi-VN') : '-'}</td>
+                          <td>
+                            <Typography
+                              variant='body2'
+                              color={item.availableToHandover > 0 ? 'warning.main' : 'text.secondary'}
+                            >
+                              {formatCurrency(item.availableToHandover)}
+                            </Typography>
+                          </td>
+                          <td>
+                            <Typography variant='body2' color='text.secondary'>
+                              {item.asOf ? new Date(item.asOf).toLocaleDateString('vi-VN') : '-'}
+                            </Typography>
+                          </td>
                         </tr>
                       ))
                     )}

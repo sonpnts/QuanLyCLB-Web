@@ -21,6 +21,7 @@ import type { BranchType, GetBranchesParams } from '@/services/branchService'
 
 // Component Imports
 import AddBranchDrawer from './AddBranchDrawer'
+import EditBranchDrawer from './EditBranchDrawer'
 import TableFilters from './TableFilters'
 
 // Service Imports
@@ -41,6 +42,8 @@ const columnHelper = createColumnHelper<BranchType>()
 const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
   // States
   const [addBranchOpen, setAddBranchOpen] = useState(false)
+  const [editBranchOpen, setEditBranchOpen] = useState(false)
+  const [selectedBranch, setSelectedBranch] = useState<BranchType | null>(null)
   const [data, setData] = useState<BranchType[]>(tableData || [])
   const [filteredData, setFilteredData] = useState<BranchType[]>([])
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -149,6 +152,12 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
     [showNotification]
   )
 
+  // Handle Edit branch
+  const handleEdit = useCallback((branch: BranchType) => {
+    setSelectedBranch(branch)
+    setEditBranchOpen(true)
+  }, [])
+
   // Columns
   const columns = useMemo(
     () => [
@@ -184,6 +193,14 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
         header: 'Bán kính (m)',
         cell: ({ row }) => <Typography variant='body2'>{row.original.allowedRadiusMeters}</Typography>
       }),
+      columnHelper.accessor('tuitionFee', {
+        header: 'Học phí',
+        cell: ({ row }) => (
+          <Typography variant='body2'>
+            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(row.original.tuitionFee || 0)}
+          </Typography>
+        )
+      }),
       columnHelper.accessor('isActive', {
         header: 'Trạng thái',
         cell: ({ row }) => (
@@ -200,6 +217,9 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
         header: 'Thao tác',
         cell: ({ row }) => (
           <Box className='flex items-center gap-2'>
+            <IconButton size='small' onClick={() => handleEdit(row.original)} color='primary'>
+              <i className='ri-edit-line text-xl' />
+            </IconButton>
             {!row.original.isActive ? (
               <IconButton size='small' onClick={() => handleRestore(row.original.id)} color='success'>
                 <i className='ri-restart-line text-xl' />
@@ -213,7 +233,7 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
         )
       })
     ],
-    [data, filteredData, showNotification, setData, setLoading, handleDelete, handleRestore]
+    [data, filteredData, showNotification, setData, setLoading, handleDelete, handleRestore, handleEdit]
   )
 
   // Table
@@ -271,6 +291,16 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
         open={addBranchOpen}
         handleClose={() => setAddBranchOpen(false)}
         branchData={data}
+        setData={setData}
+        setFilteredData={setFilteredData}
+      />
+      <EditBranchDrawer
+        open={editBranchOpen}
+        handleClose={() => {
+          setEditBranchOpen(false)
+          setSelectedBranch(null)
+        }}
+        selectedBranch={selectedBranch}
         setData={setData}
         setFilteredData={setFilteredData}
       />

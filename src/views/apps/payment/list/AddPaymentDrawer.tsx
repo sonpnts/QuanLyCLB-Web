@@ -1,17 +1,21 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Alert from '@mui/material/Alert'
 import AppBar from '@mui/material/AppBar'
 import Autocomplete from '@mui/material/Autocomplete'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Dialog from '@mui/material/Dialog'
+import Divider from '@mui/material/Divider'
 import FormControl from '@mui/material/FormControl'
 import Grid from '@mui/material/Grid2'
 import IconButton from '@mui/material/IconButton'
+import InputAdornment from '@mui/material/InputAdornment'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
+import Paper from '@mui/material/Paper'
 import Select from '@mui/material/Select'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
@@ -40,6 +44,9 @@ const PAYMENT_TYPE_PRODUCT = 3
 
 const PAYMENT_METHOD_CASH = 0
 const PAYMENT_METHOD_BANK_TRANSFER = 1
+
+const formatVND = (amount: number) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 
 const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
   const { auth } = useAuth()
@@ -136,10 +143,10 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
           const filteredClasses = isAdmin
             ? classRes.data
             : classRes.data.filter(
-                item =>
-                  item.instructorId === auth?.user.id ||
-                  (Array.isArray(item.coachIds) && item.coachIds.includes(auth?.user.id || ''))
-              )
+              item =>
+                item.instructorId === auth?.user.id ||
+                (Array.isArray(item.coachIds) && item.coachIds.includes(auth?.user.id || ''))
+            )
 
           setClasses(filteredClasses)
         }
@@ -195,6 +202,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
     }
   }, [formData.classId, open, showNotification])
 
+  // Tải báo giá học phí và tự động điền giảm trừ gợi ý
   useEffect(() => {
     const loadTuitionQuote = async () => {
       if (formData.type !== PAYMENT_TYPE_TUITION || !formData.classId || !formData.studentId) {
@@ -216,6 +224,16 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
 
         if (response.success && response.data) {
           setTuitionQuote(response.data)
+
+          // Tự động điền giảm trừ gợi ý nếu > 0
+          if (response.data.suggestedDiscountAmount > 0) {
+            setFormData(prev => ({
+              ...prev,
+              discountAmount: String(response.data!.suggestedDiscountAmount)
+            }))
+          } else {
+            setFormData(prev => ({ ...prev, discountAmount: '' }))
+          }
         } else {
           setTuitionQuote(null)
           showNotification(response.message || 'Không thể tính học phí.', 'error')
@@ -285,6 +303,22 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
       showNotification('Học phí tháng này đã thanh toán, không thể tạo thu trùng.', 'error')
 
       return
+    }
+
+    if (formData.type === PAYMENT_TYPE_TUITION) {
+      if (formData.month < 1 || formData.month > 12) {
+        showNotification('Tháng không hợp lệ (1–12).', 'error')
+
+        return
+      }
+
+      const currentYear = new Date().getFullYear()
+
+      if (formData.year < currentYear - 2 || formData.year > currentYear + 1) {
+        showNotification('Năm không hợp lệ.', 'error')
+
+        return
+      }
     }
 
     if (formData.type === PAYMENT_TYPE_EXAM_FEE && !selectedExamOptionId) {
@@ -393,10 +427,11 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
         ) : (
           <Stack spacing={4}>
             <Typography variant='body2' color='text.secondary'>
-              Chọn theo luồng: Lớp hiện tại - Học viên - Loại thanh toán.
+              Chọn theo luồng: Lớp hiện tại → Học viên → Loại thanh toán.
             </Typography>
 
             <Grid container spacing={4}>
+              {/* Lớp học */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth>
                   <InputLabel>Lớp hiện tại *</InputLabel>
@@ -414,6 +449,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                 </FormControl>
               </Grid>
 
+              {/* Học viên */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Autocomplete
                   options={students}
@@ -436,6 +472,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                 />
               </Grid>
 
+              {/* Loại thanh toán */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth>
                   <InputLabel>Loại thanh toán *</InputLabel>
@@ -447,7 +484,8 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                         ...prev,
                         type: Number(e.target.value),
                         productId: '',
-                        examRegistrationId: ''
+                        examRegistrationId: '',
+                        discountAmount: ''
                       }))
                     }
                   >
@@ -458,6 +496,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                 </FormControl>
               </Grid>
 
+              {/* Ngày thanh toán */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
@@ -469,22 +508,25 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                 />
               </Grid>
 
+              {/* Học phí - chọn tháng/năm */}
               {formData.type === PAYMENT_TYPE_TUITION && (
                 <>
                   <Grid size={{ xs: 12, md: 3 }}>
                     <TextField
                       fullWidth
-                      label='Tháng'
+                      label='Tháng *'
                       type='number'
                       inputProps={{ min: 1, max: 12 }}
                       value={formData.month}
                       onChange={e => setFormData(prev => ({ ...prev, month: Number(e.target.value) }))}
+                      error={formData.month < 1 || formData.month > 12}
+                      helperText={formData.month < 1 || formData.month > 12 ? 'Tháng phải từ 1–12' : undefined}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 3 }}>
                     <TextField
                       fullWidth
-                      label='Năm'
+                      label='Năm *'
                       type='number'
                       value={formData.year}
                       onChange={e => setFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
@@ -493,6 +535,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                 </>
               )}
 
+              {/* Lệ phí thi cấp */}
               {formData.type === PAYMENT_TYPE_EXAM_FEE && (
                 <Grid size={{ xs: 12 }}>
                   <FormControl fullWidth>
@@ -509,7 +552,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                       ) : (
                         examFeeOptions.map(item => (
                           <MenuItem key={item.registrationId} value={item.registrationId}>
-                            {item.examSessionName} - {item.targetBeltLevelName}
+                            {item.examSessionName} – {item.targetBeltLevelName} ({formatVND(item.feeAmount)})
                           </MenuItem>
                         ))
                       )}
@@ -518,6 +561,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                 </Grid>
               )}
 
+              {/* Mua sản phẩm */}
               {formData.type === PAYMENT_TYPE_PRODUCT && (
                 <Grid size={{ xs: 12 }}>
                   <FormControl fullWidth>
@@ -528,13 +572,14 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                       onChange={e => {
                         const newProductId = String(e.target.value)
                         const product = products.find(item => item.id === newProductId) || null
+
                         setSelectedProduct(product)
                         setFormData(prev => ({ ...prev, productId: newProductId }))
                       }}
                     >
                       {products.map(item => (
                         <MenuItem key={item.id} value={item.id}>
-                          {item.name} - {item.unitPrice.toLocaleString('vi-VN')} VND
+                          {item.name} – {formatVND(item.unitPrice)}
                         </MenuItem>
                       ))}
                     </Select>
@@ -542,11 +587,66 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                 </Grid>
               )}
 
+              {/* Info card học phí tháng */}
+              {formData.type === PAYMENT_TYPE_TUITION && formData.classId && formData.studentId && (
+                <Grid size={{ xs: 12 }}>
+                  {loadingQuote ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CircularProgress size={18} />
+                      <Typography variant='body2' color='text.secondary'>
+                        Đang tính học phí...
+                      </Typography>
+                    </Box>
+                  ) : tuitionQuote ? (
+                    <Paper variant='outlined' sx={{ p: 2 }}>
+                      <Typography variant='subtitle2' gutterBottom>
+                        Thông tin học phí tháng {formData.month}/{formData.year}
+                      </Typography>
+                      <Divider sx={{ mb: 1 }} />
+                      <Stack spacing={0.5}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography variant='body2' color='text.secondary'>
+                            Học phí gốc:
+                          </Typography>
+                          <Typography variant='body2' fontWeight='medium'>
+                            {formatVND(tuitionQuote.monthlyFee)}
+                          </Typography>
+                        </Box>
+                        {tuitionQuote.suggestedDiscountAmount > 0 && (
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant='body2' color='text.secondary'>
+                              Giảm trừ gợi ý:
+                            </Typography>
+                            <Typography variant='body2' color='warning.main' fontWeight='medium'>
+                              -{formatVND(tuitionQuote.suggestedDiscountAmount)}
+                            </Typography>
+                          </Box>
+                        )}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography variant='body2' fontWeight='bold'>
+                            Thực thu:
+                          </Typography>
+                          <Typography variant='body2' fontWeight='bold' color='success.main'>
+                            {formatVND(tuitionQuote.finalAmount)}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                      {tuitionQuote.alreadyPaid && (
+                        <Alert severity='warning' sx={{ mt: 1 }}>
+                          Học phí tháng này đã được thanh toán!
+                        </Alert>
+                      )}
+                    </Paper>
+                  ) : null}
+                </Grid>
+              )}
+
+              {/* Số tiền gốc / Giảm trừ / Thực thu */}
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
                   fullWidth
                   label='Số tiền gốc'
-                  value={loadingQuote ? 'Đang tính...' : originalAmount.toLocaleString('vi-VN')}
+                  value={loadingQuote ? 'Đang tính...' : formatVND(originalAmount)}
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
@@ -556,8 +656,14 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                   fullWidth
                   label='Số tiền giảm'
                   type='number'
+                  inputProps={{ min: 0 }}
                   value={formData.discountAmount}
                   onChange={e => setFormData(prev => ({ ...prev, discountAmount: e.target.value }))}
+                  InputProps={{
+                    endAdornment: <InputAdornment position='end'>VND</InputAdornment>
+                  }}
+                  error={discountAmount > originalAmount}
+                  helperText={discountAmount > originalAmount ? 'Không được lớn hơn số tiền gốc' : undefined}
                 />
               </Grid>
 
@@ -565,8 +671,9 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                 <TextField
                   fullWidth
                   label='Số tiền thu'
-                  value={finalAmount.toLocaleString('vi-VN')}
+                  value={formatVND(finalAmount)}
                   InputProps={{ readOnly: true }}
+                  sx={{ '& .MuiInputBase-input': { color: 'success.main', fontWeight: 'bold' } }}
                 />
               </Grid>
 
@@ -577,9 +684,11 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                   value={formData.discountReason}
                   onChange={e => setFormData(prev => ({ ...prev, discountReason: e.target.value }))}
                   required={discountAmount > 0}
+                  helperText={discountAmount > 0 ? 'Bắt buộc khi có giảm trừ' : undefined}
                 />
               </Grid>
 
+              {/* Phương thức thanh toán */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth>
                   <InputLabel>Phương thức thanh toán</InputLabel>
@@ -594,11 +703,12 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                 </FormControl>
               </Grid>
 
+              {/* Upload ảnh chuyển khoản */}
               {formData.method === PAYMENT_METHOD_BANK_TRANSFER && (
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Stack direction='row' spacing={2} alignItems='center'>
-                    <Button component='label' variant='outlined'>
-                      Upload ảnh chuyển khoản
+                    <Button component='label' variant='outlined' color={proofImageFile ? 'success' : 'primary'}>
+                      {proofImageFile ? 'Đổi ảnh minh chứng' : 'Upload ảnh chuyển khoản *'}
                       <input
                         hidden
                         type='file'
@@ -606,13 +716,14 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                         onChange={e => setProofImageFile(e.target.files?.[0] || null)}
                       />
                     </Button>
-                    <Typography variant='body2' color='text.secondary'>
-                      {proofImageFile?.name || 'Chưa chọn ảnh'}
+                    <Typography variant='body2' color={proofImageFile ? 'success.main' : 'text.secondary'}>
+                      {proofImageFile ? `✓ ${proofImageFile.name}` : 'Chưa chọn ảnh'}
                     </Typography>
                   </Stack>
                 </Grid>
               )}
 
+              {/* Ghi chú */}
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
@@ -626,14 +737,19 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
             </Grid>
 
             {formData.type === PAYMENT_TYPE_TUITION && tuitionQuote?.alreadyPaid && (
-              <Typography color='error.main'>Học phí tháng này đã thanh toán, hệ thống sẽ không cho phép thu thêm.</Typography>
+              <Alert severity='error'>Học phí tháng này đã thanh toán, hệ thống sẽ không cho phép thu thêm.</Alert>
             )}
 
             <Box className='flex items-center gap-3'>
               <Button
                 type='submit'
                 variant='contained'
-                disabled={loadingSubmit || loadingQuote || (formData.type === PAYMENT_TYPE_TUITION && !!tuitionQuote?.alreadyPaid)}
+                disabled={
+                  loadingSubmit ||
+                  loadingQuote ||
+                  (formData.type === PAYMENT_TYPE_TUITION && !!tuitionQuote?.alreadyPaid) ||
+                  discountAmount > originalAmount
+                }
               >
                 {loadingSubmit ? 'Đang tạo...' : 'Tạo thanh toán'}
               </Button>
@@ -649,5 +765,3 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
 }
 
 export default AddPaymentDrawer
-
-

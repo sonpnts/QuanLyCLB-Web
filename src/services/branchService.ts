@@ -17,6 +17,7 @@ export interface ApiBranchResponse {
   longitude: number
   allowedRadiusMeters: number
   googleMapsEmbedUrl?: string
+  tuitionFee: number
   isActive?: boolean
   createdAt?: string
   updatedAt?: string | null
@@ -34,6 +35,7 @@ class BranchService {
       longitude: apiBranch.longitude,
       allowedRadiusMeters: apiBranch.allowedRadiusMeters,
       googleMapsEmbedUrl: apiBranch.googleMapsEmbedUrl,
+      tuitionFee: apiBranch.tuitionFee,
       isActive: apiBranch.isActive ?? true,
       createdDate: apiBranch.createdAt,
       createdBy: apiBranch.createdByUserId || undefined,

@@ -2,15 +2,12 @@ import { apiClient } from '@/utils/apiClient'
 import type { ExamSessionType, ExamRegistrationType, BeltLevelType } from '@/types/apps/beltExamTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
-
 // Request body for POST /belt-exams/sessions
 export interface CreateExamSessionRequest {
   name: string
+  description?: string
   examDate: string
-  registrationDeadline: string
-  beltLevelId: string
-  examFee: number
-  maxCandidates: number
+  location?: string
 }
 
 // Request body for POST /belt-exams/registrations
@@ -48,6 +45,17 @@ class BeltExamService {
     }
   }
 
+  async getExamSessionById(id: string): Promise<ResponseResult<ExamSessionType>> {
+    const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.sessionById(id))
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data, message: apiResponse.message }
+  }
+
   async createExamSession(data: CreateExamSessionRequest): Promise<ResponseResult<ExamSessionType>> {
     const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessions, data)
     const apiResponse = response.data
@@ -62,7 +70,6 @@ class BeltExamService {
   async submitExamSession(id: string): Promise<ResponseResult<ExamSessionType>> {
     const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionSubmit(id))
     const apiResponse = response.data
-
     if (!apiResponse.isSuccess) {
       return { success: false, message: apiResponse.message }
     }
@@ -93,8 +100,8 @@ class BeltExamService {
   }
 
   // Exam Registrations
-  async getExamRegistrations(): Promise<ResponseResult<ExamRegistrationType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.registrations)
+  async getExamRegistrations(params?: any): Promise<ResponseResult<ExamRegistrationType[]>> {
+    const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.registrations, { params })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

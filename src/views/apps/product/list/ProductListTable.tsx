@@ -32,6 +32,7 @@ import type { GetProductsParams } from '@/services/productService'
 import { useNotification } from '@/contexts/notificationContext'
 
 import AddProductDrawer from './AddProductDrawer'
+import EditProductDrawer from './EditProductDrawer'
 import TableFilters from './TableFilters'
 
 import tableStyles from '@core/styles/table.module.css'
@@ -76,6 +77,8 @@ const columnHelper = createColumnHelper<ProductType>()
 const ProductListTable = () => {
   const { showNotification } = useNotification()
   const [addDrawerOpen, setAddDrawerOpen] = useState(false)
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null)
   const [data, setData] = useState<ProductType[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(false)
@@ -124,6 +127,15 @@ const ProductListTable = () => {
     } catch (error) {
       showNotificationRef.current('Đã có lỗi khi xóa sản phẩm.', 'error')
     }
+  }
+
+  const handleEdit = (product: ProductType) => {
+    setSelectedProduct(product)
+    setEditDrawerOpen(true)
+  }
+
+  const handleSaved = (updated: ProductType) => {
+    setData(prev => prev.map(item => (item.id === updated.id ? updated : item)))
   }
 
   const handleRestore = async (id: string) => {
@@ -180,6 +192,9 @@ const ProductListTable = () => {
         header: 'Thao tác',
         cell: ({ row }) => (
           <div className='flex items-center gap-2'>
+            <IconButton color='primary' title='Chỉnh sửa' onClick={() => handleEdit(row.original)}>
+              <i className='ri-edit-box-line' />
+            </IconButton>
             {row.original.isActive ? (
               <IconButton color='error' title='Xóa mềm' onClick={() => handleDelete(row.original.id)}>
                 <i className='ri-delete-bin-6-line' />
@@ -282,6 +297,12 @@ const ProductListTable = () => {
       </Card>
 
       <AddProductDrawer open={addDrawerOpen} handleClose={() => setAddDrawerOpen(false)} setData={setData} />
+      <EditProductDrawer
+        open={editDrawerOpen}
+        handleClose={() => { setEditDrawerOpen(false); setSelectedProduct(null) }}
+        product={selectedProduct}
+        onSaved={handleSaved}
+      />
     </>
   )
 }

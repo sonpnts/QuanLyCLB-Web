@@ -4,14 +4,22 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 
 // MUI Imports
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import Divider from '@mui/material/Divider'
-import Button from '@mui/material/Button'
-import TextField from '@mui/material/TextField'
-import Typography from '@mui/material/Typography'
-import TablePagination from '@mui/material/TablePagination'
 import Chip from '@mui/material/Chip'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogContentText from '@mui/material/DialogContentText'
+import DialogTitle from '@mui/material/DialogTitle'
+import Divider from '@mui/material/Divider'
+import IconButton from '@mui/material/IconButton'
+import TablePagination from '@mui/material/TablePagination'
+import TextField from '@mui/material/TextField'
+import Tooltip from '@mui/material/Tooltip'
+import Typography from '@mui/material/Typography'
 import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
@@ -30,11 +38,12 @@ import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
-import { paymentTypeLabels, paymentMethodLabels } from '@/types/apps/paymentTypes'
+import { paymentTypeLabels, paymentMethodLabels, PaymentTypeColors } from '@/types/apps/paymentTypes'
 
 // Component Imports
 import TableFilters from './TableFilters'
 import AddPaymentDrawer from './AddPaymentDrawer'
+import ReceiptModal from './ReceiptModal'
 
 // Service Imports
 import paymentService from '@/services/paymentService'
@@ -48,7 +57,9 @@ import tableStyles from '@core/styles/table.module.css'
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
+
   addMeta({ itemRank })
+
   return itemRank.passed
 }
 
@@ -70,29 +81,38 @@ const DebouncedInput = ({
 
   useEffect(() => {
     const timeout = setTimeout(() => onChange(value), debounce)
+
     return () => clearTimeout(timeout)
   }, [value, debounce, onChange])
 
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
-}
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 
 const columnHelper = createColumnHelper<PaymentRecordType>()
 
 const PaymentListTable = () => {
   const [addPaymentOpen, setAddPaymentOpen] = useState(false)
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false)
+  const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
+  
   const [data, setData] = useState<PaymentRecordType[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetPaymentsParams>({})
 
+  // Xóa dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deletingLoading, setDeletingLoading] = useState(false)
+
   const { showNotification } = useNotification()
 
   // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
   const currentFilterRef = useRef<string>('')
@@ -115,6 +135,7 @@ const PaymentListTable = () => {
         dataLoadedRef.current = true
 
         const response = await paymentService.getPayments(filterParams)
+
         if (response.success && response.data) {
           setData(response.data)
         } else {
@@ -126,11 +147,53 @@ const PaymentListTable = () => {
         setLoading(false)
       }
     }
+
     loadPayments()
   }, [filterParams])
 
+  const handleViewReceipt = (receiptNumber: string) => {
+    setSelectedReceipt(receiptNumber)
+    setReceiptModalOpen(true)
+  }
+
+  const handleDeleteClick = (id: string) => {
+    setDeletingId(id)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingId) return
+    setDeletingLoading(true)
+
+    try {
+      const res = await paymentService.deletePayment(deletingId)
+
+      if (res.success) {
+        setData(prev => prev.filter(item => item.id !== deletingId))
+        showNotification('Đã xoá bản ghi thanh toán.', 'success')
+      } else {
+        showNotification(res.message || 'Không thể xoá bản ghi.', 'error')
+      }
+    } catch {
+      showNotification('Có lỗi khi xoá bản ghi.', 'error')
+    } finally {
+      setDeletingLoading(false)
+      setDeleteDialogOpen(false)
+      setDeletingId(null)
+    }
+  }
+
   const columns = useMemo<ColumnDef<PaymentRecordType, any>[]>(
     () => [
+      {
+        id: 'receiptNumber',
+        header: 'Số Biên lai',
+        cell: ({ row }) => (
+          <Typography variant='body2' fontWeight={500} color='primary'>
+            {row.original.receiptNumber || '-'}
+          </Typography>
+        )
+      },
       columnHelper.accessor('studentName', {
         header: 'Học viên',
         cell: ({ row }) => (
@@ -147,15 +210,38 @@ const PaymentListTable = () => {
         header: 'Loại thanh toán',
         cell: ({ row }) => (
           <Chip
-            label={paymentTypeLabels[row.original.type] || row.original.type}
+            label={paymentTypeLabels[row.original.type] || String(row.original.type)}
             size='small'
-            color='primary'
+            color={PaymentTypeColors[row.original.type] || 'default'}
             variant='tonal'
           />
         )
       }),
+      columnHelper.accessor('originalAmount', {
+        header: 'Tiền gốc',
+        cell: ({ row }) => (
+          <Typography variant='body2' color='text.secondary'>
+            {row.original.originalAmount != null ? formatCurrency(row.original.originalAmount) : '-'}
+          </Typography>
+        )
+      }),
+      columnHelper.accessor('discountAmount', {
+        header: 'Giảm trừ',
+        cell: ({ row }) =>
+          row.original.discountAmount && row.original.discountAmount > 0 ? (
+            <Tooltip title={row.original.discountReason || ''}>
+              <Typography variant='body2' color='warning.main'>
+                -{formatCurrency(row.original.discountAmount)}
+              </Typography>
+            </Tooltip>
+          ) : (
+            <Typography variant='body2' color='text.disabled'>
+              —
+            </Typography>
+          )
+      }),
       columnHelper.accessor('amount', {
-        header: 'Số tiền',
+        header: 'Thực thu',
         cell: ({ row }) => (
           <Typography className='font-medium' color='success.main'>
             {formatCurrency(row.original.amount)}
@@ -163,14 +249,18 @@ const PaymentListTable = () => {
         )
       }),
       columnHelper.accessor('paymentDate', {
-        header: 'Ngày thanh toán',
-        cell: ({ row }) => <Typography>{new Date(row.original.paymentDate).toLocaleDateString('vi-VN')}</Typography>
+        header: 'Ngày TT',
+        cell: ({ row }) => (
+          <Typography variant='body2'>
+            {new Date(row.original.paymentDate).toLocaleDateString('vi-VN')}
+          </Typography>
+        )
       }),
       columnHelper.accessor('method', {
         header: 'Phương thức',
         cell: ({ row }) => (
           <Chip
-            label={paymentMethodLabels[row.original.method] || row.original.method}
+            label={paymentMethodLabels[row.original.method] || String(row.original.method)}
             size='small'
             color='secondary'
             variant='tonal'
@@ -181,9 +271,48 @@ const PaymentListTable = () => {
         id: 'period',
         header: 'Kỳ',
         cell: ({ row }) => (
-          <Typography>
-            {row.original.forMonth && row.original.forYear ? `${row.original.forMonth}/${row.original.forYear}` : '-'}
+          <Typography variant='body2'>
+            {row.original.forMonth && row.original.forYear
+              ? `${row.original.forMonth}/${row.original.forYear}`
+              : '-'}
           </Typography>
+        )
+      },
+      columnHelper.accessor('collectedByUserName', {
+        header: 'Người thu',
+        cell: ({ row }) => (
+          <Typography variant='body2' color='text.secondary'>
+            {row.original.collectedByUserName || '-'}
+          </Typography>
+        )
+      }),
+      {
+        id: 'actions',
+        header: 'Thao tác',
+        cell: ({ row }) => (
+          <div className='flex items-center'>
+            {row.original.receiptNumber && (
+              <Tooltip title='Xem Biên lai'>
+                <IconButton
+                  size='small'
+                  color='info'
+                  onClick={() => handleViewReceipt(row.original.receiptNumber!)}
+                >
+                  <i className='ri-eye-line text-lg' />
+                </IconButton>
+              </Tooltip>
+            )}
+            <Tooltip title='Xoá bản ghi'>
+              <IconButton
+                size='small'
+                color='error'
+                onClick={() => handleDeleteClick(row.original.id)}
+                disabled={row.original.isActive === false}
+              >
+                <i className='ri-delete-bin-7-line text-lg' />
+              </IconButton>
+            </Tooltip>
+          </div>
         )
       }
     ],
@@ -281,6 +410,28 @@ const PaymentListTable = () => {
       </Card>
 
       <AddPaymentDrawer open={addPaymentOpen} handleClose={() => setAddPaymentOpen(false)} setData={setData} />
+
+      <ReceiptModal 
+        open={receiptModalOpen} 
+        receiptNumber={selectedReceipt} 
+        onClose={() => { setReceiptModalOpen(false); setSelectedReceipt(null); }} 
+      />
+
+      {/* Confirm xoá dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => !deletingLoading && setDeleteDialogOpen(false)}>
+        <DialogTitle>Xác nhận xoá</DialogTitle>
+        <DialogContent>
+          <DialogContentText>Bạn có chắc muốn xoá bản ghi thanh toán này không? Thao tác không thể hoàn tác.</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deletingLoading} color='inherit'>
+            Huỷ
+          </Button>
+          <Button onClick={handleDeleteConfirm} disabled={deletingLoading} color='error' variant='contained'>
+            {deletingLoading ? 'Đang xoá...' : 'Xoá'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }

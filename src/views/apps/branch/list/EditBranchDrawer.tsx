@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 import { useForm } from 'react-hook-form'
 
@@ -16,7 +16,7 @@ import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
 
 // Type Imports
-import type { BranchType, CreateBranchRequest } from '@/services/branchService'
+import type { BranchType, UpdateBranchRequest } from '@/services/branchService'
 
 // Service Imports
 import branchService from '@/services/branchService'
@@ -27,9 +27,9 @@ import { useNotification } from '@/contexts/notificationContext'
 type Props = {
   open: boolean
   handleClose: () => void
-  branchData?: BranchType[]
-  setData: (data: BranchType[]) => void
-  setFilteredData: (data: BranchType[]) => void
+  selectedBranch: BranchType | null
+  setData: (data: React.SetStateAction<BranchType[]>) => void
+  setFilteredData: (data: React.SetStateAction<BranchType[]>) => void
 }
 
 type FormValidateType = {
@@ -48,8 +48,8 @@ const parseNum = (val: any) => {
   return Number(String(val).replace(',', '.'))
 }
 
-const AddBranchDrawer = (props: Props) => {
-  const { open, handleClose, branchData, setData, setFilteredData } = props
+const EditBranchDrawer = (props: Props) => {
+  const { open, handleClose, selectedBranch, setData, setFilteredData } = props
 
   // States
   const [loading, setLoading] = useState(false)
@@ -75,6 +75,22 @@ const AddBranchDrawer = (props: Props) => {
     }
   })
 
+  useEffect(() => {
+    if (selectedBranch) {
+      reset({
+        name: selectedBranch.name,
+        address: selectedBranch.address || '',
+        latitude: selectedBranch.latitude,
+        longitude: selectedBranch.longitude,
+        allowedRadiusMeters: selectedBranch.allowedRadiusMeters,
+        tuitionFee: selectedBranch.tuitionFee || 0,
+        googleMapsEmbedUrl: selectedBranch.googleMapsEmbedUrl || ''
+      })
+    } else {
+      reset()
+    }
+  }, [selectedBranch, reset, open])
+
   // Handle close
   const handleCloseDrawer = () => {
     reset()
@@ -84,9 +100,11 @@ const AddBranchDrawer = (props: Props) => {
   // Handle submit
   const onSubmit = async (data: FormValidateType) => {
     try {
+      if (!selectedBranch) return
+
       setLoading(true)
 
-      const createData: CreateBranchRequest = {
+      const updateData: UpdateBranchRequest = {
         name: data.name,
         address: data.address || undefined,
         latitude: parseNum(data.latitude),
@@ -96,19 +114,19 @@ const AddBranchDrawer = (props: Props) => {
         googleMapsEmbedUrl: data.googleMapsEmbedUrl || undefined
       }
 
-      const response = await branchService.createBranch(createData)
+      const response = await branchService.updateBranch(selectedBranch.id, updateData)
 
       if (response.success && response.data) {
-        setData([response.data, ...(branchData || [])])
-        setFilteredData([response.data, ...(branchData || [])])
-        showNotification(response.message || 'Tạo chi nhánh thành công.', 'success')
+        setData(prev => prev.map(b => (b.id === selectedBranch.id ? response.data! : b)))
+        setFilteredData(prev => prev.map(b => (b.id === selectedBranch.id ? response.data! : b)))
+        showNotification(response.message || 'Cập nhật chi nhánh thành công.', 'success')
         handleCloseDrawer()
       } else {
-        showNotification(response.message || 'Không thể tạo chi nhánh.', 'error')
+        showNotification(response.message || 'Không thể cập nhật chi nhánh.', 'error')
       }
     } catch (error) {
-      console.error('Error creating branch:', error)
-      showNotification('Đã có lỗi khi tạo chi nhánh.', 'error')
+      console.error('Error updating branch:', error)
+      showNotification('Đã có lỗi khi cập nhật chi nhánh.', 'error')
     } finally {
       setLoading(false)
     }
@@ -124,7 +142,7 @@ const AddBranchDrawer = (props: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 500, md: 600 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Thêm chi nhánh mới</Typography>
+        <Typography variant='h5'>Sửa chi nhánh</Typography>
         <IconButton size='small' onClick={handleCloseDrawer}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -154,7 +172,6 @@ const AddBranchDrawer = (props: Props) => {
             <TextField
               fullWidth
               label='Vĩ độ'
-              type='number'
               {...register('latitude', {
                 required: 'Vĩ độ là bắt buộc',
                 validate: {
@@ -171,7 +188,6 @@ const AddBranchDrawer = (props: Props) => {
             <TextField
               fullWidth
               label='Kinh độ'
-              type='number'
               {...register('longitude', {
                 required: 'Kinh độ là bắt buộc',
                 validate: {
@@ -231,7 +247,7 @@ const AddBranchDrawer = (props: Props) => {
             Hủy
           </Button>
           <Button type='submit' variant='contained' disabled={loading}>
-            {loading ? 'Đang tạo...' : 'Tạo chi nhánh'}
+            {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
           </Button>
         </Box>
       </form>
@@ -239,4 +255,4 @@ const AddBranchDrawer = (props: Props) => {
   )
 }
 
-export default AddBranchDrawer
+export default EditBranchDrawer

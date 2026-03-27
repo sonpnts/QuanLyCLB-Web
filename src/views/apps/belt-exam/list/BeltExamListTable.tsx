@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -131,31 +132,21 @@ const BeltExamListTable = () => {
           </Typography>
         )
       }),
-      columnHelper.accessor('beltLevelName', {
-        header: 'Cấp đai',
-        cell: ({ row }) => <Typography>{row.original.beltLevelName || '-'}</Typography>
-      }),
       columnHelper.accessor('examDate', {
         header: 'Ngày thi',
         cell: ({ row }) => (
           <Typography>{new Date(row.original.examDate).toLocaleDateString('vi-VN')}</Typography>
         )
       }),
-      columnHelper.accessor('registrationDeadline', {
-        header: 'Hạn đăng ký',
-        cell: ({ row }) => (
-          <Typography>{new Date(row.original.registrationDeadline).toLocaleDateString('vi-VN')}</Typography>
-        )
+      columnHelper.accessor('location', {
+        header: 'Địa điểm',
+        cell: ({ row }) => <Typography>{row.original.location || '-'}</Typography>
       }),
-      columnHelper.accessor('examFee', {
-        header: 'Lệ phí',
-        cell: ({ row }) => <Typography>{formatCurrency(row.original.examFee)}</Typography>
-      }),
-      columnHelper.accessor('maxCandidates', {
-        header: 'Số lượng',
+      columnHelper.accessor('totalRegistrations', {
+        header: 'Số lượt đ.ký',
         cell: ({ row }) => (
           <Typography>
-            {row.original.currentCandidates || 0}/{row.original.maxCandidates}
+            {row.original.totalRegistrations || 0}
           </Typography>
         )
       }),
@@ -204,7 +195,7 @@ const BeltExamListTable = () => {
                   </IconButton>
                 </>
               )}
-              <IconButton title='Xem chi tiết'>
+              <IconButton component={Link} href={`/apps/belt-exam/${exam.id}`} title='Xem chi tiết'>
                 <i className='ri-eye-line text-textSecondary' />
               </IconButton>
             </Box>

@@ -1,5 +1,10 @@
 import { apiClient } from '@/utils/apiClient'
-import type { PaymentRecordType, PaymentSummaryType, MonthlyReportType } from '@/types/apps/paymentTypes'
+import type {
+  PaymentRecordType,
+  PaymentSummaryType,
+  MonthlyReportType,
+  StudentDiscountConfigType
+} from '@/types/apps/paymentTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
@@ -29,6 +34,30 @@ export interface CreatePaymentRequest {
   forMonth?: number
   forYear?: number
   description?: string
+}
+
+export interface BulkPaymentItemRequest {
+  type: number
+  amount?: number
+  description?: string
+  classId?: string
+  productId?: string
+  forMonth?: number
+  forYear?: number
+  examRegistrationId?: string
+  discountAmount?: number
+  discountReason?: string
+  studentDiscountConfigId?: string
+}
+
+export interface CreateBulkPaymentRequest {
+  studentId: string
+  paymentDate: string
+  method: number
+  transactionRef?: string
+  transferProofImageUrl?: string
+  collectedByUserId?: string
+  items: BulkPaymentItemRequest[]
 }
 
 export interface TuitionQuoteType {
@@ -89,6 +118,17 @@ class PaymentService {
 
   async createPayment(data: CreatePaymentRequest): Promise<ResponseResult<PaymentRecordType>> {
     const response = await apiClient.post<any>(API_ENDPOINTS.payments.root, data)
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data, message: apiResponse.message }
+  }
+
+  async createBulkPayment(data: CreateBulkPaymentRequest): Promise<ResponseResult<any>> {
+    const response = await apiClient.post<any>(API_ENDPOINTS.payments.root + '/bulk', data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -255,6 +295,68 @@ class PaymentService {
       data: apiResponse.data,
       message: apiResponse.message
     }
+  }
+
+
+  // ── Student discount configs ────────────────────────────────────────────
+
+  async getStudentDiscountConfigs(params?: {
+    studentId?: string
+    branchId?: string
+    classId?: string
+    pageNumber?: number
+    pageSize?: number
+    isActive?: boolean
+  }): Promise<ResponseResult<StudentDiscountConfigType[]>> {
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.studentDiscountConfigs, { params })
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, data: [], message: apiResponse.message }
+    }
+
+    return { success: true, data: unwrapList(apiResponse.data) }
+  }
+
+  async createStudentDiscountConfig(data: {
+    studentId: string
+    branchId?: string
+    classId?: string
+    maxDiscountAmount: number
+    description?: string
+    effectiveFrom?: string
+    effectiveTo?: string
+  }): Promise<ResponseResult<StudentDiscountConfigType>> {
+    const response = await apiClient.post<any>(API_ENDPOINTS.payments.studentDiscountConfigs, data)
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data, message: apiResponse.message }
+  }
+
+  async updateStudentDiscountConfig(
+    id: string,
+    data: {
+      branchId?: string
+      classId?: string
+      maxDiscountAmount: number
+      description?: string
+      effectiveFrom?: string
+      effectiveTo?: string
+      isActive: boolean
+    }
+  ): Promise<ResponseResult<StudentDiscountConfigType>> {
+    const response = await apiClient.put<any>(API_ENDPOINTS.payments.studentDiscountConfigById(id), data)
+    const apiResponse = response.data
+
+    if (!apiResponse.isSuccess) {
+      return { success: false, message: apiResponse.message }
+    }
+
+    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 }
 

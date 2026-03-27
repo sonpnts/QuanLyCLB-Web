@@ -6,6 +6,7 @@ export interface BranchType {
   longitude: number
   allowedRadiusMeters: number
   googleMapsEmbedUrl?: string
+  tuitionFee: number
   isActive: boolean
   createdDate?: string
   createdBy?: string
@@ -35,6 +36,7 @@ export interface CreateBranchRequest {
   longitude: number
   allowedRadiusMeters: number
   googleMapsEmbedUrl?: string
+  tuitionFee: number
 }
 
 export interface UpdateBranchRequest {
@@ -44,5 +46,6 @@ export interface UpdateBranchRequest {
   longitude?: number
   allowedRadiusMeters?: number
   googleMapsEmbedUrl?: string
+  tuitionFee?: number
   isActive?: boolean
 }

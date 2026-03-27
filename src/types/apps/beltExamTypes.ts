@@ -6,16 +6,20 @@ export type ExamSessionStatus = 'Draft' | 'Pending' | 'Approved' | 'Rejected' | 
 export type ExamSessionType = {
   id: string
   name: string
+  description?: string
   examDate: string
-  registrationDeadline: string
-  beltLevelId: string
-  beltLevelName?: string
-  examFee: number
-  maxCandidates: number
-  currentCandidates?: number
+  location?: string
   status: ExamSessionStatus
-  createdAt?: string
-  createdBy?: string
+  adminNotes?: string
+  approvedAt?: string
+  approvedByUserId?: string
+  approvedByUserName?: string
+  totalRegistrations: number
+  approvedRegistrations: number
+  pendingRegistrations: number
+  isActive: boolean
+  createdAt: string
+  updatedAt?: string
 }
 
 export type ExamRegistrationStatus = 'Pending' | 'Approved' | 'Rejected'
@@ -24,14 +28,25 @@ export type ExamResult = 0 | 1 | 2 // 0 = Pending, 1 = Pass, 2 = Fail
 export type ExamRegistrationType = {
   id: string
   examSessionId: string
-  examSessionName?: string
+  examSessionName: string
   studentId: string
-  studentName?: string
+  studentName: string
+  currentBeltLevelId?: string
+  currentBeltLevelName?: string
+  targetBeltLevelId: string
+  targetBeltLevelName: string
+  classId: string
+  className: string
   status: ExamRegistrationStatus
-  result?: ExamResult
+  result: ExamResult
   score?: number
-  notes?: string
-  registeredAt?: string
+  resultNotes?: string
+  isFeePaid: boolean
+  feeAmount: number
+  rejectionReason?: string
+  resultUpdatedAt?: string
+  registeredByUserId: string
+  registeredByUserName: string
 }
 
 export type BeltLevelType = {

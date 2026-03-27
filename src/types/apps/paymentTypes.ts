@@ -15,6 +15,7 @@ export type PaymentRecordType = {
   className?: string
   productId?: string
   productName?: string
+  examRegistrationId?: string
   type: PaymentType
   amount: number
   originalAmount?: number
@@ -26,8 +27,13 @@ export type PaymentRecordType = {
   forYear?: number
   description?: string
   transferProofImageUrl?: string
+  transactionRef?: string
+  receiptNumber?: string
+  collectedByUserId?: string
+  collectedByUserName?: string
+  isActive?: boolean
   createdAt?: string
-  createdBy?: string
+  updatedAt?: string
 }
 
 export type PaymentSummaryType = {
@@ -49,6 +55,24 @@ export type MonthlyReportType = {
   paymentCount: number
 }
 
+
+export type StudentDiscountConfigType = {
+  id: string
+  studentId: string
+  studentName: string
+  branchId?: string
+  branchName?: string
+  classId?: string
+  className?: string
+  maxDiscountAmount: number
+  description?: string
+  effectiveFrom?: string
+  effectiveTo?: string
+  isActive: boolean
+  createdAt: string
+  updatedAt?: string
+}
+
 export const PaymentTypeColors: { [key: number]: ThemeColor } = {
   0: 'primary', // Tuition
   1: 'info', // ExamFee
@@ -60,7 +84,7 @@ export const paymentTypeLabels: { [key: number]: string } = {
   0: 'Học phí',
   1: 'Lệ phí thi cấp',
   2: 'Phí đăng ký',
-  3: 'Mua sản phẩm/khác'
+  3: 'Mua sản phẩm'
 }
 
 export const paymentMethodLabels: { [key: number]: string } = {

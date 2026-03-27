@@ -38,6 +38,7 @@ type Props = {
 }
 
 type FormValues = {
+  code: string
   fullName: string
   phoneNumber?: string
   email?: string
@@ -79,6 +80,7 @@ const EditStudentDrawer = (props: Props) => {
 
   const defaultValues = useMemo<FormValues>(
     () => ({
+      code: student?.code || '',
       fullName: student?.fullName || '',
       phoneNumber: student?.phoneNumber || '',
       email: student?.email || '',
@@ -114,6 +116,7 @@ const EditStudentDrawer = (props: Props) => {
       setSubmitting(true)
 
       const payload = {
+        code: values.code,
         fullName: values.fullName,
         phoneNumber: values.phoneNumber || undefined,
         email: values.email || undefined,
@@ -160,6 +163,22 @@ const EditStudentDrawer = (props: Props) => {
       <Divider />
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-4 p-5'>
         <Grid container spacing={4}>
+          <Grid size={{ xs: 12 }}>
+            <Controller
+              name='code'
+              control={control}
+              rules={{ required: 'Mã học viên là bắt buộc' }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label='Mã học viên *'
+                  error={!!errors.code}
+                  helperText={errors.code?.message}
+                />
+              )}
+            />
+          </Grid>
           <Grid size={{ xs: 12 }}>
             <Controller
               name='fullName'

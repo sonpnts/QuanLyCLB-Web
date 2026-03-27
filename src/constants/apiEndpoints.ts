@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
   },
   beltExams: {
     sessions: '/belt-exams/sessions',
+    sessionById: (id: string) => `/belt-exams/sessions/${id}`,
     sessionSubmit: (id: string) => `/belt-exams/sessions/${id}/submit`,
     sessionApprove: (id: string) => `/belt-exams/sessions/${id}/approve`,
     sessionReject: (id: string) => `/belt-exams/sessions/${id}/reject`,
@@ -104,8 +105,7 @@ export const API_ENDPOINTS = {
     overdue: '/payments/overdue',
     tuitionQuote: '/payments/tuition-quote',
     examFeeOptions: '/payments/exam-fee-options',
-    branchFeeConfigs: '/payments/branch-fee-configs',
-    branchFeeConfigById: (id: string) => `/payments/branch-fee-configs/${id}`,
+
     studentDiscountConfigs: '/payments/student-discount-configs',
     studentDiscountConfigById: (id: string) => `/payments/student-discount-configs/${id}`,
     uploadTransferProof: '/payments/upload-transfer-proof'

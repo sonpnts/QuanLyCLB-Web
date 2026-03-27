@@ -14,7 +14,7 @@ import Divider from '@mui/material/Divider'
 import Grid from '@mui/material/Grid2'
 import InputAdornment from '@mui/material/InputAdornment'
 
-import type { ExamSessionType, BeltLevelType } from '@/types/apps/beltExamTypes'
+import type { ExamSessionType } from '@/types/apps/beltExamTypes'
 import beltExamService from '@/services/beltExamService'
 import { useNotification } from '@/contexts/notificationContext'
 
@@ -27,35 +27,17 @@ type Props = {
 const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     examDate: '',
-    registrationDeadline: '',
-    beltLevelId: '',
-    examFee: 0,
-    maxCandidates: 50
+    location: ''
   })
   const [loading, setLoading] = useState(false)
-  const [beltLevels, setBeltLevels] = useState<BeltLevelType[]>([])
-
   const { showNotification } = useNotification()
-
-  useEffect(() => {
-    const loadBeltLevels = async () => {
-      try {
-        const response = await beltExamService.getBeltLevels()
-        if (response.success && response.data) {
-          setBeltLevels(response.data)
-        }
-      } catch (error) {
-        console.error('Error loading belt levels:', error)
-      }
-    }
-    if (open) loadBeltLevels()
-  }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.name || !formData.examDate || !formData.registrationDeadline || !formData.beltLevelId) {
+    if (!formData.name || !formData.examDate) {
       showNotification('Vui lòng điền đầy đủ thông tin bắt buộc.', 'error')
       return
     }
@@ -64,11 +46,9 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
       setLoading(true)
       const response = await beltExamService.createExamSession({
         name: formData.name,
+        description: formData.description || undefined,
         examDate: formData.examDate,
-        registrationDeadline: formData.registrationDeadline,
-        beltLevelId: formData.beltLevelId,
-        examFee: formData.examFee,
-        maxCandidates: formData.maxCandidates
+        location: formData.location || undefined
       })
 
       if (response.success && response.data) {
@@ -88,11 +68,9 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
   const handleReset = () => {
     setFormData({
       name: '',
+      description: '',
       examDate: '',
-      registrationDeadline: '',
-      beltLevelId: '',
-      examFee: 0,
-      maxCandidates: 50
+      location: ''
     })
     handleClose()
   }
@@ -121,58 +99,27 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
             value={formData.name}
             onChange={e => setFormData({ ...formData, name: e.target.value })}
           />
-          <FormControl fullWidth>
-            <InputLabel>Cấp đai *</InputLabel>
-            <Select
-              label='Cấp đai *'
-              value={formData.beltLevelId}
-              onChange={e => setFormData({ ...formData, beltLevelId: e.target.value })}
-            >
-              {beltLevels.map(level => (
-                <MenuItem key={level.id} value={level.id}>
-                  {level.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                type='date'
-                label='Ngày thi *'
-                value={formData.examDate}
-                onChange={e => setFormData({ ...formData, examDate: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                type='date'
-                label='Hạn đăng ký *'
-                value={formData.registrationDeadline}
-                onChange={e => setFormData({ ...formData, registrationDeadline: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-          </Grid>
           <TextField
             fullWidth
-            type='number'
-            label='Lệ phí thi'
-            value={formData.examFee}
-            onChange={e => setFormData({ ...formData, examFee: Number(e.target.value) })}
-            InputProps={{
-              endAdornment: <InputAdornment position='end'>VNĐ</InputAdornment>
-            }}
+            type='date'
+            label='Ngày thi *'
+            value={formData.examDate}
+            onChange={e => setFormData({ ...formData, examDate: e.target.value })}
+            InputLabelProps={{ shrink: true }}
           />
           <TextField
             fullWidth
-            type='number'
-            label='Số lượng tối đa'
-            value={formData.maxCandidates}
-            onChange={e => setFormData({ ...formData, maxCandidates: Number(e.target.value) })}
+            label='Địa điểm thi'
+            value={formData.location}
+            onChange={e => setFormData({ ...formData, location: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            label='Mô tả'
+            value={formData.description}
+            onChange={e => setFormData({ ...formData, description: e.target.value })}
           />
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
