@@ -16,6 +16,8 @@ export interface GetPaymentsParams {
   type?: number
   fromDate?: string
   toDate?: string
+  paymentDateFrom?: string
+  paymentDateTo?: string
 }
 
 export interface CreatePaymentRequest {
@@ -34,6 +36,7 @@ export interface CreatePaymentRequest {
   forMonth?: number
   forYear?: number
   description?: string
+  collectedByUserId?: string
 }
 
 export interface BulkPaymentItemRequest {
@@ -92,7 +95,15 @@ const unwrapList = (payload: any): any[] => {
 
 class PaymentService {
   async getPayments(params?: GetPaymentsParams): Promise<ResponseResult<PaymentRecordType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.root, { params })
+    const normalizedParams = params
+      ? {
+          ...params,
+          paymentDateFrom: params.paymentDateFrom ?? params.fromDate,
+          paymentDateTo: params.paymentDateTo ?? params.toDate
+        }
+      : undefined
+
+    const response = await apiClient.get<any>(API_ENDPOINTS.payments.root, { params: normalizedParams })
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

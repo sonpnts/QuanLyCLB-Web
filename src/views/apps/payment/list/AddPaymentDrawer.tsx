@@ -287,6 +287,14 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    const collectedByUserId = auth?.user?.id
+
+    if (!collectedByUserId) {
+      showNotification('Không xác định được người thu tiền, vui lòng đăng nhập lại.', 'error')
+
+      return
+    }
+
     if (!formData.classId) {
       showNotification('Vui lòng chọn lớp hiện tại.', 'error')
 
@@ -383,7 +391,8 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
         discountAmount: discountAmount > 0 ? discountAmount : undefined,
         discountReason: discountAmount > 0 ? formData.discountReason.trim() : undefined,
         transferProofImageUrl,
-        description: formData.description.trim() || undefined
+        description: formData.description.trim() || undefined,
+        collectedByUserId
       })
 
       if (response.success && response.data) {

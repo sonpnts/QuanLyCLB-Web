@@ -96,6 +96,7 @@ export const API_ENDPOINTS = {
   payments: {
     root: '/payments',
     byId: (id: string) => `/payments/${id}`,
+    byReceipt: (receiptNumber: string) => `/payments/receipt/${receiptNumber}`,
     restore: (id: string) => `/payments/${id}/restore`,
     byStudent: (studentId: string) => `/payments/by-student/${studentId}`,
     byClass: (classId: string) => `/payments/by-class/${classId}`,

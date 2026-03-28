@@ -21,17 +21,18 @@ export interface CreateProductSaleRequest {
   productId: string
   classId: string
   quantity: number
-  unitPrice: number
+  unitPrice?: number
+  saleDate?: string
   soldByUserId?: string
   buyerName?: string
   notes?: string
 }
 
 export interface UpdateProductSaleRequest {
-  productId?: string
-  classId?: string
-  quantity?: number
-  unitPrice?: number
+  quantity: number
+  unitPrice: number
+  saleDate: string
+  isActive: boolean
   soldByUserId?: string
   buyerName?: string
   notes?: string

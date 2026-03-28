@@ -17,18 +17,17 @@ export interface GetProductsParams {
 export interface CreateProductRequest {
   code: string
   name: string
-  category?: string
+  category: string
   unitPrice: number
   description?: string
 }
 
 export interface UpdateProductRequest {
-  code?: string
-  name?: string
-  category?: string
-  unitPrice?: number
+  name: string
+  category: string
+  unitPrice: number
   description?: string
-  isActive?: boolean
+  isActive: boolean
 }
 
 const toProduct = (value: any): ProductType => ({

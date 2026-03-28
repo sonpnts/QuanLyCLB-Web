@@ -41,7 +41,7 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
       const fetchReceipt = async () => {
         setLoading(true)
         try {
-          const res = await apiClient.get<any>(`${API_ENDPOINTS.payments.root}/receipt/${receiptNumber}`)
+          const res = await apiClient.get<any>(API_ENDPOINTS.payments.byReceipt(receiptNumber))
           if (res.data.isSuccess) {
             setItems(res.data.data)
           } else {

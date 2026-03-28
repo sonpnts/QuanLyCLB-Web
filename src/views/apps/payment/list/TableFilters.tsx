@@ -58,8 +58,8 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
     const params: GetPaymentsParams = {}
     if (type !== '') params.type = Number(type)
     if (classId) params.classId = classId
-    if (fromDate) params.fromDate = fromDate
-    if (toDate) params.toDate = toDate
+    if (fromDate) params.paymentDateFrom = fromDate
+    if (toDate) params.paymentDateTo = toDate
     onFilterChange(params)
   }, [type, classId, fromDate, toDate, onFilterChange])
 

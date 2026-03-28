@@ -83,6 +83,11 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
       return
     }
 
+    if (!formData.reason.trim()) {
+      showNotification('Vui lòng nhập lý do chuyển lớp.', 'error')
+      return
+    }
+
     if (formData.fromClassId === formData.toClassId) {
       showNotification('Lớp đích phải khác lớp hiện tại.', 'error')
       return
@@ -103,7 +108,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
         studentId: formData.studentId,
         fromClassId: formData.fromClassId,
         toClassId: formData.toClassId,
-        reason: formData.reason || undefined
+        reason: formData.reason.trim()
       })
 
       if (response.success && response.data) {
@@ -196,7 +201,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
             </Select>
           </FormControl>
           <TextField
-            label='Lý do chuyển lớp'
+            label='Lý do chuyển lớp *'
             fullWidth
             multiline
             rows={3}

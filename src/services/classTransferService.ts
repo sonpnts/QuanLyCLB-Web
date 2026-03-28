@@ -20,13 +20,13 @@ export interface CreateClassTransferRequest {
   studentId: string
   fromClassId: string
   toClassId: string
-  reason?: string
+  reason: string
 }
 
 // Request body for PUT /class-transfers/{id}
 export interface UpdateClassTransferRequest {
-  toClassId?: string
-  reason?: string
+  toClassId: string
+  reason: string
 }
 
 // Request body for approve

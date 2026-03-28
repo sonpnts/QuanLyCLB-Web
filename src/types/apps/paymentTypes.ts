@@ -84,7 +84,7 @@ export const paymentTypeLabels: { [key: number]: string } = {
   0: 'Học phí',
   1: 'Lệ phí thi cấp',
   2: 'Phí đăng ký',
-  3: 'Mua sản phẩm'
+  3: 'Khác / Mua sản phẩm'
 }
 
 export const paymentMethodLabels: { [key: number]: string } = {

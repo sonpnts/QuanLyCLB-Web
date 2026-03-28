@@ -45,8 +45,8 @@ const AddProductDrawer = ({ open, handleClose, setData }: Props) => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
-    if (!formData.code || !formData.name || !formData.unitPrice) {
-      showNotification('Vui lòng nhập đủ Mã, Tên và Đơn giá.', 'error')
+    if (!formData.code || !formData.name || !formData.category || !formData.unitPrice) {
+      showNotification('Vui lòng nhập đủ Mã, Tên, Danh mục và Đơn giá.', 'error')
       return
     }
 
@@ -62,7 +62,7 @@ const AddProductDrawer = ({ open, handleClose, setData }: Props) => {
       const response = await productService.createProduct({
         code: formData.code.trim(),
         name: formData.name.trim(),
-        category: formData.category.trim() || undefined,
+        category: formData.category.trim(),
         unitPrice,
         description: formData.description.trim() || undefined
       })
