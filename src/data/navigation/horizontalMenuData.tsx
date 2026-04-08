@@ -75,13 +75,13 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
     ]
   },
   {
-    label: 'Tài chính',
+    label: 'Tài chính & Lương',
     icon: 'ri-money-dollar-circle-line',
     children: [
       {
-        label: 'Thu tiền',
+        label: 'Thu tiền lớp',
         icon: 'ri-money-cny-circle-line',
-        href: '/apps/finance/payments/collect'
+        href: '/apps/payment/collect'
       },
       {
         label: 'Thanh toán',
@@ -121,8 +121,8 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
     ]
   },
   {
-    label: 'Học viện',
-    icon: 'ri-graduation-cap-line',
+    label: 'Cấp đai & Thi',
+    icon: 'ri-medal-line',
     children: [
       {
         label: 'Cấp đai',
@@ -133,6 +133,11 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
         label: 'Thi cấp đai',
         icon: 'ri-medal-line',
         href: '/apps/belt-exam/list'
+      },
+      {
+        label: 'Đăng ký thi cấp',
+        icon: 'ri-trophy-line',
+        href: '/apps/belt-exam/register'
       }
     ]
   },
@@ -154,27 +159,6 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
         label: 'Nhật ký hệ thống',
         icon: 'ri-file-history-line',
         href: '/apps/audit-log/list'
-      }
-    ]
-  },
-  {
-    label: 'Tiện ích',
-    icon: 'ri-apps-line',
-    children: [
-      {
-        label: 'Chat',
-        icon: 'ri-message-3-line',
-        href: '/apps/chat'
-      },
-      {
-        label: 'Email',
-        icon: 'ri-mail-line',
-        href: '/apps/email'
-      },
-      {
-        label: 'Kanban',
-        icon: 'ri-layout-grid-line',
-        href: '/apps/kanban'
       }
     ]
   }

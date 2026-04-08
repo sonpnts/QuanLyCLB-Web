@@ -12,7 +12,6 @@ import type { ChildrenType } from '@core/types'
 // Util Imports
 import { getSystemMode } from '@core/utils/serverHelpers'
 
-import { AuthProvider } from '@/contexts/authContext'
 
 
 // Style Imports
@@ -37,9 +36,7 @@ const RootLayout = async (props: ChildrenType) => {
     <html id='__next' lang='vi' dir='ltr' suppressHydrationWarning>
       <body className='flex is-full min-bs-full flex-auto flex-col'>
         <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        {children}
       </body>
     </html>
   )

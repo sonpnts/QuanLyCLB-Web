@@ -97,6 +97,8 @@ const PaymentListTable = () => {
   const [addPaymentOpen, setAddPaymentOpen] = useState(false)
   const [receiptModalOpen, setReceiptModalOpen] = useState(false)
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
+  const [proofImageOpen, setProofImageOpen] = useState(false)
+  const [proofImageUrl, setProofImageUrl] = useState<string | null>(null)
   
   const [data, setData] = useState<PaymentRecordType[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
@@ -156,6 +158,11 @@ const PaymentListTable = () => {
     setReceiptModalOpen(true)
   }
 
+  const handleViewProof = (imageUrl: string) => {
+    setProofImageUrl(imageUrl)
+    setProofImageOpen(true)
+  }
+
   const handleDeleteClick = (id: string) => {
     setDeletingId(id)
     setDeleteDialogOpen(true)
@@ -208,14 +215,21 @@ const PaymentListTable = () => {
       }),
       columnHelper.accessor('type', {
         header: 'Loại thanh toán',
-        cell: ({ row }) => (
-          <Chip
-            label={paymentTypeLabels[row.original.type] || String(row.original.type)}
-            size='small'
-            color={PaymentTypeColors[row.original.type] || 'default'}
-            variant='tonal'
-          />
-        )
+        cell: ({ row }) => {
+          const typeVal = row.original.type
+          // Support both numeric (0,1,2,3) and string ('Tuition','BankTransfer',...) values
+          const numericType = typeof typeVal === 'string'
+            ? ({ Tuition: 0, ExamFee: 1, Registration: 2, Other: 3 } as Record<string, number>)[typeVal] ?? 3
+            : typeVal
+          return (
+            <Chip
+              label={paymentTypeLabels[numericType] || String(typeVal)}
+              size='small'
+              color={PaymentTypeColors[numericType] || 'default'}
+              variant='tonal'
+            />
+          )
+        }
       }),
       columnHelper.accessor('originalAmount', {
         header: 'Tiền gốc',
@@ -258,14 +272,20 @@ const PaymentListTable = () => {
       }),
       columnHelper.accessor('method', {
         header: 'Phương thức',
-        cell: ({ row }) => (
-          <Chip
-            label={paymentMethodLabels[row.original.method] || String(row.original.method)}
-            size='small'
-            color='secondary'
-            variant='tonal'
-          />
-        )
+        cell: ({ row }) => {
+          const methodVal = row.original.method
+          const numericMethod = typeof methodVal === 'string'
+            ? ({ Cash: 0, BankTransfer: 1, Other: 2 } as Record<string, number>)[methodVal] ?? 0
+            : methodVal
+          return (
+            <Chip
+              label={paymentMethodLabels[numericMethod] || String(methodVal)}
+              size='small'
+              color={numericMethod === 1 ? 'info' : 'secondary'}
+              variant='tonal'
+            />
+          )
+        }
       }),
       {
         id: 'period',
@@ -289,31 +309,46 @@ const PaymentListTable = () => {
       {
         id: 'actions',
         header: 'Thao tác',
-        cell: ({ row }) => (
-          <div className='flex items-center'>
-            {row.original.receiptNumber && (
-              <Tooltip title='Xem Biên lai'>
+        cell: ({ row }) => {
+          const isBankTransfer = row.original.method === 1 ||
+            (row.original.method as any) === 'BankTransfer'
+          return (
+            <div className='flex items-center'>
+              {row.original.receiptNumber && (
+                <Tooltip title='Xem biên lai'>
+                  <IconButton
+                    size='small'
+                    color='info'
+                    onClick={() => handleViewReceipt(row.original.receiptNumber!)}
+                  >
+                    <i className='ri-eye-line text-lg' />
+                  </IconButton>
+                </Tooltip>
+              )}
+              {isBankTransfer && row.original.transferProofImageUrl && (
+                <Tooltip title='Xem ảnh chuyển khoản'>
+                  <IconButton
+                    size='small'
+                    color='success'
+                    onClick={() => handleViewProof(row.original.transferProofImageUrl!)}
+                  >
+                    <i className='ri-image-line text-lg' />
+                  </IconButton>
+                </Tooltip>
+              )}
+              <Tooltip title='Xoá bản ghi'>
                 <IconButton
                   size='small'
-                  color='info'
-                  onClick={() => handleViewReceipt(row.original.receiptNumber!)}
+                  color='error'
+                  onClick={() => handleDeleteClick(row.original.id)}
+                  disabled={row.original.isActive === false}
                 >
-                  <i className='ri-eye-line text-lg' />
+                  <i className='ri-delete-bin-7-line text-lg' />
                 </IconButton>
               </Tooltip>
-            )}
-            <Tooltip title='Xoá bản ghi'>
-              <IconButton
-                size='small'
-                color='error'
-                onClick={() => handleDeleteClick(row.original.id)}
-                disabled={row.original.isActive === false}
-              >
-                <i className='ri-delete-bin-7-line text-lg' />
-              </IconButton>
-            </Tooltip>
-          </div>
-        )
+            </div>
+          )
+        }
       }
     ],
     []
@@ -411,11 +446,55 @@ const PaymentListTable = () => {
 
       <AddPaymentDrawer open={addPaymentOpen} handleClose={() => setAddPaymentOpen(false)} setData={setData} />
 
-      <ReceiptModal 
-        open={receiptModalOpen} 
-        receiptNumber={selectedReceipt} 
-        onClose={() => { setReceiptModalOpen(false); setSelectedReceipt(null); }} 
+      <ReceiptModal
+        open={receiptModalOpen}
+        receiptNumber={selectedReceipt}
+        onClose={() => { setReceiptModalOpen(false); setSelectedReceipt(null) }}
       />
+
+      {/* Proof image viewer */}
+      <Dialog
+        open={proofImageOpen}
+        onClose={() => { setProofImageOpen(false); setProofImageUrl(null) }}
+        maxWidth='md'
+        fullWidth
+      >
+        <DialogTitle>
+          Ảnh chụp màn hình chuyển khoản
+          <IconButton
+            size='small'
+            onClick={() => { setProofImageOpen(false); setProofImageUrl(null) }}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <i className='ri-close-line' />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {proofImageUrl && (
+            <Box className='flex justify-center'>
+              <Box
+                component='img'
+                src={proofImageUrl}
+                alt='Ảnh chuyển khoản'
+                sx={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: 1 }}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant='outlined'
+            href={proofImageUrl || '#'}
+            target='_blank'
+            rel='noopener noreferrer'
+            startIcon={<i className='ri-external-link-line' />}
+            disabled={!proofImageUrl}
+          >
+            Mở ảnh gốc
+          </Button>
+          <Button onClick={() => { setProofImageOpen(false); setProofImageUrl(null) }}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Confirm xoá dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => !deletingLoading && setDeleteDialogOpen(false)}>

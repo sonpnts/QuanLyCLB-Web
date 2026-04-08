@@ -20,6 +20,10 @@ export interface MenuResponse {
 }
 
 class MenuService {
+  private inFlightGetMenu: Promise<ResponseResult<VerticalMenuDataType[]>> | null = null
+  private menuCache: { expiresAt: number; value: ResponseResult<VerticalMenuDataType[]> } | null = null
+  private readonly menuCacheTtlMs = 3000
+
   /**
    * Transform API menu items to frontend menu format
    */
@@ -49,6 +53,15 @@ class MenuService {
    * The backend will automatically extract roles from the JWT token
    */
   async getMenuByRole(): Promise<ResponseResult<VerticalMenuDataType[]>> {
+    const now = Date.now()
+    if (this.menuCache && this.menuCache.expiresAt > now) {
+      return this.menuCache.value
+    }
+
+    if (this.inFlightGetMenu) {
+      return this.inFlightGetMenu
+    }
+
     const auth = authStorage.get()
 
     // Prevent noisy unauthorized/invalid-token calls during bootstrap.
@@ -60,38 +73,63 @@ class MenuService {
       }
     }
 
-    try {
-      const response = await apiClient.get<any>(API_ENDPOINTS.menu.byRole)
-      const apiResponse = response.data
+    this.inFlightGetMenu = (async () => {
+      try {
+        const response = await apiClient.get<any>(API_ENDPOINTS.menu.byRole)
+        const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        return {
+        if (!apiResponse.isSuccess) {
+          const failedResult: ResponseResult<VerticalMenuDataType[]> = {
+            success: false,
+            data: [],
+            message: apiResponse.message || 'Failed to fetch menu'
+          }
+
+          this.menuCache = {
+            expiresAt: Date.now() + this.menuCacheTtlMs,
+            value: failedResult
+          }
+
+          return failedResult
+        }
+
+        const menuData: MenuResponse = apiResponse.data
+        const menuItems = menuData.menuItems || []
+
+        // Transform API menu items to frontend format
+        const transformedMenu = menuItems.map(item => this.transformMenuItem(item))
+        const successResult: ResponseResult<VerticalMenuDataType[]> = {
+          success: true,
+          data: transformedMenu
+        }
+
+        this.menuCache = {
+          expiresAt: Date.now() + this.menuCacheTtlMs,
+          value: successResult
+        }
+
+        return successResult
+      } catch (error: any) {
+        const status = error?.response?.status
+        const message = error?.response?.data?.message || error?.message || 'Failed to fetch menu'
+        const failedResult: ResponseResult<VerticalMenuDataType[]> = {
           success: false,
           data: [],
-          message: apiResponse.message || 'Failed to fetch menu'
+          message: status ? `[${status}] ${message}` : message
         }
+
+        this.menuCache = {
+          expiresAt: Date.now() + this.menuCacheTtlMs,
+          value: failedResult
+        }
+
+        return failedResult
+      } finally {
+        this.inFlightGetMenu = null
       }
+    })()
 
-      const menuData: MenuResponse = apiResponse.data
-      const menuItems = menuData.menuItems || []
-
-      // Transform API menu items to frontend format
-      const transformedMenu = menuItems.map(item => this.transformMenuItem(item))
-
-      return {
-        success: true,
-        data: transformedMenu
-      }
-    } catch (error: any) {
-      const status = error?.response?.status
-      const message = error?.response?.data?.message || error?.message || 'Failed to fetch menu'
-
-      return {
-        success: false,
-        data: [],
-        message: status ? `[${status}] ${message}` : message
-      }
-    }
+    return this.inFlightGetMenu
   }
 
   /**

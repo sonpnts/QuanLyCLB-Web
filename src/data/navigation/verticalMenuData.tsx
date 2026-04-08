@@ -85,9 +85,9 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
     isSection: true,
     children: [
       {
-        label: 'Thu tiền',
+        label: 'Thu tiền lớp',
         icon: 'ri-money-cny-circle-line',
-        href: '/apps/finance/payments/collect'
+        href: '/apps/payment/collect'
       },
       {
         label: 'Thanh toán',
@@ -127,6 +127,27 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
     ]
   },
   {
+    label: 'Cấp đai & Thi',
+    isSection: true,
+    children: [
+      {
+        label: 'Cấp đai',
+        icon: 'ri-award-line',
+        href: '/apps/belt-level/list'
+      },
+      {
+        label: 'Thi cấp đai',
+        icon: 'ri-medal-line',
+        href: '/apps/belt-exam/list'
+      },
+      {
+        label: 'Đăng ký thi cấp',
+        icon: 'ri-trophy-line',
+        href: '/apps/belt-exam/register'
+      }
+    ]
+  },
+  {
     label: 'Phân quyền',
     isSection: true,
     children: [
@@ -144,74 +165,6 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
         label: 'Nhật ký hệ thống',
         icon: 'ri-file-history-line',
         href: '/apps/audit-log/list'
-      }
-    ]
-  },
-  {
-    label: 'Học viện',
-    isSection: true,
-    children: [
-      {
-        label: 'Dashboard',
-        icon: 'ri-dashboard-3-line',
-        href: '/apps/academy/dashboard'
-      },
-      {
-        label: 'Khóa học',
-        icon: 'ri-book-open-line',
-        href: '/apps/academy/my-courses'
-      },
-      {
-        label: 'Cấp đai',
-        icon: 'ri-award-line',
-        href: '/apps/belt-level/list'
-      },
-      {
-        label: 'Thi cấp đai',
-        icon: 'ri-medal-line',
-        href: '/apps/belt-exam/list'
-      }
-    ]
-  },
-  {
-    label: 'Tiện ích',
-    isSection: true,
-    children: [
-      {
-        label: 'Chat',
-        icon: 'ri-message-3-line',
-        href: '/apps/chat'
-      },
-      {
-        label: 'Email',
-        icon: 'ri-mail-line',
-        href: '/apps/email'
-      },
-      {
-        label: 'Kanban',
-        icon: 'ri-layout-grid-line',
-        href: '/apps/kanban'
-      }
-    ]
-  },
-  {
-    label: 'Báo cáo & Thống kê',
-    isSection: true,
-    children: [
-      {
-        label: 'Phân tích',
-        icon: 'ri-bar-chart-line',
-        href: '/dashboards/analytics'
-      },
-      {
-        label: 'E-commerce',
-        icon: 'ri-shopping-cart-line',
-        href: '/dashboards/ecommerce'
-      },
-      {
-        label: 'Logistics',
-        icon: 'ri-truck-line',
-        href: '/dashboards/logistics'
       }
     ]
   }

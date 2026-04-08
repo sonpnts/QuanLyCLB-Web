@@ -1,7 +1,10 @@
 // Type Imports
 import type { ThemeColor } from '@core/types'
 
-export type ExamSessionStatus = 'Draft' | 'Pending' | 'Approved' | 'Rejected' | 'Completed'
+export type ExamSessionStatus =
+  | 'Draft' | 'Pending' | 'PendingApproval'
+  | 'Approved' | 'Rejected' | 'Completed'
+  | 'Cancelled' | 'Open' | 'Closed' | 'Locked'
 
 export type ExamSessionType = {
   id: string
@@ -20,10 +23,12 @@ export type ExamSessionType = {
   isActive: boolean
   createdAt: string
   updatedAt?: string
+  registrationDeadline?: string
+  isLocked?: boolean
 }
 
 export type ExamRegistrationStatus = 'Pending' | 'Approved' | 'Rejected'
-export type ExamResult = 0 | 1 | 2 // 0 = Pending, 1 = Pass, 2 = Fail
+export type ExamResult = 'Passed' | 'Failed' | null
 
 export type ExamRegistrationType = {
   id: string
@@ -42,7 +47,6 @@ export type ExamRegistrationType = {
   score?: number
   resultNotes?: string
   isFeePaid: boolean
-  feeAmount: number
   rejectionReason?: string
   resultUpdatedAt?: string
   registeredByUserId: string
@@ -55,6 +59,9 @@ export type BeltLevelType = {
   order: number
   description?: string
   colorCode?: string
+  isDang?: boolean
+  examFee?: number
+  isActive?: boolean
 }
 
 export type ExamSessionStatusType = {
@@ -69,14 +76,153 @@ export const examSessionStatusObj: ExamSessionStatusType = {
   Completed: 'info'
 }
 
-export const examResultLabels: { [key: number]: string } = {
-  0: 'Chưa có kết quả',
-  1: 'Đạt',
-  2: 'Không đạt'
+export const examResultLabels: Record<string, string> = {
+  Passed: 'Đạt',
+  Failed: 'Không đạt'
 }
 
-export const examResultColors: { [key: number]: ThemeColor } = {
-  0: 'secondary',
-  1: 'success',
-  2: 'error'
+export const examResultColors: Record<string, ThemeColor> = {
+  Passed: 'success',
+  Failed: 'error'
+}
+
+// ─── Luồng đăng ký thi cấp mới ────────────────────────────────────────────────
+
+/** @deprecated Use ExamSessionStatus which now includes all statuses */
+export type BeltExamSessionStatusExtended = ExamSessionStatus
+
+export type RegistrationListStatus = 'Draft' | 'Submitted'
+
+export type EligibleStudentForExamType = {
+  studentId: string
+  studentName: string
+  studentCode?: string
+  dateOfBirth?: string
+  phoneNumber?: string
+  currentBeltLevelId?: string
+  currentBeltLevelName?: string
+  currentBeltOrder?: number
+  suggestedTargetBeltLevelId?: string
+  suggestedTargetBeltLevelName?: string
+  alreadyRegistered: boolean
+  existingRegistrationListId?: string
+}
+
+export type RegistrationListItemType = {
+  id: string
+  studentId: string
+  studentName: string
+  currentBeltLevelName?: string
+  targetBeltLevelId: string
+  targetBeltLevelName: string
+  isFeePaid: boolean
+  paymentRecordId?: string
+  status: string
+}
+
+export type BeltExamRegistrationListType = {
+  id: string
+  examSessionId: string
+  examSessionName: string
+  coachId: string
+  coachName: string
+  classId: string
+  className: string
+  status: RegistrationListStatus
+  submittedAt?: string
+  isAutoSubmitted: boolean
+  totalStudents: number
+  paidCount: number
+  isActive: boolean
+  createdAt: string
+  registrations: RegistrationListItemType[]
+}
+
+export type AdminExamStudentRowType = {
+  registrationId: string
+  studentId: string
+  studentName: string
+  dateOfBirth?: string
+  phoneNumber?: string
+  currentBeltLevelName?: string
+  targetBeltLevelName: string
+  className: string
+  coachName: string
+  hasPaid: boolean
+  paidAt?: string
+  paymentRecordId?: string
+}
+
+export type AdminExamGroupByCoachType = {
+  coachId: string
+  coachName: string
+  classId: string
+  className: string
+  listStatus: RegistrationListStatus
+  isAutoSubmitted: boolean
+  totalStudents: number
+  paidCount: number
+  students: AdminExamStudentRowType[]
+}
+
+export type AdminExamSessionViewType = {
+  sessionId: string
+  sessionName: string
+  examDate: string
+  registrationDeadline?: string
+  status: ExamSessionStatus
+  isLocked: boolean
+  lockedAt?: string
+  totalRegistered: number
+  totalPaid: number
+  totalUnpaid: number
+  totalAmountCollected: number
+  coachGroups: AdminExamGroupByCoachType[]
+}
+
+export type CreateRegistrationListItemRequest = {
+  studentId: string
+  targetBeltLevelId: string
+}
+
+export type CreateRegistrationListRequest = {
+  examSessionId: string
+  classId: string
+  students: CreateRegistrationListItemRequest[]
+}
+
+export const examSessionStatusColors: Record<string, ThemeColor> = {
+  Draft: 'secondary',
+  Pending: 'warning',
+  PendingApproval: 'warning',
+  Approved: 'success',
+  Rejected: 'error',
+  Completed: 'info',
+  Cancelled: 'error',
+  Open: 'primary',
+  Closed: 'warning',
+  Locked: 'error'
+}
+
+export const examSessionStatusLabels: Record<string, string> = {
+  Draft: 'Nháp',
+  Pending: 'Chờ duyệt',
+  PendingApproval: 'Chờ duyệt',
+  Approved: 'Đã duyệt',
+  Rejected: 'Từ chối',
+  Completed: 'Hoàn thành',
+  Cancelled: 'Đã hủy',
+  Open: 'Đang mở ĐK',
+  Closed: 'Đã đóng ĐK',
+  Locked: 'Đã chốt'
+}
+
+export const registrationListStatusLabels: Record<RegistrationListStatus, string> = {
+  Draft: 'Đang soạn',
+  Submitted: 'Đã nộp'
+}
+
+export const registrationListStatusColors: Record<RegistrationListStatus, ThemeColor> = {
+  Draft: 'warning',
+  Submitted: 'success'
 }

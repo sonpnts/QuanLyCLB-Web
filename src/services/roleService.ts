@@ -46,6 +46,18 @@ export interface ApiRoleResponse {
 }
 
 class RoleService {
+  private inFlightGetRoles = new Map<string, Promise<ResponseResult<RoleType[]>>>()
+  private getRolesCache = new Map<string, { expiresAt: number; value: ResponseResult<RoleType[]> }>()
+  private readonly getRolesCacheTtlMs = 3000
+
+  private buildGetRolesKey(params?: GetRolesParams): string {
+    if (!params) return '{}'
+
+    const entries = Object.entries(params).sort(([a], [b]) => a.localeCompare(b))
+
+    return JSON.stringify(Object.fromEntries(entries))
+  }
+
   // Map API response to RoleType
   private mapApiRoleToRoleType(apiRole: ApiRoleResponse): RoleType {
     return {
@@ -66,23 +78,59 @@ class RoleService {
    * Get a list of roles with optional filtering and pagination
    */
   async getRoles(params?: GetRolesParams): Promise<ResponseResult<RoleType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.roles.root, { params })
-    const apiResponse = response.data
+    const key = this.buildGetRolesKey(params)
+    const now = Date.now()
+    const cached = this.getRolesCache.get(key)
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        data: [],
-        message: apiResponse.message
-      }
+    if (cached && cached.expiresAt > now) {
+      return cached.value
     }
 
-    const records: ApiRoleResponse[] = apiResponse.data?.records || []
-    const roles = records.map(this.mapApiRoleToRoleType)
+    const existingPromise = this.inFlightGetRoles.get(key)
+    if (existingPromise) {
+      return existingPromise
+    }
 
-    return {
-      success: true,
-      data: roles
+    const requestPromise = (async (): Promise<ResponseResult<RoleType[]>> => {
+      const response = await apiClient.get<any>(API_ENDPOINTS.roles.root, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        const failedResult: ResponseResult<RoleType[]> = {
+          success: false,
+          data: [],
+          message: apiResponse.message
+        }
+
+        this.getRolesCache.set(key, {
+          expiresAt: Date.now() + this.getRolesCacheTtlMs,
+          value: failedResult
+        })
+
+        return failedResult
+      }
+
+      const records: ApiRoleResponse[] = apiResponse.data?.records || []
+      const roles = records.map(this.mapApiRoleToRoleType)
+      const successResult: ResponseResult<RoleType[]> = {
+        success: true,
+        data: roles
+      }
+
+      this.getRolesCache.set(key, {
+        expiresAt: Date.now() + this.getRolesCacheTtlMs,
+        value: successResult
+      })
+
+      return successResult
+    })()
+
+    this.inFlightGetRoles.set(key, requestPromise)
+
+    try {
+      return await requestPromise
+    } finally {
+      this.inFlightGetRoles.delete(key)
     }
   }
 

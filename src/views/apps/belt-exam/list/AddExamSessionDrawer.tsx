@@ -29,7 +29,8 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
     name: '',
     description: '',
     examDate: '',
-    location: ''
+    location: '',
+    registrationDeadline: ''
   })
   const [loading, setLoading] = useState(false)
   const { showNotification } = useNotification()
@@ -48,7 +49,8 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
         name: formData.name,
         description: formData.description || undefined,
         examDate: formData.examDate,
-        location: formData.location || undefined
+        location: formData.location || undefined,
+        registrationDeadline: formData.registrationDeadline || undefined
       })
 
       if (response.success && response.data) {
@@ -70,7 +72,8 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
       name: '',
       description: '',
       examDate: '',
-      location: ''
+      location: '',
+      registrationDeadline: ''
     })
     handleClose()
   }
@@ -112,6 +115,15 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
             label='Địa điểm thi'
             value={formData.location}
             onChange={e => setFormData({ ...formData, location: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            type='datetime-local'
+            label='Hạn đăng ký (tùy chọn)'
+            value={formData.registrationDeadline}
+            onChange={e => setFormData({ ...formData, registrationDeadline: e.target.value })}
+            InputLabelProps={{ shrink: true }}
+            helperText='Hạn cuối HLV nộp danh sách. Để trống nếu không giới hạn.'
           />
           <TextField
             fullWidth

@@ -369,6 +369,71 @@ class PaymentService {
 
     return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
+
+  // ─── Công nợ & tổng hợp thu chi (mới) ────────────────────────────────────
+
+  async getOutstandingByStudent(studentId: string, month?: number, year?: number): Promise<ResponseResult<any>> {
+    try {
+      const params: Record<string, string> = {}
+      if (month) params['month'] = month.toString()
+      if (year) params['year'] = year.toString()
+      const qs = new URLSearchParams(params).toString()
+      const url = `${API_ENDPOINTS.payments.outstanding(studentId)}${qs ? '?' + qs : ''}`
+      const response = await apiClient.get<any>(url)
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async getSummaryForCoach(month: number, year: number): Promise<ResponseResult<any>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.summaryMy, { params: { month, year } })
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async getSummaryForAdmin(month: number, year: number, classId?: string, coachId?: string): Promise<ResponseResult<any>> {
+    try {
+      const params: Record<string, string> = { month: month.toString(), year: year.toString() }
+      if (classId) params['classId'] = classId
+      if (coachId) params['coachId'] = coachId
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.summaryAdmin, { params })
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async getUnpaidList(params: {
+    type: string
+    month?: number
+    year?: number
+    classId?: string
+    examSessionId?: string
+    coachId?: string
+  }): Promise<ResponseResult<any>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.unpaid, { params })
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
 }
 
 const paymentService = new PaymentService()

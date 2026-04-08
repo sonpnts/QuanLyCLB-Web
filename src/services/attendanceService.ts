@@ -3,14 +3,12 @@ import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 export interface CheckInRequest {
-  userId: string
   checkedInAt: string // DateTime
   latitude: number
   longitude: number
 }
 
 export interface CheckOutRequest {
-  userId: string
   checkedOutAt: string // DateTime
   latitude: number
   longitude: number
@@ -62,14 +60,16 @@ class AttendanceService {
     if (!apiResponse.isSuccess) {
       return {
         success: false,
-        message: apiResponse.message
+        message: apiResponse.message,
+        code: apiResponse.code
       }
     }
 
     return {
       success: true,
       data: apiResponse.data,
-      message: apiResponse.message
+      message: apiResponse.message,
+      code: apiResponse.code
     }
   }
 

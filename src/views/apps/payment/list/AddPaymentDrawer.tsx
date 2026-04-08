@@ -38,6 +38,12 @@ type Props = {
   setData: React.Dispatch<React.SetStateAction<PaymentRecordType[]>>
 }
 
+type AddOnProductItem = {
+  id: string
+  productId: string
+  quantity: number
+}
+
 const PAYMENT_TYPE_TUITION = 0
 const PAYMENT_TYPE_EXAM_FEE = 1
 const PAYMENT_TYPE_PRODUCT = 3
@@ -47,6 +53,12 @@ const PAYMENT_METHOD_BANK_TRANSFER = 1
 
 const formatVND = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+
+const createEmptyAddOnProduct = (): AddOnProductItem => ({
+  id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  productId: '',
+  quantity: 1
+})
 
 const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
   const { auth } = useAuth()
@@ -73,6 +85,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
   const [loadingExamOptions, setLoadingExamOptions] = useState(false)
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [proofImageFile, setProofImageFile] = useState<File | null>(null)
+  const [addOnProducts, setAddOnProducts] = useState<AddOnProductItem[]>([])
 
   const [formData, setFormData] = useState({
     classId: '',
@@ -104,6 +117,17 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
 
   const discountAmount = Number(formData.discountAmount || 0)
   const finalAmount = Math.max(0, originalAmount - discountAmount)
+  const addOnProductsAmount = useMemo(
+    () =>
+      addOnProducts.reduce((sum, item) => {
+        const product = products.find(x => x.id === item.productId)
+        if (!product) return sum
+
+        return sum + product.unitPrice * item.quantity
+      }, 0),
+    [addOnProducts, products]
+  )
+  const totalCollectAmount = finalAmount + addOnProductsAmount
 
   const resetForm = () => {
     setStudents([])
@@ -113,6 +137,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
     setSelectedExamOptionId('')
     setTuitionQuote(null)
     setProofImageFile(null)
+    setAddOnProducts([])
     setFormData({
       classId: '',
       studentId: '',
@@ -127,6 +152,18 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
       discountReason: '',
       description: ''
     })
+  }
+
+  const addAddOnProductRow = () => {
+    setAddOnProducts(prev => [...prev, createEmptyAddOnProduct()])
+  }
+
+  const removeAddOnProductRow = (rowId: string) => {
+    setAddOnProducts(prev => prev.filter(x => x.id !== rowId))
+  }
+
+  const updateAddOnProductRow = (rowId: string, payload: Partial<AddOnProductItem>) => {
+    setAddOnProducts(prev => prev.map(item => (item.id === rowId ? { ...item, ...payload } : item)))
   }
 
   useEffect(() => {
@@ -341,6 +378,20 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
       return
     }
 
+    for (const row of addOnProducts) {
+      if (!row.productId) {
+        showNotification('Vui lòng chọn sản phẩm cho phần thu kèm.', 'error')
+
+        return
+      }
+
+      if (!Number.isFinite(row.quantity) || row.quantity < 1) {
+        showNotification('Số lượng sản phẩm thu kèm phải lớn hơn hoặc bằng 1.', 'error')
+
+        return
+      }
+    }
+
     if (discountAmount > 0 && !formData.discountReason.trim()) {
       showNotification('Nếu có giảm trừ bắt buộc nhập lý do.', 'error')
 
@@ -377,31 +428,79 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
         transferProofImageUrl = uploadRes.data.imageUrl
       }
 
-      const response = await paymentService.createPayment({
-        studentId: formData.studentId,
-        classId: formData.classId,
-        type: formData.type,
-        amount: originalAmount,
-        paymentDate: formData.paymentDate,
-        method: formData.method,
-        forMonth: formData.type === PAYMENT_TYPE_TUITION ? formData.month : undefined,
-        forYear: formData.type === PAYMENT_TYPE_TUITION ? formData.year : undefined,
-        productId: formData.type === PAYMENT_TYPE_PRODUCT ? formData.productId : undefined,
-        examRegistrationId: formData.type === PAYMENT_TYPE_EXAM_FEE ? selectedExamOptionId : undefined,
-        discountAmount: discountAmount > 0 ? discountAmount : undefined,
-        discountReason: discountAmount > 0 ? formData.discountReason.trim() : undefined,
-        transferProofImageUrl,
-        description: formData.description.trim() || undefined,
-        collectedByUserId
-      })
+      const hasAddOnProducts = addOnProducts.length > 0
 
-      if (response.success && response.data) {
-        setData(prev => [response.data!, ...prev])
-        showNotification('Tạo thanh toán thành công.', 'success')
-        resetForm()
-        handleClose()
+      if (hasAddOnProducts) {
+        const baseItem = {
+          type: formData.type,
+          amount: originalAmount,
+          description: formData.description.trim() || undefined,
+          classId: formData.classId,
+          productId: formData.type === PAYMENT_TYPE_PRODUCT ? formData.productId : undefined,
+          forMonth: formData.type === PAYMENT_TYPE_TUITION ? formData.month : undefined,
+          forYear: formData.type === PAYMENT_TYPE_TUITION ? formData.year : undefined,
+          examRegistrationId: formData.type === PAYMENT_TYPE_EXAM_FEE ? selectedExamOptionId : undefined,
+          discountAmount: discountAmount > 0 ? discountAmount : undefined,
+          discountReason: discountAmount > 0 ? formData.discountReason.trim() : undefined
+        }
+
+        const addOnItems = addOnProducts.flatMap(item => {
+          const product = products.find(x => x.id === item.productId)
+          const description = product ? `Thu kèm sản phẩm: ${product.name}` : 'Thu kèm sản phẩm'
+
+          return Array.from({ length: item.quantity }).map(() => ({
+            type: PAYMENT_TYPE_PRODUCT,
+            classId: formData.classId,
+            productId: item.productId,
+            description
+          }))
+        })
+
+        const bulkResponse = await paymentService.createBulkPayment({
+          studentId: formData.studentId,
+          paymentDate: formData.paymentDate,
+          method: formData.method,
+          transferProofImageUrl,
+          collectedByUserId,
+          items: [baseItem, ...addOnItems]
+        })
+
+        if (bulkResponse.success) {
+          const createdRows = Array.isArray(bulkResponse.data) ? bulkResponse.data : []
+          setData(prev => [...createdRows, ...prev])
+          showNotification('Tạo thanh toán thành công.', 'success')
+          resetForm()
+          handleClose()
+        } else {
+          showNotification(bulkResponse.message || 'Không thể tạo thanh toán.', 'error')
+        }
       } else {
-        showNotification(response.message || 'Không thể tạo thanh toán.', 'error')
+        const response = await paymentService.createPayment({
+          studentId: formData.studentId,
+          classId: formData.classId,
+          type: formData.type,
+          amount: originalAmount,
+          paymentDate: formData.paymentDate,
+          method: formData.method,
+          forMonth: formData.type === PAYMENT_TYPE_TUITION ? formData.month : undefined,
+          forYear: formData.type === PAYMENT_TYPE_TUITION ? formData.year : undefined,
+          productId: formData.type === PAYMENT_TYPE_PRODUCT ? formData.productId : undefined,
+          examRegistrationId: formData.type === PAYMENT_TYPE_EXAM_FEE ? selectedExamOptionId : undefined,
+          discountAmount: discountAmount > 0 ? discountAmount : undefined,
+          discountReason: discountAmount > 0 ? formData.discountReason.trim() : undefined,
+          transferProofImageUrl,
+          description: formData.description.trim() || undefined,
+          collectedByUserId
+        })
+
+        if (response.success && response.data) {
+          setData(prev => [response.data!, ...prev])
+          showNotification('Tạo thanh toán thành công.', 'success')
+          resetForm()
+          handleClose()
+        } else {
+          showNotification(response.message || 'Không thể tạo thanh toán.', 'error')
+        }
       }
     } catch (error) {
       showNotification('Đã có lỗi khi tạo thanh toán.', 'error')
@@ -596,6 +695,76 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                 </Grid>
               )}
 
+              <Grid size={{ xs: 12 }}>
+                <Paper variant='outlined' sx={{ p: 2 }}>
+                  <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mb: 1 }}>
+                    <Typography variant='subtitle2'>Sản phẩm thu kèm</Typography>
+                    <Button size='small' variant='outlined' onClick={addAddOnProductRow}>
+                      + Thêm sản phẩm
+                    </Button>
+                  </Stack>
+
+                  {addOnProducts.length === 0 ? (
+                    <Typography variant='body2' color='text.secondary'>
+                      Chưa có sản phẩm thu kèm.
+                    </Typography>
+                  ) : (
+                    <Stack spacing={2}>
+                      {addOnProducts.map((row, index) => {
+                        const selected = products.find(x => x.id === row.productId)
+                        const lineAmount = selected ? selected.unitPrice * row.quantity : 0
+
+                        return (
+                          <Grid container spacing={2} key={row.id}>
+                            <Grid size={{ xs: 12, md: 6 }}>
+                              <FormControl fullWidth>
+                                <InputLabel>{`Sản phẩm #${index + 1}`}</InputLabel>
+                                <Select
+                                  label={`Sản phẩm #${index + 1}`}
+                                  value={row.productId}
+                                  onChange={e => updateAddOnProductRow(row.id, { productId: String(e.target.value) })}
+                                >
+                                  {products.map(item => (
+                                    <MenuItem key={item.id} value={item.id}>
+                                      {item.name} – {formatVND(item.unitPrice)}
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+                            </Grid>
+
+                            <Grid size={{ xs: 6, md: 2 }}>
+                              <TextField
+                                fullWidth
+                                type='number'
+                                label='SL'
+                                inputProps={{ min: 1 }}
+                                value={row.quantity}
+                                onChange={e =>
+                                  updateAddOnProductRow(row.id, {
+                                    quantity: Math.max(1, Number(e.target.value || 1))
+                                  })
+                                }
+                              />
+                            </Grid>
+
+                            <Grid size={{ xs: 6, md: 3 }}>
+                              <TextField fullWidth label='Tiền dòng' value={formatVND(lineAmount)} InputProps={{ readOnly: true }} />
+                            </Grid>
+
+                            <Grid size={{ xs: 12, md: 1 }} sx={{ display: 'flex', alignItems: 'center' }}>
+                              <IconButton color='error' onClick={() => removeAddOnProductRow(row.id)}>
+                                <i className='ri-delete-bin-6-line' />
+                              </IconButton>
+                            </Grid>
+                          </Grid>
+                        )
+                      })}
+                    </Stack>
+                  )}
+                </Paper>
+              </Grid>
+
               {/* Info card học phí tháng */}
               {formData.type === PAYMENT_TYPE_TUITION && formData.classId && formData.studentId && (
                 <Grid size={{ xs: 12 }}>
@@ -683,6 +852,25 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                   value={formatVND(finalAmount)}
                   InputProps={{ readOnly: true }}
                   sx={{ '& .MuiInputBase-input': { color: 'success.main', fontWeight: 'bold' } }}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  label='Tiền sản phẩm thu kèm'
+                  value={formatVND(addOnProductsAmount)}
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  label='Tổng thu học viên cần đóng'
+                  value={formatVND(totalCollectAmount)}
+                  InputProps={{ readOnly: true }}
+                  sx={{ '& .MuiInputBase-input': { color: 'primary.main', fontWeight: 'bold' } }}
                 />
               </Grid>
 

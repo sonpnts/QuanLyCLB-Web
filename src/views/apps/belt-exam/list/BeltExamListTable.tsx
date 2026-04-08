@@ -14,6 +14,7 @@ import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
+import TextField from '@mui/material/TextField'
 import Box from '@mui/material/Box'
 
 import classnames from 'classnames'
@@ -29,23 +30,23 @@ import {
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 
 import type { ExamSessionType } from '@/types/apps/beltExamTypes'
-import { examSessionStatusObj } from '@/types/apps/beltExamTypes'
+import { examSessionStatusColors } from '@/types/apps/beltExamTypes'
 
 import AddExamSessionDrawer from './AddExamSessionDrawer'
 import beltExamService from '@/services/beltExamService'
 import { useNotification } from '@/contexts/notificationContext'
 import tableStyles from '@core/styles/table.module.css'
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
-}
-
 const statusLabels: { [key: string]: string } = {
   Draft: 'Nháp',
   Pending: 'Chờ duyệt',
+  PendingApproval: 'Chờ duyệt',
   Approved: 'Đã duyệt',
   Rejected: 'Từ chối',
-  Completed: 'Hoàn thành'
+  Completed: 'Hoàn thành',
+  Open: 'Đang mở ĐK',
+  Closed: 'Đã đóng ĐK',
+  Locked: 'Đã chốt'
 }
 
 const columnHelper = createColumnHelper<ExamSessionType>()
@@ -56,7 +57,8 @@ const BeltExamListTable = () => {
   const [loading, setLoading] = useState(false)
   const [selectedExam, setSelectedExam] = useState<ExamSessionType | null>(null)
   const [actionDialogOpen, setActionDialogOpen] = useState(false)
-  const [actionType, setActionType] = useState<'approve' | 'reject' | 'submit'>('approve')
+  const [actionType, setActionType] = useState<'approve' | 'reject' | 'submit' | 'open'>('approve')
+  const [openDeadline, setOpenDeadline] = useState('')
 
   const { showNotification } = useNotification()
 
@@ -96,16 +98,26 @@ const BeltExamListTable = () => {
         response = await beltExamService.approveExamSession(selectedExam.id)
       } else if (actionType === 'reject') {
         response = await beltExamService.rejectExamSession(selectedExam.id)
+      } else if (actionType === 'open') {
+        response = await beltExamService.openSession(selectedExam.id, openDeadline || undefined)
       } else {
         response = await beltExamService.submitExamSession(selectedExam.id)
       }
 
       if (response.success) {
-        const newStatus = actionType === 'approve' ? 'Approved' : actionType === 'reject' ? 'Rejected' : 'Pending'
+        const newStatus =
+          actionType === 'approve' ? 'Approved' :
+          actionType === 'reject' ? 'Rejected' :
+          actionType === 'open' ? 'Open' : 'Pending'
         setData(prev => prev.map(e => e.id === selectedExam.id ? { ...e, status: newStatus as any } : e))
-        showNotification(`${actionType === 'approve' ? 'Phê duyệt' : actionType === 'reject' ? 'Từ chối' : 'Gửi duyệt'} thành công!`, 'success')
+        const label =
+          actionType === 'approve' ? 'Phê duyệt' :
+          actionType === 'reject' ? 'Từ chối' :
+          actionType === 'open' ? 'Mở đăng ký' : 'Gửi duyệt'
+        showNotification(`${label} thành công!`, 'success')
         setActionDialogOpen(false)
         setSelectedExam(null)
+        setOpenDeadline('')
       } else {
         showNotification(response.message || 'Thao tác thất bại.', 'error')
       }
@@ -116,7 +128,7 @@ const BeltExamListTable = () => {
     }
   }
 
-  const openActionDialog = (exam: ExamSessionType, type: 'approve' | 'reject' | 'submit') => {
+  const openActionDialog = (exam: ExamSessionType, type: 'approve' | 'reject' | 'submit' | 'open') => {
     setSelectedExam(exam)
     setActionType(type)
     setActionDialogOpen(true)
@@ -154,9 +166,9 @@ const BeltExamListTable = () => {
         header: 'Trạng thái',
         cell: ({ row }) => (
           <Chip
-            label={statusLabels[row.original.status]}
+            label={statusLabels[row.original.status as string] ?? row.original.status}
             size='small'
-            color={examSessionStatusObj[row.original.status]}
+            color={examSessionStatusColors[row.original.status as string] ?? 'default'}
             variant='tonal'
           />
         )
@@ -166,18 +178,28 @@ const BeltExamListTable = () => {
         header: 'Thao tác',
         cell: ({ row }) => {
           const exam = row.original
+          const isNewFlow = ['Open', 'Closed', 'Locked'].includes(exam.status as string)
           return (
             <Box className='flex items-center gap-1'>
               {exam.status === 'Draft' && (
-                <IconButton
-                  color='primary'
-                  title='Gửi duyệt'
-                  onClick={() => openActionDialog(exam, 'submit')}
-                >
-                  <i className='ri-send-plane-line' />
-                </IconButton>
+                <>
+                  <IconButton
+                    color='primary'
+                    title='Gửi duyệt'
+                    onClick={() => openActionDialog(exam, 'submit')}
+                  >
+                    <i className='ri-send-plane-line' />
+                  </IconButton>
+                  <IconButton
+                    color='success'
+                    title='Mở đăng ký (HLV flow)'
+                    onClick={() => openActionDialog(exam, 'open')}
+                  >
+                    <i className='ri-door-open-line' />
+                  </IconButton>
+                </>
               )}
-              {exam.status === 'Pending' && (
+              {(exam.status === 'Pending' || (exam.status as string) === 'PendingApproval') && (
                 <>
                   <IconButton
                     color='success'
@@ -194,6 +216,25 @@ const BeltExamListTable = () => {
                     <i className='ri-close-line' />
                   </IconButton>
                 </>
+              )}
+              {(exam.status as string) === 'Approved' && (
+                <IconButton
+                  color='success'
+                  title='Mở đăng ký (HLV flow)'
+                  onClick={() => openActionDialog(exam, 'open')}
+                >
+                  <i className='ri-door-open-line' />
+                </IconButton>
+              )}
+              {isNewFlow && (
+                <IconButton
+                  component={Link}
+                  href={`/apps/belt-exam/${exam.id}/admin`}
+                  title='Quản trị kỳ thi'
+                  color='secondary'
+                >
+                  <i className='ri-admin-line' />
+                </IconButton>
               )}
               <IconButton component={Link} href={`/apps/belt-exam/${exam.id}`} title='Xem chi tiết'>
                 <i className='ri-eye-line text-textSecondary' />
@@ -290,22 +331,36 @@ const BeltExamListTable = () => {
       {/* Action Dialog */}
       <Dialog open={actionDialogOpen} onClose={() => setActionDialogOpen(false)} maxWidth='sm' fullWidth>
         <DialogTitle>
-          {actionType === 'approve' ? 'Phê duyệt kỳ thi' : actionType === 'reject' ? 'Từ chối kỳ thi' : 'Gửi duyệt kỳ thi'}
+          {actionType === 'approve' ? 'Phê duyệt kỳ thi' :
+           actionType === 'reject' ? 'Từ chối kỳ thi' :
+           actionType === 'open' ? 'Mở đăng ký thi cấp' : 'Gửi duyệt kỳ thi'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent className='flex flex-col gap-4 pt-2'>
           <Typography>
-            Bạn có chắc muốn {actionType === 'approve' ? 'phê duyệt' : actionType === 'reject' ? 'từ chối' : 'gửi duyệt'} kỳ thi <strong>{selectedExam?.name}</strong>?
+            Bạn có chắc muốn {actionType === 'approve' ? 'phê duyệt' : actionType === 'reject' ? 'từ chối' : actionType === 'open' ? 'mở đăng ký cho' : 'gửi duyệt'} kỳ thi <strong>{selectedExam?.name}</strong>?
           </Typography>
+          {actionType === 'open' && (
+            <TextField
+              label='Hạn đăng ký (tùy chọn)'
+              type='datetime-local'
+              size='small'
+              fullWidth
+              value={openDeadline}
+              onChange={e => setOpenDeadline(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              helperText='Để trống nếu không có hạn. HLV sẽ tự nộp trước ngày thi.'
+            />
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setActionDialogOpen(false)}>Hủy</Button>
+          <Button onClick={() => { setActionDialogOpen(false); setOpenDeadline('') }}>Hủy</Button>
           <Button
             variant='contained'
-            color={actionType === 'reject' ? 'error' : actionType === 'approve' ? 'success' : 'primary'}
+            color={actionType === 'reject' ? 'error' : actionType === 'open' ? 'success' : actionType === 'approve' ? 'success' : 'primary'}
             onClick={handleAction}
             disabled={loading}
           >
-            {actionType === 'approve' ? 'Phê duyệt' : actionType === 'reject' ? 'Từ chối' : 'Gửi duyệt'}
+            {actionType === 'approve' ? 'Phê duyệt' : actionType === 'reject' ? 'Từ chối' : actionType === 'open' ? 'Mở ĐK' : 'Gửi duyệt'}
           </Button>
         </DialogActions>
       </Dialog>

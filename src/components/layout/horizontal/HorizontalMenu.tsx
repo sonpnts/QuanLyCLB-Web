@@ -54,6 +54,17 @@ const RenderVerticalExpandIcon = ({ open, transitionDuration }: RenderVerticalEx
   </StyledVerticalNavExpandIcon>
 )
 
+const hasHrefDeep = (items: HorizontalMenuDataType[], href: string): boolean => {
+  for (const item of items) {
+    const menuItem = item as { href?: string; children?: HorizontalMenuDataType[] }
+
+    if (menuItem.href === href) return true
+    if (menuItem.children?.length && hasHrefDeep(menuItem.children, href)) return true
+  }
+
+  return false
+}
+
 const HorizontalMenu = () => {
   // Hooks
   const verticalNavOptions = useVerticalNav()
@@ -69,8 +80,20 @@ const HorizontalMenu = () => {
       try {
         const response = await menuService.getMenuByRole()
         if (response.success && response.data) {
-          // Assuming horizontal menu uses the same structure or requires mapping. For now casting.
-          setDynamicMenu(response.data as unknown as HorizontalMenuDataType[])
+          const fromApi = response.data as unknown as HorizontalMenuDataType[]
+
+          if (hasHrefDeep(fromApi, '/apps/product/list')) {
+            setDynamicMenu(fromApi)
+          } else {
+            setDynamicMenu([
+              ...fromApi,
+              {
+                label: 'Sản phẩm',
+                icon: 'ri-price-tag-3-line',
+                href: '/apps/product/list'
+              }
+            ])
+          }
         } else {
           setDynamicMenu(menuData())
         }

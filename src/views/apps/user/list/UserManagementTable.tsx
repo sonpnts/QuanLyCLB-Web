@@ -57,7 +57,12 @@ const UserManagementTable = () => {
 
   // Handle filter change
   const handleFilterChange = useCallback((params: GetUsersParams) => {
-    setFilterParams(params)
+    setFilterParams(prev => {
+      const prevKey = JSON.stringify(prev || {})
+      const nextKey = JSON.stringify(params || {})
+
+      return prevKey === nextKey ? prev : params
+    })
   }, [])
 
   // Load users when filter params change

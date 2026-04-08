@@ -3,4 +3,5 @@ export interface ResponseResult<T = any> {
   data?: T
   message?: string
   errors?: string[]
+  code?: number
 }

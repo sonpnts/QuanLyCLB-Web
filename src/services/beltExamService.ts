@@ -1,5 +1,13 @@
 import { apiClient } from '@/utils/apiClient'
-import type { ExamSessionType, ExamRegistrationType, BeltLevelType } from '@/types/apps/beltExamTypes'
+import type {
+  ExamSessionType,
+  ExamRegistrationType,
+  BeltLevelType,
+  EligibleStudentForExamType,
+  BeltExamRegistrationListType,
+  CreateRegistrationListRequest,
+  AdminExamSessionViewType
+} from '@/types/apps/beltExamTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 // Request body for POST /belt-exams/sessions
@@ -8,6 +16,7 @@ export interface CreateExamSessionRequest {
   description?: string
   examDate: string
   location?: string
+  registrationDeadline?: string
 }
 
 // Request body for POST /belt-exams/registrations
@@ -97,6 +106,20 @@ class BeltExamService {
     }
 
     return { success: true, data: apiResponse.data, message: apiResponse.message }
+  }
+
+  async openSession(id: string, registrationDeadline?: string): Promise<ResponseResult<ExamSessionType>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.openSession(id), {
+        registrationDeadline: registrationDeadline || null
+      })
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
   }
 
   // Exam Registrations
@@ -191,6 +214,125 @@ class BeltExamService {
       console.error('Error fetching belt levels:', error)
 
       return { success: false, data: [], message: 'Không thể tải danh sách cấp đai' }
+    }
+  }
+
+  // ─── Luồng HLV đăng ký thi cấp ───────────────────────────────────────────
+
+  async getOpenSessions(): Promise<ResponseResult<ExamSessionType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.openSessions)
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, data: [], message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data?.records || apiResponse.data || [] }
+    } catch (error: any) {
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async getEligibleStudents(sessionId: string, classId: string): Promise<ResponseResult<EligibleStudentForExamType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.eligibleStudents(sessionId, classId))
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, data: [], message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data || [] }
+    } catch (error: any) {
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async createOrUpdateRegistrationList(
+    sessionId: string,
+    data: CreateRegistrationListRequest
+  ): Promise<ResponseResult<BeltExamRegistrationListType>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationList(sessionId), data)
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async getMyRegistrationList(sessionId: string, classId: string): Promise<ResponseResult<BeltExamRegistrationListType>> {
+    try {
+      const response = await apiClient.get<any>(
+        `${API_ENDPOINTS.beltExams.myRegistrationList(sessionId)}?classId=${classId}`
+      )
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async submitRegistrationList(listId: string): Promise<ResponseResult<null>> {
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.beltExams.submitRegistrationList(listId))
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async removeStudentFromList(listId: string, studentId: string): Promise<ResponseResult<null>> {
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.beltExams.removeStudentFromList(listId, studentId))
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async lockSession(sessionId: string): Promise<ResponseResult<null>> {
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.beltExams.lockSession(sessionId))
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async getAdminView(sessionId: string, onlyPaid = true): Promise<ResponseResult<AdminExamSessionViewType>> {
+    try {
+      const response = await apiClient.get<any>(
+        `${API_ENDPOINTS.beltExams.adminView(sessionId)}?onlyPaid=${onlyPaid}`
+      )
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+    }
+  }
+
+  async exportRegistrationList(sessionId: string, format: 'excel' | 'pdf'): Promise<ResponseResult<any>> {
+    try {
+      const response = await apiClient.get<any>(
+        `${API_ENDPOINTS.beltExams.exportList(sessionId)}?format=${format}`
+      )
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }
 }

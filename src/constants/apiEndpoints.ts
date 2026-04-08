@@ -30,7 +30,20 @@ export const API_ENDPOINTS = {
     registrationBatch: '/belt-exams/registrations/batch',
     registrationApprove: (id: string) => `/belt-exams/registrations/${id}/approve`,
     registrationReject: (id: string) => `/belt-exams/registrations/${id}/reject`,
-    registrationResult: (id: string) => `/belt-exams/registrations/${id}/result`
+    registrationResult: (id: string) => `/belt-exams/registrations/${id}/result`,
+    // --- Luồng HLV đăng ký thi cấp (mới) ---
+    openSessions: '/belt-exams/open',
+    eligibleStudents: (sessionId: string, classId: string) =>
+      `/belt-exams/${sessionId}/eligible-students/${classId}`,
+    registrationList: (sessionId: string) => `/belt-exams/${sessionId}/registration-list`,
+    myRegistrationList: (sessionId: string) => `/belt-exams/${sessionId}/registration-list/mine`,
+    submitRegistrationList: (listId: string) => `/belt-exams/registration-list/${listId}/submit`,
+    removeStudentFromList: (listId: string, studentId: string) =>
+      `/belt-exams/registration-list/${listId}/student/${studentId}`,
+    openSession: (sessionId: string) => `/belt-exams/sessions/${sessionId}/open`,
+    lockSession: (sessionId: string) => `/belt-exams/${sessionId}/lock`,
+    adminView: (sessionId: string) => `/belt-exams/${sessionId}/admin-view`,
+    exportList: (sessionId: string) => `/belt-exams/${sessionId}/export`
   },
   beltLevels: {
     root: '/belt-levels',
@@ -109,7 +122,12 @@ export const API_ENDPOINTS = {
 
     studentDiscountConfigs: '/payments/student-discount-configs',
     studentDiscountConfigById: (id: string) => `/payments/student-discount-configs/${id}`,
-    uploadTransferProof: '/payments/upload-transfer-proof'
+    uploadTransferProof: '/payments/upload-transfer-proof',
+    // --- Công nợ & tổng hợp thu chi (mới) ---
+    outstanding: (studentId: string) => `/payments/outstanding/${studentId}`,
+    summaryMy: '/payments/summary/my',
+    summaryAdmin: '/payments/summary/admin',
+    unpaid: '/payments/unpaid'
   },
   payroll: {
     root: '/Payroll',
