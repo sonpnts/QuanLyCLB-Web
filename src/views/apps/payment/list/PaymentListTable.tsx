@@ -138,13 +138,9 @@ const PaymentListTable = () => {
 
         const response = await paymentService.getPayments(filterParams)
 
-        if (response.success && response.data) {
-          setData(response.data)
-        } else {
-          showNotificationRef.current(response.message || 'Không thể tải danh sách thanh toán.', 'error')
-        }
-      } catch (error) {
-        showNotificationRef.current('Có lỗi khi tải dữ liệu.', 'error')
+        setData(response.data || [])
+      } catch {
+        setData([])
       } finally {
         setLoading(false)
       }

@@ -82,15 +82,11 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
 
         const response = await branchService.getBranches(filterParams)
 
-        if (response.success && response.data) {
-          setData(response.data)
-          setFilteredData(response.data)
-        } else {
-          showNotificationRef.current(response.message || 'Không thể tải danh sách chi nhánh.', 'error')
-        }
-      } catch (error) {
-        console.error('Error loading branches:', error)
-        showNotificationRef.current('Đã có lỗi khi tải chi nhánh.', 'error')
+        setData(response.data || [])
+        setFilteredData(response.data || [])
+      } catch {
+        setData([])
+        setFilteredData([])
       } finally {
         setLoading(false)
       }

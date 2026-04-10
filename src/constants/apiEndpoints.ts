@@ -56,7 +56,9 @@ export const API_ENDPOINTS = {
   },
   cashHandovers: {
     root: '/cash-handovers',
-    byId: (id: string) => `/cash-handovers/${id}`
+    byId: (id: string) => `/cash-handovers/${id}`,
+    confirm: (id: string) => `/cash-handovers/${id}/confirm`,
+    lateTuitionStudents: '/cash-handovers/late-tuition-students'
   },
   classes: {
     root: '/Classes',
@@ -108,6 +110,7 @@ export const API_ENDPOINTS = {
   },
   payments: {
     root: '/payments',
+    bulk: '/payments/bulk',
     byId: (id: string) => `/payments/${id}`,
     byReceipt: (receiptNumber: string) => `/payments/receipt/${receiptNumber}`,
     restore: (id: string) => `/payments/${id}/restore`,
@@ -131,8 +134,9 @@ export const API_ENDPOINTS = {
   },
   payroll: {
     root: '/Payroll',
-    byId: (payrollId: string) => `/Payroll/${payrollId}`,
+    byId: (payrollId: string) => `/Payroll/details/${payrollId}`,
     byCoach: (coachId: string) => `/Payroll/coach/${coachId}`,
+    generate: '/Payroll/generate',
     calculate: '/Payroll/calculate'
   },
   productSales: {
@@ -147,8 +151,7 @@ export const API_ENDPOINTS = {
   },
   roles: {
     root: '/Roles',
-    byId: (id: string) => `/Roles/${id}`,
-    restore: (id: string) => `/Roles/${id}/restore`
+    byId: (id: string) => `/Roles/${id}`
   },
   schedules: {
     root: '/Schedules',

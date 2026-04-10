@@ -41,71 +41,95 @@ export interface UpdateExamResultRequest {
 class BeltExamService {
   // Exam Sessions
   async getExamSessions(): Promise<ResponseResult<ExamSessionType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.sessions)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.sessions)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
-    }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
 
-    return {
-      success: true,
-      data: apiResponse.data?.items || apiResponse.data?.records || apiResponse.data || []
+      return {
+        success: true,
+        data: apiResponse.data?.items || apiResponse.data?.records || apiResponse.data || []
+      }
+    } catch {
+      return { success: true, data: [] }
     }
   }
 
   async getExamSessionById(id: string): Promise<ResponseResult<ExamSessionType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.sessionById(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.sessionById(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async createExamSession(data: CreateExamSessionRequest): Promise<ResponseResult<ExamSessionType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessions, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessions, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async submitExamSession(id: string): Promise<ResponseResult<ExamSessionType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionSubmit(id))
-    const apiResponse = response.data
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
-    }
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionSubmit(id))
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
 
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
   }
 
   async approveExamSession(id: string): Promise<ResponseResult<ExamSessionType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionApprove(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionApprove(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async rejectExamSession(id: string): Promise<ResponseResult<ExamSessionType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionReject(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionReject(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async openSession(id: string, registrationDeadline?: string): Promise<ResponseResult<ExamSessionType>> {
@@ -124,72 +148,96 @@ class BeltExamService {
 
   // Exam Registrations
   async getExamRegistrations(params?: any): Promise<ResponseResult<ExamRegistrationType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.registrations, { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.registrations, { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
-    }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
 
-    return {
-      success: true,
-      data: apiResponse.data?.items || apiResponse.data?.records || apiResponse.data || []
+      return {
+        success: true,
+        data: apiResponse.data?.items || apiResponse.data?.records || apiResponse.data || []
+      }
+    } catch {
+      return { success: true, data: [] }
     }
   }
 
   async createExamRegistration(data: CreateExamRegistrationRequest): Promise<ResponseResult<ExamRegistrationType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrations, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrations, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async batchExamRegistration(data: BatchExamRegistrationRequest): Promise<ResponseResult<ExamRegistrationType[]>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationBatch, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationBatch, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async approveExamRegistration(id: string): Promise<ResponseResult<ExamRegistrationType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationApprove(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationApprove(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async rejectExamRegistration(id: string): Promise<ResponseResult<ExamRegistrationType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationReject(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationReject(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async updateExamResult(id: string, data: UpdateExamResultRequest): Promise<ResponseResult<ExamRegistrationType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.beltExams.registrationResult(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.beltExams.registrationResult(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   // Belt Levels - NOTE: API chưa có, cần backend bổ sung
@@ -199,7 +247,7 @@ class BeltExamService {
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
-        return { success: false, data: [], message: apiResponse.message }
+        return { success: true, data: [] }
       }
 
       // Handle different response formats
@@ -223,7 +271,7 @@ class BeltExamService {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.openSessions)
       const apiResponse = response.data
-      if (!apiResponse.isSuccess) return { success: false, data: [], message: apiResponse.message }
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
 
       return { success: true, data: apiResponse.data?.records || apiResponse.data || [] }
     } catch (error: any) {
@@ -235,7 +283,7 @@ class BeltExamService {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.eligibleStudents(sessionId, classId))
       const apiResponse = response.data
-      if (!apiResponse.isSuccess) return { success: false, data: [], message: apiResponse.message }
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
 
       return { success: true, data: apiResponse.data || [] }
     } catch (error: any) {

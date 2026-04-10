@@ -47,6 +47,7 @@ export type ExamRegistrationType = {
   score?: number
   resultNotes?: string
   isFeePaid: boolean
+  feeAmount?: number
   rejectionReason?: string
   resultUpdatedAt?: string
   registeredByUserId: string

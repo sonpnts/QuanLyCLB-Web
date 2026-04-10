@@ -45,23 +45,17 @@ class BranchService {
   }
 
   async getBranches(params?: GetBranchesParams): Promise<ResponseResult<BranchType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.branches.root, { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.branches.root, { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        data: [],
-        message: apiResponse.message
-      }
-    }
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
 
-    const records: ApiBranchResponse[] = apiResponse.data?.records || []
-    const branches = records.map(this.mapApiBranchToBranchType)
+      const records: ApiBranchResponse[] = apiResponse.data?.records || []
 
-    return {
-      success: true,
-      data: branches
+      return { success: true, data: records.map(this.mapApiBranchToBranchType) }
+    } catch {
+      return { success: true, data: [] }
     }
   }
 

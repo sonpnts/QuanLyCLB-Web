@@ -54,58 +54,70 @@ export enum AttendanceStatus {
 
 class AttendanceService {
   async checkIn(data: CheckInRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.attendance.checkIn, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.attendance.checkIn, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message,
+          code: apiResponse.code
+        }
+      }
+
       return {
-        success: false,
+        success: true,
+        data: apiResponse.data,
         message: apiResponse.message,
         code: apiResponse.code
       }
-    }
-
-    return {
-      success: true,
-      data: apiResponse.data,
-      message: apiResponse.message,
-      code: apiResponse.code
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async createManualAttendance(data: ManualAttendanceRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.attendance.manual, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.attendance.manual, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
       return {
-        success: false,
+        success: true,
+        data: apiResponse.data,
         message: apiResponse.message
       }
-    }
-
-    return {
-      success: true,
-      data: apiResponse.data,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async checkOut(data: CheckOutRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.attendance.checkOut, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.attendance.checkOut, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
       return {
-        success: false,
+        success: true,
+        data: apiResponse.data,
         message: apiResponse.message
       }
-    }
-
-    return {
-      success: true,
-      data: apiResponse.data,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -116,20 +128,20 @@ class AttendanceService {
     if (fromDate) queryParams.fromDate = fromDate
     if (toDate) queryParams.toDate = toDate
 
-    const response = await apiClient.get<any>(API_ENDPOINTS.attendance.byUser(userId), { params: queryParams })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.byUser(userId), { params: queryParams })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        data: [],
-        message: apiResponse.message
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
       }
-    }
 
-    return {
-      success: true,
-      data: apiResponse.data?.records || apiResponse.data || []
+      return {
+        success: true,
+        data: apiResponse.data?.records || apiResponse.data || []
+      }
+    } catch {
+      return { success: true, data: [] }
     }
   }
 
@@ -139,56 +151,64 @@ class AttendanceService {
     if (params?.fromDate) queryParams.fromDate = params.fromDate
     if (params?.toDate) queryParams.toDate = params.toDate
 
-    const response = await apiClient.get<any>(API_ENDPOINTS.attendance.my, { params: queryParams })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.my, { params: queryParams })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        data: [],
-        message: apiResponse.message
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
       }
-    }
 
-    return {
-      success: true,
-      data: apiResponse.data?.records || apiResponse.data || []
+      return {
+        success: true,
+        data: apiResponse.data?.records || apiResponse.data || []
+      }
+    } catch {
+      return { success: true, data: [] }
     }
   }
 
   async createTicket(data: CreateTicketRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.attendance.tickets, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.attendance.tickets, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
       return {
-        success: false,
+        success: true,
+        data: apiResponse.data,
         message: apiResponse.message
       }
-    }
-
-    return {
-      success: true,
-      data: apiResponse.data,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async approveTicket(ticketId: string, data: TicketApprovalRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.attendance.ticketApproval(ticketId), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.attendance.ticketApproval(ticketId), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
       return {
-        success: false,
+        success: true,
+        data: apiResponse.data,
         message: apiResponse.message
       }
-    }
-
-    return {
-      success: true,
-      data: apiResponse.data,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }

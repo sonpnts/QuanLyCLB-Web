@@ -57,14 +57,9 @@ const AttendanceListTable = () => {
 
       const response = await attendanceService.getUserAttendance(params)
 
-      if (response.success && response.data) {
-        setFilteredData(response.data)
-      } else {
-        showNotification(response.message || 'Không thể tải dữ liệu điểm danh.', 'error')
-      }
-    } catch (error) {
-      console.error('Error loading attendance:', error)
-      showNotification('Đã có lỗi khi tải dữ liệu điểm danh.', 'error')
+      setFilteredData(response.data || [])
+    } catch {
+      setFilteredData([])
     } finally {
       setLoading(false)
     }

@@ -150,14 +150,10 @@ const StudentListTable = () => {
         studentsLoadedRef.current = true
 
         const response = await studentService.getStudents(filterParams)
-        if (response.success && response.data) {
-          setData(response.data)
-        } else {
-          showNotificationRef.current(response.message || 'Không thể tải danh sách học viên.', 'error')
-        }
-      } catch (error) {
-        console.error('Error loading students:', error)
-        showNotificationRef.current('Đã có lỗi khi tải học viên.', 'error')
+
+        setData(response.data || [])
+      } catch {
+        setData([])
       } finally {
         setLoading(false)
       }

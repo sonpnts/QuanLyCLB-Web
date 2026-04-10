@@ -75,13 +75,10 @@ const BeltExamListTable = () => {
         dataLoadedRef.current = true
         setLoading(true)
         const response = await beltExamService.getExamSessions()
-        if (response.success && response.data) {
-          setData(response.data)
-        } else {
-          showNotificationRef.current(response.message || 'Không thể tải danh sách kỳ thi.', 'error')
-        }
-      } catch (error) {
-        showNotificationRef.current('Đã có lỗi khi tải dữ liệu.', 'error')
+
+        setData(response.data || [])
+      } catch {
+        setData([])
       } finally {
         setLoading(false)
       }

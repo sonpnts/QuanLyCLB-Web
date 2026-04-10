@@ -80,9 +80,11 @@ apiClient.interceptors.request.use(config => {
 apiClient.interceptors.response.use(
   response => response,
   async error => {
-    const response = (error as AxiosError).response
+    const axiosError = error as AxiosError
+    const response = axiosError.response
     const originalRequest = (error.config || {}) as RetryConfig
 
+    // Handle 401 — try to refresh token and retry
     if (response?.status === 401 && !originalRequest._retry) {
       const requestUrl = normalizeEndpoint(originalRequest.url ?? '')
       const isRefreshRequest = requestUrl === REFRESH_ENDPOINT
@@ -110,6 +112,19 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // For HTTP errors that have a response body (4xx, 5xx), return as resolved
+    // so service methods can handle them gracefully without throwing.
+    // The backend always returns { isSuccess: false, message: "..." } for errors.
+    if (response) {
+      return {
+        data: response.data ?? { isSuccess: false, message: `Lỗi ${response.status}` },
+        status: response.status,
+        headers: response.headers,
+        config: error.config
+      }
+    }
+
+    // Network errors (no response from server) — still reject
     return Promise.reject(error)
   }
 )

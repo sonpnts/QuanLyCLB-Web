@@ -32,6 +32,7 @@ export interface CreatePaymentRequest {
   studentDiscountConfigId?: string
   paymentDate: string
   method: number
+  transactionRef?: string
   transferProofImageUrl?: string
   forMonth?: number
   forYear?: number
@@ -107,7 +108,7 @@ class PaymentService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return {
@@ -139,7 +140,7 @@ class PaymentService {
   }
 
   async createBulkPayment(data: CreateBulkPaymentRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.payments.root + '/bulk', data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.payments.bulk, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
@@ -187,7 +188,7 @@ class PaymentService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return { success: true, data: unwrapList(apiResponse.data) }
@@ -198,7 +199,7 @@ class PaymentService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return { success: true, data: unwrapList(apiResponse.data) }
@@ -248,7 +249,7 @@ class PaymentService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return { success: true, data: unwrapList(apiResponse.data) }
@@ -280,7 +281,7 @@ class PaymentService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return { success: true, data: unwrapList(apiResponse.data) as ExamFeeOptionType[] }
@@ -323,7 +324,7 @@ class PaymentService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return { success: true, data: unwrapList(apiResponse.data) }

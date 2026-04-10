@@ -73,72 +73,96 @@ const unwrapList = (value: any): any[] => {
 
 class ProductSaleService {
   async getProductSales(params?: GetProductSalesParams): Promise<ResponseResult<ProductSaleType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.productSales.root, { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.productSales.root, { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
-    }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
 
-    return {
-      success: true,
-      data: unwrapList(apiResponse.data).map(toProductSale)
+      return {
+        success: true,
+        data: unwrapList(apiResponse.data).map(toProductSale)
+      }
+    } catch {
+      return { success: true, data: [] }
     }
   }
 
   async getProductSaleById(id: string): Promise<ResponseResult<ProductSaleType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.productSales.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.productSales.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: toProductSale(apiResponse.data) }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: toProductSale(apiResponse.data) }
   }
 
   async createProductSale(data: CreateProductSaleRequest): Promise<ResponseResult<ProductSaleType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.productSales.root, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.productSales.root, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: toProductSale(apiResponse.data), message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: toProductSale(apiResponse.data), message: apiResponse.message }
   }
 
   async updateProductSale(id: string, data: UpdateProductSaleRequest): Promise<ResponseResult<ProductSaleType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.productSales.byId(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.productSales.byId(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: toProductSale(apiResponse.data), message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: toProductSale(apiResponse.data), message: apiResponse.message }
   }
 
   async deleteProductSale(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(API_ENDPOINTS.productSales.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.productSales.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, message: apiResponse.message }
   }
 
   async restoreProductSale(id: string): Promise<ResponseResult<ProductSaleType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.productSales.restore(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.productSales.restore(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: toProductSale(apiResponse.data), message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: toProductSale(apiResponse.data), message: apiResponse.message }
   }
 }
 

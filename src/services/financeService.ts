@@ -140,9 +140,7 @@ class FinanceService {
     })
     const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
-    }
+    if (!apiResponse.isSuccess) return { success: true, data: [] }
 
     const rows: any[] = Array.isArray(apiResponse.data) ? apiResponse.data : []
 
@@ -169,9 +167,7 @@ class FinanceService {
     })
     const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
-    }
+    if (!apiResponse.isSuccess) return { success: true, data: [] }
 
     const rows: any[] = Array.isArray(apiResponse.data) ? apiResponse.data : []
 

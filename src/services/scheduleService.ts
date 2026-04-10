@@ -93,119 +93,139 @@ class ScheduleService {
   }
 
   async getSchedules(params?: GetSchedulesParams): Promise<ResponseResult<ScheduleType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.schedules.root, { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.schedules.root, { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        data: [],
-        message: apiResponse.message
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
       }
-    }
 
-    const records: ApiScheduleResponse[] = apiResponse.data?.records || []
-    const schedules = records.map(this.mapApiScheduleToScheduleType)
+      const records: ApiScheduleResponse[] = apiResponse.data?.records || []
+      const schedules = records.map(this.mapApiScheduleToScheduleType)
 
-    return {
-      success: true,
-      data: schedules
+      return {
+        success: true,
+        data: schedules
+      }
+    } catch {
+      return { success: true, data: [] }
     }
   }
 
   async getScheduleById(id: string): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.schedules.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.schedules.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        message: apiResponse.message
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
       }
-    }
 
-    const scheduleData = this.mapApiScheduleToScheduleType(apiResponse.data)
+      const scheduleData = this.mapApiScheduleToScheduleType(apiResponse.data)
 
-    return {
-      success: true,
-      data: scheduleData
+      return {
+        success: true,
+        data: scheduleData
+      }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async createSchedule(data: CreateClassScheduleRequest): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.schedules.root, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.schedules.root, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
+      const scheduleData = this.mapApiScheduleToScheduleType(apiResponse.data)
+
       return {
-        success: false,
+        success: true,
+        data: scheduleData,
         message: apiResponse.message
       }
-    }
-
-    const scheduleData = this.mapApiScheduleToScheduleType(apiResponse.data)
-
-    return {
-      success: true,
-      data: scheduleData,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async updateSchedule(id: string, data: UpdateClassScheduleRequest): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.schedules.byId(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.schedules.byId(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
+      const scheduleData = this.mapApiScheduleToScheduleType(apiResponse.data)
+
       return {
-        success: false,
+        success: true,
+        data: scheduleData,
         message: apiResponse.message
       }
-    }
-
-    const scheduleData = this.mapApiScheduleToScheduleType(apiResponse.data)
-
-    return {
-      success: true,
-      data: scheduleData,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async deleteSchedule(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(API_ENDPOINTS.schedules.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.schedules.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
       return {
-        success: false,
+        success: true,
         message: apiResponse.message
       }
-    }
-
-    return {
-      success: true,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async restoreSchedule(id: string): Promise<ResponseResult<ScheduleType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.schedules.restore(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.schedules.restore(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
+      const scheduleData = this.mapApiScheduleToScheduleType(apiResponse.data)
+
       return {
-        success: false,
+        success: true,
+        data: scheduleData,
         message: apiResponse.message
       }
-    }
-
-    const scheduleData = this.mapApiScheduleToScheduleType(apiResponse.data)
-
-    return {
-      success: true,
-      data: scheduleData,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -213,56 +233,68 @@ class ScheduleService {
     classId: string,
     data: BulkCreateScheduleRequest
   ): Promise<ResponseResult<ScheduleType[]>> {
-    const response = await apiClient.post(API_ENDPOINTS.classes.schedules(classId), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.classes.schedules(classId), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          data: [],
+          message: apiResponse.message
+        }
+      }
+
+      const records: ApiScheduleResponse[] = Array.isArray(apiResponse.data)
+        ? apiResponse.data
+        : apiResponse.data?.records || []
+
+      const schedules = records.map(this.mapApiScheduleToScheduleType)
+
       return {
-        success: false,
-        data: [],
+        success: true,
+        data: schedules,
         message: apiResponse.message
       }
-    }
-
-    const records: ApiScheduleResponse[] = Array.isArray(apiResponse.data)
-      ? apiResponse.data
-      : apiResponse.data?.records || []
-
-    const schedules = records.map(this.mapApiScheduleToScheduleType)
-
-    return {
-      success: true,
-      data: schedules,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async getSchedulesByDate(date: string): Promise<ResponseResult<ScheduleType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.schedules.byDate, { params: { date } })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.schedules.byDate, { params: { date } })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      const records: ApiScheduleResponse[] = apiResponse.data || []
+      const schedules = records.map(this.mapApiScheduleToScheduleType)
+
+      return { success: true, data: schedules }
+    } catch {
+      return { success: true, data: [] }
     }
-
-    const records: ApiScheduleResponse[] = apiResponse.data || []
-    const schedules = records.map(this.mapApiScheduleToScheduleType)
-
-    return { success: true, data: schedules }
   }
 
   async getSchedulesByInstructor(instructorId: string): Promise<ResponseResult<ScheduleType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.schedules.byInstructor(instructorId))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.schedules.byInstructor(instructorId))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      const records: ApiScheduleResponse[] = apiResponse.data || []
+      const schedules = records.map(this.mapApiScheduleToScheduleType)
+
+      return { success: true, data: schedules }
+    } catch {
+      return { success: true, data: [] }
     }
-
-    const records: ApiScheduleResponse[] = apiResponse.data || []
-    const schedules = records.map(this.mapApiScheduleToScheduleType)
-
-    return { success: true, data: schedules }
   }
 }
 

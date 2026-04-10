@@ -33,7 +33,7 @@ class BeltLevelService {
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
-        return { success: false, data: [], message: apiResponse.message }
+        return { success: true, data: [] }
       }
 
       // Handle different response formats

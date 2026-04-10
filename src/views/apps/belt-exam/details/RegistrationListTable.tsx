@@ -109,7 +109,7 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
             const isPaid = row.original.isFeePaid
             return (
               <Box display='flex' flexDirection='column' alignItems='flex-start' gap={1}>
-                <Typography variant='body2'>{formatCurrency(row.original.feeAmount)}</Typography>
+                <Typography variant='body2'>{formatCurrency(row.original.feeAmount ?? 0)}</Typography>
                 <Chip
                   label={isPaid ? 'Đã thu' : 'Chưa thu'}
                   color={isPaid ? 'success' : 'error'}

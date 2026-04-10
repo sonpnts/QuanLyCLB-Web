@@ -161,25 +161,9 @@ const RoleManagementTable = () => {
     }
   }
 
-  // Handle restore role
-  const handleRestoreRole = async (id: string) => {
-    try {
-      setLoading(true)
-      const response = await roleService.restoreRole(id)
-
-      if (response.success && response.data) {
-        setData(prevData => prevData.map(role => (role.id === id ? response.data! : role)))
-        setFilteredData(prevData => prevData.map(role => (role.id === id ? response.data! : role)))
-        showNotification('Khôi phục vai trò thành công.', 'success')
-      } else {
-        showNotification(response.message || 'Không thể khôi phục vai trò.', 'error')
-      }
-    } catch (error) {
-      console.error('Error restoring role:', error)
-      showNotification('Đã có lỗi khi khôi phục vai trò.', 'error')
-    } finally {
-      setLoading(false)
-    }
+  // Roles do not support restore (no soft-delete)
+  const handleRestoreRole = (_id: string) => {
+    showNotification('Vai trò không hỗ trợ khôi phục.', 'warning')
   }
 
   // Handle edit role

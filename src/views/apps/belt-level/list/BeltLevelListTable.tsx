@@ -73,16 +73,9 @@ const BeltLevelListTable = () => {
 
         const response = await beltLevelService.getBeltLevels({ keyword: keyword || undefined })
 
-        if (response.success && Array.isArray(response.data)) {
-          const sorted = [...response.data].sort((a, b) => (a.order || 0) - (b.order || 0))
-          setData(sorted)
-        } else {
-          showNotificationRef.current(response.message || 'Không thể tải danh sách cấp đai.', 'error')
-          setData([])
-        }
-      } catch (error) {
-        console.error('Error loading belt levels:', error)
-        showNotificationRef.current('Đã có lỗi khi tải cấp đai.', 'error')
+        const sorted = [...(response.data || [])].sort((a, b) => (a.order || 0) - (b.order || 0))
+        setData(sorted)
+      } catch {
         setData([])
       } finally {
         setLoading(false)

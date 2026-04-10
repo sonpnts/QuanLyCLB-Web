@@ -5,10 +5,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
+import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import TablePagination from '@mui/material/TablePagination'
 import TextField from '@mui/material/TextField'
+import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import type { TextFieldProps } from '@mui/material/TextField'
 
@@ -26,6 +28,7 @@ import {
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 
 import type { CashHandoverType } from '@/types/apps/cashHandoverTypes'
+import { HandoverStatusLabel } from '@/types/apps/cashHandoverTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
 import cashHandoverService from '@/services/cashHandoverService'
@@ -33,6 +36,7 @@ import type { GetCashHandoversParams } from '@/services/cashHandoverService'
 import classService from '@/services/classService'
 import userService from '@/services/userService'
 import { useNotification } from '@/contexts/notificationContext'
+import { useAuth } from '@/contexts/authContext'
 
 import AddCashHandoverDrawer from './AddCashHandoverDrawer'
 import CashHandoverDetailDialog from './CashHandoverDetailDialog'
@@ -79,6 +83,12 @@ const columnHelper = createColumnHelper<CashHandoverType>()
 
 const CashHandoverListTable = () => {
   const { showNotification } = useNotification()
+  const { auth } = useAuth()
+
+  const isAdmin = useMemo(
+    () => auth?.roles?.some((r: string) => r === 'Admin' || r === 'SuperAdmin') ?? false,
+    [auth]
+  )
 
   const [data, setData] = useState<CashHandoverType[]>([])
   const [classes, setClasses] = useState<ClassType[]>([])
@@ -86,6 +96,7 @@ const CashHandoverListTable = () => {
   const [filterParams, setFilterParams] = useState<GetCashHandoversParams>({})
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(false)
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
   const [addDrawerOpen, setAddDrawerOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -99,10 +110,10 @@ const CashHandoverListTable = () => {
       try {
         const [classRes, instructorRes] = await Promise.all([classService.getClasses({}), userService.getCoaches()])
 
-        if (classRes.success && classRes.data) setClasses(classRes.data)
-        if (instructorRes.success && instructorRes.data) setInstructors(instructorRes.data)
-      } catch (error) {
-        showNotificationRef.current('Không thể tải danh mục lớp/HLV.', 'error')
+        setClasses(classRes.data || [])
+        setInstructors(instructorRes.data || [])
+      } catch {
+        // Silently fail — list shows empty state
       }
     }
 
@@ -114,14 +125,9 @@ const CashHandoverListTable = () => {
       setLoading(true)
       const response = await cashHandoverService.getCashHandovers(filterParams)
 
-      if (!response.success || !response.data) {
-        showNotificationRef.current(response.message || 'Không thể tải lịch sử bàn giao.', 'error')
-        return
-      }
-
-      setData(response.data)
-    } catch (error) {
-      showNotificationRef.current('Đã có lỗi khi tải lịch sử bàn giao.', 'error')
+      setData(response.data || [])
+    } catch {
+      setData([])
     } finally {
       setLoading(false)
     }
@@ -146,8 +152,27 @@ const CashHandoverListTable = () => {
 
       setSelectedHandover(response.data)
       setDetailOpen(true)
-    } catch (error) {
+    } catch {
       showNotificationRef.current('Đã có lỗi khi tải chi tiết phiếu.', 'error')
+    }
+  }
+
+  const handleConfirm = async (id: string) => {
+    try {
+      setConfirmingId(id)
+      const response = await cashHandoverService.confirmCashHandover(id)
+
+      if (!response.success || !response.data) {
+        showNotificationRef.current(response.message || 'Không thể xác nhận phiếu bàn giao.', 'error')
+        return
+      }
+
+      setData(prev => prev.map(item => (item.id === id ? response.data! : item)))
+      showNotificationRef.current('Xác nhận bàn giao tiền thành công.', 'success')
+    } catch {
+      showNotificationRef.current('Đã có lỗi khi xác nhận phiếu bàn giao.', 'error')
+    } finally {
+      setConfirmingId(null)
     }
   }
 
@@ -155,7 +180,9 @@ const CashHandoverListTable = () => {
     () => [
       columnHelper.accessor('className', {
         header: 'Lớp',
-        cell: ({ row }) => <Typography className='font-medium'>{row.original.className || row.original.classId}</Typography>
+        cell: ({ row }) => (
+          <Typography className='font-medium'>{row.original.className || row.original.classId}</Typography>
+        )
       }),
       columnHelper.accessor('instructorName', {
         header: 'Huấn luyện viên',
@@ -163,31 +190,74 @@ const CashHandoverListTable = () => {
       }),
       columnHelper.accessor('handoverAt', {
         header: 'Ngày bàn giao',
-        cell: ({ row }) => <Typography>{row.original.handoverAt ? new Date(row.original.handoverAt).toLocaleString('vi-VN') : '-'}</Typography>
+        cell: ({ row }) => (
+          <Typography>
+            {row.original.handoverAt ? new Date(row.original.handoverAt).toLocaleString('vi-VN') : '-'}
+          </Typography>
+        )
       }),
-      columnHelper.accessor('snapshotTotalAmount', {
-        header: 'Snapshot tổng',
-        cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotTotalAmount)}</Typography>
+      columnHelper.accessor('snapshotTuitionAmount', {
+        header: 'Học phí',
+        cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotTuitionAmount)}</Typography>
+      }),
+      columnHelper.accessor('snapshotProductSalesAmount', {
+        header: 'Sản phẩm',
+        cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotProductSalesAmount)}</Typography>
+      }),
+      columnHelper.accessor('totalDeductionAmount', {
+        header: 'Khoản trừ',
+        cell: ({ row }) => (
+          <Typography color={row.original.totalDeductionAmount > 0 ? 'error.main' : 'text.secondary'}>
+            {row.original.totalDeductionAmount > 0 ? `−${formatCurrency(row.original.totalDeductionAmount)}` : '—'}
+          </Typography>
+        )
       }),
       columnHelper.accessor('amountHandedOver', {
-        header: 'Đã nộp kỳ này',
-        cell: ({ row }) => <Typography className='font-medium text-success'>{formatCurrency(row.original.amountHandedOver)}</Typography>
+        header: 'Đã nộp',
+        cell: ({ row }) => (
+          <Typography className='font-medium' color='success.main'>
+            {formatCurrency(row.original.amountHandedOver)}
+          </Typography>
+        )
       }),
-      columnHelper.accessor('remainingAmountAfterHandover', {
-        header: 'Còn lại',
-        cell: ({ row }) => <Typography>{formatCurrency(row.original.remainingAmountAfterHandover)}</Typography>
+      columnHelper.accessor('status', {
+        header: 'Trạng thái',
+        cell: ({ row }) => (
+          <Chip
+            label={HandoverStatusLabel[row.original.status] ?? row.original.status}
+            size='small'
+            color={row.original.status === 'Confirmed' ? 'success' : 'warning'}
+            variant='tonal'
+          />
+        )
       }),
       {
         id: 'actions',
         header: 'Thao tác',
         cell: ({ row }) => (
-          <IconButton title='Xem chi tiết' onClick={() => handleOpenDetail(row.original)}>
-            <i className='ri-eye-line text-textSecondary' />
-          </IconButton>
+          <div className='flex items-center gap-1'>
+            <Tooltip title='Xem chi tiết'>
+              <IconButton size='small' onClick={() => handleOpenDetail(row.original)}>
+                <i className='ri-eye-line text-textSecondary' />
+              </IconButton>
+            </Tooltip>
+            {isAdmin && row.original.status === 'Pending' && (
+              <Tooltip title='Xác nhận bàn giao'>
+                <IconButton
+                  size='small'
+                  color='success'
+                  disabled={confirmingId === row.original.id}
+                  onClick={() => handleConfirm(row.original.id)}
+                >
+                  <i className='ri-check-double-line' />
+                </IconButton>
+              </Tooltip>
+            )}
+          </div>
         )
       }
     ],
-    []
+    [isAdmin, confirmingId]
   )
 
   const table = useReactTable({

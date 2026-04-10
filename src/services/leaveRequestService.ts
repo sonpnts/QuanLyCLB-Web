@@ -42,105 +42,141 @@ export interface RejectLeaveRequestRequest {
 
 class LeaveRequestService {
   async getLeaveRequests(params?: GetLeaveRequestsParams): Promise<ResponseResult<LeaveRequestType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.root, { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.root, { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
-    }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
 
-    return {
-      success: true,
-      data: apiResponse.data?.items || apiResponse.data?.records || []
+      return {
+        success: true,
+        data: apiResponse.data?.items || apiResponse.data?.records || []
+      }
+    } catch {
+      return { success: true, data: [] }
     }
   }
 
   async getLeaveRequestById(id: string): Promise<ResponseResult<LeaveRequestType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data }
   }
 
   async createLeaveRequest(data: CreateLeaveRequestRequest): Promise<ResponseResult<LeaveRequestType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.leaveRequests.root, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.leaveRequests.root, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async updateLeaveRequest(id: string, data: UpdateLeaveRequestRequest): Promise<ResponseResult<LeaveRequestType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.leaveRequests.byId(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.leaveRequests.byId(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async deleteLeaveRequest(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(API_ENDPOINTS.leaveRequests.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.leaveRequests.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, message: apiResponse.message }
   }
 
   async approveLeaveRequest(id: string, data: ApproveLeaveRequestRequest): Promise<ResponseResult<LeaveRequestType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.leaveRequests.approve(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.leaveRequests.approve(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async rejectLeaveRequest(id: string, data: RejectLeaveRequestRequest): Promise<ResponseResult<LeaveRequestType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.leaveRequests.reject(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.leaveRequests.reject(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async getPendingRequests(): Promise<ResponseResult<LeaveRequestType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.pending)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.pending)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: apiResponse.data || [] }
+    } catch {
+      return { success: true, data: [] }
     }
-
-    return { success: true, data: apiResponse.data || [] }
   }
 
   async getMyRequests(): Promise<ResponseResult<LeaveRequestType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.myRequests)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.leaveRequests.myRequests)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: apiResponse.data || [] }
+    } catch {
+      return { success: true, data: [] }
     }
-
-    return { success: true, data: apiResponse.data || [] }
   }
 }
 

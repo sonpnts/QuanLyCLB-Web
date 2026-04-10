@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
+import Alert from '@mui/material/Alert'
+import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import Chip from '@mui/material/Chip'
+import Collapse from '@mui/material/Collapse'
 import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
 import FormControl from '@mui/material/FormControl'
@@ -10,14 +14,20 @@ import IconButton from '@mui/material/IconButton'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
-import type { CashHandoverType } from '@/types/apps/cashHandoverTypes'
+import type { CashHandoverType, LateTuitionStudentType } from '@/types/apps/cashHandoverTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
 import type { InstructorClassCollectionType } from '@/types/apps/financeTypes'
 import cashHandoverService from '@/services/cashHandoverService'
+import type { CreateDeductionRequest } from '@/services/cashHandoverService'
 import classService from '@/services/classService'
 import userService from '@/services/userService'
 import financeService from '@/services/financeService'
@@ -28,6 +38,12 @@ type Props = {
   open: boolean
   handleClose: () => void
   setData: React.Dispatch<React.SetStateAction<CashHandoverType[]>>
+}
+
+type DeductionRow = {
+  tempId: string
+  description: string
+  amount: string
 }
 
 const formatCurrency = (amount: number) =>
@@ -41,13 +57,14 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
   const [classes, setClasses] = useState<ClassType[]>([])
   const [instructors, setInstructors] = useState<UsersType[]>([])
   const [collections, setCollections] = useState<InstructorClassCollectionType[]>([])
+  const [lateStudents, setLateStudents] = useState<LateTuitionStudentType[]>([])
+  const [showLateStudents, setShowLateStudents] = useState(false)
+  const [deductions, setDeductions] = useState<DeductionRow[]>([])
 
   const [formData, setFormData] = useState({
     classId: '',
     instructorId: auth?.user.id || '',
-    amountHandedOver: '',
-    notes: '',
-    asOfDate: new Date().toISOString().split('T')[0]
+    notes: ''
   })
 
   useEffect(() => {
@@ -58,14 +75,13 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
         if (classRes.success && classRes.data) setClasses(classRes.data)
         if (instructorRes.success && instructorRes.data) {
           setInstructors(instructorRes.data)
-
           setFormData(prev => ({
             ...prev,
             instructorId: prev.instructorId || auth?.user.id || instructorRes.data?.[0]?.id || ''
           }))
         }
-      } catch (error) {
-        showNotification('Không thể tải dữ liệu ban đầu cho bàn giao tiền.', 'error')
+      } catch {
+        showNotification('Không thể tải dữ liệu ban đầu.', 'error')
       }
     }
 
@@ -78,39 +94,55 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
 
       try {
         const response = formData.instructorId
-          ? await financeService.getClassCollectionsByInstructor(formData.instructorId, formData.asOfDate || undefined)
-          : await financeService.getMyClassCollections(formData.asOfDate || undefined)
+          ? await financeService.getClassCollectionsByInstructor(formData.instructorId)
+          : await financeService.getMyClassCollections()
 
-        if (!response.success || !response.data) {
+        if (response.success && response.data) {
+          setCollections(response.data)
+          setFormData(prev => ({
+            ...prev,
+            classId: prev.classId || response.data?.[0]?.classId || ''
+          }))
+        } else {
           setCollections([])
-          return
         }
-
-        setCollections(response.data)
-        setFormData(prev => ({
-          ...prev,
-          classId: prev.classId || response.data?.[0]?.classId || ''
-        }))
-      } catch (error) {
+      } catch {
         setCollections([])
       }
     }
 
     loadCollections()
-  }, [open, formData.instructorId, formData.asOfDate])
+  }, [open, formData.instructorId])
+
+  useEffect(() => {
+    const loadLateStudents = async () => {
+      if (!open || !formData.instructorId) return
+
+      try {
+        const response = await cashHandoverService.getLateTuitionStudents({
+          instructorId: formData.instructorId,
+          classId: formData.classId || undefined
+        })
+
+        if (response.success && response.data) {
+          setLateStudents(response.data)
+        } else {
+          setLateStudents([])
+        }
+      } catch {
+        setLateStudents([])
+      }
+    }
+
+    loadLateStudents()
+  }, [open, formData.instructorId, formData.classId])
 
   const classOptions = useMemo(() => {
     if (collections.length > 0) {
-      return collections.map(item => ({
-        id: item.classId,
-        name: item.className || item.classId
-      }))
+      return collections.map(item => ({ id: item.classId, name: item.className || item.classId }))
     }
 
-    return classes.map(item => ({
-      id: item.id,
-      name: item.name
-    }))
+    return classes.map(item => ({ id: item.id, name: item.name }))
   }, [collections, classes])
 
   const selectedCollection = useMemo(
@@ -118,31 +150,50 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
     [collections, formData.classId]
   )
 
+  const totalDeductionAmount = useMemo(
+    () => deductions.reduce((sum, d) => sum + (Number(d.amount) || 0), 0),
+    [deductions]
+  )
+
+  const addDeductionRow = () => {
+    setDeductions(prev => [...prev, { tempId: crypto.randomUUID(), description: '', amount: '' }])
+  }
+
+  const removeDeductionRow = (tempId: string) => {
+    setDeductions(prev => prev.filter(d => d.tempId !== tempId))
+  }
+
+  const updateDeductionRow = (tempId: string, field: 'description' | 'amount', value: string) => {
+    setDeductions(prev => prev.map(d => (d.tempId === tempId ? { ...d, [field]: value } : d)))
+  }
+
   const resetAndClose = () => {
-    setFormData({
-      classId: '',
-      instructorId: auth?.user.id || '',
-      amountHandedOver: '',
-      notes: '',
-      asOfDate: new Date().toISOString().split('T')[0]
-    })
+    setFormData({ classId: '', instructorId: auth?.user.id || '', notes: '' })
     setCollections([])
+    setLateStudents([])
+    setDeductions([])
+    setShowLateStudents(false)
     handleClose()
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
-    const amount = Number(formData.amountHandedOver)
-
-    if (!formData.classId || !formData.instructorId || amount <= 0) {
-      showNotification('Vui lòng nhập lớp, HLV và số tiền hợp lệ.', 'error')
+    if (!formData.classId || !formData.instructorId) {
+      showNotification('Vui lòng chọn lớp và HLV.', 'error')
       return
     }
 
-    if (selectedCollection && amount > selectedCollection.availableToHandover) {
-      showNotification('Số tiền bàn giao vượt mức có thể bàn giao tại thời điểm hiện tại.', 'error')
-      return
+    const validDeductions: CreateDeductionRequest[] = []
+    for (const d of deductions) {
+      const amt = Number(d.amount)
+
+      if (!d.description.trim() || amt <= 0) {
+        showNotification('Khoản trừ phải có mô tả và số tiền hợp lệ.', 'error')
+        return
+      }
+
+      validDeductions.push({ description: d.description.trim(), amount: amt })
     }
 
     try {
@@ -150,8 +201,8 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
       const response = await cashHandoverService.createCashHandover({
         classId: formData.classId,
         instructorId: formData.instructorId,
-        amountHandedOver: amount,
-        notes: formData.notes.trim() || undefined
+        notes: formData.notes.trim() || undefined,
+        deductions: validDeductions.length > 0 ? validDeductions : undefined
       })
 
       if (!response.success || !response.data) {
@@ -162,12 +213,17 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
       setData(prev => [response.data!, ...prev])
       showNotification('Tạo phiếu bàn giao tiền thành công.', 'success')
       resetAndClose()
-    } catch (error) {
+    } catch {
       showNotification('Đã có lỗi khi tạo phiếu bàn giao.', 'error')
     } finally {
       setLoading(false)
     }
   }
+
+  const lateInClass = useMemo(
+    () => (formData.classId ? lateStudents.filter(s => s.classId === formData.classId) : lateStudents),
+    [lateStudents, formData.classId]
+  )
 
   return (
     <Drawer
@@ -176,7 +232,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
       variant='temporary'
       onClose={resetAndClose}
       ModalProps={{ keepMounted: true }}
-      sx={{ '& .MuiDrawer-paper': { width: { xs: 320, sm: 460 } } }}
+      sx={{ '& .MuiDrawer-paper': { width: { xs: 340, sm: 520 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
         <Typography variant='h5'>Tạo phiếu bàn giao tiền</Typography>
@@ -185,27 +241,20 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
         </IconButton>
       </div>
       <Divider />
-      <div className='p-5'>
-        <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
-          <TextField
-            type='date'
-            label='As of date'
-            InputLabelProps={{ shrink: true }}
-            value={formData.asOfDate}
-            onChange={event => setFormData(prev => ({ ...prev, asOfDate: event.target.value }))}
-          />
 
+      <div className='p-5 overflow-y-auto'>
+        <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
+
+          {/* Instructor & Class */}
           <FormControl fullWidth>
             <InputLabel>Huấn luyện viên</InputLabel>
             <Select
               label='Huấn luyện viên'
               value={formData.instructorId}
-              onChange={event => setFormData(prev => ({ ...prev, instructorId: event.target.value }))}
+              onChange={e => setFormData(prev => ({ ...prev, instructorId: e.target.value, classId: '' }))}
             >
               {instructors.map(item => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.fullName}
-                </MenuItem>
+                <MenuItem key={item.id} value={item.id}>{item.fullName}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -215,59 +264,189 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
             <Select
               label='Lớp'
               value={formData.classId}
-              onChange={event => setFormData(prev => ({ ...prev, classId: event.target.value }))}
+              onChange={e => setFormData(prev => ({ ...prev, classId: e.target.value }))}
             >
               {classOptions.map(item => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.name}
-                </MenuItem>
+                <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
               ))}
             </Select>
           </FormControl>
 
-          <TextField
-            type='number'
-            label='Số tiền bàn giao'
-            value={formData.amountHandedOver}
-            onChange={event => setFormData(prev => ({ ...prev, amountHandedOver: event.target.value }))}
-          />
+          {/* Raw totals panel */}
+          {selectedCollection && (
+            <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2, bgcolor: 'action.hover' }}>
+              <Typography variant='subtitle2' className='mb-2 font-semibold'>
+                Tổng thu đến hiện tại
+              </Typography>
+              <div className='flex justify-between'>
+                <Typography variant='body2' color='text.secondary'>Học phí:</Typography>
+                <Typography variant='body2' className='font-medium'>
+                  {formatCurrency(selectedCollection.tuitionCollectedToDate)}
+                </Typography>
+              </div>
+              <div className='flex justify-between'>
+                <Typography variant='body2' color='text.secondary'>Bán sản phẩm:</Typography>
+                <Typography variant='body2' className='font-medium'>
+                  {formatCurrency(selectedCollection.productSalesCollectedToDate)}
+                </Typography>
+              </div>
+              <Divider sx={{ my: 1 }} />
+              <div className='flex justify-between'>
+                <Typography variant='body2' color='text.secondary'>Tổng cộng:</Typography>
+                <Typography variant='body2' className='font-semibold' color='primary.main'>
+                  {formatCurrency(selectedCollection.totalCollectedToDate)}
+                </Typography>
+              </div>
+            </Box>
+          )}
 
+          {/* Late students panel */}
+          <Box>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center gap-2'>
+                <Typography variant='subtitle2' className='font-semibold'>
+                  Học viên chậm học phí
+                </Typography>
+                {lateInClass.length > 0 && (
+                  <Chip label={lateInClass.length} size='small' color='warning' />
+                )}
+              </div>
+              {lateInClass.length > 0 && (
+                <Button
+                  size='small'
+                  onClick={() => setShowLateStudents(v => !v)}
+                  variant='text'
+                >
+                  {showLateStudents ? 'Ẩn' : 'Xem'}
+                </Button>
+              )}
+            </div>
+
+            {lateInClass.length === 0 && (
+              <Typography variant='body2' color='success.main' sx={{ mt: 0.5 }}>
+                Không có học viên chậm đóng học phí
+              </Typography>
+            )}
+
+            <Collapse in={showLateStudents}>
+              <Box sx={{ mt: 1, border: '1px solid', borderColor: 'warning.light', borderRadius: 1, overflow: 'hidden' }}>
+                <Table size='small'>
+                  <TableHead>
+                    <TableRow sx={{ bgcolor: 'warning.lighter' }}>
+                      <TableCell>Học viên</TableCell>
+                      <TableCell>Lớp</TableCell>
+                      <TableCell align='right'>Số ngày</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {lateInClass.map(s => (
+                      <TableRow key={s.studentId}>
+                        <TableCell>{s.studentName}</TableCell>
+                        <TableCell>{s.className}</TableCell>
+                        <TableCell align='right'>
+                          <Chip
+                            label={`${s.daysSinceLastPayment} ngày`}
+                            size='small'
+                            color={s.daysSinceLastPayment > 60 ? 'error' : 'warning'}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </Collapse>
+          </Box>
+
+          {/* Deductions */}
+          <Box>
+            <div className='flex items-center justify-between mb-2'>
+              <Typography variant='subtitle2' className='font-semibold'>
+                Khoản trừ
+              </Typography>
+              <Button size='small' startIcon={<i className='ri-add-line' />} onClick={addDeductionRow}>
+                Thêm
+              </Button>
+            </div>
+
+            {deductions.length === 0 && (
+              <Typography variant='body2' color='text.secondary'>
+                Chưa có khoản trừ nào
+              </Typography>
+            )}
+
+            {deductions.map((d, idx) => (
+              <div key={d.tempId} className='flex gap-2 mb-2 items-center'>
+                <TextField
+                  size='small'
+                  label='Mô tả'
+                  value={d.description}
+                  onChange={e => updateDeductionRow(d.tempId, 'description', e.target.value)}
+                  sx={{ flex: 2 }}
+                />
+                <TextField
+                  size='small'
+                  label='Số tiền'
+                  type='number'
+                  value={d.amount}
+                  onChange={e => updateDeductionRow(d.tempId, 'amount', e.target.value)}
+                  sx={{ flex: 1 }}
+                />
+                <IconButton size='small' color='error' onClick={() => removeDeductionRow(d.tempId)}>
+                  <i className='ri-delete-bin-line' />
+                </IconButton>
+              </div>
+            ))}
+
+            {deductions.length > 0 && (
+              <div className='flex justify-end mt-1'>
+                <Typography variant='body2' color='error.main' className='font-medium'>
+                  Tổng khoản trừ: {formatCurrency(totalDeductionAmount)}
+                </Typography>
+              </div>
+            )}
+          </Box>
+
+          {/* Summary before submit */}
+          {selectedCollection && (
+            <Alert severity='info' sx={{ py: 0.5 }}>
+              <Typography variant='body2'>
+                Số tiền bàn giao ={' '}
+                <strong>{formatCurrency(selectedCollection.totalCollectedToDate)}</strong>
+                {selectedCollection.totalHandedOver > 0 && (
+                  <> − đã bàn giao <strong>{formatCurrency(selectedCollection.totalHandedOver)}</strong></>
+                )}
+                {totalDeductionAmount > 0 && (
+                  <> − khoản trừ <strong>{formatCurrency(totalDeductionAmount)}</strong></>
+                )}
+                {' = '}
+                <strong style={{ color: 'var(--mui-palette-success-main)' }}>
+                  {formatCurrency(
+                    Math.max(0, selectedCollection.totalCollectedToDate - selectedCollection.totalHandedOver - totalDeductionAmount)
+                  )}
+                </strong>
+              </Typography>
+            </Alert>
+          )}
+
+          {/* Notes */}
           <TextField
             label='Ghi chú'
             multiline
-            rows={3}
+            rows={2}
             value={formData.notes}
-            onChange={event => setFormData(prev => ({ ...prev, notes: event.target.value }))}
+            onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
           />
 
-          {selectedCollection && (
-            <div className='rounded border border-dashed p-4'>
-              <Typography variant='body2' color='text.secondary'>
-                Snapshot học phí: {formatCurrency(selectedCollection.tuitionCollectedToDate)}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Snapshot bán sản phẩm: {formatCurrency(selectedCollection.productSalesCollectedToDate)}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Tổng đã thu: {formatCurrency(selectedCollection.totalCollectedToDate)}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Tổng đã bàn giao: {formatCurrency(selectedCollection.totalHandedOver)}
-              </Typography>
-              <Typography variant='body2' color='success.main' className='font-medium'>
-                Có thể bàn giao: {formatCurrency(selectedCollection.availableToHandover)}
-              </Typography>
-            </div>
-          )}
-
           <div className='flex items-center gap-4'>
-            <Button type='submit' variant='contained' disabled={loading}>
+            <Button type='submit' variant='contained' disabled={loading || !formData.classId}>
               {loading ? 'Đang xử lý...' : 'Tạo phiếu'}
             </Button>
             <Button variant='outlined' color='error' onClick={resetAndClose}>
               Hủy
             </Button>
           </div>
+
         </form>
       </div>
     </Drawer>

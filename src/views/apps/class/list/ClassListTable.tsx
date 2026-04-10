@@ -176,16 +176,11 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
 
         const response = await classService.getClasses(filterParams)
 
-        if (response.success && response.data) {
-          setData(response.data)
-          setFilteredData(response.data)
-        } else {
-          console.error('Failed to load classes:', response.message)
-          showNotificationRef.current(response.message || 'Không thể tải danh sách lớp học.', 'error')
-        }
-      } catch (error) {
-        console.error('Error loading classes:', error)
-        showNotificationRef.current('Đã có lỗi khi tải lớp học.', 'error')
+        setData(response.data || [])
+        setFilteredData(response.data || [])
+      } catch {
+        setData([])
+        setFilteredData([])
       } finally {
         setLoading(false)
       }

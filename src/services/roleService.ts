@@ -226,29 +226,7 @@ class RoleService {
     }
   }
 
-  /**
-   * POST /api/Roles/{id}/restore
-   * Restore a deleted role
-   */
-  async restoreRole(id: string): Promise<ResponseResult<RoleType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.roles.restore(id))
-    const apiResponse = response.data
-
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        message: apiResponse.message
-      }
-    }
-
-    const roleData = this.mapApiRoleToRoleType(apiResponse.data)
-
-    return {
-      success: true,
-      data: roleData,
-      message: apiResponse.message
-    }
-  }
+  // Roles do not support soft-delete restore
 }
 
 const roleService = new RoleService()

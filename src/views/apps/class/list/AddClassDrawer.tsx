@@ -84,13 +84,9 @@ const AddClassDrawer = (props: Props) => {
 
           if (response.success && response.data) {
             setCoaches(response.data)
-          } else {
-            console.error('Failed to load coaches:', response.message)
-            showNotification('Không thể tải danh sách huấn luyện viên.', 'warning')
           }
-        } catch (error) {
-          console.error('Error loading coaches:', error)
-          showNotification('Đã có lỗi khi tải huấn luyện viên.', 'error')
+        } catch {
+          // silently ignore — coaches list shows empty
         } finally {
           setLoadingCoaches(false)
         }
@@ -98,7 +94,8 @@ const AddClassDrawer = (props: Props) => {
     }
 
     loadCoaches()
-  }, [open, showNotification])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const onSubmit = async (data: FormValidateType) => {
     try {

@@ -78,23 +78,17 @@ class ClassService {
   }
 
   async getClasses(params?: GetClassesParams): Promise<ResponseResult<ClassType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.classes.root, { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.root, { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        data: [],
-        message: apiResponse.message
-      }
-    }
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
 
-    const records: ApiClassResponse[] = apiResponse.data?.records || []
-    const classes = records.map(this.mapApiClassToClassType)
+      const records: ApiClassResponse[] = apiResponse.data?.records || []
 
-    return {
-      success: true,
-      data: classes
+      return { success: true, data: records.map(this.mapApiClassToClassType) }
+    } catch {
+      return { success: true, data: [] }
     }
   }
 
@@ -197,7 +191,7 @@ class ClassService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return { success: true, data: apiResponse.data || [] }
@@ -208,7 +202,7 @@ class ClassService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return { success: true, data: apiResponse.data || [], message: apiResponse.message }
@@ -219,7 +213,7 @@ class ClassService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return { success: true, data: apiResponse.data?.records || apiResponse.data?.items || apiResponse.data || [] }
@@ -233,7 +227,7 @@ class ClassService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return { success: true, data: apiResponse.data || [] }
@@ -244,7 +238,7 @@ class ClassService {
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      return { success: true, data: [] }
     }
 
     return { success: true, data: apiResponse.data || [] }

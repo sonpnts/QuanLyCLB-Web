@@ -32,20 +32,9 @@ class PayrollService {
     const response = await apiClient.get<any>(API_ENDPOINTS.payroll.root, { params })
     const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        data: [],
-        message: apiResponse.message
-      }
-    }
+    if (!apiResponse.isSuccess) return { success: true, data: [] }
 
-    const records = apiResponse.data?.records || []
-
-    return {
-      success: true,
-      data: records
-    }
+    return { success: true, data: apiResponse.data?.records || [] }
   }
 
   async getPayrollById(payrollId: string): Promise<ResponseResult<any>> {
@@ -69,18 +58,9 @@ class PayrollService {
     const response = await apiClient.get<any>(API_ENDPOINTS.payroll.byCoach(coachId))
     const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        data: [],
-        message: apiResponse.message
-      }
-    }
+    if (!apiResponse.isSuccess) return { success: true, data: [] }
 
-    return {
-      success: true,
-      data: apiResponse.data?.records || apiResponse.data || []
-    }
+    return { success: true, data: apiResponse.data?.records || apiResponse.data || [] }
   }
 
   async generatePayroll(data: GeneratePayrollRequest): Promise<ResponseResult<any>> {
@@ -102,7 +82,7 @@ class PayrollService {
   }
 
   async createPayroll(data: GeneratePayrollRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.payroll.root, data)
+    const response = await apiClient.post<any>(API_ENDPOINTS.payroll.generate, data)
     const apiResponse = response.data
 
     if (!apiResponse.isSuccess) {

@@ -69,153 +69,185 @@ class InstructorService {
   }
 
   async getInstructors(params?: GetInstructorsParams): Promise<ResponseResult<InstructorType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.instructors.root, { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.instructors.root, { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        data: [],
-        message: apiResponse.message
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
       }
-    }
 
-    const records: ApiInstructorResponse[] = apiResponse.data?.records || []
-    const instructors = records.map(this.mapApiInstructorToInstructorType)
+      const records: ApiInstructorResponse[] = apiResponse.data?.records || []
+      const instructors = records.map(this.mapApiInstructorToInstructorType)
 
-    return {
-      success: true,
-      data: instructors
+      return {
+        success: true,
+        data: instructors
+      }
+    } catch {
+      return { success: true, data: [] }
     }
   }
 
   async getInstructorById(id: string): Promise<ResponseResult<InstructorType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.instructors.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.instructors.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        message: apiResponse.message
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
       }
-    }
 
-    const instructorData = this.mapApiInstructorToInstructorType(apiResponse.data)
+      const instructorData = this.mapApiInstructorToInstructorType(apiResponse.data)
 
-    return {
-      success: true,
-      data: instructorData
+      return {
+        success: true,
+        data: instructorData
+      }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async createInstructor(data: CreateInstructorRequest): Promise<ResponseResult<InstructorType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.instructors.root, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.instructors.root, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
+      const instructorData = this.mapApiInstructorToInstructorType(apiResponse.data)
+
       return {
-        success: false,
+        success: true,
+        data: instructorData,
         message: apiResponse.message
       }
-    }
-
-    const instructorData = this.mapApiInstructorToInstructorType(apiResponse.data)
-
-    return {
-      success: true,
-      data: instructorData,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async updateInstructor(id: string, data: UpdateInstructorRequest): Promise<ResponseResult<InstructorType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.instructors.byId(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.instructors.byId(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
+      const instructorData = this.mapApiInstructorToInstructorType(apiResponse.data)
+
       return {
-        success: false,
+        success: true,
+        data: instructorData,
         message: apiResponse.message
       }
-    }
-
-    const instructorData = this.mapApiInstructorToInstructorType(apiResponse.data)
-
-    return {
-      success: true,
-      data: instructorData,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async deleteInstructor(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(API_ENDPOINTS.instructors.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.instructors.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
       return {
-        success: false,
+        success: true,
         message: apiResponse.message
       }
-    }
-
-    return {
-      success: true,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async restoreInstructor(id: string): Promise<ResponseResult<InstructorType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.instructors.restore(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.instructors.restore(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
+      const instructorData = this.mapApiInstructorToInstructorType(apiResponse.data)
+
       return {
-        success: false,
+        success: true,
+        data: instructorData,
         message: apiResponse.message
       }
-    }
-
-    const instructorData = this.mapApiInstructorToInstructorType(apiResponse.data)
-
-    return {
-      success: true,
-      data: instructorData,
-      message: apiResponse.message
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async getInstructorStatistics(id: string, params?: { month?: number; year?: number }): Promise<ResponseResult<any>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.instructors.statistics(id), { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.instructors.statistics(id), { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data }
   }
 
   async getInstructorSchedules(id: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.instructors.schedules(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.instructors.schedules(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: apiResponse.data || [] }
+    } catch {
+      return { success: true, data: [] }
     }
-
-    return { success: true, data: apiResponse.data || [] }
   }
 
   async getInstructorClasses(id: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.instructors.classes(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.instructors.classes(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, data: [], message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: apiResponse.data || [] }
+    } catch {
+      return { success: true, data: [] }
     }
-
-    return { success: true, data: apiResponse.data || [] }
   }
 }
 
