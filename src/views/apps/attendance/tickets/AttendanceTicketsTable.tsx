@@ -17,6 +17,7 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import TextField from '@mui/material/TextField'
 import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 
@@ -26,6 +27,7 @@ import type { FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { CreateTicketRequest, TicketApprovalRequest } from '@/services/attendanceService'
+import { TICKET_REASONS } from '@/types/apps/attendanceTypes'
 
 // Service Imports
 import attendanceService from '@/services/attendanceService'
@@ -48,6 +50,7 @@ const AttendanceTicketsTable = () => {
   const [classScheduleId, setClassScheduleId] = useState<string>('')
   const [userId, setUserId] = useState<string>('')
   const [reason, setReason] = useState<string>('')
+  const [customReason, setCustomReason] = useState<string>('')
   const [approve, setApprove] = useState<boolean>(true)
   const [approver, setApprover] = useState<string>('')
   const [notes, setNotes] = useState<string>('')
@@ -90,10 +93,12 @@ const AttendanceTicketsTable = () => {
     try {
       setLoading(true)
 
+      const resolvedReason = reason === 'other' ? customReason || undefined : reason || undefined
+
       const createData: CreateTicketRequest = {
         classScheduleId,
         userId,
-        reason: reason || undefined,
+        reason: resolvedReason,
         createdBy: 'current-user', // Replace with actual user
         createdByUserId: 'current-user-id' // Replace with actual user ID
       }
@@ -106,6 +111,7 @@ const AttendanceTicketsTable = () => {
         setClassScheduleId('')
         setUserId('')
         setReason('')
+        setCustomReason('')
         loadTickets()
       } else {
         showNotification(response.message || 'Không thể tạo phiếu xin nghỉ.', 'error')
@@ -302,14 +308,26 @@ const AttendanceTicketsTable = () => {
               onChange={e => setUserId(e.target.value)}
               required
             />
-            <TextField
-              fullWidth
-              label='Lý do'
-              value={reason}
-              onChange={e => setReason(e.target.value)}
-              multiline
-              rows={3}
-            />
+            <FormControl fullWidth>
+              <InputLabel>Lý do</InputLabel>
+              <Select value={reason} onChange={e => setReason(e.target.value)} label='Lý do'>
+                {TICKET_REASONS.map(r => (
+                  <MenuItem key={r} value={r}>
+                    {r}
+                  </MenuItem>
+                ))}
+                <MenuItem value='other'>Khác (nhập thêm)</MenuItem>
+              </Select>
+            </FormControl>
+            {reason === 'other' && (
+              <TextField
+                fullWidth
+                label='Lý do khác'
+                value={customReason}
+                onChange={e => setCustomReason(e.target.value)}
+                sx={{ mt: 2 }}
+              />
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
@@ -326,6 +344,7 @@ const AttendanceTicketsTable = () => {
         <DialogContent>
           <Box className='flex flex-col gap-4 pt-4'>
             <FormControl fullWidth>
+              <InputLabel>Quyết định</InputLabel>
               <Select
                 label='Quyết định'
                 value={approve ? 'true' : 'false'}

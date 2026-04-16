@@ -1,6 +1,7 @@
 import { apiClient } from '@/utils/apiClient'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
+import { apiList, apiGet, apiMutate, extractList } from '@/utils/serviceHelper'
 
 // Type Imports
 import type { BranchType, GetBranchesParams, CreateBranchRequest, UpdateBranchRequest } from '@/types/apps/branchTypes'
@@ -25,134 +26,62 @@ export interface ApiBranchResponse {
   updatedByUserId?: string | null
 }
 
+const toBranch = (apiBranch: ApiBranchResponse): BranchType => ({
+  id: apiBranch.id,
+  name: apiBranch.name || '',
+  address: apiBranch.address,
+  latitude: apiBranch.latitude,
+  longitude: apiBranch.longitude,
+  allowedRadiusMeters: apiBranch.allowedRadiusMeters,
+  googleMapsEmbedUrl: apiBranch.googleMapsEmbedUrl,
+  tuitionFee: apiBranch.tuitionFee,
+  isActive: apiBranch.isActive ?? true,
+  createdDate: apiBranch.createdAt,
+  createdBy: apiBranch.createdByUserId || undefined,
+  updatedDate: apiBranch.updatedAt || undefined,
+  updatedBy: apiBranch.updatedByUserId || undefined
+})
+
 class BranchService {
-  private mapApiBranchToBranchType(apiBranch: ApiBranchResponse): BranchType {
-    return {
-      id: apiBranch.id,
-      name: apiBranch.name || '',
-      address: apiBranch.address,
-      latitude: apiBranch.latitude,
-      longitude: apiBranch.longitude,
-      allowedRadiusMeters: apiBranch.allowedRadiusMeters,
-      googleMapsEmbedUrl: apiBranch.googleMapsEmbedUrl,
-      tuitionFee: apiBranch.tuitionFee,
-      isActive: apiBranch.isActive ?? true,
-      createdDate: apiBranch.createdAt,
-      createdBy: apiBranch.createdByUserId || undefined,
-      updatedDate: apiBranch.updatedAt || undefined,
-      updatedBy: apiBranch.updatedByUserId || undefined
-    }
-  }
-
   async getBranches(params?: GetBranchesParams): Promise<ResponseResult<BranchType[]>> {
-    try {
-      const response = await apiClient.get<any>(API_ENDPOINTS.branches.root, { params })
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) return { success: true, data: [] }
-
-      const records: ApiBranchResponse[] = apiResponse.data?.records || []
-
-      return { success: true, data: records.map(this.mapApiBranchToBranchType) }
-    } catch {
-      return { success: true, data: [] }
-    }
+    return apiList(
+      () => apiClient.get<any>(API_ENDPOINTS.branches.root, { params }),
+      data => extractList<ApiBranchResponse>(data).map(toBranch)
+    )
   }
 
   async getBranchById(id: string): Promise<ResponseResult<BranchType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.branches.byId(id))
-    const apiResponse = response.data
-
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        message: apiResponse.message
-      }
-    }
-
-    const branchData = this.mapApiBranchToBranchType(apiResponse.data)
-
-    return {
-      success: true,
-      data: branchData
-    }
+    return apiGet(
+      () => apiClient.get<any>(API_ENDPOINTS.branches.byId(id)),
+      toBranch
+    )
   }
 
   async createBranch(data: CreateBranchRequest): Promise<ResponseResult<BranchType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.branches.root, data)
-    const apiResponse = response.data
-
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        message: apiResponse.message
-      }
-    }
-
-    const branchData = this.mapApiBranchToBranchType(apiResponse.data)
-
-    return {
-      success: true,
-      data: branchData,
-      message: apiResponse.message
-    }
+    return apiMutate(
+      () => apiClient.post<any>(API_ENDPOINTS.branches.root, data),
+      toBranch
+    )
   }
 
   async updateBranch(id: string, data: UpdateBranchRequest): Promise<ResponseResult<BranchType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.branches.byId(id), data)
-    const apiResponse = response.data
-
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        message: apiResponse.message
-      }
-    }
-
-    const branchData = this.mapApiBranchToBranchType(apiResponse.data)
-
-    return {
-      success: true,
-      data: branchData,
-      message: apiResponse.message
-    }
+    return apiMutate(
+      () => apiClient.put<any>(API_ENDPOINTS.branches.byId(id), data),
+      toBranch
+    )
   }
 
   async deleteBranch(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(API_ENDPOINTS.branches.byId(id))
-    const apiResponse = response.data
-
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        message: apiResponse.message
-      }
-    }
-
-    return {
-      success: true,
-      message: apiResponse.message
-    }
+    return apiMutate(
+      () => apiClient.delete<any>(API_ENDPOINTS.branches.byId(id))
+    )
   }
 
   async restoreBranch(id: string): Promise<ResponseResult<BranchType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.branches.restore(id))
-    const apiResponse = response.data
-
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        message: apiResponse.message
-      }
-    }
-
-    const branchData = this.mapApiBranchToBranchType(apiResponse.data)
-
-    return {
-      success: true,
-      data: branchData,
-      message: apiResponse.message
-    }
+    return apiMutate(
+      () => apiClient.post<any>(API_ENDPOINTS.branches.restore(id)),
+      toBranch
+    )
   }
 }
 

@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import type { StudentType, EnrollmentType, TuitionStatusType, ExamHistoryType } from '@/types/apps/studentTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
@@ -41,54 +42,80 @@ class StudentService {
       if (!apiResponse.isSuccess) return { success: true, data: [] }
 
       return { success: true, data: apiResponse.data?.items || apiResponse.data?.records || [] }
-    } catch {
+    } catch (error) {
+      logger.error('StudentService', 'getStudents', error)
       return { success: true, data: [] }
     }
   }
 
   async getStudentById(id: string): Promise<ResponseResult<StudentType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.students.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.students.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
-    return { success: true, data: apiResponse.data }
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('StudentService', 'getStudentById', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
   }
 
   async createStudent(data: CreateStudentRequest): Promise<ResponseResult<StudentType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.students.root, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.students.root, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'createStudent', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
   }
 
   async updateStudent(id: string, data: Partial<CreateStudentRequest>): Promise<ResponseResult<StudentType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.students.byId(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.students.byId(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'updateStudent', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
   }
 
   async deleteStudent(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(API_ENDPOINTS.students.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.students.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
-    return { success: true, message: apiResponse.message }
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'deleteStudent', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
   }
 
   async restoreStudent(id: string): Promise<ResponseResult<StudentType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.students.restore(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.students.restore(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'restoreStudent', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
   }
 
   async getStudentEnrollments(studentId: string): Promise<ResponseResult<EnrollmentType[]>> {
@@ -99,18 +126,24 @@ class StudentService {
       if (!apiResponse.isSuccess) return { success: true, data: [] }
 
       return { success: true, data: apiResponse.data || [] }
-    } catch {
+    } catch (error) {
+      logger.error('StudentService', 'getStudentEnrollments', error)
       return { success: true, data: [] }
     }
   }
 
   async enrollStudent(data: EnrollStudentRequest): Promise<ResponseResult<EnrollmentType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.students.enroll, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.students.enroll, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'enrollStudent', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
   }
 
   async getStudentsByClass(classId: string): Promise<ResponseResult<StudentType[]>> {
@@ -121,20 +154,26 @@ class StudentService {
       if (!apiResponse.isSuccess) return { success: true, data: [] }
 
       return { success: true, data: apiResponse.data || [] }
-    } catch {
+    } catch (error) {
+      logger.error('StudentService', 'getStudentsByClass', error)
       return { success: true, data: [] }
     }
   }
 
   async getTuitionStatus(studentId: string, classId: string, month: number, year: number): Promise<ResponseResult<TuitionStatusType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionStatus(studentId), {
-      params: { classId, month, year }
-    })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionStatus(studentId), {
+        params: { classId, month, year }
+      })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
-    return { success: true, data: apiResponse.data }
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('StudentService', 'getTuitionStatus', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
   }
 
   async getExamHistory(studentId: string): Promise<ResponseResult<ExamHistoryType[]>> {
@@ -145,7 +184,8 @@ class StudentService {
       if (!apiResponse.isSuccess) return { success: true, data: [] }
 
       return { success: true, data: apiResponse.data || [] }
-    } catch {
+    } catch (error) {
+      logger.error('StudentService', 'getExamHistory', error)
       return { success: true, data: [] }
     }
   }
@@ -158,7 +198,8 @@ class StudentService {
       if (!apiResponse.isSuccess) return { success: true, data: [] }
 
       return { success: true, data: apiResponse.data || [] }
-    } catch {
+    } catch (error) {
+      logger.error('StudentService', 'getStudentPayments', error)
       return { success: true, data: [] }
     }
   }
@@ -171,7 +212,8 @@ class StudentService {
       if (!apiResponse.isSuccess) return { success: true, data: [] }
 
       return { success: true, data: apiResponse.data || [] }
-    } catch {
+    } catch (error) {
+      logger.error('StudentService', 'getStudentAttendance', error)
       return { success: true, data: [] }
     }
   }

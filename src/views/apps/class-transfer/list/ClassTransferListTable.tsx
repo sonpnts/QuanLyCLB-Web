@@ -21,7 +21,6 @@ import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
 import classnames from 'classnames'
-import { rankItem } from '@tanstack/match-sorter-utils'
 import {
   createColumnHelper,
   flexRender,
@@ -31,7 +30,9 @@ import {
   getPaginationRowModel,
   getSortedRowModel
 } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
+
+import { fuzzyFilter } from '@/utils/tableHelpers'
 
 // Type Imports
 import type { ClassTransferType } from '@/types/apps/classTransferTypes'
@@ -50,12 +51,6 @@ import { useNotification } from '@/contexts/notificationContext'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(row.getValue(columnId), value)
-  addMeta({ itemRank })
-  return itemRank.passed
-}
 
 const DebouncedInput = ({
   value: initialValue,
@@ -128,10 +123,10 @@ const ClassTransferListTable = () => {
         if (response.success && response.data) {
           setData(response.data)
         } else {
-          showNotificationRef.current(response.message || 'Không thể tải danh sách yêu cầu chuyển lớp.', 'error')
+          setData([])
         }
       } catch (error) {
-        showNotificationRef.current('Đã có lỗi khi tải dữ liệu.', 'error')
+        setData([])
       } finally {
         setLoading(false)
       }

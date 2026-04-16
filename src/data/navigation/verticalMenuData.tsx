@@ -74,6 +74,11 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
         href: '/apps/attendance/tickets'
       },
       {
+        label: 'Thống kê chấm công',
+        icon: 'ri-bar-chart-box-line',
+        href: '/apps/attendance/admin-stats'
+      },
+      {
         label: 'Xin nghỉ phép',
         icon: 'ri-calendar-close-line',
         href: '/apps/leave-request/list'
@@ -118,6 +123,11 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
         label: 'Bảng lương',
         icon: 'ri-money-dollar-circle-line',
         href: '/apps/payroll/list'
+      },
+      {
+        label: 'Cấu hình lương',
+        icon: 'ri-money-dollar-circle-line',
+        href: '/apps/payroll/salary-config'
       },
       {
         label: 'Hóa đơn',
@@ -165,6 +175,17 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
         label: 'Nhật ký hệ thống',
         icon: 'ri-file-history-line',
         href: '/apps/audit-log/list'
+      }
+    ]
+  },
+  {
+    label: 'Cài đặt',
+    isSection: true,
+    children: [
+      {
+        label: 'Cài đặt hệ thống',
+        icon: 'ri-settings-3-line',
+        href: '/settings/system-config'
       }
     ]
   }

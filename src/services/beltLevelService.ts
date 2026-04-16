@@ -2,6 +2,7 @@ import { apiClient } from '@/utils/apiClient'
 import type { BeltLevelType } from '@/types/apps/beltExamTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
+import { apiList, apiGet, apiMutate, extractList } from '@/utils/serviceHelper'
 
 // Query parameters for GET /api/belt-levels
 export interface GetBeltLevelsParams {
@@ -28,95 +29,37 @@ export interface UpdateBeltLevelRequest {
 
 class BeltLevelService {
   async getBeltLevels(params?: GetBeltLevelsParams): Promise<ResponseResult<BeltLevelType[]>> {
-    try {
-      const response = await apiClient.get<any>(API_ENDPOINTS.beltLevels.root, { params })
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: true, data: [] }
-      }
-
-      // Handle different response formats
-      let data = apiResponse.data
-
-      if (data && typeof data === 'object' && !Array.isArray(data)) {
-        data = data.items || data.records || []
-      }
-
-      return { success: true, data: Array.isArray(data) ? data : [] }
-    } catch (error) {
-      console.error('Error fetching belt levels:', error)
-
-      return { success: false, data: [], message: 'Không thể tải danh sách cấp đai' }
-    }
+    return apiList(
+      () => apiClient.get<any>(API_ENDPOINTS.beltLevels.root, { params }),
+      data => extractList<BeltLevelType>(data)
+    )
   }
 
   async getBeltLevelById(id: string): Promise<ResponseResult<BeltLevelType>> {
-    try {
-      const response = await apiClient.get<any>(API_ENDPOINTS.beltLevels.byId(id))
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, data: apiResponse.data }
-    } catch (error) {
-      console.error('Error fetching belt level:', error)
-
-      return { success: false, message: 'Không thể tải thông tin cấp đai' }
-    }
+    return apiGet(
+      () => apiClient.get<any>(API_ENDPOINTS.beltLevels.byId(id)),
+      data => data as BeltLevelType
+    )
   }
 
   async createBeltLevel(data: CreateBeltLevelRequest): Promise<ResponseResult<BeltLevelType>> {
-    try {
-      const response = await apiClient.post<any>(API_ENDPOINTS.beltLevels.root, data)
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, data: apiResponse.data, message: apiResponse.message || 'Tạo cấp đai thành công' }
-    } catch (error) {
-      console.error('Error creating belt level:', error)
-
-      return { success: false, message: 'Không thể tạo cấp đai' }
-    }
+    return apiMutate(
+      () => apiClient.post<any>(API_ENDPOINTS.beltLevels.root, data),
+      d => d as BeltLevelType
+    )
   }
 
   async updateBeltLevel(id: string, data: UpdateBeltLevelRequest): Promise<ResponseResult<BeltLevelType>> {
-    try {
-      const response = await apiClient.put<any>(API_ENDPOINTS.beltLevels.byId(id), data)
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, data: apiResponse.data, message: apiResponse.message || 'Cập nhật cấp đai thành công' }
-    } catch (error) {
-      console.error('Error updating belt level:', error)
-
-      return { success: false, message: 'Không thể cập nhật cấp đai' }
-    }
+    return apiMutate(
+      () => apiClient.put<any>(API_ENDPOINTS.beltLevels.byId(id), data),
+      d => d as BeltLevelType
+    )
   }
 
   async deleteBeltLevel(id: string): Promise<ResponseResult<void>> {
-    try {
-      const response = await apiClient.delete<any>(API_ENDPOINTS.beltLevels.byId(id))
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, message: apiResponse.message || 'Xóa cấp đai thành công' }
-    } catch (error) {
-      console.error('Error deleting belt level:', error)
-
-      return { success: false, message: 'Không thể xóa cấp đai' }
-    }
+    return apiMutate(
+      () => apiClient.delete<any>(API_ENDPOINTS.beltLevels.byId(id))
+    )
   }
 }
 

@@ -15,10 +15,9 @@ import TextField from '@mui/material/TextField'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
-import type { FilterFn } from '@tanstack/react-table'
 
 import { AttendanceStatus } from '@/services/attendanceService'
-
+import { fuzzyFilter } from '@/utils/tableHelpers'
 // Type Imports
 import type { GetUserAttendanceParams } from '@/services/attendanceService'
 
@@ -30,6 +29,19 @@ import { useNotification } from '@/contexts/notificationContext'
 
 // Column Helper
 const columnHelper = createColumnHelper<any>()
+
+// Pure helper – defined outside component to avoid recreation on every render
+const getStatusLabel = (status: AttendanceStatus) => {
+  const statusMap = {
+    [AttendanceStatus.Present]: { label: 'Có mặt', color: 'success' as const },
+    [AttendanceStatus.Absent]: { label: 'Vắng mặt', color: 'error' as const },
+    [AttendanceStatus.Late]: { label: 'Đi muộn', color: 'warning' as const },
+    [AttendanceStatus.Excused]: { label: 'Có phép', color: 'info' as const },
+    [AttendanceStatus.Pending]: { label: 'Chờ duyệt', color: 'default' as const }
+  }
+
+  return statusMap[status] || { label: 'Không xác định', color: 'default' as const }
+}
 
 const AttendanceListTable = () => {
   // States
@@ -70,19 +82,6 @@ const AttendanceListTable = () => {
     loadAttendance()
   }
 
-  // Get status label
-  const getStatusLabel = (status: AttendanceStatus) => {
-    const statusMap = {
-      [AttendanceStatus.Present]: { label: 'Có mặt', color: 'success' as const },
-      [AttendanceStatus.Absent]: { label: 'Vắng mặt', color: 'error' as const },
-      [AttendanceStatus.Late]: { label: 'Đi muộn', color: 'warning' as const },
-      [AttendanceStatus.Excused]: { label: 'Có phép', color: 'info' as const },
-      [AttendanceStatus.Pending]: { label: 'Chờ duyệt', color: 'default' as const }
-    }
-
-    return statusMap[status] || { label: 'Không xác định', color: 'default' as const }
-  }
-
   // Columns
   const columns = useMemo(
     () => [
@@ -112,6 +111,17 @@ const AttendanceListTable = () => {
           return <Chip label={statusInfo.label} color={statusInfo.color} variant='tonal' size='small' />
         }
       }),
+      columnHelper.accessor('isSubstitute', {
+        header: 'Dạy thay',
+        cell: ({ row }) =>
+          row.original.isSubstitute ? (
+            <Chip label='Dạy thay' color='warning' variant='tonal' size='small' />
+          ) : (
+            <Typography variant='body2' color='text.secondary'>
+              -
+            </Typography>
+          )
+      }),
       columnHelper.accessor('notes', {
         header: 'Ghi chú',
         cell: ({ row }) => <Typography variant='body2'>{row.original.notes || '-'}</Typography>
@@ -121,14 +131,10 @@ const AttendanceListTable = () => {
   )
 
   // Table
-  const fuzzyFilter: FilterFn<any> = () => true
-
   const table = useReactTable({
     data: filteredData,
     columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
+    filterFns: { fuzzy: fuzzyFilter },
     getCoreRowModel: getCoreRowModel()
   })
 

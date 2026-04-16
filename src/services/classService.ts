@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
@@ -87,175 +88,231 @@ class ClassService {
       const records: ApiClassResponse[] = apiResponse.data?.records || []
 
       return { success: true, data: records.map(this.mapApiClassToClassType) }
-    } catch {
+    } catch (error) {
+      logger.error('ClassService', 'getClasses', error)
       return { success: true, data: [] }
     }
   }
 
   async getClassById(id: string): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.classes.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        message: apiResponse.message
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
       }
-    }
 
-    const classData = this.mapApiClassToClassType(apiResponse.data)
+      const classData = this.mapApiClassToClassType(apiResponse.data)
 
-    return {
-      success: true,
-      data: classData
+      return {
+        success: true,
+        data: classData
+      }
+    } catch (error: any) {
+      logger.error('ClassService', 'getClassById', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async createClass(data: CreateClassRequest): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.post(API_ENDPOINTS.classes.root, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.classes.root, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
       return {
-        success: false,
+        success: true,
+        data: apiResponse.data,
         message: apiResponse.message
       }
-    }
-
-    return {
-      success: true,
-      data: apiResponse.data,
-      message: apiResponse.message
+    } catch (error: any) {
+      logger.error('ClassService', 'createClass', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async updateClass(id: string, data: UpdateClassRequest): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.classes.byId(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.classes.byId(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
+      const classData = this.mapApiClassToClassType(apiResponse.data)
+
       return {
-        success: false,
+        success: true,
+        data: classData,
         message: apiResponse.message
       }
-    }
-
-    const classData = this.mapApiClassToClassType(apiResponse.data)
-
-    return {
-      success: true,
-      data: classData,
-      message: apiResponse.message
+    } catch (error: any) {
+      logger.error('ClassService', 'updateClass', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async deleteClass(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(API_ENDPOINTS.classes.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.classes.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
       return {
-        success: false,
+        success: true,
         message: apiResponse.message
       }
-    }
-
-    return {
-      success: true,
-      message: apiResponse.message
+    } catch (error: any) {
+      logger.error('ClassService', 'deleteClass', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async restoreClass(id: string): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.classes.restore(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.classes.restore(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
+      const classData = this.mapApiClassToClassType(apiResponse.data)
+
       return {
-        success: false,
+        success: true,
+        data: classData,
         message: apiResponse.message
       }
-    }
-
-    const classData = this.mapApiClassToClassType(apiResponse.data)
-
-    return {
-      success: true,
-      data: classData,
-      message: apiResponse.message
+    } catch (error: any) {
+      logger.error('ClassService', 'restoreClass', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
   async getClassSchedules(classId: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.classes.schedules(classId))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.schedules(classId))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: apiResponse.data || [] }
+    } catch (error) {
+      logger.error('ClassService', 'getClassSchedules', error)
       return { success: true, data: [] }
     }
-
-    return { success: true, data: apiResponse.data || [] }
   }
 
   async createClassSchedules(classId: string, data: BulkCreateScheduleRequest): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.classes.schedules(classId), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.classes.schedules(classId), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: true, data: [] }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: apiResponse.data || [], message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('ClassService', 'createClassSchedules', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data || [], message: apiResponse.message }
   }
 
   async getClassStudents(classId: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.classes.students(classId))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.students(classId))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: apiResponse.data?.records || apiResponse.data?.items || apiResponse.data || [] }
+    } catch (error) {
+      logger.error('ClassService', 'getClassStudents', error)
       return { success: true, data: [] }
     }
-
-    return { success: true, data: apiResponse.data?.records || apiResponse.data?.items || apiResponse.data || [] }
   }
 
   async getClassAttendance(
     classId: string,
     params?: { fromDate?: string; toDate?: string }
   ): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.classes.attendance(classId), { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.attendance(classId), { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: apiResponse.data || [] }
+    } catch (error) {
+      logger.error('ClassService', 'getClassAttendance', error)
       return { success: true, data: [] }
     }
-
-    return { success: true, data: apiResponse.data || [] }
   }
 
   async getClassPayments(classId: string): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.classes.payments(classId))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.payments(classId))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: apiResponse.data || [] }
+    } catch (error) {
+      logger.error('ClassService', 'getClassPayments', error)
       return { success: true, data: [] }
     }
-
-    return { success: true, data: apiResponse.data || [] }
   }
 
   async duplicateClass(
     classId: string,
     data: { newCode: string; newName: string; copySchedules?: boolean; copyInstructors?: boolean }
   ): Promise<ResponseResult<ClassType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.classes.duplicate(classId), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.classes.duplicate(classId), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('ClassService', 'duplicateClass', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 }
 

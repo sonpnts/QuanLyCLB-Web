@@ -75,13 +75,15 @@ const CollectPayment = () => {
 
   // Fetch classes on load
   useEffect(() => {
+    let mounted = true
     const fetchClasses = async () => {
       const res = await classService.getClasses()
-      if (res.success && res.data) {
+      if (mounted && res.success && res.data) {
         setClasses(res.data)
       }
     }
     fetchClasses()
+    return () => { mounted = false }
   }, [])
 
   // Fetch students when class changes
@@ -92,16 +94,18 @@ const CollectPayment = () => {
       return
     }
 
+    let mounted = true
     const fetchStudents = async () => {
-      setLoadingStudents(true)
+      if (mounted) setLoadingStudents(true)
       const res = await classService.getClassStudents(selectedClassId)
-      if (res.success && res.data) {
+      if (mounted && res.success && res.data) {
         setStudents(res.data.map(x => x.student!))
       }
-      setLoadingStudents(false)
+      if (mounted) setLoadingStudents(false)
     }
 
     fetchStudents()
+    return () => { mounted = false }
   }, [selectedClassId])
 
   // Fetch debts when student is selected
@@ -112,16 +116,17 @@ const CollectPayment = () => {
       return
     }
 
+    let mounted = true
     const fetchDebts = async () => {
-      setLoadingDebts(true)
+      if (mounted) setLoadingDebts(true)
       try {
         const items: CartItem[] = []
-        
+
         // 1. Fetch current month tuition
         const now = new Date()
         const currentMonth = now.getMonth() + 1
         const currentYear = now.getFullYear()
-        
+
         const tRes = await paymentService.getTuitionQuote(selectedClassId, selectedStudent.id, currentMonth, currentYear)
         if (tRes.success && tRes.data) {
           if (!tRes.data.alreadyPaid) {
@@ -152,17 +157,20 @@ const CollectPayment = () => {
           })
         }
 
-        setAvailableItems(items)
-        // Auto select all by default
-        setSelectedItemIds(items.map(i => i.id))
+        if (mounted) {
+          setAvailableItems(items)
+          // Auto select all by default
+          setSelectedItemIds(items.map(i => i.id))
+        }
       } catch (error) {
-        toast.error('Lỗi khi tải công nợ')
+        if (mounted) toast.error('Lỗi khi tải công nợ')
       } finally {
-        setLoadingDebts(false)
+        if (mounted) setLoadingDebts(false)
       }
     }
 
     fetchDebts()
+    return () => { mounted = false }
   }, [selectedStudent, selectedClassId])
 
   const handleAddCustomItem = () => {

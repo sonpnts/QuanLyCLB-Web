@@ -12,7 +12,10 @@ export const API_ENDPOINTS = {
     my: '/Attendance/my',
     byUser: (userId: string) => `/Attendance/${userId}`,
     tickets: '/Attendance/tickets',
-    ticketApproval: (ticketId: string) => `/Attendance/tickets/${ticketId}/approval`
+    ticketApproval: (ticketId: string) => `/Attendance/tickets/${ticketId}/approval`,
+    adminOverview: '/attendance/admin/overview',
+    adminInstructorStats: '/attendance/admin/instructor-stats',
+    adminClassSummary: '/attendance/admin/class-summary'
   },
   auditLogs: {
     root: '/audit-logs',
@@ -177,7 +180,17 @@ export const API_ENDPOINTS = {
     byId: (id: string) => `/Users/${id}`,
     restore: (id: string) => `/Users/${id}/restore`,
     updateRoles: (id: string) => `/Users/${id}/roles`
-  }
+  },
+  instructorClassSalaries: {
+    root: '/instructor-class-salaries',
+    byId: (id: string) => `/instructor-class-salaries/${id}`,
+    byUserAndClass: '/instructor-class-salaries/by-user-class',
+  },
+  systemConfig: {
+    root: '/systemconfig',
+    byKey: (key: string) => `/systemconfig/${key}`,
+    reloadCache: '/systemconfig/reload-cache',
+  },
 } as const
 
 export type ApiEndpoints = typeof API_ENDPOINTS

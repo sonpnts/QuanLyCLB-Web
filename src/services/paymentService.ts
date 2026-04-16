@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import type {
   PaymentRecordType,
   PaymentSummaryType,
@@ -96,163 +97,226 @@ const unwrapList = (payload: any): any[] => {
 
 class PaymentService {
   async getPayments(params?: GetPaymentsParams): Promise<ResponseResult<PaymentRecordType[]>> {
-    const normalizedParams = params
-      ? {
-          ...params,
-          paymentDateFrom: params.paymentDateFrom ?? params.fromDate,
-          paymentDateTo: params.paymentDateTo ?? params.toDate
-        }
-      : undefined
+    try {
+      const normalizedParams = params
+        ? {
+            ...params,
+            paymentDateFrom: params.paymentDateFrom ?? params.fromDate,
+            paymentDateTo: params.paymentDateTo ?? params.toDate
+          }
+        : undefined
 
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.root, { params: normalizedParams })
-    const apiResponse = response.data
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.root, { params: normalizedParams })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return {
+        success: true,
+        data: unwrapList(apiResponse.data)
+      }
+    } catch (error) {
+      logger.error('PaymentService', 'getPayments', error)
       return { success: true, data: [] }
-    }
-
-    return {
-      success: true,
-      data: unwrapList(apiResponse.data)
     }
   }
 
   async getPaymentById(id: string): Promise<ResponseResult<PaymentRecordType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('PaymentService', 'getPaymentById', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data }
   }
 
   async createPayment(data: CreatePaymentRequest): Promise<ResponseResult<PaymentRecordType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.payments.root, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.payments.root, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('PaymentService', 'createPayment', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async createBulkPayment(data: CreateBulkPaymentRequest): Promise<ResponseResult<any>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.payments.bulk, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.payments.bulk, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('PaymentService', 'createBulkPayment', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async updatePayment(id: string, data: Partial<CreatePaymentRequest>): Promise<ResponseResult<PaymentRecordType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.payments.byId(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.payments.byId(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('PaymentService', 'updatePayment', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async deletePayment(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(API_ENDPOINTS.payments.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.payments.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('PaymentService', 'deletePayment', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, message: apiResponse.message }
   }
 
   async restorePayment(id: string): Promise<ResponseResult<PaymentRecordType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.payments.restore(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.payments.restore(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('PaymentService', 'restorePayment', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async getPaymentsByStudent(studentId: string): Promise<ResponseResult<PaymentRecordType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.byStudent(studentId))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.byStudent(studentId))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: unwrapList(apiResponse.data) }
+    } catch (error) {
+      logger.error('PaymentService', 'getPaymentsByStudent', error)
       return { success: true, data: [] }
     }
-
-    return { success: true, data: unwrapList(apiResponse.data) }
   }
 
   async getPaymentsByClass(classId: string): Promise<ResponseResult<PaymentRecordType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.byClass(classId))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.byClass(classId))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: unwrapList(apiResponse.data) }
+    } catch (error) {
+      logger.error('PaymentService', 'getPaymentsByClass', error)
       return { success: true, data: [] }
     }
-
-    return { success: true, data: unwrapList(apiResponse.data) }
   }
 
   async getClassSummary(classId: string, fromDate: string, toDate: string): Promise<ResponseResult<PaymentSummaryType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.classSummary(classId), {
-      params: { fromDate, toDate }
-    })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.classSummary(classId), {
+        params: { fromDate, toDate }
+      })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('PaymentService', 'getClassSummary', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data }
   }
 
   async getMonthlyReport(year: number, month: number): Promise<ResponseResult<MonthlyReportType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.monthlyReport, {
-      params: { year, month }
-    })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.monthlyReport, {
+        params: { year, month }
+      })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('PaymentService', 'getMonthlyReport', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data }
   }
 
   async getClassStatistics(classId: string, month: number, year: number): Promise<ResponseResult<any>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.classStatistics(classId), {
-      params: { month, year }
-    })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.classStatistics(classId), {
+        params: { month, year }
+      })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data }
   }
 
   async getOverduePayments(): Promise<ResponseResult<any[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.overdue)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.overdue)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: unwrapList(apiResponse.data) }
+    } catch {
       return { success: true, data: [] }
     }
-
-    return { success: true, data: unwrapList(apiResponse.data) }
   }
 
   async getTuitionQuote(
@@ -262,50 +326,62 @@ class PaymentService {
     year: number,
     paymentDate?: string
   ): Promise<ResponseResult<TuitionQuoteType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.tuitionQuote, {
-      params: { classId, studentId, month, year, paymentDate }
-    })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.tuitionQuote, {
+        params: { classId, studentId, month, year, paymentDate }
+      })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data }
   }
 
   async getExamFeeOptions(classId: string, studentId: string): Promise<ResponseResult<ExamFeeOptionType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.examFeeOptions, {
-      params: { classId, studentId }
-    })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.examFeeOptions, {
+        params: { classId, studentId }
+      })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: unwrapList(apiResponse.data) as ExamFeeOptionType[] }
+    } catch {
       return { success: true, data: [] }
     }
-
-    return { success: true, data: unwrapList(apiResponse.data) as ExamFeeOptionType[] }
   }
 
   async uploadTransferProof(file: File): Promise<ResponseResult<{ imageUrl: string; storedImageId: string }>> {
-    const formData = new FormData()
+    try {
+      const formData = new FormData()
 
-    formData.append('file', file)
+      formData.append('file', file)
 
-    const response = await apiClient.post<any>(API_ENDPOINTS.payments.uploadTransferProof, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+      const response = await apiClient.post<any>(API_ENDPOINTS.payments.uploadTransferProof, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
 
-    const apiResponse = response.data
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
-    }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
 
-    return {
-      success: true,
-      data: apiResponse.data,
-      message: apiResponse.message
+      return {
+        success: true,
+        data: apiResponse.data,
+        message: apiResponse.message
+      }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -320,14 +396,18 @@ class PaymentService {
     pageSize?: number
     isActive?: boolean
   }): Promise<ResponseResult<StudentDiscountConfigType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.payments.studentDiscountConfigs, { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.studentDiscountConfigs, { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      return { success: true, data: unwrapList(apiResponse.data) }
+    } catch {
       return { success: true, data: [] }
     }
-
-    return { success: true, data: unwrapList(apiResponse.data) }
   }
 
   async createStudentDiscountConfig(data: {
@@ -339,14 +419,18 @@ class PaymentService {
     effectiveFrom?: string
     effectiveTo?: string
   }): Promise<ResponseResult<StudentDiscountConfigType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.payments.studentDiscountConfigs, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.payments.studentDiscountConfigs, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   async updateStudentDiscountConfig(
@@ -361,14 +445,18 @@ class PaymentService {
       isActive: boolean
     }
   ): Promise<ResponseResult<StudentDiscountConfigType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.payments.studentDiscountConfigById(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.payments.studentDiscountConfigById(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: apiResponse.data, message: apiResponse.message }
   }
 
   // ─── Công nợ & tổng hợp thu chi (mới) ────────────────────────────────────

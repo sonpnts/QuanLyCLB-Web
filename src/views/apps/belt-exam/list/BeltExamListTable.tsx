@@ -27,7 +27,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel
 } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 
 import type { ExamSessionType } from '@/types/apps/beltExamTypes'
 import { examSessionStatusColors } from '@/types/apps/beltExamTypes'
@@ -36,6 +36,7 @@ import AddExamSessionDrawer from './AddExamSessionDrawer'
 import beltExamService from '@/services/beltExamService'
 import { useNotification } from '@/contexts/notificationContext'
 import tableStyles from '@core/styles/table.module.css'
+import { fuzzyFilter } from '@/utils/tableHelpers'
 
 const statusLabels: { [key: string]: string } = {
   Draft: 'Nháp',
@@ -244,14 +245,10 @@ const BeltExamListTable = () => {
     []
   )
 
-  const fuzzyFilter: FilterFn<any> = () => true
-
   const table = useReactTable({
     data,
     columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
+    filterFns: { fuzzy: fuzzyFilter },
     initialState: { pagination: { pageSize: 10 } },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),

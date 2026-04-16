@@ -1,6 +1,13 @@
 import { apiClient } from '@/utils/apiClient'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
+import { apiList } from '@/utils/serviceHelper'
+import { logger } from '@/utils/logger'
+import type {
+  AttendanceAdminOverviewType,
+  InstructorMonthlyStatsType,
+  ClassAttendanceSummaryType
+} from '@/types/apps/attendanceTypes'
 
 export interface CheckInRequest {
   checkedInAt: string // DateTime
@@ -73,6 +80,7 @@ class AttendanceService {
         code: apiResponse.code
       }
     } catch (error: any) {
+      logger.error('AttendanceService', 'checkIn', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -95,6 +103,7 @@ class AttendanceService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('AttendanceService', 'createManualAttendance', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -117,6 +126,7 @@ class AttendanceService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('AttendanceService', 'checkOut', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -140,7 +150,8 @@ class AttendanceService {
         success: true,
         data: apiResponse.data?.records || apiResponse.data || []
       }
-    } catch {
+    } catch (error) {
+      logger.error('AttendanceService', 'getUserAttendance', error)
       return { success: true, data: [] }
     }
   }
@@ -163,7 +174,8 @@ class AttendanceService {
         success: true,
         data: apiResponse.data?.records || apiResponse.data || []
       }
-    } catch {
+    } catch (error) {
+      logger.error('AttendanceService', 'getMyAttendance', error)
       return { success: true, data: [] }
     }
   }
@@ -186,6 +198,7 @@ class AttendanceService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('AttendanceService', 'createTicket', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -208,8 +221,43 @@ class AttendanceService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('AttendanceService', 'approveTicket', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
+  }
+
+  async getAdminOverview(params?: {
+    month?: number
+    year?: number
+    instructorId?: string
+    classId?: string
+  }): Promise<ResponseResult<AttendanceAdminOverviewType>> {
+    return apiList(
+      () => apiClient.get<any>(API_ENDPOINTS.attendance.adminOverview, { params }),
+      data => data
+    ) as unknown as Promise<ResponseResult<AttendanceAdminOverviewType>>
+  }
+
+  async getInstructorAttendanceStats(params?: {
+    month?: number
+    year?: number
+    instructorId?: string
+  }): Promise<ResponseResult<InstructorMonthlyStatsType[]>> {
+    return apiList(
+      () => apiClient.get<any>(API_ENDPOINTS.attendance.adminInstructorStats, { params }),
+      data => (Array.isArray(data) ? data : [])
+    )
+  }
+
+  async getClassAttendanceSummary(params?: {
+    month?: number
+    year?: number
+    classId?: string
+  }): Promise<ResponseResult<ClassAttendanceSummaryType[]>> {
+    return apiList(
+      () => apiClient.get<any>(API_ENDPOINTS.attendance.adminClassSummary, { params }),
+      data => (Array.isArray(data) ? data : [])
+    )
   }
 }
 

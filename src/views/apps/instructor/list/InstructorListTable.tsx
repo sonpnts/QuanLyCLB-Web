@@ -14,11 +14,10 @@ import Box from '@mui/material/Box'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
-import type { FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { InstructorType, GetInstructorsParams } from '@/services/instructorService'
-
+import { fuzzyFilter } from '@/utils/tableHelpers'
 // Component Imports
 import AddInstructorDrawer from './AddInstructorDrawer'
 import TableFilters from './TableFilters'
@@ -43,8 +42,6 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
   const [addInstructorOpen, setAddInstructorOpen] = useState(false)
   const [data, setData] = useState<InstructorType[]>(tableData || [])
   const [filteredData, setFilteredData] = useState<InstructorType[]>([])
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetInstructorsParams>({})
 
   // Notification Hook
@@ -73,7 +70,6 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
       if (tableData && tableData.length > 0) return
 
       try {
-        setLoading(true)
         currentFilterRef.current = filterKey
         dataLoadedRef.current = true
 
@@ -88,8 +84,6 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
       } catch (error) {
         console.error('Error loading instructors:', error)
         showNotificationRef.current('Đã có lỗi khi tải huấn luyện viên.', 'error')
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -104,7 +98,6 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
   // Handle delete instructor
   const handleDelete = useCallback(async (id: string) => {
     try {
-      setLoading(true)
       const response = await instructorService.deleteInstructor(id)
 
       if (response.success) {
@@ -117,15 +110,12 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
     } catch (error) {
       console.error('Error deleting instructor:', error)
       showNotificationRef.current('Đã có lỗi khi xóa huấn luyện viên.', 'error')
-    } finally {
-      setLoading(false)
     }
   }, [])
 
   // Handle restore instructor
   const handleRestore = useCallback(async (id: string) => {
     try {
-      setLoading(true)
       const response = await instructorService.restoreInstructor(id)
 
       if (response.success && response.data) {
@@ -138,8 +128,6 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
     } catch (error) {
       console.error('Error restoring instructor:', error)
       showNotificationRef.current('Đã có lỗi khi khôi phục huấn luyện viên.', 'error')
-    } finally {
-      setLoading(false)
     }
   }, [])
 
@@ -209,18 +197,14 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
         )
       })
     ],
-    [data, filteredData, showNotification, setData, setLoading, handleDelete, handleRestore]
+    [handleDelete, handleRestore]
   )
 
   // Table
-  const fuzzyFilter: FilterFn<any> = () => true
-
   const table = useReactTable({
     data: filteredData,
     columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
+    filterFns: { fuzzy: fuzzyFilter },
     getCoreRowModel: getCoreRowModel()
   })
 

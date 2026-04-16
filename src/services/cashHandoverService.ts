@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import type { CashHandoverType, CashHandoverDeductionType, LateTuitionStudentType } from '@/types/apps/cashHandoverTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
@@ -73,54 +74,79 @@ const unwrapList = (value: any): any[] => {
 
 class CashHandoverService {
   async getCashHandovers(params?: GetCashHandoversParams): Promise<ResponseResult<CashHandoverType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.cashHandovers.root, { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.cashHandovers.root, { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) return { success: true, data: [] }
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
 
-    return { success: true, data: unwrapList(apiResponse.data).map(toCashHandover) }
+      return { success: true, data: unwrapList(apiResponse.data).map(toCashHandover) }
+    } catch (error) {
+      logger.error('CashHandoverService', 'getCashHandovers', error)
+      return { success: true, data: [] }
+    }
   }
 
   async getCashHandoverById(id: string): Promise<ResponseResult<CashHandoverType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.cashHandovers.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.cashHandovers.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: toCashHandover(apiResponse.data) }
+    } catch (error: any) {
+      logger.error('CashHandoverService', 'getCashHandoverById', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: toCashHandover(apiResponse.data) }
   }
 
   async createCashHandover(data: CreateCashHandoverRequest): Promise<ResponseResult<CashHandoverType>> {
-    const response = await apiClient.post<any>(API_ENDPOINTS.cashHandovers.root, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.cashHandovers.root, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: toCashHandover(apiResponse.data), message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('CashHandoverService', 'createCashHandover', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: toCashHandover(apiResponse.data), message: apiResponse.message }
   }
 
   async confirmCashHandover(id: string): Promise<ResponseResult<CashHandoverType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.cashHandovers.confirm(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.cashHandovers.confirm(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return { success: false, message: apiResponse.message }
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: toCashHandover(apiResponse.data), message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('CashHandoverService', 'confirmCashHandover', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-
-    return { success: true, data: toCashHandover(apiResponse.data), message: apiResponse.message }
   }
 
   async getLateTuitionStudents(params?: { classId?: string; instructorId?: string }): Promise<ResponseResult<LateTuitionStudentType[]>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.cashHandovers.lateTuitionStudents, { params })
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.cashHandovers.lateTuitionStudents, { params })
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) return { success: true, data: [] }
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
 
-    return { success: true, data: unwrapList(apiResponse.data).map(toLateTuitionStudent) }
+      return { success: true, data: unwrapList(apiResponse.data).map(toLateTuitionStudent) }
+    } catch (error) {
+      logger.error('CashHandoverService', 'getLateTuitionStudents', error)
+      return { success: true, data: [] }
+    }
   }
 }
 

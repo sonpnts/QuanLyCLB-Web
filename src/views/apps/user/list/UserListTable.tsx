@@ -22,7 +22,6 @@ import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
 import classnames from 'classnames'
-import { rankItem } from '@tanstack/match-sorter-utils'
 import {
   createColumnHelper,
   flexRender,
@@ -35,12 +34,14 @@ import {
   getPaginationRowModel,
   getSortedRowModel
 } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
-import type { RankingInfo } from '@tanstack/match-sorter-utils'
+import type { ColumnDef } from '@tanstack/react-table'
+
+import { fuzzyFilter } from '@/utils/tableHelpers'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
 import type { UsersType } from '@/types/apps/userTypes'
+import { RoleLabels } from '@/types/apps/userTypes'
 
 // Component Imports
 import AddUserDrawer from './AddUserDrawer'
@@ -52,15 +53,6 @@ import { getInitials } from '@/utils/getInitials'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
-
-declare module '@tanstack/table-core' {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
-}
 
 type UsersTypeWithAction = UsersType & {
   action?: string
@@ -76,19 +68,6 @@ type UserStatusType = {
 
 // Styled Components
 const Icon = styled('i')({})
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
-
-  // Store the itemRank info
-  addMeta({
-    itemRank
-  })
-
-  // Return if the item should be filtered in/out
-  return itemRank.passed
-}
 
 const DebouncedInput = ({
   value: initialValue,
@@ -208,7 +187,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 sx={{ color: `var(--mui-palette-${roleObj.color}-main)`, fontSize: '1.375rem' }}
               />
               <Typography className='capitalize' color='text.primary'>
-                {rolesArr.join(', ')}
+                {rolesArr.map(r => RoleLabels[r] || r).join(', ')}
               </Typography>
             </div>
           )

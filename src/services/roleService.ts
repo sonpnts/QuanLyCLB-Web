@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
@@ -92,37 +93,42 @@ class RoleService {
     }
 
     const requestPromise = (async (): Promise<ResponseResult<RoleType[]>> => {
-      const response = await apiClient.get<any>(API_ENDPOINTS.roles.root, { params })
-      const apiResponse = response.data
+      try {
+        const response = await apiClient.get<any>(API_ENDPOINTS.roles.root, { params })
+        const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        const failedResult: ResponseResult<RoleType[]> = {
-          success: false,
-          data: [],
-          message: apiResponse.message
+        if (!apiResponse.isSuccess) {
+          const failedResult: ResponseResult<RoleType[]> = {
+            success: false,
+            data: [],
+            message: apiResponse.message
+          }
+
+          this.getRolesCache.set(key, {
+            expiresAt: Date.now() + this.getRolesCacheTtlMs,
+            value: failedResult
+          })
+
+          return failedResult
+        }
+
+        const records: ApiRoleResponse[] = apiResponse.data?.records || []
+        const roles = records.map(this.mapApiRoleToRoleType)
+        const successResult: ResponseResult<RoleType[]> = {
+          success: true,
+          data: roles
         }
 
         this.getRolesCache.set(key, {
           expiresAt: Date.now() + this.getRolesCacheTtlMs,
-          value: failedResult
+          value: successResult
         })
 
-        return failedResult
+        return successResult
+      } catch (error) {
+        logger.error('RoleService', 'getRoles', error)
+        return { success: true, data: [] }
       }
-
-      const records: ApiRoleResponse[] = apiResponse.data?.records || []
-      const roles = records.map(this.mapApiRoleToRoleType)
-      const successResult: ResponseResult<RoleType[]> = {
-        success: true,
-        data: roles
-      }
-
-      this.getRolesCache.set(key, {
-        expiresAt: Date.now() + this.getRolesCacheTtlMs,
-        value: successResult
-      })
-
-      return successResult
     })()
 
     this.inFlightGetRoles.set(key, requestPromise)
@@ -139,22 +145,27 @@ class RoleService {
    * Create a new role
    */
   async createRole(data: CreateRoleRequest): Promise<ResponseResult<RoleType>> {
-    const response = await apiClient.post(API_ENDPOINTS.roles.root, data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.roles.root, data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
+      const roleData = this.mapApiRoleToRoleType(apiResponse.data)
+
       return {
-        success: false,
+        success: true,
+        data: roleData,
         message: apiResponse.message
       }
-    }
-
-    const roleData = this.mapApiRoleToRoleType(apiResponse.data)
-
-    return {
-      success: true,
-      data: roleData,
-      message: apiResponse.message
+    } catch (error: any) {
+      logger.error('RoleService', 'createRole', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -163,21 +174,26 @@ class RoleService {
    * Get a role by ID
    */
   async getRoleById(id: string): Promise<ResponseResult<RoleType>> {
-    const response = await apiClient.get<any>(API_ENDPOINTS.roles.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.roles.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
-      return {
-        success: false,
-        message: apiResponse.message
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
       }
-    }
 
-    const roleData = this.mapApiRoleToRoleType(apiResponse.data)
+      const roleData = this.mapApiRoleToRoleType(apiResponse.data)
 
-    return {
-      success: true,
-      data: roleData
+      return {
+        success: true,
+        data: roleData
+      }
+    } catch (error: any) {
+      logger.error('RoleService', 'getRoleById', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -186,22 +202,27 @@ class RoleService {
    * Update a role
    */
   async updateRole(id: string, data: UpdateRoleRequest): Promise<ResponseResult<RoleType>> {
-    const response = await apiClient.put<any>(API_ENDPOINTS.roles.byId(id), data)
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.roles.byId(id), data)
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
+      const roleData = this.mapApiRoleToRoleType(apiResponse.data)
+
       return {
-        success: false,
+        success: true,
+        data: roleData,
         message: apiResponse.message
       }
-    }
-
-    const roleData = this.mapApiRoleToRoleType(apiResponse.data)
-
-    return {
-      success: true,
-      data: roleData,
-      message: apiResponse.message
+    } catch (error: any) {
+      logger.error('RoleService', 'updateRole', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -210,19 +231,24 @@ class RoleService {
    * Delete a role
    */
   async deleteRole(id: string): Promise<ResponseResult<void>> {
-    const response = await apiClient.delete<any>(API_ENDPOINTS.roles.byId(id))
-    const apiResponse = response.data
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.roles.byId(id))
+      const apiResponse = response.data
 
-    if (!apiResponse.isSuccess) {
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message
+        }
+      }
+
       return {
-        success: false,
+        success: true,
         message: apiResponse.message
       }
-    }
-
-    return {
-      success: true,
-      message: apiResponse.message
+    } catch (error: any) {
+      logger.error('RoleService', 'deleteRole', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 

@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import type { UsersType, ApiUserResponse } from '@/types/apps/userTypes'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
@@ -102,7 +103,8 @@ class UserService {
         success: true,
         data: users
       }
-    } catch {
+    } catch (error) {
+      logger.error('UserService', 'getUsers', error)
       return { success: true, data: [] }
     }
   }
@@ -132,6 +134,7 @@ class UserService {
         data: user
       }
     } catch (error: any) {
+      logger.error('UserService', 'getUserById', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -161,6 +164,7 @@ class UserService {
         data: user
       }
     } catch (error: any) {
+      logger.error('UserService', 'createUser', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -205,6 +209,7 @@ class UserService {
         data: users
       }
     } catch (error) {
+      logger.error('UserService', 'getCoaches', error)
       console.error('Error in getCoaches:', error)
 
       return {
@@ -239,6 +244,7 @@ class UserService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('UserService', 'updateUser', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -264,6 +270,7 @@ class UserService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('UserService', 'deleteUser', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -292,6 +299,7 @@ class UserService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('UserService', 'restoreUser', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -316,6 +324,7 @@ class UserService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('UserService', 'updateUserRoles', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }

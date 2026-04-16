@@ -23,11 +23,10 @@ import DialogActions from '@mui/material/DialogActions'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
-import type { FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { GetPayrollParams, GeneratePayrollRequest } from '@/services/payrollService'
-
+import { fuzzyFilter } from '@/utils/tableHelpers'
 // Service Imports
 import payrollService from '@/services/payrollService'
 
@@ -63,15 +62,17 @@ const PayrollListTable = () => {
         setData(response.data)
         setFilteredData(response.data)
       } else {
-        showNotification(response.message || 'Không thể tải danh sách bảng lương.', 'error')
+        setData([])
+        setFilteredData([])
       }
     } catch (error) {
       console.error('Error loading payrolls:', error)
-      showNotification('Đã có lỗi khi tải bảng lương.', 'error')
+      setData([])
+      setFilteredData([])
     } finally {
       setLoading(false)
     }
-  }, [filterParams, showNotification])
+  }, [filterParams])
 
   useEffect(() => {
     loadPayrolls()
@@ -164,14 +165,10 @@ const PayrollListTable = () => {
   )
 
   // Table
-  const fuzzyFilter: FilterFn<any> = () => true
-
   const table = useReactTable({
     data: filteredData,
     columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
+    filterFns: { fuzzy: fuzzyFilter },
     getCoreRowModel: getCoreRowModel()
   })
 

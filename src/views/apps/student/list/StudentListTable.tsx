@@ -18,7 +18,6 @@ import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
 import classnames from 'classnames'
-import { rankItem } from '@tanstack/match-sorter-utils'
 import {
   createColumnHelper,
   flexRender,
@@ -31,8 +30,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel
 } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
-import type { RankingInfo } from '@tanstack/match-sorter-utils'
+import type { ColumnDef } from '@tanstack/react-table'
 
 // Type Imports
 import type { StudentType } from '@/types/apps/studentTypes'
@@ -54,21 +52,8 @@ import { useNotification } from '@/contexts/notificationContext'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
+import { fuzzyFilter } from '@/utils/tableHelpers'
 
-declare module '@tanstack/table-core' {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
-}
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(row.getValue(columnId), value)
-  addMeta({ itemRank })
-  return itemRank.passed
-}
 
 const DebouncedInput = ({
   value: initialValue,

@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import type {
   ExamSessionType,
   ExamRegistrationType,
@@ -53,7 +54,8 @@ class BeltExamService {
         success: true,
         data: apiResponse.data?.items || apiResponse.data?.records || apiResponse.data || []
       }
-    } catch {
+    } catch (error) {
+      logger.error('BeltExamService', 'getExamSessions', error)
       return { success: true, data: [] }
     }
   }
@@ -69,6 +71,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'getExamSessionById', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -84,6 +87,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'createExamSession', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -98,6 +102,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'submitExamSession', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -113,6 +118,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'approveExamSession', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -128,6 +134,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'rejectExamSession', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -142,6 +149,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'openSession', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }
@@ -160,7 +168,8 @@ class BeltExamService {
         success: true,
         data: apiResponse.data?.items || apiResponse.data?.records || apiResponse.data || []
       }
-    } catch {
+    } catch (error) {
+      logger.error('BeltExamService', 'getExamRegistrations', error)
       return { success: true, data: [] }
     }
   }
@@ -176,6 +185,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'createExamRegistration', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -191,6 +201,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'batchExamRegistration', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -206,6 +217,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'approveExamRegistration', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -221,6 +233,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'rejectExamRegistration', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -236,6 +249,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'updateExamResult', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -259,6 +273,7 @@ class BeltExamService {
 
       return { success: true, data: Array.isArray(data) ? data : [] }
     } catch (error) {
+      logger.error('BeltExamService', 'getBeltLevels', error)
       console.error('Error fetching belt levels:', error)
 
       return { success: false, data: [], message: 'Không thể tải danh sách cấp đai' }
@@ -275,6 +290,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data?.records || apiResponse.data || [] }
     } catch (error: any) {
+      logger.error('BeltExamService', 'getOpenSessions', error)
       return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }
@@ -287,6 +303,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data || [] }
     } catch (error: any) {
+      logger.error('BeltExamService', 'getEligibleStudents', error)
       return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }
@@ -302,6 +319,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'createOrUpdateRegistrationList', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }
@@ -316,6 +334,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
+      logger.error('BeltExamService', 'getMyRegistrationList', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }
@@ -328,6 +347,7 @@ class BeltExamService {
 
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'submitRegistrationList', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }
@@ -340,6 +360,7 @@ class BeltExamService {
 
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'removeStudentFromList', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }
@@ -352,6 +373,7 @@ class BeltExamService {
 
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('BeltExamService', 'lockSession', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }
@@ -366,6 +388,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
+      logger.error('BeltExamService', 'getAdminView', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }
@@ -380,6 +403,7 @@ class BeltExamService {
 
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
+      logger.error('BeltExamService', 'exportRegistrationList', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
     }
   }

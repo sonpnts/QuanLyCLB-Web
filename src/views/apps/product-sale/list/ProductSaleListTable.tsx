@@ -14,7 +14,6 @@ import Typography from '@mui/material/Typography'
 import type { TextFieldProps } from '@mui/material/TextField'
 
 import classnames from 'classnames'
-import { rankItem } from '@tanstack/match-sorter-utils'
 import {
   createColumnHelper,
   flexRender,
@@ -24,7 +23,9 @@ import {
   getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
+
+import { fuzzyFilter } from '@/utils/tableHelpers'
 
 import type { ProductSaleType } from '@/types/apps/productSaleTypes'
 import type { ProductType } from '@/types/apps/productTypes'
@@ -41,13 +42,6 @@ import AddProductSaleDrawer from './AddProductSaleDrawer'
 import TableFilters from './TableFilters'
 
 import tableStyles from '@core/styles/table.module.css'
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(row.getValue(columnId), value)
-  addMeta({ itemRank })
-
-  return itemRank.passed
-}
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
@@ -112,7 +106,7 @@ const ProductSaleListTable = () => {
         if (classesRes.success && classesRes.data) setClasses(classesRes.data)
         if (coachesRes.success && coachesRes.data) setCollectors(coachesRes.data)
       } catch (error) {
-        showNotificationRef.current('Không thể tải dữ liệu danh mục.', 'error')
+        // silently ignore reference data load errors
       }
     }
 
@@ -125,13 +119,13 @@ const ProductSaleListTable = () => {
       const response = await productSaleService.getProductSales(filterParams)
 
       if (!response.success || !response.data) {
-        showNotificationRef.current(response.message || 'Không thể tải danh sách giao dịch.', 'error')
+        setData([])
         return
       }
 
       setData(response.data)
     } catch (error) {
-      showNotificationRef.current('Đã có lỗi khi tải danh sách giao dịch.', 'error')
+      setData([])
     } finally {
       setLoading(false)
     }

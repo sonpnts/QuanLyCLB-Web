@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import type { BranchType } from './branchService'
 import type { ClassInfo } from '@/services/classService'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
@@ -108,7 +109,8 @@ class ScheduleService {
         success: true,
         data: schedules
       }
-    } catch {
+    } catch (error) {
+      logger.error('ScheduleService', 'getSchedules', error)
       return { success: true, data: [] }
     }
   }
@@ -132,6 +134,7 @@ class ScheduleService {
         data: scheduleData
       }
     } catch (error: any) {
+      logger.error('ScheduleService', 'getScheduleById', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -156,6 +159,7 @@ class ScheduleService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('ScheduleService', 'createSchedule', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -180,6 +184,7 @@ class ScheduleService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('ScheduleService', 'updateSchedule', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -201,6 +206,7 @@ class ScheduleService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('ScheduleService', 'deleteSchedule', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -225,6 +231,7 @@ class ScheduleService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('ScheduleService', 'restoreSchedule', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -257,6 +264,7 @@ class ScheduleService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('ScheduleService', 'createClassSchedules', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -274,7 +282,8 @@ class ScheduleService {
       const schedules = records.map(this.mapApiScheduleToScheduleType)
 
       return { success: true, data: schedules }
-    } catch {
+    } catch (error) {
+      logger.error('ScheduleService', 'getSchedulesByDate', error)
       return { success: true, data: [] }
     }
   }
@@ -292,7 +301,8 @@ class ScheduleService {
       const schedules = records.map(this.mapApiScheduleToScheduleType)
 
       return { success: true, data: schedules }
-    } catch {
+    } catch (error) {
+      logger.error('ScheduleService', 'getSchedulesByInstructor', error)
       return { success: true, data: [] }
     }
   }

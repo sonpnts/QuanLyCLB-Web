@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -72,7 +72,14 @@ const FinanceSummaryView = () => {
   const [instructorSummary, setInstructorSummary] = useState<ClassInstructorSummaryType | null>(null)
   const [collections, setCollections] = useState<InstructorClassCollectionType[]>([])
 
+  const mountedRef = useRef(true)
   useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
     const loadReferences = async () => {
       try {
         const [classRes, branchRes, instructorRes] = await Promise.all([
@@ -85,30 +92,33 @@ const FinanceSummaryView = () => {
         const nextBranches = branchRes.success && branchRes.data ? branchRes.data : []
         const nextInstructors = instructorRes.success && instructorRes.data ? instructorRes.data : []
 
-        setClasses(nextClasses)
-        setBranches(nextBranches)
-        setInstructors(nextInstructors)
+        if (mounted) {
+          setClasses(nextClasses)
+          setBranches(nextBranches)
+          setInstructors(nextInstructors)
 
-        const defaultInstructorId =
-          nextInstructors.find(item => item.id === auth?.user.id)?.id || nextInstructors[0]?.id || ''
+          const defaultInstructorId =
+            nextInstructors.find(item => item.id === auth?.user.id)?.id || nextInstructors[0]?.id || ''
 
-        setFilters(prev => ({
-          ...prev,
-          classId: prev.classId || nextClasses[0]?.id || '',
-          branchId: prev.branchId || nextBranches[0]?.id || '',
-          instructorId: prev.instructorId || defaultInstructorId
-        }))
+          setFilters(prev => ({
+            ...prev,
+            classId: prev.classId || nextClasses[0]?.id || '',
+            branchId: prev.branchId || nextBranches[0]?.id || '',
+            instructorId: prev.instructorId || defaultInstructorId
+          }))
+        }
       } catch (error) {
-        showNotification('Không thể tải dữ liệu danh mục thống kê.', 'error')
+        if (mounted) showNotification('Không thể tải dữ liệu danh mục thống kê.', 'error')
       }
     }
 
     loadReferences()
+    return () => { mounted = false }
   }, [auth?.user.id, showNotification])
 
   const loadSummary = useCallback(async () => {
     try {
-      setLoading(true)
+      if (mountedRef.current) setLoading(true)
 
       if (filters.classId) {
         const tuitionRes = await financeService.getClassTuitionSummary(filters.classId, {
@@ -116,7 +126,7 @@ const FinanceSummaryView = () => {
           toDate: filters.toDate || undefined
         })
 
-        if (tuitionRes.success && tuitionRes.data) {
+        if (mountedRef.current && tuitionRes.success && tuitionRes.data) {
           setClassTuitionAmount(tuitionRes.data.amount)
         }
       }
@@ -129,7 +139,7 @@ const FinanceSummaryView = () => {
         toDate: filters.toDate || undefined
       })
 
-      if (productSalesRes.success && productSalesRes.data) {
+      if (mountedRef.current && productSalesRes.success && productSalesRes.data) {
         setProductSalesAmount(productSalesRes.data.amount)
       }
 
@@ -143,11 +153,11 @@ const FinanceSummaryView = () => {
           }
         )
 
-        if (instructorRes.success && instructorRes.data) {
+        if (mountedRef.current && instructorRes.success && instructorRes.data) {
           setInstructorSummary(instructorRes.data)
         }
       } else {
-        setInstructorSummary(null)
+        if (mountedRef.current) setInstructorSummary(null)
       }
 
       if (filters.branchId) {
@@ -156,7 +166,7 @@ const FinanceSummaryView = () => {
           toDate: filters.toDate || undefined
         })
 
-        if (branchRes.success && branchRes.data) {
+        if (mountedRef.current && branchRes.success && branchRes.data) {
           setBranchAmount(branchRes.data.amount)
         }
       }
@@ -165,15 +175,17 @@ const FinanceSummaryView = () => {
         ? await financeService.getClassCollectionsByInstructor(filters.instructorId, filters.asOfDate || undefined)
         : await financeService.getMyClassCollections(filters.asOfDate || undefined)
 
-      if (classCollectionsRes.success && classCollectionsRes.data) {
-        setCollections(classCollectionsRes.data)
-      } else {
-        setCollections([])
+      if (mountedRef.current) {
+        if (classCollectionsRes.success && classCollectionsRes.data) {
+          setCollections(classCollectionsRes.data)
+        } else {
+          setCollections([])
+        }
       }
     } catch (error) {
-      showNotification('Không thể tải dữ liệu thống kê tài chính.', 'error')
+      if (mountedRef.current) showNotification('Không thể tải dữ liệu thống kê tài chính.', 'error')
     } finally {
-      setLoading(false)
+      if (mountedRef.current) setLoading(false)
     }
   }, [
     filters.classId,

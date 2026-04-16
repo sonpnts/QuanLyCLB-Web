@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import type { ClassTransferType } from '@/types/apps/classTransferTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
@@ -53,7 +54,8 @@ class ClassTransferService {
         success: true,
         data: apiResponse.data?.items || apiResponse.data?.records || []
       }
-    } catch {
+    } catch (error) {
+      logger.error('ClassTransferService', 'getClassTransfers', error)
       return { success: true, data: [] }
     }
   }
@@ -69,6 +71,7 @@ class ClassTransferService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('ClassTransferService', 'createClassTransfer', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -84,6 +87,7 @@ class ClassTransferService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('ClassTransferService', 'updateClassTransfer', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -102,6 +106,7 @@ class ClassTransferService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('ClassTransferService', 'approveClassTransfer', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -117,6 +122,7 @@ class ClassTransferService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('ClassTransferService', 'rejectClassTransfer', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -132,6 +138,7 @@ class ClassTransferService {
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('ClassTransferService', 'cancelClassTransfer', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -147,6 +154,7 @@ class ClassTransferService {
 
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
+      logger.error('ClassTransferService', 'deleteClassTransfer', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -161,7 +169,8 @@ class ClassTransferService {
       }
 
       return { success: true, data: apiResponse.data || [] }
-    } catch {
+    } catch (error) {
+      logger.error('ClassTransferService', 'getTransfersByStudent', error)
       return { success: true, data: [] }
     }
   }
@@ -176,7 +185,8 @@ class ClassTransferService {
       }
 
       return { success: true, data: apiResponse.data || [] }
-    } catch {
+    } catch (error) {
+      logger.error('ClassTransferService', 'getPendingTransfers', error)
       return { success: true, data: [] }
     }
   }

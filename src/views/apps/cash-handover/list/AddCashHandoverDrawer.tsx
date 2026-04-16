@@ -68,12 +68,13 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
   })
 
   useEffect(() => {
+    let mounted = true
     const loadReferences = async () => {
       try {
         const [classRes, instructorRes] = await Promise.all([classService.getClasses({}), userService.getCoaches()])
 
-        if (classRes.success && classRes.data) setClasses(classRes.data)
-        if (instructorRes.success && instructorRes.data) {
+        if (mounted && classRes.success && classRes.data) setClasses(classRes.data)
+        if (mounted && instructorRes.success && instructorRes.data) {
           setInstructors(instructorRes.data)
           setFormData(prev => ({
             ...prev,
@@ -81,14 +82,16 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
           }))
         }
       } catch {
-        showNotification('Không thể tải dữ liệu ban đầu.', 'error')
+        if (mounted) showNotification('Không thể tải dữ liệu ban đầu.', 'error')
       }
     }
 
     if (open) loadReferences()
+    return () => { mounted = false }
   }, [open, auth?.user.id, showNotification])
 
   useEffect(() => {
+    let mounted = true
     const loadCollections = async () => {
       if (!open) return
 
@@ -97,24 +100,26 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
           ? await financeService.getClassCollectionsByInstructor(formData.instructorId)
           : await financeService.getMyClassCollections()
 
-        if (response.success && response.data) {
+        if (mounted && response.success && response.data) {
           setCollections(response.data)
           setFormData(prev => ({
             ...prev,
             classId: prev.classId || response.data?.[0]?.classId || ''
           }))
         } else {
-          setCollections([])
+          if (mounted) setCollections([])
         }
       } catch {
-        setCollections([])
+        if (mounted) setCollections([])
       }
     }
 
     loadCollections()
+    return () => { mounted = false }
   }, [open, formData.instructorId])
 
   useEffect(() => {
+    let mounted = true
     const loadLateStudents = async () => {
       if (!open || !formData.instructorId) return
 
@@ -124,17 +129,18 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
           classId: formData.classId || undefined
         })
 
-        if (response.success && response.data) {
+        if (mounted && response.success && response.data) {
           setLateStudents(response.data)
         } else {
-          setLateStudents([])
+          if (mounted) setLateStudents([])
         }
       } catch {
-        setLateStudents([])
+        if (mounted) setLateStudents([])
       }
     }
 
     loadLateStudents()
+    return () => { mounted = false }
   }, [open, formData.instructorId, formData.classId])
 
   const classOptions = useMemo(() => {

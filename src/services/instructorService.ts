@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
@@ -84,7 +85,8 @@ class InstructorService {
         success: true,
         data: instructors
       }
-    } catch {
+    } catch (error) {
+      logger.error('InstructorService', 'getInstructors', error)
       return { success: true, data: [] }
     }
   }
@@ -108,6 +110,7 @@ class InstructorService {
         data: instructorData
       }
     } catch (error: any) {
+      logger.error('InstructorService', 'getInstructorById', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -132,6 +135,7 @@ class InstructorService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('InstructorService', 'createInstructor', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -156,6 +160,7 @@ class InstructorService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('InstructorService', 'updateInstructor', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -177,6 +182,7 @@ class InstructorService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('InstructorService', 'deleteInstructor', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -201,6 +207,7 @@ class InstructorService {
         message: apiResponse.message
       }
     } catch (error: any) {
+      logger.error('InstructorService', 'restoreInstructor', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -216,6 +223,7 @@ class InstructorService {
 
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
+      logger.error('InstructorService', 'getInstructorStatistics', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -230,7 +238,8 @@ class InstructorService {
       }
 
       return { success: true, data: apiResponse.data || [] }
-    } catch {
+    } catch (error) {
+      logger.error('InstructorService', 'getInstructorSchedules', error)
       return { success: true, data: [] }
     }
   }
@@ -245,7 +254,8 @@ class InstructorService {
       }
 
       return { success: true, data: apiResponse.data || [] }
-    } catch {
+    } catch (error) {
+      logger.error('InstructorService', 'getInstructorClasses', error)
       return { success: true, data: [] }
     }
   }

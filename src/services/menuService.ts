@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 import { authStorage } from '@/utils/authStorage'
 import type { ResponseResult } from '@/types/common'
 import type { VerticalMenuDataType } from '@/types/menuTypes'
@@ -110,6 +111,7 @@ class MenuService {
 
         return successResult
       } catch (error: any) {
+        logger.error('MenuService', 'getMenuByRole', error)
         const status = error?.response?.status
         const message = error?.response?.data?.message || error?.message || 'Failed to fetch menu'
         const failedResult: ResponseResult<VerticalMenuDataType[]> = {
@@ -152,6 +154,7 @@ class MenuService {
         message: apiResponse.message || 'Menu data seeded successfully'
       }
     } catch (error: any) {
+      logger.error('MenuService', 'seedMenuData', error)
       return {
         success: false,
         message: error.message || 'Failed to seed menu data'

@@ -41,3 +41,15 @@ export type ApiUsersListResponse = {
   totalRecords: number
   records: ApiUserResponse[]
 }
+
+// Vietnamese role label mapping
+export const RoleLabels: Record<string, string> = {
+  'Administrator': 'Quản trị viên',
+  'Admin': 'Quản trị viên',
+  'Coach': 'Huấn luyện viên',
+  'Assistant': 'Trợ giảng',
+  'Student': 'Võ sinh',
+  'Member': 'Thành viên',
+  'Moderator': 'Kiểm duyệt viên',
+  'User': 'Người dùng',
+}

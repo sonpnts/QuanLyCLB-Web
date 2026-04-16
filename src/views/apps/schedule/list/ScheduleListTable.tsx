@@ -14,11 +14,10 @@ import Box from '@mui/material/Box'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
-import type { FilterFn } from '@tanstack/react-table'
 
 // Type Imports
 import type { ScheduleType, GetSchedulesParams } from '@/services/scheduleService'
-
+import { fuzzyFilter } from '@/utils/tableHelpers'
 // Component Imports
 import AddScheduleDrawer from './AddScheduleDrawer'
 import TableFilters from './TableFilters'
@@ -49,8 +48,6 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
   const [branches, setBranches] = useState<BranchType[]>([])
   const [data, setData] = useState<ScheduleType[]>(tableData || [])
   const [filteredData, setFilteredData] = useState<ScheduleType[]>([])
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetSchedulesParams>({})
 
   // Notification Hook
@@ -101,7 +98,6 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
       if (tableData && tableData.length > 0) return
 
       try {
-        setLoading(true)
         currentFilterRef.current = filterKey
         dataLoadedRef.current = true
 
@@ -116,8 +112,6 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
       } catch (error) {
         console.error('Error loading schedules:', error)
         showNotificationRef.current(Messages.schedule.error.loadGeneric, 'error')
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -133,7 +127,6 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
   const handleDelete = useCallback(
     async (id: string) => {
       try {
-        setLoading(true)
         const response = await scheduleService.deleteSchedule(id)
 
         if (response.success) {
@@ -146,8 +139,6 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
       } catch (error) {
         console.error('Error deleting schedule:', error)
         showNotification(Messages.schedule.error.deleteGeneric, 'error')
-      } finally {
-        setLoading(false)
       }
     },
     [showNotification]
@@ -157,7 +148,6 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
   const handleRestore = useCallback(
     async (id: string) => {
       try {
-        setLoading(true)
         const response = await scheduleService.restoreSchedule(id)
 
         if (response.success && response.data) {
@@ -170,8 +160,6 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
       } catch (error) {
         console.error('Error restoring schedule:', error)
         showNotification(Messages.schedule.error.restoreGeneric, 'error')
-      } finally {
-        setLoading(false)
       }
     },
     [showNotification]
@@ -268,14 +256,10 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
   )
 
   // Table
-  const fuzzyFilter: FilterFn<any> = () => true
-
   const table = useReactTable({
     data: filteredData,
     columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
+    filterFns: { fuzzy: fuzzyFilter },
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     pageCount: Math.ceil(filteredData.length / 10)

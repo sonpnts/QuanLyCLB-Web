@@ -15,7 +15,6 @@ import Typography from '@mui/material/Typography'
 import type { TextFieldProps } from '@mui/material/TextField'
 
 import classnames from 'classnames'
-import { rankItem } from '@tanstack/match-sorter-utils'
 import {
   createColumnHelper,
   flexRender,
@@ -25,8 +24,9 @@ import {
   getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 
+import { fuzzyFilter } from '@/utils/tableHelpers'
 import type { CashHandoverType } from '@/types/apps/cashHandoverTypes'
 import { HandoverStatusLabel } from '@/types/apps/cashHandoverTypes'
 import type { ClassType } from '@/types/apps/classTypes'
@@ -43,13 +43,6 @@ import CashHandoverDetailDialog from './CashHandoverDetailDialog'
 import TableFilters from './TableFilters'
 
 import tableStyles from '@core/styles/table.module.css'
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(row.getValue(columnId), value)
-  addMeta({ itemRank })
-
-  return itemRank.passed
-}
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
