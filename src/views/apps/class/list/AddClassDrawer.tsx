@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useState, useEffect } from 'react'
 
 // MUI Imports
@@ -86,7 +87,7 @@ const AddClassDrawer = (props: Props) => {
             setCoaches(response.data)
           }
         } catch {
-          // silently ignore — coaches list shows empty
+          // silently ignore â€” coaches list shows empty
         } finally {
           setLoadingCoaches(false)
         }
@@ -111,15 +112,15 @@ const AddClassDrawer = (props: Props) => {
 
       if (response.success && response.data) {
         setData([...(classData ?? []), response.data])
-        showNotification('Tạo lớp học thành công!', 'success')
+        showNotification('Táº¡o lá»›p há»c thÃ nh cÃ´ng!', 'success')
         handleClose()
         resetForm()
       } else {
-        showNotification(response.message || 'Không thể tạo lớp học. Vui lòng thử lại.', 'error')
+        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o lá»›p há»c. Vui lÃ²ng thá»­ láº¡i.', 'error')
       }
     } catch (error) {
-      console.error('Error creating class:', error)
-      showNotification('Đã có lỗi xảy ra. Vui lòng thử lại.', 'error')
+      logger.error('AddClassDrawer', 'Error creating class', error)
+      showNotification('ÄÃ£ cÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.', 'error')
     } finally {
       setLoading(false)
     }
@@ -140,7 +141,7 @@ const AddClassDrawer = (props: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 500, md: 600 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Thêm lớp học mới</Typography>
+        <Typography variant='h5'>ThÃªm lá»›p há»c má»›i</Typography>
         <IconButton size='small' onClick={handleReset}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -158,9 +159,9 @@ const AddClassDrawer = (props: Props) => {
                   <TextField
                     {...field}
                     fullWidth
-                    label='Mã lớp học *'
+                    label='MÃ£ lá»›p há»c *'
                     placeholder='VD: LOP-001'
-                    {...(errors.code && { error: true, helperText: 'Trường này là bắt buộc.' })}
+                    {...(errors.code && { error: true, helperText: 'TrÆ°á»ng nÃ y lÃ  báº¯t buá»™c.' })}
                   />
                 )}
               />
@@ -175,11 +176,11 @@ const AddClassDrawer = (props: Props) => {
                     {...field}
                     fullWidth
                     type='number'
-                    label='Sỉ số tối đa *'
+                    label='Sá»‰ sá»‘ tá»‘i Ä‘a *'
                     placeholder='30'
                     {...(errors.maxStudents && {
                       error: true,
-                      helperText: 'Trường này là bắt buộc và phải lớn hơn 0.'
+                      helperText: 'TrÆ°á»ng nÃ y lÃ  báº¯t buá»™c vÃ  pháº£i lá»›n hÆ¡n 0.'
                     })}
                   />
                 )}
@@ -194,9 +195,9 @@ const AddClassDrawer = (props: Props) => {
                   <TextField
                     {...field}
                     fullWidth
-                    label='Tên lớp *'
-                    placeholder='VD: Lớp Thiếu Nhi A'
-                    {...(errors.name && { error: true, helperText: 'Trường này là bắt buộc.' })}
+                    label='TÃªn lá»›p *'
+                    placeholder='VD: Lá»›p Thiáº¿u Nhi A'
+                    {...(errors.name && { error: true, helperText: 'TrÆ°á»ng nÃ y lÃ  báº¯t buá»™c.' })}
                   />
                 )}
               />
@@ -211,8 +212,8 @@ const AddClassDrawer = (props: Props) => {
                     fullWidth
                     multiline
                     rows={3}
-                    label='Mô tả'
-                    placeholder='Nhập mô tả lớp học...'
+                    label='MÃ´ táº£'
+                    placeholder='Nháº­p mÃ´ táº£ lá»›p há»c...'
                   />
                 )}
               />
@@ -220,7 +221,7 @@ const AddClassDrawer = (props: Props) => {
             <Grid size={{ xs: 12 }}>
               <FormControl fullWidth>
                 <InputLabel id='instructor-select' error={Boolean(errors.userIds)}>
-                  Huấn luyện viên
+                  Huáº¥n luyá»‡n viÃªn
                 </InputLabel>
                 <Controller
                   name='userIds'
@@ -233,7 +234,7 @@ const AddClassDrawer = (props: Props) => {
                       <Select
                         {...field}
                         multiple
-                        label='Huấn luyện viên'
+                        label='Huáº¥n luyá»‡n viÃªn'
                         error={Boolean(errors.userIds)}
                         disabled={loadingCoaches}
                         value={selectedIds}
@@ -270,16 +271,16 @@ const AddClassDrawer = (props: Props) => {
                     )
                   }}
                 />
-                {loadingCoaches && <FormHelperText>Đang tải danh sách...</FormHelperText>}
+                {loadingCoaches && <FormHelperText>Äang táº£i danh sÃ¡ch...</FormHelperText>}
               </FormControl>
             </Grid>
           </Grid>
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
-              {loading ? 'Đang xử lý...' : 'Tạo lớp học'}
+              {loading ? 'Äang xá»­ lÃ½...' : 'Táº¡o lá»›p há»c'}
             </Button>
             <Button variant='outlined' color='error' type='reset' onClick={() => handleReset()} disabled={loading}>
-              Hủy
+              Há»§y
             </Button>
           </div>
         </form>

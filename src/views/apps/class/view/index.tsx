@@ -1,5 +1,6 @@
-'use client'
+﻿'use client'
 
+import { logger } from '@/utils/logger'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -59,13 +60,13 @@ type ScheduleType = {
 }
 
 const dayOfWeekLabels: { [key: number]: string } = {
-  0: 'Chủ nhật',
-  1: 'Thứ 2',
-  2: 'Thứ 3',
-  3: 'Thứ 4',
-  4: 'Thứ 5',
-  5: 'Thứ 6',
-  6: 'Thứ 7'
+  0: 'Chá»§ nháº­t',
+  1: 'Thá»© 2',
+  2: 'Thá»© 3',
+  3: 'Thá»© 4',
+  4: 'Thá»© 5',
+  5: 'Thá»© 6',
+  6: 'Thá»© 7'
 }
 
 const ClassViewPage = ({ classId }: Props) => {
@@ -97,12 +98,12 @@ const ClassViewPage = ({ classId }: Props) => {
         if (response.success && response.data) {
           setClassData(response.data)
         } else {
-          showNotificationRef.current(response.message || 'Không thể tải thông tin lớp học.', 'error')
+          showNotificationRef.current(response.message || 'KhÃ´ng thá»ƒ táº£i thÃ´ng tin lá»›p há»c.', 'error')
           router.push('/apps/class/list')
         }
       } catch (error) {
-        console.error('Error loading class:', error)
-        showNotificationRef.current('Đã có lỗi khi tải thông tin lớp học.', 'error')
+        logger.error('index', 'Error loading class', error)
+        showNotificationRef.current('ÄÃ£ cÃ³ lá»—i khi táº£i thÃ´ng tin lá»›p há»c.', 'error')
         router.push('/apps/class/list')
       } finally {
         setLoading(false)
@@ -125,13 +126,13 @@ const ClassViewPage = ({ classId }: Props) => {
         setStudents(response.data)
       }
     } catch (error) {
-      console.error('Error loading students:', error)
+      logger.error('index', 'Error loading students', error)
     } finally {
       setLoadingStudents(false)
     }
   }
 
-  // Reload students sau khi thêm
+  // Reload students sau khi thÃªm
   const handleStudentsAdded = () => {
     studentsLoadedRef.current = false
     loadStudents()
@@ -150,7 +151,7 @@ const ClassViewPage = ({ classId }: Props) => {
         setSchedules(response.data)
       }
     } catch (error) {
-      console.error('Error loading schedules:', error)
+      logger.error('index', 'Error loading schedules', error)
     } finally {
       setLoadingSchedules(false)
     }
@@ -178,9 +179,9 @@ const ClassViewPage = ({ classId }: Props) => {
     return (
       <Card>
         <CardContent>
-          <Typography>Không tìm thấy thông tin lớp học.</Typography>
+          <Typography>KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin lá»›p há»c.</Typography>
           <Button variant='contained' onClick={() => router.push('/apps/class/list')} className='mt-4'>
-            Quay lại danh sách
+            Quay láº¡i danh sÃ¡ch
           </Button>
         </CardContent>
       </Card>
@@ -199,7 +200,7 @@ const ClassViewPage = ({ classId }: Props) => {
                   <Typography variant='h5'>{classData.name}</Typography>
                   <Chip label={classData.code} color='primary' variant='tonal' />
                   <Chip
-                    label={classData.isActive !== false ? 'Hoạt động' : 'Không hoạt động'}
+                    label={classData.isActive !== false ? 'Hoáº¡t Ä‘á»™ng' : 'KhÃ´ng hoáº¡t Ä‘á»™ng'}
                     color={classData.isActive !== false ? 'success' : 'error'}
                     variant='tonal'
                   />
@@ -207,7 +208,7 @@ const ClassViewPage = ({ classId }: Props) => {
               }
               action={
                 <Button variant='outlined' onClick={() => router.push('/apps/class/list')}>
-                  Quay lại
+                  Quay láº¡i
                 </Button>
               }
             />
@@ -219,17 +220,17 @@ const ClassViewPage = ({ classId }: Props) => {
           <Card>
             <TabContext value={activeTab}>
               <TabList onChange={handleTabChange}>
-                <Tab label='Thông tin' value='1' />
-                <Tab label='Học viên' value='2' />
-                <Tab label='Lịch học' value='3' />
+                <Tab label='ThÃ´ng tin' value='1' />
+                <Tab label='Há»c viÃªn' value='2' />
+                <Tab label='Lá»‹ch há»c' value='3' />
               </TabList>
 
-              {/* Tab 1: Thông tin */}
+              {/* Tab 1: ThÃ´ng tin */}
               <TabPanel value='1'>
                 <Grid container spacing={4}>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Mã lớp
+                      MÃ£ lá»›p
                     </Typography>
                     <Typography variant='body1' className='font-medium'>
                       {classData.code}
@@ -237,7 +238,7 @@ const ClassViewPage = ({ classId }: Props) => {
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Tên lớp
+                      TÃªn lá»›p
                     </Typography>
                     <Typography variant='body1' className='font-medium'>
                       {classData.name}
@@ -245,24 +246,24 @@ const ClassViewPage = ({ classId }: Props) => {
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Sĩ số tối đa
+                      SÄ© sá»‘ tá»‘i Ä‘a
                     </Typography>
                     <Typography variant='body1' className='font-medium'>
-                      {classData.maxStudents} học viên
+                      {classData.maxStudents} há»c viÃªn
                     </Typography>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Số học viên hiện tại
+                      Sá»‘ há»c viÃªn hiá»‡n táº¡i
                     </Typography>
                     <Typography variant='body1' className='font-medium'>
-                      {classData.currentStudents || 0} học viên
+                      {classData.currentStudents || 0} há»c viÃªn
                     </Typography>
                   </Grid>
                   {classData.description && (
                     <Grid size={{ xs: 12 }}>
                       <Typography variant='body2' color='text.secondary'>
-                        Mô tả
+                        MÃ´ táº£
                       </Typography>
                       <Typography variant='body1'>{classData.description}</Typography>
                     </Grid>
@@ -270,16 +271,16 @@ const ClassViewPage = ({ classId }: Props) => {
                 </Grid>
               </TabPanel>
 
-              {/* Tab 2: Học viên */}
+              {/* Tab 2: Há»c viÃªn */}
               <TabPanel value='2'>
                 <Box className='flex justify-between items-center mb-4'>
-                  <Typography variant='subtitle1'>Danh sách học viên ({students.length})</Typography>
+                  <Typography variant='subtitle1'>Danh sÃ¡ch há»c viÃªn ({students.length})</Typography>
                   <Button
                     variant='contained'
                     startIcon={<i className='ri-user-add-line' />}
                     onClick={() => setAddStudentsOpen(true)}
                   >
-                    Thêm học viên
+                    ThÃªm há»c viÃªn
                   </Button>
                 </Box>
                 {loadingStudents ? (
@@ -287,17 +288,17 @@ const ClassViewPage = ({ classId }: Props) => {
                     <CircularProgress size={32} />
                   </Box>
                 ) : students.length === 0 ? (
-                  <Typography color='text.secondary'>Chưa có học viên trong lớp này.</Typography>
+                  <Typography color='text.secondary'>ChÆ°a cÃ³ há»c viÃªn trong lá»›p nÃ y.</Typography>
                 ) : (
                   <TableContainer>
                     <Table>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Họ tên</TableCell>
-                          <TableCell>Số điện thoại</TableCell>
+                          <TableCell>Há» tÃªn</TableCell>
+                          <TableCell>Sá»‘ Ä‘iá»‡n thoáº¡i</TableCell>
                           <TableCell>Email</TableCell>
-                          <TableCell>Ngày đăng ký</TableCell>
-                          <TableCell>Trạng thái</TableCell>
+                          <TableCell>NgÃ y Ä‘Äƒng kÃ½</TableCell>
+                          <TableCell>Tráº¡ng thÃ¡i</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -315,10 +316,10 @@ const ClassViewPage = ({ classId }: Props) => {
                               <Chip
                                 label={
                                   student.status === 'Active'
-                                    ? 'Đang học'
+                                    ? 'Äang há»c'
                                     : student.status === 'Inactive'
-                                      ? 'Tạm nghỉ'
-                                      : 'Hoàn thành'
+                                      ? 'Táº¡m nghá»‰'
+                                      : 'HoÃ n thÃ nh'
                                 }
                                 size='small'
                                 color={
@@ -339,23 +340,23 @@ const ClassViewPage = ({ classId }: Props) => {
                 )}
               </TabPanel>
 
-              {/* Tab 3: Lịch học */}
+              {/* Tab 3: Lá»‹ch há»c */}
               <TabPanel value='3'>
                 {loadingSchedules ? (
                   <Box className='flex justify-center py-8'>
                     <CircularProgress size={32} />
                   </Box>
                 ) : schedules.length === 0 ? (
-                  <Typography color='text.secondary'>Chưa có lịch học cho lớp này.</Typography>
+                  <Typography color='text.secondary'>ChÆ°a cÃ³ lá»‹ch há»c cho lá»›p nÃ y.</Typography>
                 ) : (
                   <TableContainer>
                     <Table>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Ngày trong tuần</TableCell>
-                          <TableCell>Giờ bắt đầu</TableCell>
-                          <TableCell>Giờ kết thúc</TableCell>
-                          <TableCell>Chi nhánh</TableCell>
+                          <TableCell>NgÃ y trong tuáº§n</TableCell>
+                          <TableCell>Giá» báº¯t Ä‘áº§u</TableCell>
+                          <TableCell>Giá» káº¿t thÃºc</TableCell>
+                          <TableCell>Chi nhÃ¡nh</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>

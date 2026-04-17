@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useEffect, useState, useRef, useCallback } from 'react'
 
 // MUI Imports
@@ -91,16 +92,16 @@ const getInitials = (name: string) => {
 }
 
 const paymentTypeLabels: { [key: number]: string } = {
-  0: 'Học phí',
-  1: 'Phí thi',
-  2: 'Phí đăng ký',
-  3: 'Khác'
+  0: 'Há»c phÃ­',
+  1: 'PhÃ­ thi',
+  2: 'PhÃ­ Ä‘Äƒng kÃ½',
+  3: 'KhÃ¡c'
 }
 
 const paymentMethodLabels: { [key: number]: string } = {
-  0: 'Tiền mặt',
-  1: 'Chuyển khoản',
-  2: 'Thẻ'
+  0: 'Tiá»n máº·t',
+  1: 'Chuyá»ƒn khoáº£n',
+  2: 'Tháº»'
 }
 
 const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
@@ -124,7 +125,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
 
   const { showNotification } = useNotification()
 
-  // Track đã load data cho student nào để tránh load lại
+  // Track Ä‘Ã£ load data cho student nÃ o Ä‘á»ƒ trÃ¡nh load láº¡i
   const loadedDataRef = useRef<{
     studentId: string | null
     enrollments: boolean
@@ -139,7 +140,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
     examHistory: false
   })
 
-  // Reset cache khi student thay đổi
+  // Reset cache khi student thay Ä‘á»•i
   useEffect(() => {
     if (student?.id !== loadedDataRef.current.studentId) {
       loadedDataRef.current = {
@@ -157,7 +158,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
     }
   }, [student?.id])
 
-  // Load enrollments khi drawer mở (chỉ load 1 lần cho mỗi student)
+  // Load enrollments khi drawer má»Ÿ (chá»‰ load 1 láº§n cho má»—i student)
   useEffect(() => {
     const loadEnrollments = async () => {
       if (!student?.id || !open || loadedDataRef.current.enrollments) return
@@ -173,7 +174,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
         }
         loadedDataRef.current.enrollments = true
       } catch (error) {
-        console.error('Error loading enrollments:', error)
+        logger.error('ViewStudentDrawer', 'Error loading enrollments', error)
         setEnrollments([])
       } finally {
         setLoadingEnrollments(false)
@@ -183,7 +184,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
     loadEnrollments()
   }, [student?.id, open])
 
-  // Load payments khi chuyển sang tab payments (lazy load)
+  // Load payments khi chuyá»ƒn sang tab payments (lazy load)
   const loadPayments = useCallback(async () => {
     if (!student?.id || loadedDataRef.current.payments) return
 
@@ -198,14 +199,14 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
       }
       loadedDataRef.current.payments = true
     } catch (error) {
-      console.error('Error loading payments:', error)
+      logger.error('ViewStudentDrawer', 'Error loading payments', error)
       setPayments([])
     } finally {
       setLoadingPayments(false)
     }
   }, [student?.id])
 
-  // Load attendance khi chuyển sang tab attendance (lazy load)
+  // Load attendance khi chuyá»ƒn sang tab attendance (lazy load)
   const loadAttendance = useCallback(async () => {
     if (!student?.id || loadedDataRef.current.attendance) return
 
@@ -220,14 +221,14 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
       }
       loadedDataRef.current.attendance = true
     } catch (error) {
-      console.error('Error loading attendance:', error)
+      logger.error('ViewStudentDrawer', 'Error loading attendance', error)
       setAttendance([])
     } finally {
       setLoadingAttendance(false)
     }
   }, [student?.id])
 
-  // Load exam history khi chuyển sang tab exam (lazy load)
+  // Load exam history khi chuyá»ƒn sang tab exam (lazy load)
   const loadExamHistory = useCallback(async () => {
     if (!student?.id || loadedDataRef.current.examHistory) return
 
@@ -242,14 +243,14 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
       }
       loadedDataRef.current.examHistory = true
     } catch (error) {
-      console.error('Error loading exam history:', error)
+      logger.error('ViewStudentDrawer', 'Error loading exam history', error)
       setExamHistory([])
     } finally {
       setLoadingExamHistory(false)
     }
   }, [student?.id])
 
-  // Reset tab khi drawer đóng
+  // Reset tab khi drawer Ä‘Ã³ng
   useEffect(() => {
     if (!open) {
       setActiveTab('1')
@@ -298,13 +299,13 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
         reason: transferReason.trim()
       })
       if (response.success) {
-        showNotification('Yêu cầu chuyển lớp đã được gửi thành công.', 'success')
+        showNotification('YÃªu cáº§u chuyá»ƒn lá»›p Ä‘Ã£ Ä‘Æ°á»£c gá»­i thÃ nh cÃ´ng.', 'success')
         handleCloseTransferDialog()
       } else {
-        showNotification(response.message || 'Không thể gửi yêu cầu chuyển lớp.', 'error')
+        showNotification(response.message || 'KhÃ´ng thá»ƒ gá»­i yÃªu cáº§u chuyá»ƒn lá»›p.', 'error')
       }
     } catch {
-      showNotification('Đã có lỗi khi gửi yêu cầu chuyển lớp.', 'error')
+      showNotification('ÄÃ£ cÃ³ lá»—i khi gá»­i yÃªu cáº§u chuyá»ƒn lá»›p.', 'error')
     } finally {
       setTransferLoading(false)
     }
@@ -313,7 +314,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
   const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
     setActiveTab(newValue)
 
-    // Lazy load data khi chuyển tab
+    // Lazy load data khi chuyá»ƒn tab
     if (newValue === '2' && !loadedDataRef.current.payments) {
       loadPayments()
     } else if (newValue === '3' && !loadedDataRef.current.attendance) {
@@ -333,7 +334,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 360, sm: 500, md: 600 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Chi tiết học viên</Typography>
+        <Typography variant='h5'>Chi tiáº¿t há»c viÃªn</Typography>
         <IconButton size='small' onClick={onClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -341,7 +342,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
       <Divider />
 
       <Box className='p-5'>
-        {/* Header với Avatar */}
+        {/* Header vá»›i Avatar */}
         <Box className='flex items-center gap-4 mb-4'>
           <CustomAvatar skin='light' size={64} color='primary'>
             {getInitials(student.fullName)}
@@ -349,7 +350,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
           <Box>
             <Typography variant='h6'>{student.fullName}</Typography>
             <Typography variant='body2' color='text.secondary'>
-              {student.email || 'Chưa có email'}
+              {student.email || 'ChÆ°a cÃ³ email'}
             </Typography>
             {student.currentBeltLevelName && (
               <Chip
@@ -366,37 +367,37 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
         {/* Tabs */}
         <TabContext value={activeTab}>
           <TabList onChange={handleTabChange} variant='scrollable' scrollButtons='auto'>
-            <Tab label='Thông tin' value='1' />
-            <Tab label='Thanh toán' value='2' />
-            <Tab label='Điểm danh' value='3' />
-            <Tab label='Lịch sử thi' value='4' />
+            <Tab label='ThÃ´ng tin' value='1' />
+            <Tab label='Thanh toÃ¡n' value='2' />
+            <Tab label='Äiá»ƒm danh' value='3' />
+            <Tab label='Lá»‹ch sá»­ thi' value='4' />
           </TabList>
 
-          {/* Tab 1: Thông tin cơ bản */}
+          {/* Tab 1: ThÃ´ng tin cÆ¡ báº£n */}
           <TabPanel value='1' className='px-0'>
             <Card variant='outlined' className='mb-4'>
               <CardContent>
                 <Typography variant='subtitle1' className='font-medium mb-3'>
-                  Thông tin cơ bản
+                  ThÃ´ng tin cÆ¡ báº£n
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Số điện thoại
+                      Sá»‘ Ä‘iá»‡n thoáº¡i
                     </Typography>
                     <Typography variant='body1'>{student.phoneNumber || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Giới tính
+                      Giá»›i tÃ­nh
                     </Typography>
                     <Typography variant='body1'>
-                      {student.gender === true ? 'Nam' : student.gender === false ? 'Nữ' : '-'}
+                      {student.gender === true ? 'Nam' : student.gender === false ? 'Ná»¯' : '-'}
                     </Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Ngày sinh
+                      NgÃ y sinh
                     </Typography>
                     <Typography variant='body1'>
                       {student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : '-'}
@@ -410,12 +411,12 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Cấp đai hiện tại
+                      Cáº¥p Ä‘ai hiá»‡n táº¡i
                     </Typography>
                     {student.currentBeltLevelName ? (
                       <Chip label={student.currentBeltLevelName} size='small' color='warning' variant='tonal' />
                     ) : (
-                      <Typography variant='body1'>Chưa có cấp đai</Typography>
+                      <Typography variant='body1'>ChÆ°a cÃ³ cáº¥p Ä‘ai</Typography>
                     )}
                   </Grid>
                   <Grid size={{ xs: 6 }}>
@@ -426,14 +427,14 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                   </Grid>
                   <Grid size={{ xs: 12 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Địa chỉ
+                      Äá»‹a chá»‰
                     </Typography>
                     <Typography variant='body1'>{student.address || '-'}</Typography>
                   </Grid>
                   {student.notes && (
                     <Grid size={{ xs: 12 }}>
                       <Typography variant='body2' color='text.secondary'>
-                        Ghi chú
+                        Ghi chÃº
                       </Typography>
                       <Typography variant='body1'>{student.notes}</Typography>
                     </Grid>
@@ -442,11 +443,11 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
               </CardContent>
             </Card>
 
-            {/* Danh sách lớp đang học */}
+            {/* Danh sÃ¡ch lá»›p Ä‘ang há»c */}
             <Card variant='outlined'>
               <CardContent>
                 <Typography variant='subtitle1' className='font-medium mb-3'>
-                  Lớp đang học
+                  Lá»›p Ä‘ang há»c
                 </Typography>
                 {loadingEnrollments ? (
                   <Box className='flex justify-center py-4'>
@@ -454,14 +455,14 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                   </Box>
                 ) : (
                   (() => {
-                    // Ưu tiên dùng classes từ student response (API mới)
+                    // Æ¯u tiÃªn dÃ¹ng classes tá»« student response (API má»›i)
                     const studentClasses = (student as any).classes || []
                     const displayData = studentClasses.length > 0 ? studentClasses : enrollments
 
                     if (displayData.length === 0) {
                       return (
                         <Typography variant='body2' color='text.secondary'>
-                          Chưa đăng ký lớp nào
+                          ChÆ°a Ä‘Äƒng kÃ½ lá»›p nÃ o
                         </Typography>
                       )
                     }
@@ -471,16 +472,16 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                         {displayData.map((item: any) => (
                           <ListItem key={item.enrollmentId || item.id || item.classId} disablePadding className='mb-2'>
                             <ListItemText
-                              primary={item.className || 'Lớp không xác định'}
+                              primary={item.className || 'Lá»›p khÃ´ng xÃ¡c Ä‘á»‹nh'}
                               secondary={
                                 <Box className='flex items-center gap-2 mt-1'>
                                   <Chip
                                     label={
                                       item.status === 0 || item.status === 'Active'
-                                        ? 'Đang học'
+                                        ? 'Äang há»c'
                                         : item.status === 1 || item.status === 'Inactive'
-                                          ? 'Tạm nghỉ'
-                                          : 'Hoàn thành'
+                                          ? 'Táº¡m nghá»‰'
+                                          : 'HoÃ n thÃ nh'
                                     }
                                     size='small'
                                     color={
@@ -494,7 +495,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                                   />
                                   {(item.enrollmentDate || item.enrollmentDate) && (
                                     <Typography variant='caption' color='text.secondary'>
-                                      Từ {new Date(item.enrollmentDate).toLocaleDateString('vi-VN')}
+                                      Tá»« {new Date(item.enrollmentDate).toLocaleDateString('vi-VN')}
                                     </Typography>
                                   )}
                                 </Box>
@@ -508,7 +509,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                 )}
               </CardContent>
             </Card>
-            {/* Chuyển lớp button */}
+            {/* Chuyá»ƒn lá»›p button */}
             <Box className='mt-3'>
               <Button
                 variant='outlined'
@@ -517,17 +518,17 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                 onClick={handleOpenTransferDialog}
                 fullWidth
               >
-                Chuyển lớp
+                Chuyá»ƒn lá»›p
               </Button>
             </Box>
           </TabPanel>
 
-          {/* Tab 2: Lịch sử thanh toán */}
+          {/* Tab 2: Lá»‹ch sá»­ thanh toÃ¡n */}
           <TabPanel value='2' className='px-0'>
             <Card variant='outlined'>
               <CardContent>
                 <Typography variant='subtitle1' className='font-medium mb-3'>
-                  Lịch sử thanh toán
+                  Lá»‹ch sá»­ thanh toÃ¡n
                 </Typography>
                 {loadingPayments ? (
                   <Box className='flex justify-center py-4'>
@@ -535,17 +536,17 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                   </Box>
                 ) : payments.length === 0 ? (
                   <Typography variant='body2' color='text.secondary'>
-                    Chưa có lịch sử thanh toán
+                    ChÆ°a cÃ³ lá»‹ch sá»­ thanh toÃ¡n
                   </Typography>
                 ) : (
                   <TableContainer>
                     <Table size='small'>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Ngày</TableCell>
-                          <TableCell>Loại</TableCell>
-                          <TableCell align='right'>Số tiền</TableCell>
-                          <TableCell>Phương thức</TableCell>
+                          <TableCell>NgÃ y</TableCell>
+                          <TableCell>Loáº¡i</TableCell>
+                          <TableCell align='right'>Sá»‘ tiá»n</TableCell>
+                          <TableCell>PhÆ°Æ¡ng thá»©c</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -554,13 +555,13 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                             <TableCell>{new Date(payment.paymentDate).toLocaleDateString('vi-VN')}</TableCell>
                             <TableCell>
                               <Chip
-                                label={paymentTypeLabels[payment.type] || 'Khác'}
+                                label={paymentTypeLabels[payment.type] || 'KhÃ¡c'}
                                 size='small'
                                 color={payment.type === 0 ? 'primary' : 'default'}
                                 variant='tonal'
                               />
                             </TableCell>
-                            <TableCell align='right'>{payment.amount.toLocaleString('vi-VN')}đ</TableCell>
+                            <TableCell align='right'>{payment.amount.toLocaleString('vi-VN')}Ä‘</TableCell>
                             <TableCell>{paymentMethodLabels[payment.method] || '-'}</TableCell>
                           </TableRow>
                         ))}
@@ -572,12 +573,12 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
             </Card>
           </TabPanel>
 
-          {/* Tab 3: Lịch sử điểm danh */}
+          {/* Tab 3: Lá»‹ch sá»­ Ä‘iá»ƒm danh */}
           <TabPanel value='3' className='px-0'>
             <Card variant='outlined'>
               <CardContent>
                 <Typography variant='subtitle1' className='font-medium mb-3'>
-                  Lịch sử điểm danh
+                  Lá»‹ch sá»­ Ä‘iá»ƒm danh
                 </Typography>
                 {loadingAttendance ? (
                   <Box className='flex justify-center py-4'>
@@ -585,17 +586,17 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                   </Box>
                 ) : attendance.length === 0 ? (
                   <Typography variant='body2' color='text.secondary'>
-                    Chưa có lịch sử điểm danh
+                    ChÆ°a cÃ³ lá»‹ch sá»­ Ä‘iá»ƒm danh
                   </Typography>
                 ) : (
                   <TableContainer>
                     <Table size='small'>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Ngày</TableCell>
-                          <TableCell>Lớp</TableCell>
-                          <TableCell>Trạng thái</TableCell>
-                          <TableCell>Ghi chú</TableCell>
+                          <TableCell>NgÃ y</TableCell>
+                          <TableCell>Lá»›p</TableCell>
+                          <TableCell>Tráº¡ng thÃ¡i</TableCell>
+                          <TableCell>Ghi chÃº</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -607,13 +608,13 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                               <Chip
                                 label={
                                   record.status === 'Present'
-                                    ? 'Có mặt'
+                                    ? 'CÃ³ máº·t'
                                     : record.status === 'Absent'
-                                      ? 'Vắng'
+                                      ? 'Váº¯ng'
                                       : record.status === 'Late'
-                                        ? 'Trễ'
+                                        ? 'Trá»…'
                                         : record.status === 'Excused'
-                                          ? 'Có phép'
+                                          ? 'CÃ³ phÃ©p'
                                           : record.status
                                 }
                                 size='small'
@@ -640,12 +641,12 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
             </Card>
           </TabPanel>
 
-          {/* Tab 4: Lịch sử thi cấp */}
+          {/* Tab 4: Lá»‹ch sá»­ thi cáº¥p */}
           <TabPanel value='4' className='px-0'>
             <Card variant='outlined'>
               <CardContent>
                 <Typography variant='subtitle1' className='font-medium mb-3'>
-                  Lịch sử thi cấp
+                  Lá»‹ch sá»­ thi cáº¥p
                 </Typography>
                 {loadingExamHistory ? (
                   <Box className='flex justify-center py-4'>
@@ -653,18 +654,18 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                   </Box>
                 ) : examHistory.length === 0 ? (
                   <Typography variant='body2' color='text.secondary'>
-                    Chưa có lịch sử thi cấp
+                    ChÆ°a cÃ³ lá»‹ch sá»­ thi cáº¥p
                   </Typography>
                 ) : (
                   <TableContainer>
                     <Table size='small'>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Ngày thi</TableCell>
-                          <TableCell>Kỳ thi</TableCell>
-                          <TableCell>Cấp đai</TableCell>
-                          <TableCell>Kết quả</TableCell>
-                          <TableCell align='right'>Điểm</TableCell>
+                          <TableCell>NgÃ y thi</TableCell>
+                          <TableCell>Ká»³ thi</TableCell>
+                          <TableCell>Cáº¥p Ä‘ai</TableCell>
+                          <TableCell>Káº¿t quáº£</TableCell>
+                          <TableCell align='right'>Äiá»ƒm</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -675,7 +676,7 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
                             <TableCell>{exam.beltLevelName}</TableCell>
                             <TableCell>
                               <Chip
-                                label={exam.result === 1 ? 'Đạt' : exam.result === 2 ? 'Không đạt' : 'Chờ kết quả'}
+                                label={exam.result === 1 ? 'Äáº¡t' : exam.result === 2 ? 'KhÃ´ng Ä‘áº¡t' : 'Chá» káº¿t quáº£'}
                                 size='small'
                                 color={exam.result === 1 ? 'success' : exam.result === 2 ? 'error' : 'warning'}
                                 variant='tonal'
@@ -693,13 +694,13 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
           </TabPanel>
         </TabContext>
 
-        {/* Thông tin hệ thống */}
+        {/* ThÃ´ng tin há»‡ thá»‘ng */}
         {(student.createdAt || student.updatedAt) && (
           <Box className='mt-4'>
             <Typography variant='caption' color='text.secondary'>
-              {student.createdAt && `Tạo: ${new Date(student.createdAt).toLocaleString('vi-VN')}`}
+              {student.createdAt && `Táº¡o: ${new Date(student.createdAt).toLocaleString('vi-VN')}`}
               {student.createdAt && student.updatedAt && ' | '}
-              {student.updatedAt && `Cập nhật: ${new Date(student.updatedAt).toLocaleString('vi-VN')}`}
+              {student.updatedAt && `Cáº­p nháº­t: ${new Date(student.updatedAt).toLocaleString('vi-VN')}`}
             </Typography>
           </Box>
         )}
@@ -707,20 +708,20 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
 
       {/* Transfer Class Dialog */}
       <Dialog open={transferDialogOpen} onClose={handleCloseTransferDialog} maxWidth='sm' fullWidth>
-        <DialogTitle>Chuyển lớp học viên</DialogTitle>
+        <DialogTitle>Chuyá»ƒn lá»›p há»c viÃªn</DialogTitle>
         <DialogContent>
           <Box className='flex flex-col gap-4 pt-2'>
             <FormControl fullWidth>
-              <InputLabel>Từ lớp</InputLabel>
+              <InputLabel>Tá»« lá»›p</InputLabel>
               <Select
-                label='Từ lớp'
+                label='Tá»« lá»›p'
                 value={transferFromClassId}
                 onChange={e => setTransferFromClassId(e.target.value)}
               >
                 {activeStudentClasses.length > 0
                   ? activeStudentClasses.map((c: any) => (
                       <MenuItem key={c.classId || c.id} value={c.classId || c.id}>
-                        {c.className || 'Lớp không xác định'}
+                        {c.className || 'Lá»›p khÃ´ng xÃ¡c Ä‘á»‹nh'}
                       </MenuItem>
                     ))
                   : availableClasses.map(c => (
@@ -732,9 +733,9 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
             </FormControl>
 
             <FormControl fullWidth>
-              <InputLabel>Đến lớp</InputLabel>
+              <InputLabel>Äáº¿n lá»›p</InputLabel>
               <Select
-                label='Đến lớp'
+                label='Äáº¿n lá»›p'
                 value={transferToClassId}
                 onChange={e => setTransferToClassId(e.target.value)}
               >
@@ -750,26 +751,26 @@ const ViewStudentDrawer = ({ open, onClose, student }: Props) => {
 
             <TextField
               fullWidth
-              label='Lý do'
+              label='LÃ½ do'
               value={transferReason}
               onChange={e => setTransferReason(e.target.value)}
               multiline
               rows={3}
               required
-              placeholder='Nhập lý do chuyển lớp...'
+              placeholder='Nháº­p lÃ½ do chuyá»ƒn lá»›p...'
             />
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseTransferDialog} disabled={transferLoading}>
-            Hủy
+            Há»§y
           </Button>
           <Button
             onClick={handleSubmitTransfer}
             variant='contained'
             disabled={transferLoading || !transferFromClassId || !transferToClassId || !transferReason.trim()}
           >
-            {transferLoading ? 'Đang gửi...' : 'Xác nhận chuyển lớp'}
+            {transferLoading ? 'Äang gá»­i...' : 'XÃ¡c nháº­n chuyá»ƒn lá»›p'}
           </Button>
         </DialogActions>
       </Dialog>

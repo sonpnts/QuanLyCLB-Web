@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useState, useEffect } from 'react'
 
 // MUI Imports
@@ -62,7 +63,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
           setBeltLevels([])
         }
       } catch (error) {
-        console.error('Error loading belt levels:', error)
+        logger.error('AddStudentDrawer', 'Error loading belt levels', error)
         setBeltLevels([])
       }
     }
@@ -76,7 +77,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
     e.preventDefault()
 
     if (!formData.fullName.trim()) {
-      showNotification('Vui lòng nhập họ tên học viên.', 'error')
+      showNotification('Vui lÃ²ng nháº­p há» tÃªn há»c viÃªn.', 'error')
 
       return
     }
@@ -98,13 +99,13 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
 
       if (response.success && response.data) {
         setData(prev => [...prev, response.data!])
-        showNotification('Thêm học viên thành công!', 'success')
+        showNotification('ThÃªm há»c viÃªn thÃ nh cÃ´ng!', 'success')
         handleReset()
       } else {
-        showNotification(response.message || 'Không thể thêm học viên.', 'error')
+        showNotification(response.message || 'KhÃ´ng thá»ƒ thÃªm há»c viÃªn.', 'error')
       }
     } catch (error) {
-      showNotification('Đã có lỗi khi thêm học viên.', 'error')
+      showNotification('ÄÃ£ cÃ³ lá»—i khi thÃªm há»c viÃªn.', 'error')
     } finally {
       setLoading(false)
     }
@@ -135,7 +136,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Thêm học viên mới</Typography>
+        <Typography variant='h5'>ThÃªm há»c viÃªn má»›i</Typography>
         <IconButton size='small' onClick={handleReset}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -144,13 +145,13 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
       <div className='p-5'>
         <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
           <TextField
-            label='Họ và tên *'
+            label='Há» vÃ  tÃªn *'
             fullWidth
             value={formData.fullName}
             onChange={e => setFormData({ ...formData, fullName: e.target.value })}
           />
           <TextField
-            label='Số điện thoại'
+            label='Sá»‘ Ä‘iá»‡n thoáº¡i'
             fullWidth
             value={formData.phoneNumber}
             onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
@@ -163,7 +164,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
             onChange={e => setFormData({ ...formData, email: e.target.value })}
           />
           <TextField
-            label='Địa chỉ'
+            label='Äá»‹a chá»‰'
             fullWidth
             value={formData.address}
             onChange={e => setFormData({ ...formData, address: e.target.value })}
@@ -175,7 +176,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
             onChange={e => setFormData({ ...formData, identityNumber: e.target.value })}
           />
           <TextField
-            label='Ngày sinh'
+            label='NgÃ y sinh'
             type='date'
             fullWidth
             InputLabelProps={{ shrink: true }}
@@ -183,25 +184,25 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
             onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })}
           />
           <FormControl fullWidth>
-            <InputLabel>Giới tính</InputLabel>
+            <InputLabel>Giá»›i tÃ­nh</InputLabel>
             <Select
-              label='Giới tính'
+              label='Giá»›i tÃ­nh'
               value={formData.gender}
               onChange={e => setFormData({ ...formData, gender: e.target.value })}
             >
-              <MenuItem value=''>Chọn giới tính</MenuItem>
+              <MenuItem value=''>Chá»n giá»›i tÃ­nh</MenuItem>
               <MenuItem value='true'>Nam</MenuItem>
-              <MenuItem value='false'>Nữ</MenuItem>
+              <MenuItem value='false'>Ná»¯</MenuItem>
             </Select>
           </FormControl>
           <FormControl fullWidth>
-            <InputLabel>Cấp đai hiện tại</InputLabel>
+            <InputLabel>Cáº¥p Ä‘ai hiá»‡n táº¡i</InputLabel>
             <Select
-              label='Cấp đai hiện tại'
+              label='Cáº¥p Ä‘ai hiá»‡n táº¡i'
               value={formData.currentBeltLevelId}
               onChange={e => setFormData({ ...formData, currentBeltLevelId: e.target.value })}
             >
-              <MenuItem value=''>Chưa có cấp đai</MenuItem>
+              <MenuItem value=''>ChÆ°a cÃ³ cáº¥p Ä‘ai</MenuItem>
               {beltLevels.map(belt => (
                 <MenuItem key={belt.id} value={belt.id}>
                   {belt.name}
@@ -210,7 +211,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
             </Select>
           </FormControl>
           <TextField
-            label='Ghi chú'
+            label='Ghi chÃº'
             fullWidth
             multiline
             rows={3}
@@ -219,10 +220,10 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
           />
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
-              {loading ? 'Đang xử lý...' : 'Thêm mới'}
+              {loading ? 'Äang xá»­ lÃ½...' : 'ThÃªm má»›i'}
             </Button>
             <Button variant='outlined' color='error' type='reset' onClick={handleReset}>
-              Hủy
+              Há»§y
             </Button>
           </div>
         </form>

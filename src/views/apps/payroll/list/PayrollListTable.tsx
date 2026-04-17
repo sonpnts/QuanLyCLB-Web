@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 
 // MUI Imports
@@ -66,7 +67,7 @@ const PayrollListTable = () => {
         setFilteredData([])
       }
     } catch (error) {
-      console.error('Error loading payrolls:', error)
+      logger.error('PayrollListTable', 'Error loading payrolls', error)
       setData([])
       setFilteredData([])
     } finally {
@@ -92,18 +93,18 @@ const PayrollListTable = () => {
       const response = await payrollService.generatePayroll(generateData)
 
       if (response.success) {
-        showNotification('Tạo bảng lương thành công.', 'success')
+        showNotification('Táº¡o báº£ng lÆ°Æ¡ng thÃ nh cÃ´ng.', 'success')
         setGeneratePayrollOpen(false)
         setCoachId('')
         setYear(new Date().getFullYear())
         setMonth(new Date().getMonth() + 1)
         loadPayrolls()
       } else {
-        showNotification(response.message || 'Không thể tạo bảng lương.', 'error')
+        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o báº£ng lÆ°Æ¡ng.', 'error')
       }
     } catch (error) {
-      console.error('Error generating payroll:', error)
-      showNotification('Đã có lỗi khi tạo bảng lương.', 'error')
+      logger.error('PayrollListTable', 'Error generating payroll', error)
+      showNotification('ÄÃ£ cÃ³ lá»—i khi táº¡o báº£ng lÆ°Æ¡ng.', 'error')
     } finally {
       setLoading(false)
     }
@@ -118,7 +119,7 @@ const PayrollListTable = () => {
   const columns = useMemo(
     () => [
       columnHelper.accessor('coachId', {
-        header: 'Huấn luyện viên',
+        header: 'Huáº¥n luyá»‡n viÃªn',
         cell: ({ row }) => (
           <Typography variant='body2' className='font-medium'>
             {row.original.coachId}
@@ -126,23 +127,23 @@ const PayrollListTable = () => {
         )
       }),
       columnHelper.accessor('year', {
-        header: 'Năm',
+        header: 'NÄƒm',
         cell: ({ row }) => <Typography variant='body2'>{row.original.year}</Typography>
       }),
       columnHelper.accessor('month', {
-        header: 'Tháng',
+        header: 'ThÃ¡ng',
         cell: ({ row }) => <Typography variant='body2'>{row.original.month}</Typography>
       }),
       columnHelper.accessor('totalAmount', {
-        header: 'Tổng tiền',
+        header: 'Tá»•ng tiá»n',
         cell: ({ row }) => (
           <Typography variant='body2' className='font-medium'>
-            {row.original.totalAmount ? `${row.original.totalAmount.toLocaleString('vi-VN')} VNĐ` : '-'}
+            {row.original.totalAmount ? `${row.original.totalAmount.toLocaleString('vi-VN')} VNÄ` : '-'}
           </Typography>
         )
       }),
       columnHelper.accessor('generatedAt', {
-        header: 'Ngày tạo',
+        header: 'NgÃ y táº¡o',
         cell: ({ row }) => (
           <Typography variant='body2'>
             {row.original.generatedAt ? new Date(row.original.generatedAt).toLocaleDateString('vi-VN') : '-'}
@@ -150,10 +151,10 @@ const PayrollListTable = () => {
         )
       }),
       columnHelper.accessor('isActive', {
-        header: 'Trạng thái',
+        header: 'Tráº¡ng thÃ¡i',
         cell: ({ row }) => (
           <Chip
-            label={row.original.isActive ? 'Hoạt động' : 'Không hoạt động'}
+            label={row.original.isActive ? 'Hoáº¡t Ä‘á»™ng' : 'KhÃ´ng hoáº¡t Ä‘á»™ng'}
             color={row.original.isActive ? 'success' : 'error'}
             variant='tonal'
             size='small'
@@ -176,10 +177,10 @@ const PayrollListTable = () => {
     <>
       <Card>
         <CardHeader
-          title='Bảng lương'
+          title='Báº£ng lÆ°Æ¡ng'
           action={
             <Button variant='contained' onClick={() => setGeneratePayrollOpen(true)}>
-              Tạo bảng lương
+              Táº¡o báº£ng lÆ°Æ¡ng
             </Button>
           }
         />
@@ -188,30 +189,30 @@ const PayrollListTable = () => {
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <TextField
                 fullWidth
-                label='ID Huấn luyện viên'
+                label='ID Huáº¥n luyá»‡n viÃªn'
                 value={filterParams.CoachId || ''}
                 onChange={e => handleFilterChange({ CoachId: e.target.value || undefined })}
-                placeholder='Nhập ID huấn luyện viên...'
+                placeholder='Nháº­p ID huáº¥n luyá»‡n viÃªn...'
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <TextField
                 fullWidth
-                label='Năm'
+                label='NÄƒm'
                 type='number'
                 value={filterParams.Year || ''}
                 onChange={e => handleFilterChange({ Year: e.target.value ? parseInt(e.target.value) : undefined })}
-                placeholder='Nhập năm...'
+                placeholder='Nháº­p nÄƒm...'
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <TextField
                 fullWidth
-                label='Tháng'
+                label='ThÃ¡ng'
                 type='number'
                 value={filterParams.Month || ''}
                 onChange={e => handleFilterChange({ Month: e.target.value ? parseInt(e.target.value) : undefined })}
-                placeholder='Nhập tháng...'
+                placeholder='Nháº­p thÃ¡ng...'
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -223,7 +224,7 @@ const PayrollListTable = () => {
                 }}
                 fullWidth
               >
-                Xóa bộ lọc
+                XÃ³a bá»™ lá»c
               </Button>
             </Grid>
           </Grid>
@@ -260,7 +261,7 @@ const PayrollListTable = () => {
           ) : (
             <Box className='text-center py-8'>
               <Typography variant='body1' color='text.secondary'>
-                Chưa có bảng lương nào
+                ChÆ°a cÃ³ báº£ng lÆ°Æ¡ng nÃ o
               </Typography>
             </Box>
           )}
@@ -269,30 +270,30 @@ const PayrollListTable = () => {
 
       {/* Generate Payroll Dialog */}
       <Dialog open={generatePayrollOpen} onClose={() => setGeneratePayrollOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Tạo bảng lương</DialogTitle>
+        <DialogTitle>Táº¡o báº£ng lÆ°Æ¡ng</DialogTitle>
         <DialogContent>
           <Box className='flex flex-col gap-4 pt-4'>
             <TextField
               fullWidth
-              label='ID Huấn luyện viên'
+              label='ID Huáº¥n luyá»‡n viÃªn'
               value={coachId}
               onChange={e => setCoachId(e.target.value)}
               required
             />
             <TextField
               fullWidth
-              label='Năm'
+              label='NÄƒm'
               type='number'
               value={year}
               onChange={e => setYear(parseInt(e.target.value))}
               required
             />
             <FormControl fullWidth>
-              <InputLabel>Tháng</InputLabel>
-              <Select value={month} label='Tháng' onChange={e => setMonth(e.target.value as number)}>
+              <InputLabel>ThÃ¡ng</InputLabel>
+              <Select value={month} label='ThÃ¡ng' onChange={e => setMonth(e.target.value as number)}>
                 {Array.from({ length: 12 }, (_, i) => (
                   <MenuItem key={i + 1} value={i + 1}>
-                    Tháng {i + 1}
+                    ThÃ¡ng {i + 1}
                   </MenuItem>
                 ))}
               </Select>
@@ -300,9 +301,9 @@ const PayrollListTable = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setGeneratePayrollOpen(false)}>Hủy</Button>
+          <Button onClick={() => setGeneratePayrollOpen(false)}>Há»§y</Button>
           <Button onClick={handleGeneratePayroll} variant='contained' disabled={loading || !coachId}>
-            {loading ? 'Đang tạo...' : 'Tạo bảng lương'}
+            {loading ? 'Äang táº¡o...' : 'Táº¡o báº£ng lÆ°Æ¡ng'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useEffect, useMemo, useState } from 'react'
 
 // MUI Imports
@@ -112,15 +113,15 @@ const EditUserDrawer = (props: Props) => {
       const res = await userService.updateUser(user.id, payload)
 
       if (res.success && res.data) {
-        showNotification(res.message || 'Cập nhật người dùng thành công.', 'success')
+        showNotification(res.message || 'Cáº­p nháº­t ngÆ°á»i dÃ¹ng thÃ nh cÃ´ng.', 'success')
         onSaved(res.data as UsersType)
         onClose()
       } else {
-        showNotification(res.message || 'Không thể cập nhật người dùng.', 'error')
+        showNotification(res.message || 'KhÃ´ng thá»ƒ cáº­p nháº­t ngÆ°á»i dÃ¹ng.', 'error')
       }
     } catch (err) {
-      console.error('Error updating user:', err)
-      showNotification('Đã có lỗi khi cập nhật người dùng.', 'error')
+      logger.error('EditUserDrawer', 'Error updating user', err)
+      showNotification('ÄÃ£ cÃ³ lá»—i khi cáº­p nháº­t ngÆ°á»i dÃ¹ng.', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -136,7 +137,7 @@ const EditUserDrawer = (props: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 320, sm: 520 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Chỉnh sửa người dùng</Typography>
+        <Typography variant='h5'>Chá»‰nh sá»­a ngÆ°á»i dÃ¹ng</Typography>
         <IconButton size='small' onClick={onClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -148,12 +149,12 @@ const EditUserDrawer = (props: Props) => {
             <Controller
               name='fullName'
               control={control}
-              rules={{ required: 'Họ tên là bắt buộc' }}
+              rules={{ required: 'Há» tÃªn lÃ  báº¯t buá»™c' }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label='Họ tên'
+                  label='Há» tÃªn'
                   error={!!errors.fullName}
                   helperText={errors.fullName?.message}
                 />
@@ -171,7 +172,7 @@ const EditUserDrawer = (props: Props) => {
             <Controller
               name='phoneNumber'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Số điện thoại' />}
+              render={({ field }) => <TextField {...field} fullWidth label='Sá»‘ Ä‘iá»‡n thoáº¡i' />}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -181,7 +182,7 @@ const EditUserDrawer = (props: Props) => {
               render={({ field }) => (
                 <FormControlLabel
                   control={<Checkbox checked={field.value} onChange={(_, v) => field.onChange(v)} />}
-                  label='Hoạt động'
+                  label='Hoáº¡t Ä‘á»™ng'
                 />
               )}
             />
@@ -190,29 +191,29 @@ const EditUserDrawer = (props: Props) => {
             <Controller
               name='skillLevel'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Trình độ' />}
+              render={({ field }) => <TextField {...field} fullWidth label='TrÃ¬nh Ä‘á»™' />}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='certification'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Chứng chỉ' />}
+              render={({ field }) => <TextField {...field} fullWidth label='Chá»©ng chá»‰' />}
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Controller
               name='roleIds'
               control={control}
-              rules={{ validate: v => (v && v.length > 0) || 'Chọn ít nhất 1 vai trò' }}
+              rules={{ validate: v => (v && v.length > 0) || 'Chá»n Ã­t nháº¥t 1 vai trÃ²' }}
               render={({ field }) => (
                 <FormControl fullWidth error={!!errors.roleIds}>
-                  <InputLabel>Vai trò</InputLabel>
+                  <InputLabel>Vai trÃ²</InputLabel>
                   <Select
                     multiple
                     value={field.value}
                     onChange={e => field.onChange(e.target.value as string[])}
-                    label='Vai trò'
+                    label='Vai trÃ²'
                     renderValue={selected =>
                       (selected as string[]).map(id => roles.find(r => r.id === id)?.name || id).join(', ')
                     }
@@ -236,10 +237,10 @@ const EditUserDrawer = (props: Props) => {
         </Grid>
         <div className='flex gap-2 justify-end'>
           <Button variant='outlined' onClick={onClose}>
-            Hủy
+            Há»§y
           </Button>
           <Button type='submit' variant='contained' disabled={submitting}>
-            {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}
+            {submitting ? 'Äang lÆ°u...' : 'LÆ°u thay Ä‘á»•i'}
           </Button>
         </div>
       </form>

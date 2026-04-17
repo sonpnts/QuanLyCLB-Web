@@ -1,5 +1,6 @@
-'use client'
+﻿'use client'
 
+import { logger } from '@/utils/logger'
 import { useState, useEffect, useRef, useCallback } from 'react'
 
 // MUI Imports
@@ -50,7 +51,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
 
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Search students với debounce
+  // Search students vá»›i debounce
   const searchStudents = useCallback(
     async (keyword: string) => {
       if (!keyword.trim()) {
@@ -66,7 +67,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
         })
 
         if (response.success && response.data) {
-          // Lọc bỏ học viên đã có trong lớp này
+          // Lá»c bá» há»c viÃªn Ä‘Ã£ cÃ³ trong lá»›p nÃ y
           const filtered = response.data.filter(student => {
             const classes = (student as any).classes || []
             return !classes.some((c: any) => c.classId === classData.id)
@@ -74,7 +75,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
           setSearchResults(filtered)
         }
       } catch (error) {
-        console.error('Error searching students:', error)
+        logger.error('AddStudentsToClassDrawer', 'Error searching students', error)
       } finally {
         setSearching(false)
       }
@@ -99,7 +100,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
     }
   }, [searchKeyword, searchStudents])
 
-  // Reset khi đóng drawer
+  // Reset khi Ä‘Ã³ng drawer
   useEffect(() => {
     if (!open) {
       setSearchKeyword('')
@@ -124,7 +125,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
 
   const handleSubmit = async () => {
     if (selectedStudents.length === 0) {
-      showNotificationRef.current('Vui lòng chọn ít nhất một học viên.', 'error')
+      showNotificationRef.current('Vui lÃ²ng chá»n Ã­t nháº¥t má»™t há»c viÃªn.', 'error')
       return
     }
 
@@ -132,7 +133,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
       setSubmitting(true)
       const today = new Date().toISOString().split('T')[0]
 
-      // Enroll từng học viên
+      // Enroll tá»«ng há»c viÃªn
       const results = await Promise.all(
         selectedStudents.map(student =>
           studentService.enrollStudent({
@@ -148,17 +149,17 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
 
       if (successCount > 0) {
         showNotificationRef.current(
-          `Đã thêm ${successCount} học viên vào lớp${failCount > 0 ? `, ${failCount} thất bại` : ''}.`,
+          `ÄÃ£ thÃªm ${successCount} há»c viÃªn vÃ o lá»›p${failCount > 0 ? `, ${failCount} tháº¥t báº¡i` : ''}.`,
           failCount > 0 ? 'warning' : 'success'
         )
         onStudentsAdded?.()
         onClose()
       } else {
-        showNotificationRef.current('Không thể thêm học viên vào lớp.', 'error')
+        showNotificationRef.current('KhÃ´ng thá»ƒ thÃªm há»c viÃªn vÃ o lá»›p.', 'error')
       }
     } catch (error) {
-      console.error('Error enrolling students:', error)
-      showNotificationRef.current('Đã có lỗi khi thêm học viên.', 'error')
+      logger.error('AddStudentsToClassDrawer', 'Error enrolling students', error)
+      showNotificationRef.current('ÄÃ£ cÃ³ lá»—i khi thÃªm há»c viÃªn.', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -174,7 +175,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
       sx={{ '& .MuiDrawer-paper': { width: { xs: 320, sm: 450 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Thêm học viên vào lớp</Typography>
+        <Typography variant='h5'>ThÃªm há»c viÃªn vÃ o lá»›p</Typography>
         <IconButton size='small' onClick={onClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -182,20 +183,20 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
       <Divider />
 
       <Box className='p-5 flex flex-col gap-4 h-full'>
-        {/* Thông tin lớp */}
+        {/* ThÃ´ng tin lá»›p */}
         <Box className='flex items-center gap-2'>
           <Typography variant='body2' color='text.secondary'>
-            Lớp:
+            Lá»›p:
           </Typography>
           <Chip label={classData.name} color='primary' size='small' />
           <Chip label={classData.code} variant='outlined' size='small' />
         </Box>
 
-        {/* Học viên đã chọn */}
+        {/* Há»c viÃªn Ä‘Ã£ chá»n */}
         {selectedStudents.length > 0 && (
           <Box>
             <Typography variant='subtitle2' className='mb-2'>
-              Đã chọn ({selectedStudents.length}):
+              ÄÃ£ chá»n ({selectedStudents.length}):
             </Typography>
             <Box className='flex flex-wrap gap-1'>
               {selectedStudents.map(student => (
@@ -212,11 +213,11 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
           </Box>
         )}
 
-        {/* Tìm kiếm */}
+        {/* TÃ¬m kiáº¿m */}
         <TextField
           fullWidth
-          label='Tìm học viên'
-          placeholder='Nhập tên hoặc số điện thoại...'
+          label='TÃ¬m há»c viÃªn'
+          placeholder='Nháº­p tÃªn hoáº·c sá»‘ Ä‘iá»‡n thoáº¡i...'
           value={searchKeyword}
           onChange={e => setSearchKeyword(e.target.value)}
           InputProps={{
@@ -233,11 +234,11 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
           }}
         />
 
-        {/* Kết quả tìm kiếm */}
+        {/* Káº¿t quáº£ tÃ¬m kiáº¿m */}
         <Box className='flex-1 overflow-auto'>
           {searchKeyword && searchResults.length === 0 && !searching ? (
             <Typography variant='body2' color='text.secondary' className='text-center py-4'>
-              Không tìm thấy học viên phù hợp
+              KhÃ´ng tÃ¬m tháº¥y há»c viÃªn phÃ¹ há»£p
             </Typography>
           ) : (
             <List dense>
@@ -251,7 +252,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
                         primary={student.fullName}
                         secondary={
                           <Box className='flex items-center gap-2'>
-                            <span>{student.phoneNumber || 'Chưa có SĐT'}</span>
+                            <span>{student.phoneNumber || 'ChÆ°a cÃ³ SÄT'}</span>
                             {student.currentBeltLevelName && (
                               <Chip label={student.currentBeltLevelName} size='small' variant='outlined' />
                             )}
@@ -269,7 +270,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
         {/* Actions */}
         <Box className='flex gap-4 pt-4'>
           <Button variant='outlined' onClick={onClose} fullWidth>
-            Hủy
+            Há»§y
           </Button>
           <Button
             variant='contained'
@@ -277,7 +278,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
             disabled={selectedStudents.length === 0 || submitting}
             fullWidth
           >
-            {submitting ? 'Đang thêm...' : `Thêm ${selectedStudents.length} học viên`}
+            {submitting ? 'Äang thÃªm...' : `ThÃªm ${selectedStudents.length} há»c viÃªn`}
           </Button>
         </Box>
       </Box>

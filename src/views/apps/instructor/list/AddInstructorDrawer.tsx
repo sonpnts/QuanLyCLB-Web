@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useState } from 'react'
 
 import { useForm } from 'react-hook-form'
@@ -89,14 +90,14 @@ const AddInstructorDrawer = (props: Props) => {
       if (response.success && response.data) {
         setData([response.data, ...(instructorData || [])])
         setFilteredData([response.data, ...(instructorData || [])])
-        showNotification(response.message || 'Tạo huấn luyện viên thành công.', 'success')
+        showNotification(response.message || 'Táº¡o huáº¥n luyá»‡n viÃªn thÃ nh cÃ´ng.', 'success')
         handleCloseDrawer()
       } else {
-        showNotification(response.message || 'Không thể tạo huấn luyện viên.', 'error')
+        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o huáº¥n luyá»‡n viÃªn.', 'error')
       }
     } catch (error) {
-      console.error('Error creating instructor:', error)
-      showNotification('Đã có lỗi khi tạo huấn luyện viên.', 'error')
+      logger.error('AddInstructorDrawer', 'Error creating instructor', error)
+      showNotification('ÄÃ£ cÃ³ lá»—i khi táº¡o huáº¥n luyá»‡n viÃªn.', 'error')
     } finally {
       setLoading(false)
     }
@@ -112,7 +113,7 @@ const AddInstructorDrawer = (props: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 500, md: 600 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Thêm huấn luyện viên mới</Typography>
+        <Typography variant='h5'>ThÃªm huáº¥n luyá»‡n viÃªn má»›i</Typography>
         <IconButton size='small' onClick={handleCloseDrawer}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -123,8 +124,8 @@ const AddInstructorDrawer = (props: Props) => {
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              label='Họ và tên'
-              {...register('fullName', { required: 'Họ và tên là bắt buộc' })}
+              label='Há» vÃ  tÃªn'
+              {...register('fullName', { required: 'Há» vÃ  tÃªn lÃ  báº¯t buá»™c' })}
               error={!!errors.fullName}
               helperText={errors.fullName?.message}
             />
@@ -135,10 +136,10 @@ const AddInstructorDrawer = (props: Props) => {
               label='Email'
               type='email'
               {...register('email', {
-                required: 'Email là bắt buộc',
+                required: 'Email lÃ  báº¯t buá»™c',
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Email không hợp lệ'
+                  message: 'Email khÃ´ng há»£p lá»‡'
                 }
               })}
               error={!!errors.email}
@@ -148,7 +149,7 @@ const AddInstructorDrawer = (props: Props) => {
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              label='Số điện thoại'
+              label='Sá»‘ Ä‘iá»‡n thoáº¡i'
               {...register('phoneNumber')}
               error={!!errors.phoneNumber}
               helperText={errors.phoneNumber?.message}
@@ -157,30 +158,30 @@ const AddInstructorDrawer = (props: Props) => {
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label='Trình độ'
+              label='TrÃ¬nh Ä‘á»™'
               {...register('skillLevel')}
               error={!!errors.skillLevel}
               helperText={errors.skillLevel?.message}
-              placeholder='Ví dụ: Beginner, Intermediate, Advanced'
+              placeholder='VÃ­ dá»¥: Beginner, Intermediate, Advanced'
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label='Chứng chỉ'
+              label='Chá»©ng chá»‰'
               {...register('certification')}
               error={!!errors.certification}
               helperText={errors.certification?.message}
-              placeholder='Ví dụ: ACE, NASM, ACSM'
+              placeholder='VÃ­ dá»¥: ACE, NASM, ACSM'
             />
           </Grid>
         </Grid>
         <Box className='flex gap-2 justify-end'>
           <Button variant='outlined' onClick={handleCloseDrawer}>
-            Hủy
+            Há»§y
           </Button>
           <Button type='submit' variant='contained' disabled={loading}>
-            {loading ? 'Đang tạo...' : 'Tạo huấn luyện viên'}
+            {loading ? 'Äang táº¡o...' : 'Táº¡o huáº¥n luyá»‡n viÃªn'}
           </Button>
         </Box>
       </form>

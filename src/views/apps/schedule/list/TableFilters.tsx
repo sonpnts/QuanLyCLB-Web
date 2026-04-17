@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useState, useEffect, useRef, memo } from 'react'
 
 // MUI Imports
@@ -40,7 +41,7 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
   const isFirstRender = useRef(true)
   const dataLoaded = useRef(false)
 
-  // Load classes and branches - chỉ 1 lần
+  // Load classes and branches - chá»‰ 1 láº§n
   useEffect(() => {
     if (dataLoaded.current) return
 
@@ -57,7 +58,7 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
           setBranches(branchRes.data)
         }
       } catch (error) {
-        console.error('Error loading data:', error)
+        logger.error('TableFilters', 'Error loading data', error)
         dataLoaded.current = false
       }
     }
@@ -91,9 +92,9 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
         <Grid container spacing={4} alignItems='center'>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <FormControl fullWidth>
-              <InputLabel>Lớp học</InputLabel>
-              <Select value={classId} label='Lớp học' onChange={e => setClassId(e.target.value)}>
-                <MenuItem value=''>Tất cả lớp học</MenuItem>
+              <InputLabel>Lá»›p há»c</InputLabel>
+              <Select value={classId} label='Lá»›p há»c' onChange={e => setClassId(e.target.value)}>
+                <MenuItem value=''>Táº¥t cáº£ lá»›p há»c</MenuItem>
                 {classes.map(cls => (
                   <MenuItem key={cls.id} value={cls.id}>
                     {cls.name} ({cls.code})
@@ -104,9 +105,9 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <FormControl fullWidth>
-              <InputLabel>Chi nhánh</InputLabel>
-              <Select value={branchId} label='Chi nhánh' onChange={e => setBranchId(e.target.value)}>
-                <MenuItem value=''>Tất cả chi nhánh</MenuItem>
+              <InputLabel>Chi nhÃ¡nh</InputLabel>
+              <Select value={branchId} label='Chi nhÃ¡nh' onChange={e => setBranchId(e.target.value)}>
+                <MenuItem value=''>Táº¥t cáº£ chi nhÃ¡nh</MenuItem>
                 {branches.map(branch => (
                   <MenuItem key={branch.id} value={branch.id}>
                     {branch.name}
@@ -117,9 +118,9 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <FormControl fullWidth>
-              <InputLabel>Thứ trong tuần</InputLabel>
-              <Select value={dayOfWeek} label='Thứ trong tuần' onChange={e => setDayOfWeek(e.target.value)}>
-                <MenuItem value=''>Tất cả</MenuItem>
+              <InputLabel>Thá»© trong tuáº§n</InputLabel>
+              <Select value={dayOfWeek} label='Thá»© trong tuáº§n' onChange={e => setDayOfWeek(e.target.value)}>
+                <MenuItem value=''>Táº¥t cáº£</MenuItem>
                 {DAY_OF_WEEK_OPTIONS.map(day => (
                   <MenuItem key={day.value} value={day.value.toString()}>
                     {day.label}
@@ -131,7 +132,7 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Box className='flex gap-2'>
               <Button variant='outlined' onClick={handleReset} fullWidth>
-                Đặt lại bộ lọc
+                Äáº·t láº¡i bá»™ lá»c
               </Button>
             </Box>
           </Grid>

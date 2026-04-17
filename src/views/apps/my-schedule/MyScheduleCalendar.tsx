@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useState, useEffect, useCallback } from 'react'
 
 // MUI Imports
@@ -27,7 +28,7 @@ import AddEventSidebar from '@views/apps/calendar/AddEventSidebar'
 // Slice Imports
 import { setScheduleEvents } from '@/redux-store/slices/calendar'
 
-// CalendarColors Object - chỉ hiển thị Schedule
+// CalendarColors Object - chá»‰ hiá»ƒn thá»‹ Schedule
 const calendarsColor: CalendarColors = {
   ETC: 'secondary',
   Family: 'warning',
@@ -86,8 +87,8 @@ const convertScheduleToEvent = (schedule: ScheduleType, year: number, month: num
       endDateTime.setDate(endDateTime.getDate() + 1)
     }
 
-    const className = schedule.class?.name || 'Lớp học'
-    const branchName = schedule.branch?.name || 'Chi nhánh'
+    const className = schedule.class?.name || 'Lá»›p há»c'
+    const branchName = schedule.branch?.name || 'Chi nhÃ¡nh'
     const dayName = getDayName(dayOfWeek)
     const timeStr = `${schedule.startTime.substring(0, 5)} - ${schedule.endTime.substring(0, 5)}`
 
@@ -106,7 +107,7 @@ const convertScheduleToEvent = (schedule: ScheduleType, year: number, month: num
         dayName: dayName,
         startTime: schedule.startTime,
         endTime: schedule.endTime,
-        description: `Lớp: ${className}\nChi nhánh: ${branchName}\nThứ: ${dayName}\nGiờ: ${timeStr}`
+        description: `Lá»›p: ${className}\nChi nhÃ¡nh: ${branchName}\nThá»©: ${dayName}\nGiá»: ${timeStr}`
       }
     })
 
@@ -133,7 +134,7 @@ const MyScheduleCalendar = () => {
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
 
-  // Load schedules and convert to events - chỉ load active schedules
+  // Load schedules and convert to events - chá»‰ load active schedules
   const loadScheduleEvents = useCallback(async () => {
     try {
       setLoadingSchedules(true)
@@ -161,7 +162,7 @@ const MyScheduleCalendar = () => {
         dispatch(setScheduleEvents(events))
       }
     } catch (error) {
-      console.error('Error loading schedules for calendar:', error)
+      logger.error('MyScheduleCalendar', 'Error loading schedules for calendar', error)
     } finally {
       setLoadingSchedules(false)
     }

@@ -274,7 +274,6 @@ class BeltExamService {
       return { success: true, data: Array.isArray(data) ? data : [] }
     } catch (error) {
       logger.error('BeltExamService', 'getBeltLevels', error)
-      console.error('Error fetching belt levels:', error)
 
       return { success: false, data: [], message: 'Không thể tải danh sách cấp đai' }
     }

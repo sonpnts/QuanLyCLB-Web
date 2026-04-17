@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useState, useEffect } from 'react'
 
 import { useForm, Controller } from 'react-hook-form'
@@ -91,7 +92,7 @@ const AddClassScheduleDrawer = (props: Props) => {
           setBranches(response.data)
         }
       } catch (error) {
-        console.error('Error loading branches:', error)
+        logger.error('AddClassScheduleDrawer', 'Error loading branches', error)
       }
     }
 
@@ -146,7 +147,7 @@ const AddClassScheduleDrawer = (props: Props) => {
         showNotification(response.message || Messages.class.error.addSchedule, 'error')
       }
     } catch (error) {
-      console.error('Error creating schedules:', error)
+      logger.error('AddClassScheduleDrawer', 'Error creating schedules', error)
       showNotification(Messages.class.error.addScheduleGeneric, 'error')
     } finally {
       setLoading(false)
@@ -163,7 +164,7 @@ const AddClassScheduleDrawer = (props: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 500, md: 600 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Thêm lịch học cho lớp: {classData.name}</Typography>
+        <Typography variant='h5'>ThÃªm lá»‹ch há»c cho lá»›p: {classData.name}</Typography>
         <IconButton size='small' onClick={handleCloseDrawer}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -173,12 +174,12 @@ const AddClassScheduleDrawer = (props: Props) => {
         <Grid container spacing={4}>
           <Grid size={{ xs: 12 }}>
             <Typography variant='h6' className='mb-2'>
-              Chọn ngày trong tuần
+              Chá»n ngÃ y trong tuáº§n
             </Typography>
             <Controller
               name='daysOfWeek'
               control={control}
-              rules={{ required: 'Vui lòng chọn ít nhất một ngày' }}
+              rules={{ required: 'Vui lÃ²ng chá»n Ã­t nháº¥t má»™t ngÃ y' }}
               render={({ field }) => (
                 <FormGroup row>
                   {DAY_OF_WEEK_OPTIONS.map(day => (
@@ -211,7 +212,7 @@ const AddClassScheduleDrawer = (props: Props) => {
 
           <Grid size={{ xs: 12 }}>
             <Typography variant='h6' className='mb-2'>
-              Ngày đã chọn:
+              NgÃ y Ä‘Ã£ chá»n:
             </Typography>
             <Box className='flex flex-wrap gap-1'>
               {selectedDays.map(dayValue => {
@@ -226,12 +227,12 @@ const AddClassScheduleDrawer = (props: Props) => {
             <Controller
               name='startTime'
               control={control}
-              rules={{ required: 'Giờ bắt đầu là bắt buộc' }}
+              rules={{ required: 'Giá» báº¯t Ä‘áº§u lÃ  báº¯t buá»™c' }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label='Giờ bắt đầu'
+                  label='Giá» báº¯t Ä‘áº§u'
                   type='time'
                   error={!!errors.startTime}
                   helperText={errors.startTime?.message}
@@ -245,12 +246,12 @@ const AddClassScheduleDrawer = (props: Props) => {
             <Controller
               name='endTime'
               control={control}
-              rules={{ required: 'Giờ kết thúc là bắt buộc' }}
+              rules={{ required: 'Giá» káº¿t thÃºc lÃ  báº¯t buá»™c' }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label='Giờ kết thúc'
+                  label='Giá» káº¿t thÃºc'
                   type='time'
                   error={!!errors.endTime}
                   helperText={errors.endTime?.message}
@@ -264,11 +265,11 @@ const AddClassScheduleDrawer = (props: Props) => {
             <Controller
               name='branchId'
               control={control}
-              rules={{ required: 'Chi nhánh là bắt buộc' }}
+              rules={{ required: 'Chi nhÃ¡nh lÃ  báº¯t buá»™c' }}
               render={({ field }) => (
                 <FormControl fullWidth error={!!errors.branchId}>
-                  <InputLabel>Chi nhánh</InputLabel>
-                  <Select {...field} label='Chi nhánh'>
+                  <InputLabel>Chi nhÃ¡nh</InputLabel>
+                  <Select {...field} label='Chi nhÃ¡nh'>
                     {branches.map(branch => (
                       <MenuItem key={branch.id} value={branch.id}>
                         {branch.name}
@@ -288,10 +289,10 @@ const AddClassScheduleDrawer = (props: Props) => {
 
         <Box className='flex gap-2 justify-end'>
           <Button variant='outlined' onClick={handleCloseDrawer}>
-            Hủy
+            Há»§y
           </Button>
           <Button type='submit' variant='contained' disabled={loading}>
-            {loading ? 'Đang thêm...' : 'Thêm lịch học'}
+            {loading ? 'Äang thÃªm...' : 'ThÃªm lá»‹ch há»c'}
           </Button>
         </Box>
       </form>

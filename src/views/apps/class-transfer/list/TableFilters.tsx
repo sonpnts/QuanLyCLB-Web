@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useState, useEffect, useRef, memo } from 'react'
 
 // MUI Imports
@@ -29,7 +30,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
   const isFirstRender = useRef(true)
   const classesLoaded = useRef(false)
 
-  // Load classes chỉ 1 lần
+  // Load classes chá»‰ 1 láº§n
   useEffect(() => {
     if (classesLoaded.current) return
 
@@ -41,7 +42,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
           setClasses(response.data)
         }
       } catch (error) {
-        console.error('Error loading classes:', error)
+        logger.error('TableFilters', 'Error loading classes', error)
         classesLoaded.current = false
       }
     }
@@ -67,25 +68,25 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
       <Grid container spacing={5}>
         <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <InputLabel>Trạng thái</InputLabel>
-            <Select value={status} onChange={(e: SelectChangeEvent) => setStatus(e.target.value)} label='Trạng thái'>
-              <MenuItem value=''>Tất cả</MenuItem>
-              <MenuItem value='Pending'>Chờ duyệt</MenuItem>
-              <MenuItem value='Approved'>Đã duyệt</MenuItem>
-              <MenuItem value='Rejected'>Từ chối</MenuItem>
-              <MenuItem value='Cancelled'>Đã hủy</MenuItem>
+            <InputLabel>Tráº¡ng thÃ¡i</InputLabel>
+            <Select value={status} onChange={(e: SelectChangeEvent) => setStatus(e.target.value)} label='Tráº¡ng thÃ¡i'>
+              <MenuItem value=''>Táº¥t cáº£</MenuItem>
+              <MenuItem value='Pending'>Chá» duyá»‡t</MenuItem>
+              <MenuItem value='Approved'>ÄÃ£ duyá»‡t</MenuItem>
+              <MenuItem value='Rejected'>Tá»« chá»‘i</MenuItem>
+              <MenuItem value='Cancelled'>ÄÃ£ há»§y</MenuItem>
             </Select>
           </FormControl>
         </Grid>
         <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <InputLabel>Từ lớp</InputLabel>
+            <InputLabel>Tá»« lá»›p</InputLabel>
             <Select
               value={fromClassId}
               onChange={(e: SelectChangeEvent) => setFromClassId(e.target.value)}
-              label='Từ lớp'
+              label='Tá»« lá»›p'
             >
-              <MenuItem value=''>Tất cả</MenuItem>
+              <MenuItem value=''>Táº¥t cáº£</MenuItem>
               {classes.map(cls => (
                 <MenuItem key={cls.id} value={cls.id}>
                   {cls.name}
@@ -96,9 +97,9 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
         </Grid>
         <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <InputLabel>Đến lớp</InputLabel>
-            <Select value={toClassId} onChange={(e: SelectChangeEvent) => setToClassId(e.target.value)} label='Đến lớp'>
-              <MenuItem value=''>Tất cả</MenuItem>
+            <InputLabel>Äáº¿n lá»›p</InputLabel>
+            <Select value={toClassId} onChange={(e: SelectChangeEvent) => setToClassId(e.target.value)} label='Äáº¿n lá»›p'>
+              <MenuItem value=''>Táº¥t cáº£</MenuItem>
               {classes.map(cls => (
                 <MenuItem key={cls.id} value={cls.id}>
                   {cls.name}

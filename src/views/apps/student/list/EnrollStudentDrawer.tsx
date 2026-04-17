@@ -1,5 +1,6 @@
-'use client'
+﻿'use client'
 
+import { logger } from '@/utils/logger'
 import { useState, useEffect, useRef, useCallback } from 'react'
 
 // MUI Imports
@@ -64,11 +65,11 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
 
         if (response.success && response.data) {
           setClasses(response.data)
-          // Hiển thị mặc định 5 lớp đầu tiên
+          // Hiá»ƒn thá»‹ máº·c Ä‘á»‹nh 5 lá»›p Ä‘áº§u tiÃªn
           setFilteredClasses(response.data.slice(0, 5))
         }
       } catch (error) {
-        console.error('Error loading classes:', error)
+        logger.error('EnrollStudentDrawer', 'Error loading classes', error)
       } finally {
         setLoading(false)
       }
@@ -91,7 +92,7 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
     setFilteredClasses(filtered.slice(0, 10))
   }, [searchKeyword, classes])
 
-  // Lọc bỏ các lớp học viên đã đăng ký
+  // Lá»c bá» cÃ¡c lá»›p há»c viÃªn Ä‘Ã£ Ä‘Äƒng kÃ½
   const getAvailableClasses = useCallback(() => {
     if (!student) return filteredClasses
 
@@ -99,7 +100,7 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
     return filteredClasses.filter(cls => !enrolledClassIds.includes(cls.id))
   }, [filteredClasses, student])
 
-  // Reset khi đóng drawer
+  // Reset khi Ä‘Ã³ng drawer
   useEffect(() => {
     if (!open) {
       setSelectedClassId('')
@@ -107,14 +108,14 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
       setEnrollmentDate('')
       setNotes('')
     } else {
-      // Set ngày mặc định là hôm nay
+      // Set ngÃ y máº·c Ä‘á»‹nh lÃ  hÃ´m nay
       setEnrollmentDate(new Date().toISOString().split('T')[0])
     }
   }, [open])
 
   const handleSubmit = async () => {
     if (!student || !selectedClassId) {
-      showNotificationRef.current('Vui lòng chọn lớp học.', 'error')
+      showNotificationRef.current('Vui lÃ²ng chá»n lá»›p há»c.', 'error')
       return
     }
 
@@ -129,15 +130,15 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
       })
 
       if (response.success) {
-        showNotificationRef.current(response.message || 'Đăng ký lớp học thành công!', 'success')
+        showNotificationRef.current(response.message || 'ÄÄƒng kÃ½ lá»›p há»c thÃ nh cÃ´ng!', 'success')
         onEnrolled?.()
         onClose()
       } else {
-        showNotificationRef.current(response.message || 'Không thể đăng ký lớp học.', 'error')
+        showNotificationRef.current(response.message || 'KhÃ´ng thá»ƒ Ä‘Äƒng kÃ½ lá»›p há»c.', 'error')
       }
     } catch (error) {
-      console.error('Error enrolling student:', error)
-      showNotificationRef.current('Đã có lỗi khi đăng ký lớp học.', 'error')
+      logger.error('EnrollStudentDrawer', 'Error enrolling student', error)
+      showNotificationRef.current('ÄÃ£ cÃ³ lá»—i khi Ä‘Äƒng kÃ½ lá»›p há»c.', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -158,7 +159,7 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 320, sm: 400 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Đăng ký lớp học</Typography>
+        <Typography variant='h5'>ÄÄƒng kÃ½ lá»›p há»c</Typography>
         <IconButton size='small' onClick={onClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -166,19 +167,19 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
       <Divider />
 
       <Box className='p-5 flex flex-col gap-4'>
-        {/* Thông tin học viên */}
+        {/* ThÃ´ng tin há»c viÃªn */}
         <Box className='flex items-center gap-2'>
           <Typography variant='body2' color='text.secondary'>
-            Học viên:
+            Há»c viÃªn:
           </Typography>
           <Chip label={student.fullName} color='primary' size='small' />
         </Box>
 
-        {/* Các lớp đã đăng ký */}
+        {/* CÃ¡c lá»›p Ä‘Ã£ Ä‘Äƒng kÃ½ */}
         {((student as any).classes || []).length > 0 && (
           <Box>
             <Typography variant='body2' color='text.secondary' className='mb-1'>
-              Đang học:
+              Äang há»c:
             </Typography>
             <Box className='flex flex-wrap gap-1'>
               {((student as any).classes || []).map((c: any) => (
@@ -188,11 +189,11 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
           </Box>
         )}
 
-        {/* Tìm kiếm lớp */}
+        {/* TÃ¬m kiáº¿m lá»›p */}
         <TextField
           fullWidth
-          label='Tìm lớp học'
-          placeholder='Nhập tên hoặc mã lớp...'
+          label='TÃ¬m lá»›p há»c'
+          placeholder='Nháº­p tÃªn hoáº·c mÃ£ lá»›p...'
           value={searchKeyword}
           onChange={e => setSearchKeyword(e.target.value)}
           InputProps={{
@@ -204,21 +205,21 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
           }}
         />
 
-        {/* Chọn lớp */}
+        {/* Chá»n lá»›p */}
         <FormControl fullWidth>
-          <InputLabel>Chọn lớp học *</InputLabel>
+          <InputLabel>Chá»n lá»›p há»c *</InputLabel>
           <Select
             value={selectedClassId}
             onChange={e => setSelectedClassId(e.target.value)}
-            label='Chọn lớp học *'
+            label='Chá»n lá»›p há»c *'
             disabled={loading}
           >
             {loading ? (
               <MenuItem disabled>
-                <CircularProgress size={20} className='mr-2' /> Đang tải...
+                <CircularProgress size={20} className='mr-2' /> Äang táº£i...
               </MenuItem>
             ) : availableClasses.length === 0 ? (
-              <MenuItem disabled>Không có lớp phù hợp</MenuItem>
+              <MenuItem disabled>KhÃ´ng cÃ³ lá»›p phÃ¹ há»£p</MenuItem>
             ) : (
               availableClasses.map(cls => (
                 <MenuItem key={cls.id} value={cls.id}>
@@ -235,15 +236,15 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
           </Select>
         </FormControl>
 
-        {/* Thông tin lớp đã chọn */}
+        {/* ThÃ´ng tin lá»›p Ä‘Ã£ chá»n */}
         {selectedClass && (
           <Box className='p-3 bg-gray-50 rounded'>
             <Typography variant='subtitle2'>{selectedClass.name}</Typography>
             <Typography variant='body2' color='text.secondary'>
-              Mã lớp: {selectedClass.code}
+              MÃ£ lá»›p: {selectedClass.code}
             </Typography>
             <Typography variant='body2' color='text.secondary'>
-              Sĩ số: {selectedClass.currentStudents || 0}/{selectedClass.maxStudents}
+              SÄ© sá»‘: {selectedClass.currentStudents || 0}/{selectedClass.maxStudents}
             </Typography>
             {selectedClass.description && (
               <Typography variant='body2' color='text.secondary'>
@@ -253,34 +254,34 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
           </Box>
         )}
 
-        {/* Ngày đăng ký */}
+        {/* NgÃ y Ä‘Äƒng kÃ½ */}
         <TextField
           fullWidth
           type='date'
-          label='Ngày đăng ký'
+          label='NgÃ y Ä‘Äƒng kÃ½'
           value={enrollmentDate}
           onChange={e => setEnrollmentDate(e.target.value)}
           InputLabelProps={{ shrink: true }}
         />
 
-        {/* Ghi chú */}
+        {/* Ghi chÃº */}
         <TextField
           fullWidth
           multiline
           rows={2}
-          label='Ghi chú'
+          label='Ghi chÃº'
           value={notes}
           onChange={e => setNotes(e.target.value)}
-          placeholder='Ghi chú thêm (tùy chọn)...'
+          placeholder='Ghi chÃº thÃªm (tÃ¹y chá»n)...'
         />
 
         {/* Actions */}
         <Box className='flex gap-4 pt-4'>
           <Button variant='outlined' onClick={onClose} fullWidth>
-            Hủy
+            Há»§y
           </Button>
           <Button variant='contained' onClick={handleSubmit} disabled={!selectedClassId || submitting} fullWidth>
-            {submitting ? 'Đang đăng ký...' : 'Đăng ký'}
+            {submitting ? 'Äang Ä‘Äƒng kÃ½...' : 'ÄÄƒng kÃ½'}
           </Button>
         </Box>
       </Box>

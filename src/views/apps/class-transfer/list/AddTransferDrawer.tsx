@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useState, useEffect, useMemo } from 'react'
 
 // MUI Imports
@@ -69,7 +70,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
         if (classRes.success && classRes.data) setClasses(classRes.data)
         if (studentRes.success && studentRes.data) setStudents(studentRes.data)
       } catch (error) {
-        console.error('Error loading data:', error)
+        logger.error('AddTransferDrawer', 'Error loading data', error)
       }
     }
     if (open) loadData()
@@ -79,17 +80,17 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
     e.preventDefault()
 
     if (!formData.studentId || !formData.fromClassId || !formData.toClassId) {
-      showNotification('Vui lòng điền đầy đủ thông tin.', 'error')
+      showNotification('Vui lÃ²ng Ä‘iá»n Ä‘áº§y Ä‘á»§ thÃ´ng tin.', 'error')
       return
     }
 
     if (!formData.reason.trim()) {
-      showNotification('Vui lòng nhập lý do chuyển lớp.', 'error')
+      showNotification('Vui lÃ²ng nháº­p lÃ½ do chuyá»ƒn lá»›p.', 'error')
       return
     }
 
     if (formData.fromClassId === formData.toClassId) {
-      showNotification('Lớp đích phải khác lớp hiện tại.', 'error')
+      showNotification('Lá»›p Ä‘Ã­ch pháº£i khÃ¡c lá»›p hiá»‡n táº¡i.', 'error')
       return
     }
 
@@ -97,7 +98,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
       const canCreateFromClass = fromClassOptions.some(item => item.id === formData.fromClassId)
 
       if (!canCreateFromClass) {
-        showNotification('Bạn chỉ có thể tạo yêu cầu từ lớp mình đang phụ trách.', 'error')
+        showNotification('Báº¡n chá»‰ cÃ³ thá»ƒ táº¡o yÃªu cáº§u tá»« lá»›p mÃ¬nh Ä‘ang phá»¥ trÃ¡ch.', 'error')
         return
       }
     }
@@ -113,18 +114,18 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
 
       if (response.success && response.data) {
         setData(prev => [...prev, response.data!])
-        showNotification('Tạo yêu cầu chuyển lớp thành công!', 'success')
+        showNotification('Táº¡o yÃªu cáº§u chuyá»ƒn lá»›p thÃ nh cÃ´ng!', 'success')
         handleReset()
       } else {
-        showNotification(response.message || 'Không thể tạo yêu cầu.', 'error')
+        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o yÃªu cáº§u.', 'error')
       }
     } catch (error) {
       const responseStatus = (error as { response?: { status?: number } })?.response?.status
 
       if (responseStatus === 403) {
-        showNotification('Không có quyền tạo yêu cầu chuyển lớp từ lớp nguồn này.', 'error')
+        showNotification('KhÃ´ng cÃ³ quyá»n táº¡o yÃªu cáº§u chuyá»ƒn lá»›p tá»« lá»›p nguá»“n nÃ y.', 'error')
       } else {
-        showNotification('Đã có lỗi khi tạo yêu cầu.', 'error')
+        showNotification('ÄÃ£ cÃ³ lá»—i khi táº¡o yÃªu cáº§u.', 'error')
       }
     } finally {
       setLoading(false)
@@ -147,7 +148,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Tạo yêu cầu chuyển lớp</Typography>
+        <Typography variant='h5'>Táº¡o yÃªu cáº§u chuyá»ƒn lá»›p</Typography>
         <IconButton size='small' onClick={handleReset}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -157,7 +158,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
         <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
           {!isAdmin && (
             <Typography variant='body2' color='warning.main'>
-              Chỉ hiển thị lớp bạn đang được phân công để tạo yêu cầu chuyển lớp.
+              Chá»‰ hiá»ƒn thá»‹ lá»›p báº¡n Ä‘ang Ä‘Æ°á»£c phÃ¢n cÃ´ng Ä‘á»ƒ táº¡o yÃªu cáº§u chuyá»ƒn lá»›p.
             </Typography>
           )}
           <Autocomplete
@@ -168,12 +169,12 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
               setSelectedStudent(newValue)
               setFormData({ ...formData, studentId: newValue?.id || '' })
             }}
-            renderInput={params => <TextField {...params} label='Học viên *' />}
+            renderInput={params => <TextField {...params} label='Há»c viÃªn *' />}
           />
           <FormControl fullWidth>
-            <InputLabel>Từ lớp *</InputLabel>
+            <InputLabel>Tá»« lá»›p *</InputLabel>
             <Select
-              label='Từ lớp *'
+              label='Tá»« lá»›p *'
               value={formData.fromClassId}
               onChange={e => setFormData({ ...formData, fromClassId: e.target.value })}
             >
@@ -185,9 +186,9 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
             </Select>
           </FormControl>
           <FormControl fullWidth>
-            <InputLabel>Đến lớp *</InputLabel>
+            <InputLabel>Äáº¿n lá»›p *</InputLabel>
             <Select
-              label='Đến lớp *'
+              label='Äáº¿n lá»›p *'
               value={formData.toClassId}
               onChange={e => setFormData({ ...formData, toClassId: e.target.value })}
             >
@@ -201,7 +202,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
             </Select>
           </FormControl>
           <TextField
-            label='Lý do chuyển lớp *'
+            label='LÃ½ do chuyá»ƒn lá»›p *'
             fullWidth
             multiline
             rows={3}
@@ -210,10 +211,10 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
           />
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
-              {loading ? 'Đang xử lý...' : 'Tạo yêu cầu'}
+              {loading ? 'Äang xá»­ lÃ½...' : 'Táº¡o yÃªu cáº§u'}
             </Button>
             <Button variant='outlined' color='error' onClick={handleReset}>
-              Hủy
+              Há»§y
             </Button>
           </div>
         </form>

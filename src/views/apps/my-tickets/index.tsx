@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 
 // MUI Imports
@@ -68,11 +69,11 @@ const MyTicketsView = () => {
         setData(tickets)
         setFilteredData(tickets)
       } else {
-        showNotification(response.message || 'Không thể tải lịch sử phiếu.', 'error')
+        showNotification(response.message || 'KhÃ´ng thá»ƒ táº£i lá»‹ch sá»­ phiáº¿u.', 'error')
       }
     } catch (error) {
-      console.error('Error loading tickets:', error)
-      showNotification('Đã có lỗi khi tải lịch sử phiếu.', 'error')
+      logger.error('index', 'Error loading tickets', error)
+      showNotification('ÄÃ£ cÃ³ lá»—i khi táº£i lá»‹ch sá»­ phiáº¿u.', 'error')
     } finally {
       setLoading(false)
     }
@@ -85,21 +86,21 @@ const MyTicketsView = () => {
   // Get status label
   const getStatusLabel = (status: number) => {
     const statusMap: Record<number, { label: string; color: 'success' | 'error' | 'warning' | 'info' | 'default' }> = {
-      0: { label: 'Có mặt', color: 'success' },
-      1: { label: 'Vắng mặt', color: 'error' },
-      2: { label: 'Đi muộn', color: 'warning' },
-      3: { label: 'Có phép', color: 'info' },
-      4: { label: 'Chờ duyệt', color: 'default' }
+      0: { label: 'CÃ³ máº·t', color: 'success' },
+      1: { label: 'Váº¯ng máº·t', color: 'error' },
+      2: { label: 'Äi muá»™n', color: 'warning' },
+      3: { label: 'CÃ³ phÃ©p', color: 'info' },
+      4: { label: 'Chá» duyá»‡t', color: 'default' }
     }
 
-    return statusMap[status] || { label: 'Không xác định', color: 'default' }
+    return statusMap[status] || { label: 'KhÃ´ng xÃ¡c Ä‘á»‹nh', color: 'default' }
   }
 
   // Columns
   const columns = useMemo(
     () => [
       columnHelper.accessor('classScheduleId', {
-        header: 'Lịch học',
+        header: 'Lá»‹ch há»c',
         cell: ({ row }) => (
           <Typography variant='body2' className='font-medium'>
             {row.original.classScheduleId || 'N/A'}
@@ -107,11 +108,11 @@ const MyTicketsView = () => {
         )
       }),
       columnHelper.accessor('reason', {
-        header: 'Lý do',
+        header: 'LÃ½ do',
         cell: ({ row }) => <Typography variant='body2'>{row.original.reason || '-'}</Typography>
       }),
       columnHelper.accessor('status', {
-        header: 'Trạng thái',
+        header: 'Tráº¡ng thÃ¡i',
         cell: ({ row }) => {
           const statusInfo = getStatusLabel(row.original.status)
 
@@ -119,7 +120,7 @@ const MyTicketsView = () => {
         }
       }),
       columnHelper.accessor('createdAt', {
-        header: 'Ngày tạo',
+        header: 'NgÃ y táº¡o',
         cell: ({ row }) => (
           <Typography variant='body2'>
             {row.original.createdAt ? new Date(row.original.createdAt).toLocaleDateString('vi-VN') : '-'}
@@ -154,7 +155,7 @@ const MyTicketsView = () => {
     <Grid container spacing={{ xs: 4, sm: 6 }}>
       <Grid size={{ xs: 12 }}>
         <Card>
-          <CardHeader title='Lịch sử phiếu xin nghỉ' className='p-4 sm:p-6' />
+          <CardHeader title='Lá»‹ch sá»­ phiáº¿u xin nghá»‰' className='p-4 sm:p-6' />
           <div className='p-3 sm:p-5'>
             {filteredData.length > 0 ? (
               <Box
@@ -203,7 +204,7 @@ const MyTicketsView = () => {
               <Box className='text-center py-8 sm:py-12'>
                 <i className='ri-file-list-line text-5xl sm:text-6xl text-textDisabled mb-4' />
                 <Typography variant='body1' color='text.secondary' className='text-sm sm:text-base'>
-                  Chưa có phiếu xin nghỉ nào
+                  ChÆ°a cÃ³ phiáº¿u xin nghá»‰ nÃ o
                 </Typography>
               </Box>
             )}

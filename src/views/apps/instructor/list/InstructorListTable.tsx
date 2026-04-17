@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 
 // MUI Imports
@@ -47,7 +48,7 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
   // Notification Hook
   const { showNotification } = useNotification()
 
-  // Refs để tránh duplicate calls
+  // Refs Ä‘á»ƒ trÃ¡nh duplicate calls
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
@@ -79,11 +80,11 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
           setData(response.data)
           setFilteredData(response.data)
         } else {
-          showNotificationRef.current(response.message || 'Không thể tải danh sách huấn luyện viên.', 'error')
+          showNotificationRef.current(response.message || 'KhÃ´ng thá»ƒ táº£i danh sÃ¡ch huáº¥n luyá»‡n viÃªn.', 'error')
         }
       } catch (error) {
-        console.error('Error loading instructors:', error)
-        showNotificationRef.current('Đã có lỗi khi tải huấn luyện viên.', 'error')
+        logger.error('InstructorListTable', 'Error loading instructors', error)
+        showNotificationRef.current('ÄÃ£ cÃ³ lá»—i khi táº£i huáº¥n luyá»‡n viÃªn.', 'error')
       }
     }
 
@@ -103,13 +104,13 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
       if (response.success) {
         setData(prevData => prevData.filter(instructor => instructor.id !== id))
         setFilteredData(prevData => prevData.filter(instructor => instructor.id !== id))
-        showNotificationRef.current(response.message || 'Xóa huấn luyện viên thành công.', 'success')
+        showNotificationRef.current(response.message || 'XÃ³a huáº¥n luyá»‡n viÃªn thÃ nh cÃ´ng.', 'success')
       } else {
-        showNotificationRef.current(response.message || 'Không thể xóa huấn luyện viên.', 'error')
+        showNotificationRef.current(response.message || 'KhÃ´ng thá»ƒ xÃ³a huáº¥n luyá»‡n viÃªn.', 'error')
       }
     } catch (error) {
-      console.error('Error deleting instructor:', error)
-      showNotificationRef.current('Đã có lỗi khi xóa huấn luyện viên.', 'error')
+      logger.error('InstructorListTable', 'Error deleting instructor', error)
+      showNotificationRef.current('ÄÃ£ cÃ³ lá»—i khi xÃ³a huáº¥n luyá»‡n viÃªn.', 'error')
     }
   }, [])
 
@@ -121,13 +122,13 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
       if (response.success && response.data) {
         setData(prevData => prevData.map(instructor => (instructor.id === id ? response.data! : instructor)))
         setFilteredData(prevData => prevData.map(instructor => (instructor.id === id ? response.data! : instructor)))
-        showNotificationRef.current(response.message || 'Khôi phục huấn luyện viên thành công.', 'success')
+        showNotificationRef.current(response.message || 'KhÃ´i phá»¥c huáº¥n luyá»‡n viÃªn thÃ nh cÃ´ng.', 'success')
       } else {
-        showNotificationRef.current(response.message || 'Không thể khôi phục huấn luyện viên.', 'error')
+        showNotificationRef.current(response.message || 'KhÃ´ng thá»ƒ khÃ´i phá»¥c huáº¥n luyá»‡n viÃªn.', 'error')
       }
     } catch (error) {
-      console.error('Error restoring instructor:', error)
-      showNotificationRef.current('Đã có lỗi khi khôi phục huấn luyện viên.', 'error')
+      logger.error('InstructorListTable', 'Error restoring instructor', error)
+      showNotificationRef.current('ÄÃ£ cÃ³ lá»—i khi khÃ´i phá»¥c huáº¥n luyá»‡n viÃªn.', 'error')
     }
   }, [])
 
@@ -135,7 +136,7 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
   const columns = useMemo(
     () => [
       columnHelper.accessor('fullName', {
-        header: 'Họ tên',
+        header: 'Há» tÃªn',
         cell: ({ row }) => (
           <Box className='flex items-center gap-3'>
             <CustomAvatar skin='light' color='primary'>
@@ -155,24 +156,24 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
         )
       }),
       columnHelper.accessor('phoneNumber', {
-        header: 'Số điện thoại',
+        header: 'Sá»‘ Ä‘iá»‡n thoáº¡i',
         cell: ({ row }) => <Typography variant='body2'>{row.original.phoneNumber || '-'}</Typography>
       }),
       columnHelper.accessor('skillLevel', {
-        header: 'Trình độ',
+        header: 'TrÃ¬nh Ä‘á»™',
         cell: ({ row }) => (
-          <Chip label={row.original.skillLevel || 'Chưa xác định'} color='info' variant='tonal' size='small' />
+          <Chip label={row.original.skillLevel || 'ChÆ°a xÃ¡c Ä‘á»‹nh'} color='info' variant='tonal' size='small' />
         )
       }),
       columnHelper.accessor('certification', {
-        header: 'Chứng chỉ',
+        header: 'Chá»©ng chá»‰',
         cell: ({ row }) => <Typography variant='body2'>{row.original.certification || '-'}</Typography>
       }),
       columnHelper.accessor('isActive', {
-        header: 'Trạng thái',
+        header: 'Tráº¡ng thÃ¡i',
         cell: ({ row }) => (
           <Chip
-            label={row.original.isActive ? 'Hoạt động' : 'Không hoạt động'}
+            label={row.original.isActive ? 'Hoáº¡t Ä‘á»™ng' : 'KhÃ´ng hoáº¡t Ä‘á»™ng'}
             color={row.original.isActive ? 'success' : 'error'}
             variant='tonal'
             size='small'
@@ -181,7 +182,7 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
       }),
       columnHelper.display({
         id: 'actions',
-        header: 'Thao tác',
+        header: 'Thao tÃ¡c',
         cell: ({ row }) => (
           <Box className='flex items-center gap-2'>
             {!row.original.isActive ? (
@@ -212,10 +213,10 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
     <>
       <Card>
         <CardHeader
-          title='Danh sách huấn luyện viên'
+          title='Danh sÃ¡ch huáº¥n luyá»‡n viÃªn'
           action={
             <Button variant='contained' onClick={() => setAddInstructorOpen(true)}>
-              Thêm huấn luyện viên mới
+              ThÃªm huáº¥n luyá»‡n viÃªn má»›i
             </Button>
           }
         />

@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useState, useEffect, useCallback } from 'react'
 
 // MUI Imports
@@ -34,7 +35,7 @@ const calendarsColor: CalendarColors = {
   Family: 'warning',
   Holiday: 'success',
   ETC: 'info',
-  Schedule: 'info' // Thêm màu cho schedule events
+  Schedule: 'info' // ThÃªm mÃ u cho schedule events
 }
 
 // Helper function to convert ScheduleType to EventInput
@@ -86,8 +87,8 @@ const convertScheduleToEvent = (schedule: ScheduleType, year: number, month: num
       endDateTime.setDate(endDateTime.getDate() + 1)
     }
 
-    const className = schedule.class?.name || 'Lớp học'
-    const branchName = schedule.branch?.name || 'Chi nhánh'
+    const className = schedule.class?.name || 'Lá»›p há»c'
+    const branchName = schedule.branch?.name || 'Chi nhÃ¡nh'
     const dayName = getDayName(dayOfWeek)
     const timeStr = `${schedule.startTime.substring(0, 5)} - ${schedule.endTime.substring(0, 5)}`
 
@@ -106,7 +107,7 @@ const convertScheduleToEvent = (schedule: ScheduleType, year: number, month: num
         dayName: dayName,
         startTime: schedule.startTime,
         endTime: schedule.endTime,
-        description: `Lớp: ${className}\nChi nhánh: ${branchName}\nThứ: ${dayName}\nGiờ: ${timeStr}`
+        description: `Lá»›p: ${className}\nChi nhÃ¡nh: ${branchName}\nThá»©: ${dayName}\nGiá»: ${timeStr}`
       }
     })
 
@@ -162,7 +163,7 @@ const AppCalendar = () => {
         dispatch(setScheduleEvents(events))
       }
     } catch (error) {
-      console.error('Error loading schedules for calendar:', error)
+      logger.error('CalendarWrapper', 'Error loading schedules for calendar', error)
     } finally {
       setLoadingSchedules(false)
     }

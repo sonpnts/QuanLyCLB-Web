@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 
 // Next Imports
@@ -118,7 +119,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   // Notification Hook
   const { showNotification } = useNotification()
 
-  // Refs để tránh duplicate calls
+  // Refs Ä‘á»ƒ trÃ¡nh duplicate calls
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
@@ -134,7 +135,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   useEffect(() => {
     const filterKey = JSON.stringify(filterParams)
 
-    // Tránh load lại nếu filter không đổi
+    // TrÃ¡nh load láº¡i náº¿u filter khÃ´ng Ä‘á»•i
     if (dataLoadedRef.current && currentFilterRef.current === filterKey) {
       return
     }
@@ -170,7 +171,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
     setFilteredData(data)
   }, [data])
 
-  // Load users for display (coaches/instructors) - chỉ load 1 lần
+  // Load users for display (coaches/instructors) - chá»‰ load 1 láº§n
   useEffect(() => {
     if (usersLoadedRef.current) return
 
@@ -183,7 +184,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
           setUsers(response.data)
         }
       } catch (error) {
-        console.error('Error loading users:', error)
+        logger.error('ClassListTable', 'Error loading users', error)
         usersLoadedRef.current = false
       }
     }
@@ -217,7 +218,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
         )
       },
       columnHelper.accessor('name', {
-        header: 'Tên',
+        header: 'TÃªn',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
             {/*<CustomAvatar skin='light' size={34}>*/}
@@ -233,7 +234,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
         )
       }),
       columnHelper.accessor('code', {
-        header: 'Mã',
+        header: 'MÃ£',
         cell: ({ row }) => (
           <Typography className='font-medium' color='text.primary'>
             {row.original.code}
@@ -241,7 +242,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
         )
       }),
       columnHelper.accessor('coachIds', {
-        header: 'Huấn luyện viên & Trợ giảng',
+        header: 'Huáº¥n luyá»‡n viÃªn & Trá»£ giáº£ng',
         cell: ({ row }) => {
           const coachIds = row.original.coachIds || []
 
@@ -271,7 +272,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
         }
       }),
       columnHelper.accessor('maxStudents', {
-        header: 'Sỉ số',
+        header: 'Sá»‰ sá»‘',
         cell: ({ row }) => (
           <div className='flex items-center gap-2'>
             <Typography color='text.primary'>{row.original.currentStudents || 0}</Typography>
@@ -295,7 +296,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
       //   )
       // }),
       columnHelper.accessor('action', {
-        header: 'Thao tác',
+        header: 'Thao tÃ¡c',
         cell: ({ row }) => {
           // Check if class is inactive - explicitly check for false
           // Treat undefined/null as active (default behavior)
@@ -315,13 +316,13 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                 setFilteredData(prevData =>
                   prevData?.map(clazz => (clazz.id === row.original.id ? restoredClass : clazz))
                 )
-                showNotification('Khôi phục lớp học thành công!', 'success')
+                showNotification('KhÃ´i phá»¥c lá»›p há»c thÃ nh cÃ´ng!', 'success')
               } else {
-                showNotification(response.message || 'Không thể khôi phục lớp học.', 'error')
+                showNotification(response.message || 'KhÃ´ng thá»ƒ khÃ´i phá»¥c lá»›p há»c.', 'error')
               }
             } catch (error) {
-              console.error('Error restoring class:', error)
-              showNotification('Đã có lỗi khi khôi phục lớp học.', 'error')
+              logger.error('ClassListTable', 'Error restoring class', error)
+              showNotification('ÄÃ£ cÃ³ lá»—i khi khÃ´i phá»¥c lá»›p há»c.', 'error')
             } finally {
               setLoading(false)
             }
@@ -335,13 +336,13 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
               if (response.success) {
                 setData(prevData => prevData?.filter(clazz => clazz.id !== row.original.id))
                 setFilteredData(prevData => prevData?.filter(clazz => clazz.id !== row.original.id))
-                showNotification('Xóa lớp học thành công!', 'success')
+                showNotification('XÃ³a lá»›p há»c thÃ nh cÃ´ng!', 'success')
               } else {
-                showNotification(response.message || 'Không thể xóa lớp học.', 'error')
+                showNotification(response.message || 'KhÃ´ng thá»ƒ xÃ³a lá»›p há»c.', 'error')
               }
             } catch (error) {
-              console.error('Error deleting class:', error)
-              showNotification('Đã có lỗi khi xóa lớp học.', 'error')
+              logger.error('ClassListTable', 'Error deleting class', error)
+              showNotification('ÄÃ£ cÃ³ lá»—i khi xÃ³a lá»›p há»c.', 'error')
             } finally {
               setLoading(false)
             }
@@ -354,7 +355,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   setSelectedClass(row.original)
                   setAddStudentsOpen(true)
                 }}
-                title='Thêm học viên'
+                title='ThÃªm há»c viÃªn'
                 color='success'
               >
                 <i className='ri-user-add-line' />
@@ -364,7 +365,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   setSelectedClass(row.original)
                   setAddScheduleOpen(true)
                 }}
-                title='Thêm lịch học'
+                title='ThÃªm lá»‹ch há»c'
                 color='info'
               >
                 <i className='ri-calendar-line' />
@@ -374,22 +375,22 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   setSelectedClass(row.original)
                   setViewScheduleOpen(true)
                 }}
-                title='Xem lịch học'
+                title='Xem lá»‹ch há»c'
                 color='primary'
               >
                 <i className='ri-calendar-check-line' />
               </IconButton>
               {isInactive ? (
-                <IconButton onClick={handleRestore} title='Khôi phục lớp học' color='success'>
+                <IconButton onClick={handleRestore} title='KhÃ´i phá»¥c lá»›p há»c' color='success'>
                   <i className='ri-restart-line' style={{ color: '#2e7d32' }} />
                 </IconButton>
               ) : (
-                <IconButton onClick={handleDelete} title='Xóa lớp học' color='error'>
+                <IconButton onClick={handleDelete} title='XÃ³a lá»›p há»c' color='error'>
                   <i className='ri-delete-bin-7-line' />
                 </IconButton>
               )}
               <IconButton>
-                <Link href={`/apps/class/view/${row.original.id}`} className='flex' title='Xem chi tiết'>
+                <Link href={`/apps/class/view/${row.original.id}`} className='flex' title='Xem chi tiáº¿t'>
                   <i className='ri-eye-line text-textSecondary' />
                 </Link>
               </IconButton>
@@ -398,7 +399,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                 iconClassName='text-textSecondary'
                 options={[
                   {
-                    text: 'Chỉnh sửa',
+                    text: 'Chá»‰nh sá»­a',
                     icon: 'ri-edit-box-line',
                     menuItemProps: {
                       className: 'flex items-center gap-2 text-textSecondary',
@@ -451,7 +452,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   return (
     <>
       <Card>
-        <CardHeader title='Bộ lọc' />
+        <CardHeader title='Bá»™ lá»c' />
         <TableFilters onFilterChange={handleFilterChange} />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>

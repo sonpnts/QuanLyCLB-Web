@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 
 // MUI Imports
@@ -52,7 +53,7 @@ const BeltLevelListTable = () => {
   // Notification Hook
   const { showNotification } = useNotification()
 
-  // Refs để tránh duplicate calls
+  // Refs Ä‘á»ƒ trÃ¡nh duplicate calls
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
@@ -60,7 +61,7 @@ const BeltLevelListTable = () => {
 
   // Load belt levels
   useEffect(() => {
-    // Tránh load lại nếu keyword không đổi
+    // TrÃ¡nh load láº¡i náº¿u keyword khÃ´ng Ä‘á»•i
     if (dataLoadedRef.current && currentKeywordRef.current === keyword) {
       return
     }
@@ -87,7 +88,7 @@ const BeltLevelListTable = () => {
 
   // Handle delete
   const handleDelete = useCallback(async (id: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa cấp đai này?')) return
+    if (!confirm('Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n xÃ³a cáº¥p Ä‘ai nÃ y?')) return
 
     try {
       setLoading(true)
@@ -95,13 +96,13 @@ const BeltLevelListTable = () => {
 
       if (response.success) {
         setData(prev => prev.filter(item => item.id !== id))
-        showNotificationRef.current(response.message || 'Xóa cấp đai thành công.', 'success')
+        showNotificationRef.current(response.message || 'XÃ³a cáº¥p Ä‘ai thÃ nh cÃ´ng.', 'success')
       } else {
-        showNotificationRef.current(response.message || 'Không thể xóa cấp đai.', 'error')
+        showNotificationRef.current(response.message || 'KhÃ´ng thá»ƒ xÃ³a cáº¥p Ä‘ai.', 'error')
       }
     } catch (error) {
-      console.error('Error deleting belt level:', error)
-      showNotificationRef.current('Đã có lỗi khi xóa cấp đai.', 'error')
+      logger.error('BeltLevelListTable', 'Error deleting belt level', error)
+      showNotificationRef.current('ÄÃ£ cÃ³ lá»—i khi xÃ³a cáº¥p Ä‘ai.', 'error')
     } finally {
       setLoading(false)
     }
@@ -135,11 +136,11 @@ const BeltLevelListTable = () => {
   const columns = useMemo(
     () => [
       columnHelper.accessor('order', {
-        header: 'Cấp',
+        header: 'Cáº¥p',
         cell: ({ row }) => <Chip label={row.original.order} size='small' color='primary' variant='tonal' />
       }),
       columnHelper.accessor('name', {
-        header: 'Tên cấp đai',
+        header: 'TÃªn cáº¥p Ä‘ai',
         cell: ({ row }) => (
           <Box className='flex items-center gap-3'>
             <Box
@@ -158,7 +159,7 @@ const BeltLevelListTable = () => {
         )
       }),
       columnHelper.accessor('description', {
-        header: 'Mô tả',
+        header: 'MÃ´ táº£',
         cell: ({ row }) => (
           <Typography variant='body2' color='text.secondary'>
             {row.original.description || '-'}
@@ -166,7 +167,7 @@ const BeltLevelListTable = () => {
         )
       }),
       columnHelper.accessor('colorCode', {
-        header: 'Màu sắc',
+        header: 'MÃ u sáº¯c',
         cell: ({ row }) => (
           <Box className='flex items-center gap-2'>
             <Box
@@ -184,7 +185,7 @@ const BeltLevelListTable = () => {
       }),
       columnHelper.display({
         id: 'actions',
-        header: 'Thao tác',
+        header: 'Thao tÃ¡c',
         cell: ({ row }) => (
           <Box className='flex items-center gap-2'>
             <IconButton size='small' onClick={() => handleEdit(row.original)} color='primary'>
@@ -220,17 +221,17 @@ const BeltLevelListTable = () => {
     <>
       <Card>
         <CardHeader
-          title='Quản lý cấp đai'
+          title='Quáº£n lÃ½ cáº¥p Ä‘ai'
           action={
             <Button variant='contained' onClick={() => setAddDrawerOpen(true)}>
-              Thêm cấp đai mới
+              ThÃªm cáº¥p Ä‘ai má»›i
             </Button>
           }
         />
         <Box className='p-4'>
           <TextField
             size='small'
-            placeholder='Tìm kiếm cấp đai...'
+            placeholder='TÃ¬m kiáº¿m cáº¥p Ä‘ai...'
             value={keyword}
             onChange={e => setKeyword(e.target.value)}
             sx={{ width: 300 }}
@@ -253,13 +254,13 @@ const BeltLevelListTable = () => {
               {loading ? (
                 <tr>
                   <td colSpan={columns.length} className='p-4 text-center'>
-                    Đang tải...
+                    Äang táº£i...
                   </td>
                 </tr>
               ) : table.getRowModel().rows.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className='p-4 text-center'>
-                    Không có dữ liệu
+                    KhÃ´ng cÃ³ dá»¯ liá»‡u
                   </td>
                 </tr>
               ) : (

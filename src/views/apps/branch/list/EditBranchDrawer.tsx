@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 // React Imports
+import { logger } from '@/utils/logger'
 import { useState, useEffect } from 'react'
 
 import { useForm } from 'react-hook-form'
@@ -119,14 +120,14 @@ const EditBranchDrawer = (props: Props) => {
       if (response.success && response.data) {
         setData(prev => prev.map(b => (b.id === selectedBranch.id ? response.data! : b)))
         setFilteredData(prev => prev.map(b => (b.id === selectedBranch.id ? response.data! : b)))
-        showNotification(response.message || 'Cập nhật chi nhánh thành công.', 'success')
+        showNotification(response.message || 'Cáº­p nháº­t chi nhÃ¡nh thÃ nh cÃ´ng.', 'success')
         handleCloseDrawer()
       } else {
-        showNotification(response.message || 'Không thể cập nhật chi nhánh.', 'error')
+        showNotification(response.message || 'KhÃ´ng thá»ƒ cáº­p nháº­t chi nhÃ¡nh.', 'error')
       }
     } catch (error) {
-      console.error('Error updating branch:', error)
-      showNotification('Đã có lỗi khi cập nhật chi nhánh.', 'error')
+      logger.error('EditBranchDrawer', 'Error updating branch', error)
+      showNotification('ÄÃ£ cÃ³ lá»—i khi cáº­p nháº­t chi nhÃ¡nh.', 'error')
     } finally {
       setLoading(false)
     }
@@ -142,7 +143,7 @@ const EditBranchDrawer = (props: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 500, md: 600 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Sửa chi nhánh</Typography>
+        <Typography variant='h5'>Sá»­a chi nhÃ¡nh</Typography>
         <IconButton size='small' onClick={handleCloseDrawer}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -153,8 +154,8 @@ const EditBranchDrawer = (props: Props) => {
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              label='Tên chi nhánh'
-              {...register('name', { required: 'Tên chi nhánh là bắt buộc' })}
+              label='TÃªn chi nhÃ¡nh'
+              {...register('name', { required: 'TÃªn chi nhÃ¡nh lÃ  báº¯t buá»™c' })}
               error={!!errors.name}
               helperText={errors.name?.message}
             />
@@ -162,7 +163,7 @@ const EditBranchDrawer = (props: Props) => {
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              label='Địa chỉ'
+              label='Äá»‹a chá»‰'
               {...register('address')}
               error={!!errors.address}
               helperText={errors.address?.message}
@@ -171,13 +172,13 @@ const EditBranchDrawer = (props: Props) => {
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label='Vĩ độ'
+              label='VÄ© Ä‘á»™'
               {...register('latitude', {
-                required: 'Vĩ độ là bắt buộc',
+                required: 'VÄ© Ä‘á»™ lÃ  báº¯t buá»™c',
                 validate: {
-                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
-                  min: (v) => parseNum(v) >= -90 || 'Vĩ độ phải từ -90 đến 90',
-                  max: (v) => parseNum(v) <= 90 || 'Vĩ độ phải từ -90 đến 90',
+                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lÃ²ng nháº­p má»™t sá»‘ há»£p lá»‡',
+                  min: (v) => parseNum(v) >= -90 || 'VÄ© Ä‘á»™ pháº£i tá»« -90 Ä‘áº¿n 90',
+                  max: (v) => parseNum(v) <= 90 || 'VÄ© Ä‘á»™ pháº£i tá»« -90 Ä‘áº¿n 90',
                 }
               })}
               error={!!errors.latitude}
@@ -187,13 +188,13 @@ const EditBranchDrawer = (props: Props) => {
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label='Kinh độ'
+              label='Kinh Ä‘á»™'
               {...register('longitude', {
-                required: 'Kinh độ là bắt buộc',
+                required: 'Kinh Ä‘á»™ lÃ  báº¯t buá»™c',
                 validate: {
-                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
-                  min: (v) => parseNum(v) >= -180 || 'Kinh độ phải từ -180 đến 180',
-                  max: (v) => parseNum(v) <= 180 || 'Kinh độ phải từ -180 đến 180',
+                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lÃ²ng nháº­p má»™t sá»‘ há»£p lá»‡',
+                  min: (v) => parseNum(v) >= -180 || 'Kinh Ä‘á»™ pháº£i tá»« -180 Ä‘áº¿n 180',
+                  max: (v) => parseNum(v) <= 180 || 'Kinh Ä‘á»™ pháº£i tá»« -180 Ä‘áº¿n 180',
                 }
               })}
               error={!!errors.longitude}
@@ -203,13 +204,13 @@ const EditBranchDrawer = (props: Props) => {
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              label='Bán kính cho phép (mét)'
+              label='BÃ¡n kÃ­nh cho phÃ©p (mÃ©t)'
               type='number'
               {...register('allowedRadiusMeters', {
-                required: 'Bán kính là bắt buộc',
+                required: 'BÃ¡n kÃ­nh lÃ  báº¯t buá»™c',
                 validate: {
-                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
-                  min: (v) => parseNum(v) > 0 || 'Bán kính phải lớn hơn 0',
+                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lÃ²ng nháº­p má»™t sá»‘ há»£p lá»‡',
+                  min: (v) => parseNum(v) > 0 || 'BÃ¡n kÃ­nh pháº£i lá»›n hÆ¡n 0',
                 }
               })}
               error={!!errors.allowedRadiusMeters}
@@ -219,13 +220,13 @@ const EditBranchDrawer = (props: Props) => {
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              label='Học phí cơ sở'
+              label='Há»c phÃ­ cÆ¡ sá»Ÿ'
               type='number'
               {...register('tuitionFee', {
-                required: 'Học phí là bắt buộc',
+                required: 'Há»c phÃ­ lÃ  báº¯t buá»™c',
                 validate: {
-                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
-                  min: (v) => parseNum(v) >= 0 || 'Học phí không được âm',
+                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lÃ²ng nháº­p má»™t sá»‘ há»£p lá»‡',
+                  min: (v) => parseNum(v) >= 0 || 'Há»c phÃ­ khÃ´ng Ä‘Æ°á»£c Ã¢m',
                 }
               })}
               error={!!errors.tuitionFee}
@@ -244,10 +245,10 @@ const EditBranchDrawer = (props: Props) => {
         </Grid>
         <Box className='flex gap-2 justify-end'>
           <Button variant='outlined' onClick={handleCloseDrawer}>
-            Hủy
+            Há»§y
           </Button>
           <Button type='submit' variant='contained' disabled={loading}>
-            {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
+            {loading ? 'Äang lÆ°u...' : 'LÆ°u thay Ä‘á»•i'}
           </Button>
         </Box>
       </form>

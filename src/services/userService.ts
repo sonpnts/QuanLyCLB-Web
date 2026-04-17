@@ -210,7 +210,6 @@ class UserService {
       }
     } catch (error) {
       logger.error('UserService', 'getCoaches', error)
-      console.error('Error in getCoaches:', error)
 
       return {
         success: false,
