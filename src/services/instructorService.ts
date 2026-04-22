@@ -5,7 +5,7 @@ import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
 // Query parameters for GET /api/Instructors - Theo API Documentation
 export interface GetInstructorsParams {
-  skillLevel?: string
+  skillLevelId?: string
   certification?: string
 }
 
@@ -13,14 +13,14 @@ export interface CreateInstructorRequest {
   fullName: string
   email?: string
   phoneNumber?: string
-  skillLevel?: string
+  skillLevelId?: string | null
   certification?: string
 }
 
 export interface UpdateInstructorRequest {
   fullName?: string
   phoneNumber?: string
-  skillLevel?: string
+  skillLevelId?: string | null
   certification?: string
 }
 
@@ -29,7 +29,8 @@ export interface ApiInstructorResponse {
   fullName?: string
   email?: string
   phoneNumber?: string
-  skillLevel?: string
+  skillLevelId?: string
+  skillLevelName?: string
   certification?: string
   isActive?: boolean
   createdAt?: string
@@ -43,7 +44,8 @@ export interface InstructorType {
   fullName: string
   email?: string
   phoneNumber?: string
-  skillLevel?: string
+  skillLevelId?: string
+  skillLevelName?: string
   certification?: string
   isActive: boolean
   createdDate?: string
@@ -59,7 +61,8 @@ class InstructorService {
       fullName: apiInstructor.fullName || '',
       email: apiInstructor.email,
       phoneNumber: apiInstructor.phoneNumber,
-      skillLevel: apiInstructor.skillLevel,
+      skillLevelId: apiInstructor.skillLevelId,
+      skillLevelName: apiInstructor.skillLevelName,
       certification: apiInstructor.certification,
       isActive: apiInstructor.isActive ?? true,
       createdDate: apiInstructor.createdAt,

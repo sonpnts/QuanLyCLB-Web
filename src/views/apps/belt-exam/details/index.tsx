@@ -1,6 +1,5 @@
-﻿'use client'
+'use client'
 
-import { logger } from '@/utils/logger'
 import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
@@ -29,21 +28,21 @@ const BeltExamDetails = ({ id }: { id: string }) => {
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmitSession = async () => {
-    if (!confirm('Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n chá»‘t danh sÃ¡ch thi? Nhá»¯ng há»c viÃªn CHÆ¯A ÄÃ“NG Lá»† PHÃ sáº½ tá»± Ä‘á»™ng bá»‹ loáº¡i khá»i danh sÃ¡ch.')) return
+    if (!confirm('Bạn có chắc chắn muốn chốt danh sách thi? Những học viên CHƯA ĐÓNG LỆ PHÍ sẽ tự động bị loại khỏi danh sách.')) return
 
     setSubmitting(true)
     try {
       const res = await beltExamService.submitExamSession(id)
       if (res.success) {
-        toast.success(res.message || 'Chá»‘t danh sÃ¡ch thÃ nh cÃ´ng!')
+        toast.success(res.message || 'Chốt danh sách thành công!')
         fetchSession()
         handleRefresh()
       } else {
-        toast.error(res.message || 'CÃ³ lá»—i xáº£y ra khi chá»‘t danh sÃ¡ch.')
+        toast.error(res.message || 'Có lỗi xảy ra khi chốt danh sách.')
       }
     } catch (error) {
-      logger.error('index', 'unknown', error)
-      toast.error('Lá»—i káº¿t ná»‘i mÃ¡y chá»§.')
+      console.error(error)
+      toast.error('Lỗi kết nối máy chủ.')
     } finally {
       setSubmitting(false)
     }
@@ -59,7 +58,7 @@ const BeltExamDetails = ({ id }: { id: string }) => {
         router.replace('/apps/belt-exam')
       }
     } catch (error) {
-      logger.error('index', 'Li khi ly thng tin k thi', error)
+      console.error('Lỗi khi lấy thông tin kỳ thi:', error)
       router.replace('/apps/belt-exam')
     } finally {
       setLoading(false)
@@ -90,7 +89,7 @@ const BeltExamDetails = ({ id }: { id: string }) => {
       <Grid item xs={12}>
         <Card>
           <CardHeader
-            title={<Typography variant='h5'>Ká»³ thi: {session.name}</Typography>}
+            title={<Typography variant='h5'>Kỳ thi: {session.name}</Typography>}
             action={
               <Box display='flex' gap={2}>
                 <Chip
@@ -101,15 +100,15 @@ const BeltExamDetails = ({ id }: { id: string }) => {
                 {session.status === 'Draft' && (
                   <>
                     <Button variant='contained' onClick={() => setDrawerOpen(true)}>
-                      <i className='ri-add-line' /> ThÃªm VÃµ sinh
+                      <i className='ri-add-line' /> Thêm Võ sinh
                     </Button>
                     <Button variant='contained' color='success' disabled={submitting} onClick={handleSubmitSession}>
-                      <i className='ri-check-line' /> {submitting ? 'Äang xá»­ lÃ½...' : 'Chá»‘t Danh sÃ¡ch'}
+                      <i className='ri-check-line' /> {submitting ? 'Đang xử lý...' : 'Chốt Danh sách'}
                     </Button>
                   </>
                 )}
                 <Button variant='outlined' color='secondary' onClick={() => router.push('/apps/belt-exam')}>
-                  Quay láº¡i
+                  Quay lại
                 </Button>
               </Box>
             }
@@ -117,15 +116,15 @@ const BeltExamDetails = ({ id }: { id: string }) => {
           <CardContent>
             <Grid container spacing={4}>
               <Grid item xs={12} sm={4}>
-                <Typography variant='body2' color='textSecondary'>NgÃ y thi</Typography>
+                <Typography variant='body2' color='textSecondary'>Ngày thi</Typography>
                 <Typography fontWeight={500}>{new Date(session.examDate).toLocaleDateString('vi-VN')}</Typography>
               </Grid>
               <Grid item xs={12} sm={4}>
-                <Typography variant='body2' color='textSecondary'>Äá»‹a Ä‘iá»ƒm</Typography>
+                <Typography variant='body2' color='textSecondary'>Địa điểm</Typography>
                 <Typography fontWeight={500}>{session.location || '-'}</Typography>
               </Grid>
               <Grid item xs={12} sm={4}>
-                <Typography variant='body2' color='textSecondary'>MÃ´ táº£</Typography>
+                <Typography variant='body2' color='textSecondary'>Mô tả</Typography>
                 <Typography fontWeight={500}>{session.description || '-'}</Typography>
               </Grid>
             </Grid>

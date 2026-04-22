@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useEffect, useMemo, useState } from 'react'
 
 // MUI Imports
@@ -75,13 +75,13 @@ const EditBeltLevelDrawer = (props: Props) => {
     if (!beltLevel) return
 
     if (!values.name.trim()) {
-      showNotification('Vui lÃ²ng nháº­p tÃªn cáº¥p Ä‘ai.', 'error')
+      showNotification('Vui lòng nhập tên cấp đai.', 'error')
 
       return
     }
 
     if (!values.order || isNaN(Number(values.order))) {
-      showNotification('Vui lÃ²ng nháº­p thá»© tá»± há»£p lá»‡.', 'error')
+      showNotification('Vui lòng nhập thứ tự hợp lệ.', 'error')
 
       return
     }
@@ -99,9 +99,9 @@ const EditBeltLevelDrawer = (props: Props) => {
       const res = await beltLevelService.updateBeltLevel(beltLevel.id, payload)
 
       if (res.success) {
-        showNotification(res.message || 'Cáº­p nháº­t cáº¥p Ä‘ai thÃ nh cÃ´ng.', 'success')
+        showNotification(res.message || 'Cập nhật cấp đai thành công.', 'success')
 
-        // Náº¿u API khÃ´ng tráº£ vá» data, táº¡o object vá»›i dá»¯ liá»‡u Ä‘Ã£ cáº­p nháº­t
+        // Nếu API không trả về data, tạo object với dữ liệu đã cập nhật
 
         const updatedBeltLevel: BeltLevelType = res.data || {
           ...beltLevel,
@@ -114,11 +114,11 @@ const EditBeltLevelDrawer = (props: Props) => {
         onSaved(updatedBeltLevel)
         onClose()
       } else {
-        showNotification(res.message || 'KhÃ´ng thá»ƒ cáº­p nháº­t cáº¥p Ä‘ai.', 'error')
+        showNotification(res.message || 'Không thể cập nhật cấp đai.', 'error')
       }
     } catch (err) {
       logger.error('EditBeltLevelDrawer', 'Error updating belt level', err)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi cáº­p nháº­t cáº¥p Ä‘ai.', 'error')
+      showNotification('Đã có lỗi khi cập nhật cấp đai.', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -136,7 +136,7 @@ const EditBeltLevelDrawer = (props: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Chá»‰nh sá»­a cáº¥p Ä‘ai</Typography>
+        <Typography variant='h5'>Chỉnh sửa cấp đai</Typography>
         <IconButton size='small' onClick={onClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -146,30 +146,30 @@ const EditBeltLevelDrawer = (props: Props) => {
         <Controller
           name='name'
           control={control}
-          rules={{ required: 'TÃªn cáº¥p Ä‘ai lÃ  báº¯t buá»™c' }}
+          rules={{ required: 'Tên cấp đai là bắt buộc' }}
           render={({ field }) => (
             <TextField
               {...field}
               fullWidth
-              label='TÃªn cáº¥p Ä‘ai *'
+              label='Tên cấp đai *'
               error={!!errors.name}
               helperText={errors.name?.message}
-              placeholder='VD: Äai tráº¯ng, Äai vÃ ng...'
+              placeholder='VD: Đai trắng, Đai vàng...'
             />
           )}
         />
         <Controller
           name='order'
           control={control}
-          rules={{ required: 'Thá»© tá»± lÃ  báº¯t buá»™c' }}
+          rules={{ required: 'Thứ tự là bắt buộc' }}
           render={({ field }) => (
             <TextField
               {...field}
               fullWidth
               type='number'
-              label='Thá»© tá»± *'
+              label='Thứ tự *'
               error={!!errors.order}
-              helperText={errors.order?.message || 'Thá»© tá»± tá»« tháº¥p Ä‘áº¿n cao (1 lÃ  tháº¥p nháº¥t)'}
+              helperText={errors.order?.message || 'Thứ tự từ thấp đến cao (1 là thấp nhất)'}
               placeholder='VD: 1, 2, 3...'
             />
           )}
@@ -178,12 +178,12 @@ const EditBeltLevelDrawer = (props: Props) => {
           name='description'
           control={control}
           render={({ field }) => (
-            <TextField {...field} fullWidth multiline rows={3} label='MÃ´ táº£' placeholder='MÃ´ táº£ vá» cáº¥p Ä‘ai nÃ y...' />
+            <TextField {...field} fullWidth multiline rows={3} label='Mô tả' placeholder='Mô tả về cấp đai này...' />
           )}
         />
         <Box>
           <Typography variant='body2' className='mb-2'>
-            MÃ u sáº¯c
+            Màu sắc
           </Typography>
           <Box className='flex items-center gap-3'>
             <input
@@ -201,10 +201,10 @@ const EditBeltLevelDrawer = (props: Props) => {
         </Box>
         <div className='flex gap-4'>
           <Button variant='contained' type='submit' disabled={submitting}>
-            {submitting ? 'Äang lÆ°u...' : 'LÆ°u thay Ä‘á»•i'}
+            {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}
           </Button>
           <Button variant='outlined' color='error' onClick={onClose}>
-            Há»§y
+            Hủy
           </Button>
         </div>
       </form>

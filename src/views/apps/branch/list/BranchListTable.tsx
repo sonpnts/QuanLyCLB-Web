@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 
 // MUI Imports
@@ -54,7 +54,7 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
   // Notification Hook
   const { showNotification } = useNotification()
 
-  // Refs Ä‘á»ƒ trÃ¡nh duplicate calls
+  // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
@@ -111,13 +111,13 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
         if (response.success) {
           setData(prevData => prevData.filter(branch => branch.id !== id))
           setFilteredData(prevData => prevData.filter(branch => branch.id !== id))
-          showNotification(response.message || 'XÃ³a chi nhÃ¡nh thÃ nh cÃ´ng.', 'success')
+          showNotification(response.message || 'Xóa chi nhánh thành công.', 'success')
         } else {
-          showNotification(response.message || 'KhÃ´ng thá»ƒ xÃ³a chi nhÃ¡nh.', 'error')
+          showNotification(response.message || 'Không thể xóa chi nhánh.', 'error')
         }
       } catch (error) {
         logger.error('BranchListTable', 'Error deleting branch', error)
-        showNotification('ÄÃ£ cÃ³ lá»—i khi xÃ³a chi nhÃ¡nh.', 'error')
+        showNotification('Đã có lỗi khi xóa chi nhánh.', 'error')
       } finally {
         setLoading(false)
       }
@@ -135,13 +135,13 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
         if (response.success && response.data) {
           setData(prevData => prevData.map(branch => (branch.id === id ? response.data! : branch)))
           setFilteredData(prevData => prevData.map(branch => (branch.id === id ? response.data! : branch)))
-          showNotification(response.message || 'KhÃ´i phá»¥c chi nhÃ¡nh thÃ nh cÃ´ng.', 'success')
+          showNotification(response.message || 'Khôi phục chi nhánh thành công.', 'success')
         } else {
-          showNotification(response.message || 'KhÃ´ng thá»ƒ khÃ´i phá»¥c chi nhÃ¡nh.', 'error')
+          showNotification(response.message || 'Không thể khôi phục chi nhánh.', 'error')
         }
       } catch (error) {
         logger.error('BranchListTable', 'Error restoring branch', error)
-        showNotification('ÄÃ£ cÃ³ lá»—i khi khÃ´i phá»¥c chi nhÃ¡nh.', 'error')
+        showNotification('Đã có lỗi khi khôi phục chi nhánh.', 'error')
       } finally {
         setLoading(false)
       }
@@ -159,7 +159,7 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
   const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
-        header: 'TÃªn chi nhÃ¡nh',
+        header: 'Tên chi nhánh',
         cell: ({ row }) => (
           <Box className='flex items-center gap-3'>
             <CustomAvatar skin='light' color='primary'>
@@ -179,19 +179,19 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
         )
       }),
       columnHelper.accessor('latitude', {
-        header: 'VÄ© Ä‘á»™',
+        header: 'Vĩ độ',
         cell: ({ row }) => <Typography variant='body2'>{row.original.latitude}</Typography>
       }),
       columnHelper.accessor('longitude', {
-        header: 'Kinh Ä‘á»™',
+        header: 'Kinh độ',
         cell: ({ row }) => <Typography variant='body2'>{row.original.longitude}</Typography>
       }),
       columnHelper.accessor('allowedRadiusMeters', {
-        header: 'BÃ¡n kÃ­nh (m)',
+        header: 'Bán kính (m)',
         cell: ({ row }) => <Typography variant='body2'>{row.original.allowedRadiusMeters}</Typography>
       }),
       columnHelper.accessor('tuitionFee', {
-        header: 'Há»c phÃ­',
+        header: 'Học phí',
         cell: ({ row }) => (
           <Typography variant='body2'>
             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(row.original.tuitionFee || 0)}
@@ -199,10 +199,10 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
         )
       }),
       columnHelper.accessor('isActive', {
-        header: 'Tráº¡ng thÃ¡i',
+        header: 'Trạng thái',
         cell: ({ row }) => (
           <Chip
-            label={row.original.isActive ? 'Hoáº¡t Ä‘á»™ng' : 'KhÃ´ng hoáº¡t Ä‘á»™ng'}
+            label={row.original.isActive ? 'Hoạt động' : 'Không hoạt động'}
             color={row.original.isActive ? 'success' : 'error'}
             variant='tonal'
             size='small'
@@ -211,7 +211,7 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
       }),
       columnHelper.display({
         id: 'actions',
-        header: 'Thao tÃ¡c',
+        header: 'Thao tác',
         cell: ({ row }) => (
           <Box className='flex items-center gap-2'>
             <IconButton size='small' onClick={() => handleEdit(row.original)} color='primary'>
@@ -249,10 +249,10 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
     <>
       <Card>
         <CardHeader
-          title='Danh sÃ¡ch chi nhÃ¡nh'
+          title='Danh sách chi nhánh'
           action={
             <Button variant='contained' onClick={() => setAddBranchOpen(true)}>
-              ThÃªm chi nhÃ¡nh má»›i
+              Thêm chi nhánh mới
             </Button>
           }
         />

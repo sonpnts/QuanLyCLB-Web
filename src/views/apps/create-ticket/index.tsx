@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useState, useEffect, useCallback } from 'react'
 
 // MUI Imports
@@ -32,18 +32,18 @@ type TicketType = 'compensatory' | 'checkout' | 'overtime'
 const TICKET_TYPES: { value: TicketType; label: string; description: string }[] = [
   {
     value: 'compensatory',
-    label: 'Äiá»ƒm danh bÃ¹',
-    description: 'Äiá»ƒm danh bÃ¹ cho toÃ n bá»™ buá»•i há»c Ä‘Ã£ bá» lá»¡'
+    label: 'Điểm danh bù',
+    description: 'Điểm danh bù cho toàn bộ buổi học đã bỏ lỡ'
   },
   {
     value: 'checkout',
     label: 'Checkout',
-    description: 'Checkout sá»›m hoáº·c Ä‘áº·c biá»‡t'
+    description: 'Checkout sớm hoặc đặc biệt'
   },
   {
     value: 'overtime',
-    label: 'LÃ m thÃªm giá»',
-    description: 'LÃ m thÃªm giá» ngoÃ i lá»‹ch há»c'
+    label: 'Làm thêm giờ',
+    description: 'Làm thêm giờ ngoài lịch học'
   }
 ]
 
@@ -71,11 +71,11 @@ const CreateTicketView = () => {
       if (response.success && response.data) {
         setSchedules(response.data)
       } else {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ táº£i lá»‹ch há»c.', 'error')
+        showNotification(response.message || 'Không thể tải lịch học.', 'error')
       }
     } catch (error) {
       logger.error('index', 'Error loading schedules', error)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi táº£i lá»‹ch há»c.', 'error')
+      showNotification('Đã có lỗi khi tải lịch học.', 'error')
     } finally {
       setLoadingSchedules(false)
     }
@@ -88,19 +88,19 @@ const CreateTicketView = () => {
   // Handle create ticket
   const handleCreateTicket = useCallback(async () => {
     if (!auth?.user?.id) {
-      showNotification('Báº¡n chÆ°a Ä‘Äƒng nháº­p.', 'error')
+      showNotification('Bạn chưa đăng nhập.', 'error')
 
       return
     }
 
     if (!selectedScheduleId) {
-      showNotification('Vui lÃ²ng chá»n lá»‹ch há»c.', 'error')
+      showNotification('Vui lòng chọn lịch học.', 'error')
 
       return
     }
 
     if (!ticketType) {
-      showNotification('Vui lÃ²ng chá»n loáº¡i phiáº¿u.', 'error')
+      showNotification('Vui lòng chọn loại phiếu.', 'error')
 
       return
     }
@@ -127,18 +127,18 @@ const CreateTicketView = () => {
       const response = await attendanceService.createTicket(ticketData)
 
       if (response.success) {
-        showNotification('Táº¡o phiáº¿u thÃ nh cÃ´ng.', 'success')
+        showNotification('Tạo phiếu thành công.', 'success')
 
         // Reset form
         setSelectedScheduleId('')
         setTicketType('compensatory')
         setReason('')
       } else {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o phiáº¿u.', 'error')
+        showNotification(response.message || 'Không thể tạo phiếu.', 'error')
       }
     } catch (error) {
       logger.error('index', 'Error creating ticket', error)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi táº¡o phiáº¿u.', 'error')
+      showNotification('Đã có lỗi khi tạo phiếu.', 'error')
     } finally {
       setLoading(false)
     }
@@ -151,19 +151,19 @@ const CreateTicketView = () => {
     <Grid container spacing={{ xs: 4, sm: 6 }}>
       <Grid size={{ xs: 12 }}>
         <Card>
-          <CardHeader title='Táº¡o phiáº¿u Ä‘iá»ƒm danh bÃ¹ / LÃ m thÃªm giá» / Checkout' className='p-4 sm:p-6' />
+          <CardHeader title='Tạo phiếu điểm danh bù / Làm thêm giờ / Checkout' className='p-4 sm:p-6' />
           <CardContent className='p-4 sm:p-6'>
             <Box className='flex flex-col gap-4 sm:gap-6'>
               <Alert severity='info' className='text-xs sm:text-sm'>
-                Báº¡n cÃ³ thá»ƒ táº¡o phiáº¿u Ä‘á»ƒ Ä‘iá»ƒm danh bÃ¹ cho toÃ n bá»™ buá»•i há»c, checkout hoáº·c lÃ m thÃªm giá».
+                Bạn có thể tạo phiếu để điểm danh bù cho toàn bộ buổi học, checkout hoặc làm thêm giờ.
               </Alert>
 
               {/* Ticket Type Selection */}
               <FormControl fullWidth required>
-                <InputLabel>Loáº¡i phiáº¿u</InputLabel>
+                <InputLabel>Loại phiếu</InputLabel>
                 <Select
                   value={ticketType}
-                  label='Loáº¡i phiáº¿u'
+                  label='Loại phiếu'
                   onChange={e => setTicketType(e.target.value as TicketType)}
                   disabled={loading}
                 >
@@ -184,10 +184,10 @@ const CreateTicketView = () => {
 
               {/* Schedule Selection */}
               <FormControl fullWidth required>
-                <InputLabel>Chá»n lá»‹ch há»c</InputLabel>
+                <InputLabel>Chọn lịch học</InputLabel>
                 <Select
                   value={selectedScheduleId}
-                  label='Chá»n lá»‹ch há»c'
+                  label='Chọn lịch học'
                   onChange={e => setSelectedScheduleId(e.target.value)}
                   disabled={loadingSchedules || loading}
                 >
@@ -195,10 +195,10 @@ const CreateTicketView = () => {
                     <MenuItem key={schedule.id} value={schedule.id}>
                       <Box>
                         <Typography variant='body1' className='font-medium'>
-                          {schedule.class?.name || schedule.class?.code || 'Lá»›p há»c'}
+                          {schedule.class?.name || schedule.class?.code || 'Lớp học'}
                         </Typography>
                         <Typography variant='body2' color='text.secondary'>
-                          {schedule.startTime} - {schedule.endTime} | {schedule.branch?.name || 'Chi nhÃ¡nh'}
+                          {schedule.startTime} - {schedule.endTime} | {schedule.branch?.name || 'Chi nhánh'}
                         </Typography>
                       </Box>
                     </MenuItem>
@@ -210,22 +210,22 @@ const CreateTicketView = () => {
               {selectedSchedule && (
                 <Box className='p-3 sm:p-4 border rounded bg-background'>
                   <Typography variant='subtitle2' className='mb-2 font-medium text-sm sm:text-base'>
-                    ThÃ´ng tin lá»‹ch há»c Ä‘Ã£ chá»n:
+                    Thông tin lịch học đã chọn:
                   </Typography>
                   <Typography variant='body2' color='text.secondary' className='text-xs sm:text-sm mb-1'>
-                    <strong>Lá»›p:</strong> {selectedSchedule.class?.name || selectedSchedule.class?.code || 'N/A'}
+                    <strong>Lớp:</strong> {selectedSchedule.class?.name || selectedSchedule.class?.code || 'N/A'}
                   </Typography>
                   <Typography variant='body2' color='text.secondary' className='text-xs sm:text-sm mb-1'>
-                    <strong>Thá»i gian:</strong> {selectedSchedule.startTime} - {selectedSchedule.endTime}
+                    <strong>Thời gian:</strong> {selectedSchedule.startTime} - {selectedSchedule.endTime}
                   </Typography>
                   {selectedSchedule.branch && (
                     <>
                       <Typography variant='body2' color='text.secondary' className='text-xs sm:text-sm mb-1'>
-                        <strong>Chi nhÃ¡nh:</strong> {selectedSchedule.branch.name}
+                        <strong>Chi nhánh:</strong> {selectedSchedule.branch.name}
                       </Typography>
                       {selectedSchedule.branch.address && (
                         <Typography variant='body2' color='text.secondary' className='text-xs sm:text-sm break-words'>
-                          <strong>Äá»‹a chá»‰:</strong> {selectedSchedule.branch.address}
+                          <strong>Địa chỉ:</strong> {selectedSchedule.branch.address}
                         </Typography>
                       )}
                     </>
@@ -236,17 +236,17 @@ const CreateTicketView = () => {
               {/* Reason */}
               <TextField
                 fullWidth
-                label='LÃ½ do (tÃ¹y chá»n)'
+                label='Lý do (tùy chọn)'
                 value={reason}
                 onChange={e => setReason(e.target.value)}
                 multiline
                 rows={4}
                 placeholder={
                   ticketType === 'compensatory'
-                    ? 'Nháº­p lÃ½ do Ä‘iá»ƒm danh bÃ¹...'
+                    ? 'Nhập lý do điểm danh bù...'
                     : ticketType === 'checkout'
-                      ? 'Nháº­p lÃ½ do checkout...'
-                      : 'Nháº­p lÃ½ do lÃ m thÃªm giá»...'
+                      ? 'Nhập lý do checkout...'
+                      : 'Nhập lý do làm thêm giờ...'
                 }
                 disabled={loading}
                 sx={{
@@ -271,7 +271,7 @@ const CreateTicketView = () => {
                   fontSize: { xs: '0.875rem', sm: '1rem' }
                 }}
               >
-                {loading ? 'Äang táº¡o...' : `Táº¡o phiáº¿u ${TICKET_TYPES.find(t => t.value === ticketType)?.label || ''}`}
+                {loading ? 'Đang tạo...' : `Tạo phiếu ${TICKET_TYPES.find(t => t.value === ticketType)?.label || ''}`}
               </Button>
             </Box>
           </CardContent>

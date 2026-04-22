@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback, useState } from 'react'
 import { logger } from '@/utils/logger'
+import { useEffect, useRef, useCallback, useState } from 'react'
 
 interface UseDataLoaderOptions<T, P> {
   fetchFn: (params: P) => Promise<{ success: boolean; data?: T; message?: string }>
@@ -102,7 +102,7 @@ export function useOnceLoader<T>(fetchFn: () => Promise<{ success: boolean; data
           setData(response.data)
         }
       } catch (error) {
-        logger.error('useDataLoader', 'fetchData', error)
+        logger.error('useDataLoader', 'Error loading data', error)
         loadedRef.current = false // Cho phép retry nếu lỗi
       } finally {
         setLoading(false)

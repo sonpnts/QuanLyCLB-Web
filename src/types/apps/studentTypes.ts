@@ -14,6 +14,10 @@ export type StudentType = {
   notes?: string
   currentBeltLevelId?: string
   currentBeltLevelName?: string
+  isActive?: boolean
+  isSuspended?: boolean
+  suspendedAt?: string
+  suspendReason?: string
   avatarColor?: ThemeColor
   createdAt?: string
   updatedAt?: string

@@ -1,6 +1,6 @@
-﻿'use client'
-
+'use client'
 import { logger } from '@/utils/logger'
+
 import { useState, useEffect } from 'react'
 
 // MUI Imports
@@ -75,10 +75,10 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
     try {
       const res = await classService.getClassStudents(classId)
       if (res.success && res.data) {
-        // Chá»‰ láº¥y há»c viÃªn Active (giáº£ sá»­ cÃ³ trÆ°á»ng isActive)
+        // Chỉ lấy học viên Active (giả sử có trường isActive)
         const activeStudents = res.data.filter((s: any) => s.isActive !== false)
         setStudents(activeStudents)
-        // Máº·c Ä‘á»‹nh chá»n táº¥t cáº£
+        // Mặc định chọn tất cả
         setSelectedStudents(activeStudents.map((s: any) => s.id))
       }
     } catch (error) {
@@ -129,18 +129,18 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
         studentIds: selectedStudents
       }
 
-      // Giáº£ sá»­ gá»i batchExamRegistration
+      // Giả sử gọi batchExamRegistration
       const res = await beltExamService.batchExamRegistration(payload)
       if (res.success) {
-        toast.success(res.message || 'ThÃªm há»c viÃªn dá»± thi thÃ nh cÃ´ng')
+        toast.success(res.message || 'Thêm học viên dự thi thành công')
         onSuccess()
         handleClose()
       } else {
-        toast.error(res.message || 'CÃ³ lá»—i xáº£y ra khi thÃªm há»c viÃªn')
+        toast.error(res.message || 'Có lỗi xảy ra khi thêm học viên')
       }
     } catch (error) {
       logger.error('AddStudentsDrawer', 'Error submitting registrations', error)
-      toast.error('CÃ³ lá»—i xáº£y ra khi thÃªm há»c viÃªn')
+      toast.error('Có lỗi xảy ra khi thêm học viên')
     } finally {
       setSubmitting(false)
     }
@@ -156,7 +156,7 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
     >
       <Box className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>ThÃªm VÃµ Sinh Dá»± Thi</Typography>
+        <Typography variant='h5'>Thêm Võ Sinh Dự Thi</Typography>
         <IconButton size='small' onClick={handleClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -173,7 +173,7 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
           renderInput={params => (
             <TextField
               {...params}
-              label='Chá»n Lá»›p'
+              label='Chọn Lớp'
               variant='outlined'
               InputProps={{
                 ...params.InputProps,
@@ -192,10 +192,10 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
           <Box>
             <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
               <Typography variant='subtitle2'>
-                Lá»±a chá»n VÃµ sinh ({selectedStudents.length}/{students.length})
+                Lựa chọn Võ sinh ({selectedStudents.length}/{students.length})
               </Typography>
               <Button size='small' onClick={handleSelectAll}>
-                {selectedStudents.length === students.length ? 'Bá» chá»n táº¥t cáº£' : 'Chá»n táº¥t cáº£'}
+                {selectedStudents.length === students.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
               </Button>
             </Box>
             
@@ -228,7 +228,7 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
                       <ListItemText 
                         id={labelId} 
                         primary={student.fullName || student.name} 
-                        secondary={student.currentBeltLevelName ? `Äai: ${student.currentBeltLevelName}` : 'ChÆ°a cÃ³ cáº¥p Ä‘ai'} 
+                        secondary={student.currentBeltLevelName ? `Đai: ${student.currentBeltLevelName}` : 'Chưa có cấp đai'} 
                       />
                     </ListItem>
                   )
@@ -236,7 +236,7 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
               </List>
             ) : (
               <Typography color='textSecondary' align='center' my={4}>
-                KhÃ´ng cÃ³ vÃµ sinh nÃ o trong lá»›p.
+                Không có võ sinh nào trong lớp.
               </Typography>
             )}
           </Box>
@@ -249,10 +249,10 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
             disabled={!selectedClass || selectedStudents.length === 0 || submitting}
             fullWidth
           >
-            {submitting ? 'Äang thÃªm...' : 'XÃ¡c nháº­n ThÃªm Há»c viÃªn'}
+            {submitting ? 'Đang thêm...' : 'Xác nhận Thêm Học viên'}
           </Button>
           <Button variant='outlined' color='secondary' onClick={handleClose} fullWidth>
-            Huá»·
+            Huỷ
           </Button>
         </Box>
       </Box>

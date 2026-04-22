@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useEffect, useState, useMemo, useCallback } from 'react'
 
 // MUI Imports
@@ -103,7 +103,7 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
     loadSchedules()
   }, [loadSchedules])
 
-  // Láº¥y danh sÃ¡ch branch duy nháº¥t
+  // Lấy danh sách branch duy nhất
   const uniqueBranches = useMemo(() => {
     const branchMap = new Map()
 
@@ -147,22 +147,22 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
     <Dialog open={true} onClose={onClose} maxWidth='lg' fullWidth>
       <DialogTitle>
         <Box className='flex items-center justify-between'>
-          <Typography variant='h6'>Lá»‹ch há»c - {classData.name}</Typography>
+          <Typography variant='h6'>Lịch học - {classData.name}</Typography>
           <Button variant='outlined' onClick={onClose}>
-            ÄÃ³ng
+            Đóng
           </Button>
         </Box>
       </DialogTitle>
       <DialogContent>
         <FormControl fullWidth variant='outlined' size='small' sx={{ mb: 3, maxWidth: 300 }}>
-          <InputLabel id='branch-filter-label'>Chi nhÃ¡nh</InputLabel>
+          <InputLabel id='branch-filter-label'>Chi nhánh</InputLabel>
           <Select
             labelId='branch-filter-label'
-            label='Chi nhÃ¡nh'
+            label='Chi nhánh'
             value={branchFilter}
             onChange={e => setBranchFilter(e.target.value)}
           >
-            <MenuItem value=''>Táº¥t cáº£ chi nhÃ¡nh</MenuItem>
+            <MenuItem value=''>Tất cả chi nhánh</MenuItem>
             {uniqueBranches.map(([id, name]) => (
               <MenuItem key={id} value={id}>
                 {name}
@@ -172,7 +172,7 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
         </FormControl>
         {loading ? (
           <Box className='text-center py-8'>
-            <Typography variant='body1'>Äang táº£i...</Typography>
+            <Typography variant='body1'>Đang tải...</Typography>
           </Box>
         ) : schedules && schedules.length > 0 ? (
           <Grid container spacing={3}>
@@ -192,7 +192,7 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
                             setShowEdit(true)
                           }}
                           color='primary'
-                          title='Sá»­a'
+                          title='Sửa'
                         >
                           <i className='ri-edit-box-line text-sm' />
                         </IconButton>
@@ -204,7 +204,7 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
                             setRestoreDialogOpen(true)
                           }}
                           color='success'
-                          title='KhÃ´i phá»¥c'
+                          title='Khôi phục'
                         >
                           <i className='ri-restart-line text-sm' />
                         </IconButton>
@@ -216,7 +216,7 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
                           setDeleteDialogOpen(true)
                         }}
                         color='error'
-                        title='XÃ³a lá»‹ch há»c'
+                        title='Xóa lịch học'
                       >
                         <i className='ri-delete-bin-7-line text-sm' />
                       </IconButton>
@@ -231,11 +231,11 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
                     </Box>
                     <Box className='flex items-center gap-2'>
                       <i className='ri-building-line text-sm text-textSecondary' />
-                      <Typography variant='body2'>{schedule.branch?.name || 'Chi nhÃ¡nh khÃ´ng xÃ¡c Ä‘á»‹nh'}</Typography>
+                      <Typography variant='body2'>{schedule.branch?.name || 'Chi nhánh không xác định'}</Typography>
                     </Box>
                     <Box className='flex items-center gap-2'>
                       <Chip
-                        label={schedule.isActive ? 'Hoáº¡t Ä‘á»™ng' : 'KhÃ´ng hoáº¡t Ä‘á»™ng'}
+                        label={schedule.isActive ? 'Hoạt động' : 'Không hoạt động'}
                         color={schedule.isActive ? 'success' : 'error'}
                         variant='tonal'
                         size='small'
@@ -257,16 +257,16 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>XÃ¡c nháº­n xÃ³a lá»‹ch há»c</DialogTitle>
+        <DialogTitle>Xác nhận xóa lịch học</DialogTitle>
         <DialogContent>
           <Typography>
-            Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n xÃ³a lá»‹ch há»c {selectedSchedule ? getDayName(selectedSchedule.dayOfWeek) : ''}?
+            Bạn có chắc chắn muốn xóa lịch học {selectedSchedule ? getDayName(selectedSchedule.dayOfWeek) : ''}?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Há»§y</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Hủy</Button>
           <Button onClick={handleDeleteSchedule} color='error' variant='contained' disabled={loading}>
-            {loading ? 'Äang xÃ³a...' : 'XÃ³a'}
+            {loading ? 'Đang xóa...' : 'Xóa'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -281,16 +281,16 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
           loadSchedules()
         }}
       />
-      {/* Dialog xÃ¡c nháº­n khÃ´i phá»¥c */}
+      {/* Dialog xác nhận khôi phục */}
       <Dialog open={restoreDialogOpen} onClose={() => setRestoreDialogOpen(false)}>
-        <DialogTitle>XÃ¡c nháº­n khÃ´i phá»¥c lá»‹ch há»c</DialogTitle>
+        <DialogTitle>Xác nhận khôi phục lịch học</DialogTitle>
         <DialogContent>
           <Typography>
-            Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n khÃ´i phá»¥c lá»‹ch há»c {selectedRestore ? getDayName(selectedRestore.dayOfWeek) : ''}?
+            Bạn có chắc chắn muốn khôi phục lịch học {selectedRestore ? getDayName(selectedRestore.dayOfWeek) : ''}?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRestoreDialogOpen(false)}>Há»§y</Button>
+          <Button onClick={() => setRestoreDialogOpen(false)}>Hủy</Button>
           <Button
             onClick={async () => {
               if (!selectedRestore) return
@@ -312,7 +312,7 @@ const ClassScheduleView = ({ classData, onClose }: Props) => {
             variant='contained'
             disabled={loading}
           >
-            {loading ? 'Äang khÃ´i phá»¥c...' : 'KhÃ´i phá»¥c'}
+            {loading ? 'Đang khôi phục...' : 'Khôi phục'}
           </Button>
         </DialogActions>
       </Dialog>

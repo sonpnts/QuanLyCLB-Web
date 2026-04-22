@@ -1,7 +1,6 @@
-﻿'use client'
+'use client'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useEffect, useState, useMemo } from 'react'
 
 // MUI Imports
@@ -64,11 +63,11 @@ const RoleManagementTable = () => {
           setData(response.data)
           setFilteredData(response.data)
         } else {
-          showNotification(response.message || 'KhÃ´ng thá»ƒ táº£i danh sÃ¡ch vai trÃ².', 'error')
+          showNotification(response.message || 'Không thể tải danh sách vai trò.', 'error')
         }
       } catch (error) {
-        logger.error('RoleManagementTable', 'Error loading roles', error)
-        showNotification('ÄÃ£ cÃ³ lá»—i khi táº£i vai trÃ².', 'error')
+        console.error('Error loading roles:', error)
+        showNotification('Đã có lỗi khi tải vai trò.', 'error')
       } finally {
         setLoading(false)
       }
@@ -95,16 +94,16 @@ const RoleManagementTable = () => {
       if (response.success && response.data) {
         setData([response.data, ...data])
         setFilteredData([response.data, ...data])
-        showNotification('Táº¡o vai trÃ² thÃ nh cÃ´ng.', 'success')
+        showNotification('Tạo vai trò thành công.', 'success')
         setAddRoleOpen(false)
         setRoleName('')
         setRoleDescription('')
       } else {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o vai trÃ².', 'error')
+        showNotification(response.message || 'Không thể tạo vai trò.', 'error')
       }
     } catch (error) {
-      logger.error('RoleManagementTable', 'Error creating role', error)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi táº¡o vai trÃ².', 'error')
+      console.error('Error creating role:', error)
+      showNotification('Đã có lỗi khi tạo vai trò.', 'error')
     } finally {
       setLoading(false)
     }
@@ -125,17 +124,17 @@ const RoleManagementTable = () => {
       if (response.success && response.data) {
         setData(prevData => prevData.map(role => (role.id === selectedRole.id ? response.data! : role)))
         setFilteredData(prevData => prevData.map(role => (role.id === selectedRole.id ? response.data! : role)))
-        showNotification('Cáº­p nháº­t vai trÃ² thÃ nh cÃ´ng.', 'success')
+        showNotification('Cập nhật vai trò thành công.', 'success')
         setEditRoleOpen(false)
         setSelectedRole(null)
         setRoleName('')
         setRoleDescription('')
       } else {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ cáº­p nháº­t vai trÃ².', 'error')
+        showNotification(response.message || 'Không thể cập nhật vai trò.', 'error')
       }
     } catch (error) {
-      logger.error('RoleManagementTable', 'Error updating role', error)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi cáº­p nháº­t vai trÃ².', 'error')
+      console.error('Error updating role:', error)
+      showNotification('Đã có lỗi khi cập nhật vai trò.', 'error')
     } finally {
       setLoading(false)
     }
@@ -150,13 +149,13 @@ const RoleManagementTable = () => {
       if (response.success) {
         setData(prevData => prevData.filter(role => role.id !== id))
         setFilteredData(prevData => prevData.filter(role => role.id !== id))
-        showNotification('XÃ³a vai trÃ² thÃ nh cÃ´ng.', 'success')
+        showNotification('Xóa vai trò thành công.', 'success')
       } else {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ xÃ³a vai trÃ².', 'error')
+        showNotification(response.message || 'Không thể xóa vai trò.', 'error')
       }
     } catch (error) {
-      logger.error('RoleManagementTable', 'Error deleting role', error)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi xÃ³a vai trÃ².', 'error')
+      console.error('Error deleting role:', error)
+      showNotification('Đã có lỗi khi xóa vai trò.', 'error')
     } finally {
       setLoading(false)
     }
@@ -164,7 +163,7 @@ const RoleManagementTable = () => {
 
   // Roles do not support restore (no soft-delete)
   const handleRestoreRole = (_id: string) => {
-    showNotification('Vai trÃ² khÃ´ng há»— trá»£ khÃ´i phá»¥c.', 'warning')
+    showNotification('Vai trò không hỗ trợ khôi phục.', 'warning')
   }
 
   // Handle edit role
@@ -179,7 +178,7 @@ const RoleManagementTable = () => {
   const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
-        header: 'TÃªn vai trÃ²',
+        header: 'Tên vai trò',
         cell: ({ row }) => (
           <Typography variant='body2' className='font-medium'>
             {row.original.name}
@@ -187,11 +186,11 @@ const RoleManagementTable = () => {
         )
       }),
       columnHelper.accessor('description', {
-        header: 'MÃ´ táº£',
+        header: 'Mô tả',
         cell: ({ row }) => <Typography variant='body2'>{row.original.description || '-'}</Typography>
       }),
       columnHelper.accessor('permissions', {
-        header: 'Quyá»n',
+        header: 'Quyền',
         cell: ({ row }) => (
           <Box className='flex flex-wrap gap-1'>
             {row.original.permissions && row.original.permissions.length > 0 ? (
@@ -207,10 +206,10 @@ const RoleManagementTable = () => {
         )
       }),
       columnHelper.accessor('isActive', {
-        header: 'Tráº¡ng thÃ¡i',
+        header: 'Trạng thái',
         cell: ({ row }) => (
           <Chip
-            label={row.original.isActive ? 'Hoáº¡t Ä‘á»™ng' : 'KhÃ´ng hoáº¡t Ä‘á»™ng'}
+            label={row.original.isActive ? 'Hoạt động' : 'Không hoạt động'}
             color={row.original.isActive ? 'success' : 'error'}
             variant='tonal'
             size='small'
@@ -219,7 +218,7 @@ const RoleManagementTable = () => {
       }),
       columnHelper.display({
         id: 'actions',
-        header: 'Thao tÃ¡c',
+        header: 'Thao tác',
         cell: ({ row }) => (
           <Box className='flex items-center gap-2'>
             <IconButton size='small' onClick={() => handleEditRole(row.original)} color='primary'>
@@ -257,10 +256,10 @@ const RoleManagementTable = () => {
     <>
       <Card>
         <CardHeader
-          title='Quáº£n lÃ½ vai trÃ²'
+          title='Quản lý vai trò'
           action={
             <Button variant='contained' onClick={() => setAddRoleOpen(true)}>
-              ThÃªm vai trÃ² má»›i
+              Thêm vai trò mới
             </Button>
           }
         />
@@ -269,13 +268,13 @@ const RoleManagementTable = () => {
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <TextField
                 fullWidth
-                label='TÃ¬m kiáº¿m'
+                label='Tìm kiếm'
                 value={keyword}
                 onChange={e => {
                   setKeyword(e.target.value)
                   handleFilterChange({ Keyword: e.target.value || undefined })
                 }}
-                placeholder='TÃ¬m kiáº¿m theo tÃªn vai trÃ²...'
+                placeholder='Tìm kiếm theo tên vai trò...'
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -288,7 +287,7 @@ const RoleManagementTable = () => {
                 }}
                 fullWidth
               >
-                XÃ³a bá»™ lá»c
+                Xóa bộ lọc
               </Button>
             </Grid>
           </Grid>
@@ -325,7 +324,7 @@ const RoleManagementTable = () => {
           ) : (
             <Box className='text-center py-8'>
               <Typography variant='body1' color='text.secondary'>
-                ChÆ°a cÃ³ vai trÃ² nÃ o
+                Chưa có vai trò nào
               </Typography>
             </Box>
           )}
@@ -334,19 +333,19 @@ const RoleManagementTable = () => {
 
       {/* Add Role Dialog */}
       <Dialog open={addRoleOpen} onClose={() => setAddRoleOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>ThÃªm vai trÃ² má»›i</DialogTitle>
+        <DialogTitle>Thêm vai trò mới</DialogTitle>
         <DialogContent>
           <Box className='flex flex-col gap-4 pt-4'>
             <TextField
               fullWidth
-              label='TÃªn vai trÃ²'
+              label='Tên vai trò'
               value={roleName}
               onChange={e => setRoleName(e.target.value)}
               required
             />
             <TextField
               fullWidth
-              label='MÃ´ táº£'
+              label='Mô tả'
               value={roleDescription}
               onChange={e => setRoleDescription(e.target.value)}
               multiline
@@ -355,28 +354,28 @@ const RoleManagementTable = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddRoleOpen(false)}>Há»§y</Button>
+          <Button onClick={() => setAddRoleOpen(false)}>Hủy</Button>
           <Button onClick={handleCreateRole} variant='contained' disabled={loading || !roleName}>
-            {loading ? 'Äang táº¡o...' : 'Táº¡o vai trÃ²'}
+            {loading ? 'Đang tạo...' : 'Tạo vai trò'}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit Role Dialog */}
       <Dialog open={editRoleOpen} onClose={() => setEditRoleOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Chá»‰nh sá»­a vai trÃ²</DialogTitle>
+        <DialogTitle>Chỉnh sửa vai trò</DialogTitle>
         <DialogContent>
           <Box className='flex flex-col gap-4 pt-4'>
             <TextField
               fullWidth
-              label='TÃªn vai trÃ²'
+              label='Tên vai trò'
               value={roleName}
               onChange={e => setRoleName(e.target.value)}
               required
             />
             <TextField
               fullWidth
-              label='MÃ´ táº£'
+              label='Mô tả'
               value={roleDescription}
               onChange={e => setRoleDescription(e.target.value)}
               multiline
@@ -385,9 +384,9 @@ const RoleManagementTable = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditRoleOpen(false)}>Há»§y</Button>
+          <Button onClick={() => setEditRoleOpen(false)}>Hủy</Button>
           <Button onClick={handleUpdateRole} variant='contained' disabled={loading || !roleName}>
-            {loading ? 'Äang cáº­p nháº­t...' : 'Cáº­p nháº­t vai trÃ²'}
+            {loading ? 'Đang cập nhật...' : 'Cập nhật vai trò'}
           </Button>
         </DialogActions>
       </Dialog>

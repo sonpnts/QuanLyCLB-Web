@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useState, useEffect, useCallback } from 'react'
 
 // MUI Imports
@@ -35,7 +35,7 @@ const calendarsColor: CalendarColors = {
   Family: 'warning',
   Holiday: 'success',
   ETC: 'info',
-  Schedule: 'info' // ThÃªm mÃ u cho schedule events
+  Schedule: 'info' // Thêm màu cho schedule events
 }
 
 // Helper function to convert ScheduleType to EventInput
@@ -87,8 +87,8 @@ const convertScheduleToEvent = (schedule: ScheduleType, year: number, month: num
       endDateTime.setDate(endDateTime.getDate() + 1)
     }
 
-    const className = schedule.class?.name || 'Lá»›p há»c'
-    const branchName = schedule.branch?.name || 'Chi nhÃ¡nh'
+    const className = schedule.class?.name || 'Lớp học'
+    const branchName = schedule.branch?.name || 'Chi nhánh'
     const dayName = getDayName(dayOfWeek)
     const timeStr = `${schedule.startTime.substring(0, 5)} - ${schedule.endTime.substring(0, 5)}`
 
@@ -107,7 +107,7 @@ const convertScheduleToEvent = (schedule: ScheduleType, year: number, month: num
         dayName: dayName,
         startTime: schedule.startTime,
         endTime: schedule.endTime,
-        description: `Lá»›p: ${className}\nChi nhÃ¡nh: ${branchName}\nThá»©: ${dayName}\nGiá»: ${timeStr}`
+        description: `Lớp: ${className}\nChi nhánh: ${branchName}\nThứ: ${dayName}\nGiờ: ${timeStr}`
       }
     })
 
@@ -139,7 +139,7 @@ const AppCalendar = () => {
   const loadScheduleEvents = useCallback(async () => {
     try {
       setLoadingSchedules(true)
-      const response = await scheduleService.getSchedules({})
+      const response = await scheduleService.getSchedules({ IsActive: true, PageSize: 500 })
 
       if (response.success && response.data) {
         const now = new Date()

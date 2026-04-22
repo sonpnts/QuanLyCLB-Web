@@ -1,41 +1,56 @@
 'use client'
 
-// React Imports
 import { useState, useEffect, useRef, memo } from 'react'
 
 // MUI Imports
 import CardContent from '@mui/material/CardContent'
 import Grid from '@mui/material/Grid2'
 import TextField from '@mui/material/TextField'
+import MenuItem from '@mui/material/MenuItem'
+import ListSubheader from '@mui/material/ListSubheader'
 import Button from '@mui/material/Button'
 
 // Type Imports
 import type { GetInstructorsParams } from '@/services/instructorService'
+import type { BeltLevelType } from '@/types/apps/beltExamTypes'
+
+// Service Imports
+import beltLevelService from '@/services/beltLevelService'
+import { logger } from '@/utils/logger'
 
 type Props = {
   onFilterChange: (params: GetInstructorsParams) => void
 }
 
 const TableFilters = memo(({ onFilterChange }: Props) => {
-  const [skillLevel, setSkillLevel] = useState<string>('')
+  const [skillLevelId, setSkillLevelId] = useState<string>('')
   const [certification, setCertification] = useState<string>('')
+  const [beltLevels, setBeltLevels] = useState<BeltLevelType[]>([])
   const isFirstRender = useRef(true)
 
+  // Load danh sách cấp đai một lần
   useEffect(() => {
-    // Bỏ qua lần render đầu tiên
+    beltLevelService.getBeltLevels({ pageSize: 100 }).then(res => {
+      if (res.success && res.data) {
+        setBeltLevels(res.data.filter(b => b.isActive !== false).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)))
+      }
+    }).catch(err => logger.error('InstructorTableFilters', 'fetchBeltLevels', err))
+  }, [])
+
+  useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
       return
     }
 
     const params: GetInstructorsParams = {}
-    if (skillLevel) params.skillLevel = skillLevel
+    if (skillLevelId) params.skillLevelId = skillLevelId
     if (certification) params.certification = certification
     onFilterChange(params)
-  }, [skillLevel, certification, onFilterChange])
+  }, [skillLevelId, certification, onFilterChange])
 
   const handleReset = () => {
-    setSkillLevel('')
+    setSkillLevelId('')
     setCertification('')
   }
 
@@ -44,12 +59,30 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
       <Grid container spacing={4} alignItems='center'>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <TextField
+            select
             fullWidth
-            label='Trình độ'
-            value={skillLevel}
-            onChange={e => setSkillLevel(e.target.value)}
-            placeholder='Lọc theo trình độ...'
-          />
+            label='Cấp đai'
+            value={skillLevelId}
+            onChange={e => setSkillLevelId(e.target.value)}
+          >
+            <MenuItem value=''>
+              <em>Tất cả cấp đai</em>
+            </MenuItem>
+            {(() => {
+              const capItems = beltLevels.filter(b => !b.isDang).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+              const dangItems = beltLevels.filter(b => b.isDang).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+              return [
+                capItems.length > 0 && <ListSubheader key='cap-header'>Cấp đai</ListSubheader>,
+                ...capItems.map(belt => (
+                  <MenuItem key={belt.id} value={belt.id}>{belt.name}</MenuItem>
+                )),
+                dangItems.length > 0 && <ListSubheader key='dang-header'>Đẳng</ListSubheader>,
+                ...dangItems.map(belt => (
+                  <MenuItem key={belt.id} value={belt.id}>{belt.name}</MenuItem>
+                ))
+              ]
+            })()}
+          </TextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <TextField

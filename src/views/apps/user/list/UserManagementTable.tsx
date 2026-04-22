@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 
 // MUI Imports
@@ -84,7 +84,7 @@ const UserManagementTable = () => {
         } else {
           // Only show error if it's not a 400 (bad request from invalid input)
           if (response.message && !response.message.includes('400')) {
-            showNotification(response.message || 'KhÃ´ng thá»ƒ táº£i danh sÃ¡ch ngÆ°á»i dÃ¹ng.', 'error')
+            showNotification(response.message || 'Không thể tải danh sách người dùng.', 'error')
           }
         }
       } catch (error: any) {
@@ -94,7 +94,7 @@ const UserManagementTable = () => {
         // Only show error notification if it's not a cancelled request or 400 error
         if (error?.code !== 'ERR_CANCELED' && error?.response?.status !== 400) {
           logger.error('UserManagementTable', 'Error loading users', error)
-          showNotification('ÄÃ£ cÃ³ lá»—i khi táº£i ngÆ°á»i dÃ¹ng.', 'error')
+          showNotification('Đã có lỗi khi tải người dùng.', 'error')
         }
       } finally {
         if (!isCancelled) {
@@ -145,13 +145,13 @@ const UserManagementTable = () => {
         if (response.success) {
           setData(prevData => prevData.filter(user => user.id !== id))
           setFilteredData(prevData => prevData.filter(user => user.id !== id))
-          showNotification(response.message || 'XÃ³a ngÆ°á»i dÃ¹ng thÃ nh cÃ´ng.', 'success')
+          showNotification(response.message || 'Xóa người dùng thành công.', 'success')
         } else {
-          showNotification(response.message || 'KhÃ´ng thá»ƒ xÃ³a ngÆ°á»i dÃ¹ng.', 'error')
+          showNotification(response.message || 'Không thể xóa người dùng.', 'error')
         }
       } catch (error) {
         logger.error('UserManagementTable', 'Error deleting user', error)
-        showNotification('ÄÃ£ cÃ³ lá»—i khi xÃ³a ngÆ°á»i dÃ¹ng.', 'error')
+        showNotification('Đã có lỗi khi xóa người dùng.', 'error')
       } finally {
         setLoading(false)
       }
@@ -169,13 +169,13 @@ const UserManagementTable = () => {
         if (response.success && response.data) {
           setData(prevData => prevData.map(user => (user.id === id ? response.data! : user)))
           setFilteredData(prevData => prevData.map(user => (user.id === id ? response.data! : user)))
-          showNotification(response.message || 'KhÃ´i phá»¥c ngÆ°á»i dÃ¹ng thÃ nh cÃ´ng.', 'success')
+          showNotification(response.message || 'Khôi phục người dùng thành công.', 'success')
         } else {
-          showNotification(response.message || 'KhÃ´ng thá»ƒ khÃ´i phá»¥c ngÆ°á»i dÃ¹ng.', 'error')
+          showNotification(response.message || 'Không thể khôi phục người dùng.', 'error')
         }
       } catch (error) {
         logger.error('UserManagementTable', 'Error restoring user', error)
-        showNotification('ÄÃ£ cÃ³ lá»—i khi khÃ´i phá»¥c ngÆ°á»i dÃ¹ng.', 'error')
+        showNotification('Đã có lỗi khi khôi phục người dùng.', 'error')
       } finally {
         setLoading(false)
       }
@@ -198,7 +198,7 @@ const UserManagementTable = () => {
   const columns = useMemo(
     () => [
       columnHelper.accessor('fullName', {
-        header: 'Há» tÃªn',
+        header: 'Họ tên',
         cell: ({ row }) => (
           <Box className='flex items-center gap-3'>
             <CustomAvatar
@@ -218,7 +218,7 @@ const UserManagementTable = () => {
         )
       }),
       columnHelper.accessor('roles', {
-        header: 'Vai trÃ²',
+        header: 'Vai trò',
         cell: ({ row }) => {
           const rolesArr = row.original.roles || []
 
@@ -234,14 +234,14 @@ const UserManagementTable = () => {
         }
       }),
       columnHelper.accessor('phoneNumber', {
-        header: 'LiÃªn há»‡',
+        header: 'Liên hệ',
         cell: ({ row }) => <Typography variant='body2'>{row.original.phoneNumber || '-'}</Typography>
       }),
       columnHelper.accessor('isActive', {
-        header: 'Tráº¡ng thÃ¡i',
+        header: 'Trạng thái',
         cell: ({ row }) => (
           <Chip
-            label={row.original.isActive ? 'Hoáº¡t Ä‘á»™ng' : 'KhÃ´ng hoáº¡t Ä‘á»™ng'}
+            label={row.original.isActive ? 'Hoạt động' : 'Không hoạt động'}
             color={row.original.isActive ? 'success' : 'error'}
             variant='tonal'
             size='small'
@@ -250,7 +250,7 @@ const UserManagementTable = () => {
       }),
       columnHelper.display({
         id: 'actions',
-        header: 'Thao tÃ¡c',
+        header: 'Thao tác',
         cell: ({ row }) => (
           <Box className='flex items-center gap-2'>
             <IconButton
@@ -296,10 +296,10 @@ const UserManagementTable = () => {
     <>
       <Card>
         <CardHeader
-          title='Quáº£n lÃ½ ngÆ°á»i dÃ¹ng'
+          title='Quản lý người dùng'
           action={
             <Button variant='contained' onClick={() => setAddUserOpen(true)}>
-              ThÃªm ngÆ°á»i dÃ¹ng má»›i
+              Thêm người dùng mới
             </Button>
           }
         />

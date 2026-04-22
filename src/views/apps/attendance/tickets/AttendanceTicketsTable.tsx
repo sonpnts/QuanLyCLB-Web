@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 
 // MUI Imports
@@ -70,7 +70,7 @@ const AttendanceTicketsTable = () => {
           id: '1',
           classScheduleId: 'schedule-1',
           userId: 'user-1',
-          reason: 'Bá»‹ á»‘m',
+          reason: 'Bị ốm',
           status: 'pending',
           createdAt: new Date().toISOString()
         }
@@ -79,7 +79,7 @@ const AttendanceTicketsTable = () => {
       setFilteredData(mockData)
     } catch (error) {
       logger.error('AttendanceTicketsTable', 'Error loading tickets', error)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi táº£i phiáº¿u xin nghá»‰.', 'error')
+      showNotification('Đã có lỗi khi tải phiếu xin nghỉ.', 'error')
     } finally {
       setLoading(false)
     }
@@ -107,7 +107,7 @@ const AttendanceTicketsTable = () => {
       const response = await attendanceService.createTicket(createData)
 
       if (response.success) {
-        showNotification('Táº¡o phiáº¿u xin nghá»‰ thÃ nh cÃ´ng.', 'success')
+        showNotification('Tạo phiếu xin nghỉ thành công.', 'success')
         setCreateTicketOpen(false)
         setClassScheduleId('')
         setUserId('')
@@ -115,11 +115,11 @@ const AttendanceTicketsTable = () => {
         setCustomReason('')
         loadTickets()
       } else {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o phiáº¿u xin nghá»‰.', 'error')
+        showNotification(response.message || 'Không thể tạo phiếu xin nghỉ.', 'error')
       }
     } catch (error) {
       logger.error('AttendanceTicketsTable', 'Error creating ticket', error)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi táº¡o phiáº¿u xin nghá»‰.', 'error')
+      showNotification('Đã có lỗi khi tạo phiếu xin nghỉ.', 'error')
     } finally {
       setLoading(false)
     }
@@ -142,18 +142,18 @@ const AttendanceTicketsTable = () => {
       const response = await attendanceService.approveTicket(selectedTicket.id, approvalData)
 
       if (response.success) {
-        showNotification(approve ? 'Duyá»‡t phiáº¿u xin nghá»‰ thÃ nh cÃ´ng.' : 'Tá»« chá»‘i phiáº¿u xin nghá»‰ thÃ nh cÃ´ng.', 'success')
+        showNotification(approve ? 'Duyệt phiếu xin nghỉ thành công.' : 'Từ chối phiếu xin nghỉ thành công.', 'success')
         setApproveTicketOpen(false)
         setSelectedTicket(null)
         setApprover('')
         setNotes('')
         loadTickets()
       } else {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ xá»­ lÃ½ phiáº¿u xin nghá»‰.', 'error')
+        showNotification(response.message || 'Không thể xử lý phiếu xin nghỉ.', 'error')
       }
     } catch (error) {
       logger.error('AttendanceTicketsTable', 'Error approving ticket', error)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi xá»­ lÃ½ phiáº¿u xin nghá»‰.', 'error')
+      showNotification('Đã có lỗi khi xử lý phiếu xin nghỉ.', 'error')
     } finally {
       setLoading(false)
     }
@@ -162,19 +162,19 @@ const AttendanceTicketsTable = () => {
   // Get status label
   const getStatusLabel = (status: string) => {
     const statusMap: Record<string, { label: string; color: 'success' | 'error' | 'warning' | 'info' | 'default' }> = {
-      pending: { label: 'Chá» duyá»‡t', color: 'warning' },
-      approved: { label: 'ÄÃ£ duyá»‡t', color: 'success' },
-      rejected: { label: 'Tá»« chá»‘i', color: 'error' }
+      pending: { label: 'Chờ duyệt', color: 'warning' },
+      approved: { label: 'Đã duyệt', color: 'success' },
+      rejected: { label: 'Từ chối', color: 'error' }
     }
 
-    return statusMap[status] || { label: 'KhÃ´ng xÃ¡c Ä‘á»‹nh', color: 'default' }
+    return statusMap[status] || { label: 'Không xác định', color: 'default' }
   }
 
   // Columns
   const columns = useMemo(
     () => [
       columnHelper.accessor('classScheduleId', {
-        header: 'Lá»‹ch há»c',
+        header: 'Lịch học',
         cell: ({ row }) => (
           <Typography variant='body2' className='font-medium'>
             {row.original.classScheduleId}
@@ -182,15 +182,15 @@ const AttendanceTicketsTable = () => {
         )
       }),
       columnHelper.accessor('userId', {
-        header: 'NgÆ°á»i dÃ¹ng',
+        header: 'Người dùng',
         cell: ({ row }) => <Typography variant='body2'>{row.original.userId}</Typography>
       }),
       columnHelper.accessor('reason', {
-        header: 'LÃ½ do',
+        header: 'Lý do',
         cell: ({ row }) => <Typography variant='body2'>{row.original.reason || '-'}</Typography>
       }),
       columnHelper.accessor('status', {
-        header: 'Tráº¡ng thÃ¡i',
+        header: 'Trạng thái',
         cell: ({ row }) => {
           const statusInfo = getStatusLabel(row.original.status)
 
@@ -198,14 +198,14 @@ const AttendanceTicketsTable = () => {
         }
       }),
       columnHelper.accessor('createdAt', {
-        header: 'NgÃ y táº¡o',
+        header: 'Ngày tạo',
         cell: ({ row }) => (
           <Typography variant='body2'>{new Date(row.original.createdAt).toLocaleDateString('vi-VN')}</Typography>
         )
       }),
       columnHelper.display({
         id: 'actions',
-        header: 'Thao tÃ¡c',
+        header: 'Thao tác',
         cell: ({ row }) => (
           <Box className='flex items-center gap-2'>
             {row.original.status === 'pending' && (
@@ -243,10 +243,10 @@ const AttendanceTicketsTable = () => {
     <>
       <Card>
         <CardHeader
-          title='Phiáº¿u xin nghá»‰'
+          title='Phiếu xin nghỉ'
           action={
             <Button variant='contained' onClick={() => setCreateTicketOpen(true)}>
-              Táº¡o phiáº¿u xin nghá»‰
+              Tạo phiếu xin nghỉ
             </Button>
           }
         />
@@ -283,7 +283,7 @@ const AttendanceTicketsTable = () => {
           ) : (
             <Box className='text-center py-8'>
               <Typography variant='body1' color='text.secondary'>
-                ChÆ°a cÃ³ phiáº¿u xin nghá»‰ nÃ o
+                Chưa có phiếu xin nghỉ nào
               </Typography>
             </Box>
           )}
@@ -292,38 +292,38 @@ const AttendanceTicketsTable = () => {
 
       {/* Create Ticket Dialog */}
       <Dialog open={createTicketOpen} onClose={() => setCreateTicketOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Táº¡o phiáº¿u xin nghá»‰</DialogTitle>
+        <DialogTitle>Tạo phiếu xin nghỉ</DialogTitle>
         <DialogContent>
           <Box className='flex flex-col gap-4 pt-4'>
             <TextField
               fullWidth
-              label='ID Lá»‹ch há»c'
+              label='ID Lịch học'
               value={classScheduleId}
               onChange={e => setClassScheduleId(e.target.value)}
               required
             />
             <TextField
               fullWidth
-              label='ID NgÆ°á»i dÃ¹ng'
+              label='ID Người dùng'
               value={userId}
               onChange={e => setUserId(e.target.value)}
               required
             />
             <FormControl fullWidth>
-              <InputLabel>LÃ½ do</InputLabel>
-              <Select value={reason} onChange={e => setReason(e.target.value)} label='LÃ½ do'>
+              <InputLabel>Lý do</InputLabel>
+              <Select value={reason} onChange={e => setReason(e.target.value)} label='Lý do'>
                 {TICKET_REASONS.map(r => (
                   <MenuItem key={r} value={r}>
                     {r}
                   </MenuItem>
                 ))}
-                <MenuItem value='other'>KhÃ¡c (nháº­p thÃªm)</MenuItem>
+                <MenuItem value='other'>Khác (nhập thêm)</MenuItem>
               </Select>
             </FormControl>
             {reason === 'other' && (
               <TextField
                 fullWidth
-                label='LÃ½ do khÃ¡c'
+                label='Lý do khác'
                 value={customReason}
                 onChange={e => setCustomReason(e.target.value)}
                 sx={{ mt: 2 }}
@@ -332,33 +332,33 @@ const AttendanceTicketsTable = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateTicketOpen(false)}>Há»§y</Button>
+          <Button onClick={() => setCreateTicketOpen(false)}>Hủy</Button>
           <Button onClick={handleCreateTicket} variant='contained' disabled={loading}>
-            {loading ? 'Äang táº¡o...' : 'Táº¡o phiáº¿u'}
+            {loading ? 'Đang tạo...' : 'Tạo phiếu'}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Approve Ticket Dialog */}
       <Dialog open={approveTicketOpen} onClose={() => setApproveTicketOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Duyá»‡t phiáº¿u xin nghá»‰</DialogTitle>
+        <DialogTitle>Duyệt phiếu xin nghỉ</DialogTitle>
         <DialogContent>
           <Box className='flex flex-col gap-4 pt-4'>
             <FormControl fullWidth>
-              <InputLabel>Quyáº¿t Ä‘á»‹nh</InputLabel>
+              <InputLabel>Quyết định</InputLabel>
               <Select
-                label='Quyáº¿t Ä‘á»‹nh'
+                label='Quyết định'
                 value={approve ? 'true' : 'false'}
                 onChange={e => setApprove(e.target.value === 'true')}
               >
-                <MenuItem value='true'>Duyá»‡t</MenuItem>
-                <MenuItem value='false'>Tá»« chá»‘i</MenuItem>
+                <MenuItem value='true'>Duyệt</MenuItem>
+                <MenuItem value='false'>Từ chối</MenuItem>
               </Select>
             </FormControl>
-            <TextField fullWidth label='NgÆ°á»i duyá»‡t' value={approver} onChange={e => setApprover(e.target.value)} />
+            <TextField fullWidth label='Người duyệt' value={approver} onChange={e => setApprover(e.target.value)} />
             <TextField
               fullWidth
-              label='Ghi chÃº'
+              label='Ghi chú'
               value={notes}
               onChange={e => setNotes(e.target.value)}
               multiline
@@ -367,9 +367,9 @@ const AttendanceTicketsTable = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setApproveTicketOpen(false)}>Há»§y</Button>
+          <Button onClick={() => setApproveTicketOpen(false)}>Hủy</Button>
           <Button onClick={handleApproveTicket} variant='contained' disabled={loading}>
-            {loading ? 'Äang xá»­ lÃ½...' : 'XÃ¡c nháº­n'}
+            {loading ? 'Đang xử lý...' : 'Xác nhận'}
           </Button>
         </DialogActions>
       </Dialog>

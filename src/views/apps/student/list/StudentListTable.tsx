@@ -14,6 +14,12 @@ import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import TablePagination from '@mui/material/TablePagination'
 import Chip from '@mui/material/Chip'
+import ToggleButton from '@mui/material/ToggleButton'
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
 import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
@@ -50,10 +56,14 @@ import type { GetStudentsParams } from '@/services/studentService'
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
 
+// Utils
+import { logger } from '@/utils/logger'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 import { fuzzyFilter } from '@/utils/tableHelpers'
 
+type StatusFilter = 'all' | 'active' | 'suspended'
 
 const DebouncedInput = ({
   value: initialValue,
@@ -104,14 +114,19 @@ const StudentListTable = () => {
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetStudentsParams>({})
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+
+  // Suspend dialog
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
+  const [suspendTarget, setSuspendTarget] = useState<StudentType | null>(null)
+  const [suspendReason, setSuspendReason] = useState('')
+  const [suspendLoading, setSuspendLoading] = useState(false)
 
   const { showNotification } = useNotification()
 
-  // Dùng ref để tránh dependency showNotification trong useEffect
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
 
-  // Ref để track đã load students chưa (tránh double call trong Strict Mode)
   const studentsLoadedRef = useRef(false)
   const currentFilterRef = useRef<string>('')
 
@@ -119,14 +134,24 @@ const StudentListTable = () => {
     setFilterParams(params)
   }, [])
 
-  // Load students - chỉ phụ thuộc vào filterParams
-  useEffect(() => {
-    const filterKey = JSON.stringify(filterParams)
-
-    // Tránh load lại nếu filter không đổi
-    if (studentsLoadedRef.current && currentFilterRef.current === filterKey) {
-      return
+  // Tính filterParams thực tế (kết hợp base filter + status filter)
+  const effectiveParams = useMemo<GetStudentsParams>(() => {
+    const p = { ...filterParams }
+    if (statusFilter === 'suspended') {
+      p.isSuspended = true
+    } else if (statusFilter === 'active') {
+      p.isSuspended = false
+    } else {
+      delete p.isSuspended
     }
+    return p
+  }, [filterParams, statusFilter])
+
+  // Load students - phụ thuộc vào effectiveParams
+  useEffect(() => {
+    const filterKey = JSON.stringify(effectiveParams)
+
+    if (studentsLoadedRef.current && currentFilterRef.current === filterKey) return
 
     const loadStudents = async () => {
       try {
@@ -134,17 +159,23 @@ const StudentListTable = () => {
         currentFilterRef.current = filterKey
         studentsLoadedRef.current = true
 
-        const response = await studentService.getStudents(filterParams)
-
+        const response = await studentService.getStudents(effectiveParams)
         setData(response.data || [])
-      } catch {
+      } catch (error) {
+        logger.error('StudentListTable', 'loadStudents', error)
         setData([])
       } finally {
         setLoading(false)
       }
     }
     loadStudents()
-  }, [filterParams])
+  }, [effectiveParams])
+
+  const reloadData = useCallback(() => {
+    studentsLoadedRef.current = false
+    currentFilterRef.current = ''
+    setFilterParams(prev => ({ ...prev }))
+  }, [])
 
   const handleDelete = useCallback(async (id: string) => {
     try {
@@ -157,6 +188,7 @@ const StudentListTable = () => {
         showNotificationRef.current(response.message || 'Không thể xóa học viên.', 'error')
       }
     } catch (error) {
+      logger.error('StudentListTable', 'handleDelete', error)
       showNotificationRef.current('Đã có lỗi khi xóa học viên.', 'error')
     } finally {
       setLoading(false)
@@ -182,12 +214,57 @@ const StudentListTable = () => {
     setData(prev => prev.map(s => (s.id === updated.id ? updated : s)))
   }, [])
 
-  // Reload data sau khi enroll
   const handleEnrolled = useCallback(() => {
-    studentsLoadedRef.current = false
-    currentFilterRef.current = ''
-    setFilterParams(prev => ({ ...prev }))
+    reloadData()
+  }, [reloadData])
+
+  // Suspend handlers
+  const openSuspendDialog = useCallback((student: StudentType) => {
+    setSuspendTarget(student)
+    setSuspendReason('')
+    setSuspendDialogOpen(true)
   }, [])
+
+  const handleSuspendConfirm = useCallback(async () => {
+    if (!suspendTarget) return
+    try {
+      setSuspendLoading(true)
+      const response = await studentService.suspendStudent(suspendTarget.id, suspendReason.trim() || undefined)
+      if (response.success) {
+        setData(prev => prev.map(s => (s.id === suspendTarget.id ? { ...s, isSuspended: true, suspendedAt: new Date().toISOString(), suspendReason: suspendReason.trim() || undefined } : s)))
+        showNotificationRef.current('Đã chuyển học viên sang trạng thái tạm nghỉ.', 'success')
+        setSuspendDialogOpen(false)
+        setSuspendTarget(null)
+        if (statusFilter !== 'all') reloadData()
+      } else {
+        showNotificationRef.current(response.message || 'Không thể tạm nghỉ học viên.', 'error')
+      }
+    } catch (error) {
+      logger.error('StudentListTable', 'handleSuspendConfirm', error)
+      showNotificationRef.current('Đã có lỗi xảy ra.', 'error')
+    } finally {
+      setSuspendLoading(false)
+    }
+  }, [suspendTarget, suspendReason, statusFilter, reloadData])
+
+  const handleResume = useCallback(async (student: StudentType) => {
+    try {
+      setLoading(true)
+      const response = await studentService.resumeStudent(student.id)
+      if (response.success) {
+        setData(prev => prev.map(s => (s.id === student.id ? { ...s, isSuspended: false, suspendedAt: undefined, suspendReason: undefined } : s)))
+        showNotificationRef.current('Đã khôi phục học viên.', 'success')
+        if (statusFilter !== 'all') reloadData()
+      } else {
+        showNotificationRef.current(response.message || 'Không thể khôi phục học viên.', 'error')
+      }
+    } catch (error) {
+      logger.error('StudentListTable', 'handleResume', error)
+      showNotificationRef.current('Đã có lỗi xảy ra.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }, [statusFilter, reloadData])
 
   const columns = useMemo<ColumnDef<StudentType, any>[]>(
     () => [
@@ -212,13 +289,18 @@ const StudentListTable = () => {
         header: 'Học viên',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
-            <CustomAvatar skin='light' size={34} color={row.original.avatarColor || 'primary'}>
+            <CustomAvatar skin='light' size={34} color={row.original.isSuspended ? 'secondary' : (row.original.avatarColor || 'primary')}>
               {getInitials(row.original.fullName)}
             </CustomAvatar>
-            <div className='flex flex-col'>
-              <Typography className='font-medium' color='text.primary'>
-                {row.original.fullName}
-              </Typography>
+            <div className='flex flex-col gap-0.5'>
+              <div className='flex items-center gap-2'>
+                <Typography className='font-medium' color='text.primary'>
+                  {row.original.fullName}
+                </Typography>
+                {row.original.isSuspended && (
+                  <Chip label='Tạm nghỉ' size='small' color='warning' variant='tonal' />
+                )}
+              </div>
               <Typography variant='body2'>{row.original.email}</Typography>
             </div>
           </div>
@@ -254,16 +336,37 @@ const StudentListTable = () => {
         )
       }),
       {
+        id: 'suspendReason',
+        header: 'Lý do tạm nghỉ',
+        cell: ({ row }) =>
+          row.original.isSuspended ? (
+            <Typography variant='body2' color='text.secondary' className='max-w-[160px] truncate' title={row.original.suspendReason || ''}>
+              {row.original.suspendReason || '—'}
+            </Typography>
+          ) : null
+      },
+      {
         id: 'actions',
         header: 'Thao tác',
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton onClick={() => handleEnroll(row.original)} title='Đăng ký lớp' color='success'>
-              <i className='ri-user-add-line' />
-            </IconButton>
-            <IconButton onClick={() => handleDelete(row.original.id)} title='Xóa học viên' color='error'>
-              <i className='ri-delete-bin-7-line' />
-            </IconButton>
+            {!row.original.isSuspended ? (
+              <>
+                <IconButton onClick={() => handleEnroll(row.original)} title='Đăng ký lớp' color='success'>
+                  <i className='ri-user-add-line' />
+                </IconButton>
+                <IconButton onClick={() => openSuspendDialog(row.original)} title='Tạm nghỉ' color='warning'>
+                  <i className='ri-pause-circle-line' />
+                </IconButton>
+                <IconButton onClick={() => handleDelete(row.original.id)} title='Xóa học viên' color='error'>
+                  <i className='ri-delete-bin-7-line' />
+                </IconButton>
+              </>
+            ) : (
+              <IconButton onClick={() => handleResume(row.original)} title='Khôi phục' color='success'>
+                <i className='ri-play-circle-line' />
+              </IconButton>
+            )}
             <IconButton title='Xem chi tiết' onClick={() => handleView(row.original)}>
               <i className='ri-eye-line text-textSecondary' />
             </IconButton>
@@ -274,7 +377,7 @@ const StudentListTable = () => {
         )
       }
     ],
-    [handleDelete, handleEdit, handleView, handleEnroll]
+    [handleDelete, handleEdit, handleView, handleEnroll, openSuspendDialog, handleResume]
   )
 
   const table = useReactTable({
@@ -296,21 +399,34 @@ const StudentListTable = () => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
+  const suspendedCount = data.filter(s => s.isSuspended).length
+
   return (
     <>
       <Card>
         <CardHeader title='Bộ lọc' />
         <TableFilters onFilterChange={handleFilterChange} />
         <Divider />
-        <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
-          <Button
-            color='secondary'
-            variant='outlined'
-            startIcon={<i className='ri-upload-2-line text-xl' />}
-            className='max-sm:is-full'
+
+        {/* Status filter bar */}
+        <div className='flex items-center justify-between px-5 pt-4 pb-2 gap-4 flex-wrap'>
+          <ToggleButtonGroup
+            value={statusFilter}
+            exclusive
+            onChange={(_, v) => { if (v) { setStatusFilter(v); studentsLoadedRef.current = false; currentFilterRef.current = '' } }}
+            size='small'
+            color='primary'
           >
-            Xuất Excel
-          </Button>
+            <ToggleButton value='all'>Tất cả</ToggleButton>
+            <ToggleButton value='active'>Đang học</ToggleButton>
+            <ToggleButton value='suspended'>
+              Tạm nghỉ
+              {suspendedCount > 0 && statusFilter !== 'suspended' && (
+                <Chip label={suspendedCount} size='small' color='warning' sx={{ ml: 1, height: 18, fontSize: 11 }} />
+              )}
+            </ToggleButton>
+          </ToggleButtonGroup>
+
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
@@ -323,6 +439,7 @@ const StudentListTable = () => {
             </Button>
           </div>
         </div>
+
         <div className='overflow-x-auto'>
           <table className={tableStyles.table}>
             <thead>
@@ -359,7 +476,11 @@ const StudentListTable = () => {
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                  <tr
+                    key={row.id}
+                    className={classnames({ selected: row.getIsSelected() })}
+                    style={row.original.isSuspended ? { opacity: 0.75, background: 'rgba(255,152,0,0.04)' } : undefined}
+                  >
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                     ))}
@@ -380,6 +501,33 @@ const StudentListTable = () => {
           onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
         />
       </Card>
+
+      {/* Suspend Confirmation Dialog */}
+      <Dialog open={suspendDialogOpen} onClose={() => setSuspendDialogOpen(false)} maxWidth='xs' fullWidth>
+        <DialogTitle>Tạm nghỉ học viên</DialogTitle>
+        <DialogContent>
+          <Typography variant='body2' color='text.secondary' className='mb-4'>
+            Học viên <strong>{suspendTarget?.fullName}</strong> sẽ được chuyển sang trạng thái tạm nghỉ.
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            label='Lý do tạm nghỉ (tuỳ chọn)'
+            placeholder='Nhập lý do...'
+            value={suspendReason}
+            onChange={e => setSuspendReason(e.target.value)}
+            size='small'
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSuspendDialogOpen(false)} disabled={suspendLoading}>Hủy</Button>
+          <Button variant='contained' color='warning' onClick={handleSuspendConfirm} disabled={suspendLoading}>
+            {suspendLoading ? 'Đang xử lý...' : 'Xác nhận tạm nghỉ'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <AddStudentDrawer open={addStudentOpen} handleClose={() => setAddStudentOpen(false)} setData={setData} />
       <EditStudentDrawer
         open={editStudentOpen}
@@ -397,6 +545,8 @@ const StudentListTable = () => {
           setSelectedStudent(null)
         }}
         student={selectedStudent}
+        onSuspend={openSuspendDialog}
+        onResume={handleResume}
       />
       <EnrollStudentDrawer
         open={enrollStudentOpen}

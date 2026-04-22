@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useState, useEffect } from 'react'
 
 // MUI Imports
@@ -77,7 +77,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
     e.preventDefault()
 
     if (!formData.fullName.trim()) {
-      showNotification('Vui lÃ²ng nháº­p há» tÃªn há»c viÃªn.', 'error')
+      showNotification('Vui lòng nhập họ tên học viên.', 'error')
 
       return
     }
@@ -99,13 +99,13 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
 
       if (response.success && response.data) {
         setData(prev => [...prev, response.data!])
-        showNotification('ThÃªm há»c viÃªn thÃ nh cÃ´ng!', 'success')
+        showNotification('Thêm học viên thành công!', 'success')
         handleReset()
       } else {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ thÃªm há»c viÃªn.', 'error')
+        showNotification(response.message || 'Không thể thêm học viên.', 'error')
       }
     } catch (error) {
-      showNotification('ÄÃ£ cÃ³ lá»—i khi thÃªm há»c viÃªn.', 'error')
+      showNotification('Đã có lỗi khi thêm học viên.', 'error')
     } finally {
       setLoading(false)
     }
@@ -136,7 +136,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>ThÃªm há»c viÃªn má»›i</Typography>
+        <Typography variant='h5'>Thêm học viên mới</Typography>
         <IconButton size='small' onClick={handleReset}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -145,13 +145,13 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
       <div className='p-5'>
         <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
           <TextField
-            label='Há» vÃ  tÃªn *'
+            label='Họ và tên *'
             fullWidth
             value={formData.fullName}
             onChange={e => setFormData({ ...formData, fullName: e.target.value })}
           />
           <TextField
-            label='Sá»‘ Ä‘iá»‡n thoáº¡i'
+            label='Số điện thoại'
             fullWidth
             value={formData.phoneNumber}
             onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
@@ -164,7 +164,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
             onChange={e => setFormData({ ...formData, email: e.target.value })}
           />
           <TextField
-            label='Äá»‹a chá»‰'
+            label='Địa chỉ'
             fullWidth
             value={formData.address}
             onChange={e => setFormData({ ...formData, address: e.target.value })}
@@ -176,7 +176,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
             onChange={e => setFormData({ ...formData, identityNumber: e.target.value })}
           />
           <TextField
-            label='NgÃ y sinh'
+            label='Ngày sinh'
             type='date'
             fullWidth
             InputLabelProps={{ shrink: true }}
@@ -184,25 +184,25 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
             onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })}
           />
           <FormControl fullWidth>
-            <InputLabel>Giá»›i tÃ­nh</InputLabel>
+            <InputLabel>Giới tính</InputLabel>
             <Select
-              label='Giá»›i tÃ­nh'
+              label='Giới tính'
               value={formData.gender}
               onChange={e => setFormData({ ...formData, gender: e.target.value })}
             >
-              <MenuItem value=''>Chá»n giá»›i tÃ­nh</MenuItem>
+              <MenuItem value=''>Chọn giới tính</MenuItem>
               <MenuItem value='true'>Nam</MenuItem>
-              <MenuItem value='false'>Ná»¯</MenuItem>
+              <MenuItem value='false'>Nữ</MenuItem>
             </Select>
           </FormControl>
           <FormControl fullWidth>
-            <InputLabel>Cáº¥p Ä‘ai hiá»‡n táº¡i</InputLabel>
+            <InputLabel>Cấp đai hiện tại</InputLabel>
             <Select
-              label='Cáº¥p Ä‘ai hiá»‡n táº¡i'
+              label='Cấp đai hiện tại'
               value={formData.currentBeltLevelId}
               onChange={e => setFormData({ ...formData, currentBeltLevelId: e.target.value })}
             >
-              <MenuItem value=''>ChÆ°a cÃ³ cáº¥p Ä‘ai</MenuItem>
+              <MenuItem value=''>Chưa có cấp đai</MenuItem>
               {beltLevels.map(belt => (
                 <MenuItem key={belt.id} value={belt.id}>
                   {belt.name}
@@ -211,7 +211,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
             </Select>
           </FormControl>
           <TextField
-            label='Ghi chÃº'
+            label='Ghi chú'
             fullWidth
             multiline
             rows={3}
@@ -220,10 +220,10 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
           />
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
-              {loading ? 'Äang xá»­ lÃ½...' : 'ThÃªm má»›i'}
+              {loading ? 'Đang xử lý...' : 'Thêm mới'}
             </Button>
             <Button variant='outlined' color='error' type='reset' onClick={handleReset}>
-              Há»§y
+              Hủy
             </Button>
           </div>
         </form>

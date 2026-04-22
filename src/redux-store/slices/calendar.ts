@@ -81,14 +81,14 @@ export const calendarSlice = createSlice({
     },
 
     setScheduleEvents: (state, action: PayloadAction<EventInput[]>) => {
-      // Merge schedule events with existing events
-      // Remove old schedule events (identified by extendedProps.calendar === 'Schedule')
+      // Merge schedule events with existing non-schedule events
       const nonScheduleEvents = state.filteredEvents.filter(event => event.extendedProps?.calendar !== 'Schedule')
+      const allEvents = [...nonScheduleEvents, ...action.payload]
 
-      const newEvents = [...nonScheduleEvents, ...action.payload]
-
-      state.events = newEvents
-      state.filteredEvents = newEvents
+      // filteredEvents = toàn bộ sự kiện (nguồn gốc, chưa lọc)
+      state.filteredEvents = allEvents
+      // events = áp filter selectedCalendars
+      state.events = filterEventsUsingCheckbox(allEvents, state.selectedCalendars)
     },
 
     // Filter by class names (each filter item represents a class)

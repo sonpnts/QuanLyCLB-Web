@@ -167,6 +167,8 @@ export const API_ENDPOINTS = {
     root: '/Students',
     byId: (id: string) => `/Students/${id}`,
     restore: (id: string) => `/Students/${id}/restore`,
+    suspend: (id: string) => `/Students/${id}/suspend`,
+    resume: (id: string) => `/Students/${id}/resume`,
     enroll: '/Students/enroll',
     byClass: (classId: string) => `/Students/by-class/${classId}`,
     enrollments: (studentId: string) => `/Students/${studentId}/enrollments`,
@@ -190,6 +192,13 @@ export const API_ENDPOINTS = {
     root: '/systemconfig',
     byKey: (key: string) => `/systemconfig/${key}`,
     reloadCache: '/systemconfig/reload-cache',
+  },
+  dashboard: {
+    statistics: '/dashboard/statistics',
+    revenue: '/dashboard/revenue',
+    students: '/dashboard/students',
+    classes: '/dashboard/classes',
+    attendance: '/dashboard/attendance',
   },
 } as const
 

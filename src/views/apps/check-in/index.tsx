@@ -1,7 +1,6 @@
-﻿'use client'
+'use client'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useState, useEffect, useCallback } from 'react'
 
 // MUI Imports
@@ -23,14 +22,14 @@ import { useNotification } from '@/contexts/notificationContext'
 import attendanceService, { type CheckInRequest, type CheckOutRequest } from '@/services/attendanceService'
 import { getVietnamNow, toVietnamISOString } from '@/utils/dateTime'
 
-const MAX_ACCEPTABLE_ACCURACY = 50 // meters; chá»‰nh theo yÃªu cáº§u (vÃ­ dá»¥ 20, 50, 100)
+const MAX_ACCEPTABLE_ACCURACY = 50 // meters; chỉnh theo yêu cầu (ví dụ 20, 50, 100)
 
 const mapAttendanceError = (code?: number, fallback?: string, type: 'checkin' | 'checkout' = 'checkin') => {
-  if (code === 4100) return 'Báº¡n Ä‘ang cÃ¡ch xa cÃ¢u láº¡c bá»™, vui lÃ²ng di chuyá»ƒn láº¡i gáº§n vÃ  thá»­ láº¡i.'
-  if (code === 4101) return 'Báº¡n cáº§n cháº¥m cÃ´ng ra ca trÆ°á»›c trÆ°á»›c khi cháº¥m cÃ´ng vÃ o ca má»›i.'
-  if (code === 4102) return 'KhÃ´ng tÃ¬m tháº¥y lÆ°á»£t cháº¥m cÃ´ng vÃ o Ä‘á»ƒ cháº¥m cÃ´ng ra. Vui lÃ²ng cháº¥m cÃ´ng vÃ o trÆ°á»›c.'
+  if (code === 4100) return 'Bạn đang cách xa câu lạc bộ, vui lòng di chuyển lại gần và thử lại.'
+  if (code === 4101) return 'Bạn cần chấm công ra ca trước trước khi chấm công vào ca mới.'
+  if (code === 4102) return 'Không tìm thấy lượt chấm công vào để chấm công ra. Vui lòng chấm công vào trước.'
 
-  return fallback || (type === 'checkin' ? 'Cháº¥m cÃ´ng vÃ o tháº¥t báº¡i.' : 'Cháº¥m cÃ´ng ra tháº¥t báº¡i.')
+  return fallback || (type === 'checkin' ? 'Chấm công vào thất bại.' : 'Chấm công ra thất bại.')
 }
 
 const CheckInView = () => {
@@ -66,7 +65,7 @@ const CheckInView = () => {
       setPermissionDenied(false)
 
       if (!navigator.geolocation) {
-        const errorMsg = 'TrÃ¬nh duyá»‡t cá»§a báº¡n khÃ´ng há»— trá»£ Ä‘á»‹nh vá»‹.'
+        const errorMsg = 'Trình duyệt của bạn không hỗ trợ định vị.'
 
         setLocationError(errorMsg)
         setIsRequestingLocation(false)
@@ -85,11 +84,11 @@ const CheckInView = () => {
 
         const accuracy = position.coords.accuracy ?? Infinity
 
-        // Náº¿u khÃ´ng cÃ³ thÃ´ng tin accuracy hoáº·c accuracy quÃ¡ lá»›n thÃ¬ tá»« chá»‘i
+        // Nếu không có thông tin accuracy hoặc accuracy quá lớn thì từ chối
         if (!isFinite(accuracy) || accuracy > MAX_ACCEPTABLE_ACCURACY) {
-          const errMsg = `Vá»‹ trÃ­ khÃ´ng Ä‘á»§ chÃ­nh xÃ¡c (accuracy: ${
-            isFinite(accuracy) ? Math.round(accuracy) + ' m' : 'khÃ´ng xÃ¡c Ä‘á»‹nh'
-          }). Vui lÃ²ng báº­t GPS / Wi-Fi hoáº·c di chuyá»ƒn ra ngoÃ i trá»i vÃ  thá»­ láº¡i.`
+          const errMsg = `Vị trí không đủ chính xác (accuracy: ${
+            isFinite(accuracy) ? Math.round(accuracy) + ' m' : 'không xác định'
+          }). Vui lòng bật GPS / Wi-Fi hoặc di chuyển ra ngoài trời và thử lại.`
 
           setLocationError(errMsg)
           setIsRequestingLocation(false)
@@ -110,21 +109,21 @@ const CheckInView = () => {
 
         return locationData
       } catch (err: unknown) {
-        let errorMessage = 'KhÃ´ng thá»ƒ láº¥y vá»‹ trÃ­.'
+        let errorMessage = 'Không thể lấy vị trí.'
 
         // Narrow unknown error
         const e = err as { code?: number; name?: string; message?: string } | undefined
 
         if (e?.code === 1 || e?.name === 'PermissionDenied' || e?.name === 'NotAllowedError') {
           errorMessage =
-            'Báº¡n Ä‘Ã£ tá»« chá»‘i quyá»n truy cáº­p vá»‹ trÃ­. Vui lÃ²ng cáº¥p quyá»n trong cÃ i Ä‘áº·t trÃ¬nh duyá»‡t vÃ  thá»­ láº¡i.'
+            'Bạn đã từ chối quyền truy cập vị trí. Vui lòng cấp quyền trong cài đặt trình duyệt và thử lại.'
           setPermissionDenied(true)
         } else if (e?.code === 2 || e?.name === 'PositionUnavailable') {
-          errorMessage = 'KhÃ´ng thá»ƒ xÃ¡c Ä‘á»‹nh vá»‹ trÃ­. Vui lÃ²ng kiá»ƒm tra GPS/thiáº¿t bá»‹ vÃ  thá»­ láº¡i.'
+          errorMessage = 'Không thể xác định vị trí. Vui lòng kiểm tra GPS/thiết bị và thử lại.'
         } else if (e?.code === 3 || e?.name === 'TimeoutError') {
-          errorMessage = 'Háº¿t thá»i gian chá» khi láº¥y vá»‹ trÃ­. Vui lÃ²ng thá»­ láº¡i.'
+          errorMessage = 'Hết thời gian chờ khi lấy vị trí. Vui lòng thử lại.'
         } else if (e?.message) {
-          errorMessage = `Lá»—i khi láº¥y vá»‹ trÃ­: ${e.message}`
+          errorMessage = `Lỗi khi lấy vị trí: ${e.message}`
         }
 
         setLocationError(errorMessage)
@@ -139,7 +138,7 @@ const CheckInView = () => {
   // Handle check-in
   const handleCheckIn = useCallback(async () => {
     if (!userId) {
-      showNotification('Báº¡n chÆ°a Ä‘Äƒng nháº­p.', 'error')
+      showNotification('Bạn chưa đăng nhập.', 'error')
 
       return
     }
@@ -156,7 +155,7 @@ const CheckInView = () => {
     const currentLocation = await requestLocation()
 
     if (!currentLocation) {
-      showNotification(locationError ?? 'KhÃ´ng thá»ƒ láº¥y vá»‹ trÃ­ GPS chÃ­nh xÃ¡c. Vui lÃ²ng thá»­ láº¡i.', 'error')
+      showNotification(locationError ?? 'Không thể lấy vị trí GPS chính xác. Vui lòng thử lại.', 'error')
       setPendingAction(null)
 
       return
@@ -176,7 +175,7 @@ const CheckInView = () => {
       const response = await attendanceService.checkIn(checkInData)
 
       if (response?.success) {
-        showNotification('Cháº¥m cÃ´ng vÃ o thÃ nh cÃ´ng!', 'success')
+        showNotification('Chấm công vào thành công!', 'success')
 
         // Clear stored location after success (optionally)
         setLocation(null)
@@ -185,7 +184,7 @@ const CheckInView = () => {
       }
     } catch (err: unknown) {
       // Prefer notifying user instead of console.error (lint)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi cháº¥m cÃ´ng vÃ o.', 'error')
+      showNotification('Đã có lỗi khi chấm công vào.', 'error')
     } finally {
       setIsCheckingIn(false)
       setPendingAction(null)
@@ -195,7 +194,7 @@ const CheckInView = () => {
   // Handle check-out
   const handleCheckOut = useCallback(async () => {
     if (!userId) {
-      showNotification('Báº¡n chÆ°a Ä‘Äƒng nháº­p.', 'error')
+      showNotification('Bạn chưa đăng nhập.', 'error')
 
       return
     }
@@ -212,7 +211,7 @@ const CheckInView = () => {
     const currentLocation = await requestLocation()
 
     if (!currentLocation) {
-      showNotification(locationError ?? 'KhÃ´ng thá»ƒ láº¥y vá»‹ trÃ­ GPS chÃ­nh xÃ¡c. Vui lÃ²ng thá»­ láº¡i.', 'error')
+      showNotification(locationError ?? 'Không thể lấy vị trí GPS chính xác. Vui lòng thử lại.', 'error')
       setPendingAction(null)
 
       return
@@ -231,13 +230,13 @@ const CheckInView = () => {
       const response = await attendanceService.checkOut(checkOutData)
 
       if (response?.success) {
-        showNotification('Cháº¥m cÃ´ng ra thÃ nh cÃ´ng!', 'success')
+        showNotification('Chấm công ra thành công!', 'success')
         setLocation(null)
       } else {
         showNotification(mapAttendanceError(response?.code, response?.message, 'checkout'), 'error')
       }
     } catch (err: unknown) {
-      showNotification('ÄÃ£ cÃ³ lá»—i khi cháº¥m cÃ´ng ra.', 'error')
+      showNotification('Đã có lỗi khi chấm công ra.', 'error')
     } finally {
       setIsCheckingOut(false)
       setPendingAction(null)
@@ -265,7 +264,7 @@ const CheckInView = () => {
     <Grid container spacing={{ xs: 4, sm: 6 }}>
       <Grid size={{ xs: 12 }}>
         <Card>
-          <CardHeader title='Cháº¥m cÃ´ng' className='p-4 sm:p-6' />
+          <CardHeader title='Chấm công' className='p-4 sm:p-6' />
           <CardContent className='p-4 sm:p-6'>
             <Box className='flex flex-col items-center gap-4 sm:gap-6 py-4 sm:py-6'>
               {/* Current Date and Time */}
@@ -293,7 +292,7 @@ const CheckInView = () => {
                 {location && !locationError && (
                   <Alert severity='success' className='mb-4'>
                     <Typography variant='body2' className='font-medium text-xs sm:text-sm'>
-                      Vá»‹ trÃ­ GPS sáºµn sÃ ng Ä‘á»ƒ gá»­i
+                      Vị trí GPS sẵn sàng để gửi
                     </Typography>
                     <Typography variant='body2' color='text.secondary' className='text-xs sm:text-sm break-all'>
                       Latitude: {location.latitude.toFixed(6)}
@@ -326,10 +325,10 @@ const CheckInView = () => {
                     }}
                   >
                     {isRequestingLocation && pendingAction === 'checkin'
-                      ? 'Äang láº¥y vá»‹ trÃ­...'
+                      ? 'Đang lấy vị trí...'
                       : isCheckingIn
-                        ? 'Äang cháº¥m cÃ´ng vÃ o...'
-                        : 'Cháº¥m cÃ´ng vÃ o'}
+                        ? 'Đang chấm công vào...'
+                        : 'Chấm công vào'}
                   </Button>
 
                   {/* Check-out Button */}
@@ -353,10 +352,10 @@ const CheckInView = () => {
                     }}
                   >
                     {isRequestingLocation && pendingAction === 'checkout'
-                      ? 'Äang láº¥y vá»‹ trÃ­...'
+                      ? 'Đang lấy vị trí...'
                       : isCheckingOut
-                        ? 'Äang cháº¥m cÃ´ng ra...'
-                        : 'Cháº¥m cÃ´ng ra'}
+                        ? 'Đang chấm công ra...'
+                        : 'Chấm công ra'}
                   </Button>
                 </Box>
               </Box>
@@ -366,8 +365,8 @@ const CheckInView = () => {
                 <Typography variant='body2' color='text.secondary' className='text-xs sm:text-sm'>
                   <i className='ri-information-line mr-1 sm:mr-2' />
                   {permissionDenied
-                    ? 'Báº¡n Ä‘Ã£ tá»« chá»‘i quyá»n truy cáº­p vá»‹ trÃ­. Nháº¥n "Cháº¥m cÃ´ng" láº¡i Ä‘á»ƒ thá»­ yÃªu cáº§u quyá»n má»™t láº§n ná»¯a. Náº¿u váº«n khÃ´ng Ä‘Æ°á»£c, vui lÃ²ng cáº¥p quyá»n trong cÃ i Ä‘áº·t trÃ¬nh duyá»‡t.'
-                    : `Khi nháº¥n "Cháº¥m cÃ´ng", há»‡ thá»‘ng sáº½ yÃªu cáº§u quyá»n truy cáº­p vá»‹ trÃ­ (chá»‰ cháº¥p nháº­n GPS/Wi-Fi). Vá»‹ trÃ­ pháº£i cÃ³ Ä‘á»™ chÃ­nh xÃ¡c â‰¤ ${MAX_ACCEPTABLE_ACCURACY}m Ä‘á»ƒ Ä‘Æ°á»£c gá»­i.`}
+                    ? 'Bạn đã từ chối quyền truy cập vị trí. Nhấn "Chấm công" lại để thử yêu cầu quyền một lần nữa. Nếu vẫn không được, vui lòng cấp quyền trong cài đặt trình duyệt.'
+                    : `Khi nhấn "Chấm công", hệ thống sẽ yêu cầu quyền truy cập vị trí (chỉ chấp nhận GPS/Wi-Fi). Vị trí phải có độ chính xác ≤ ${MAX_ACCEPTABLE_ACCURACY}m để được gửi.`}
                 </Typography>
               </Box>
             </Box>

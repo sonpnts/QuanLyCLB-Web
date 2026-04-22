@@ -12,6 +12,7 @@ export interface GetStudentsParams {
   beltLevelId?: string
   gender?: boolean
   enrollmentStatus?: string
+  isSuspended?: boolean
 }
 
 export interface CreateStudentRequest {
@@ -114,6 +115,34 @@ class StudentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'restoreStudent', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async suspendStudent(id: string, reason?: string): Promise<ResponseResult<StudentType>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.students.suspend(id), { reason })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'suspendStudent', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async resumeStudent(id: string): Promise<ResponseResult<StudentType>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.students.resume(id))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'resumeStudent', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }

@@ -1,8 +1,8 @@
-﻿
+
 'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useState } from 'react'
 
 import { useForm } from 'react-hook-form'
@@ -103,7 +103,7 @@ const AddUserDrawer = (props: Props) => {
       const roleName = selectedRole?.name
 
       if (!roleName) {
-        showNotification('Vui lÃ²ng chá»n vai trÃ².', 'error')
+        showNotification('Vui lòng chọn vai trò.', 'error')
 
         return
       }
@@ -125,14 +125,14 @@ const AddUserDrawer = (props: Props) => {
       if (response.success && response.data) {
         setData([response.data, ...(userData || [])])
         setFilteredData([response.data, ...(userData || [])])
-        showNotification(response.message || 'Táº¡o ngÆ°á»i dÃ¹ng thÃ nh cÃ´ng.', 'success')
+        showNotification(response.message || 'Tạo người dùng thành công.', 'success')
         handleCloseDrawer()
       } else {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o ngÆ°á»i dÃ¹ng.', 'error')
+        showNotification(response.message || 'Không thể tạo người dùng.', 'error')
       }
     } catch (error) {
       logger.error('AddUserDrawer', 'Error creating user', error)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi táº¡o ngÆ°á»i dÃ¹ng.', 'error')
+      showNotification('Đã có lỗi khi tạo người dùng.', 'error')
     } finally {
       setLoading(false)
     }
@@ -148,7 +148,7 @@ const AddUserDrawer = (props: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 500, md: 600 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>ThÃªm ngÆ°á»i dÃ¹ng má»›i</Typography>
+        <Typography variant='h5'>Thêm người dùng mới</Typography>
         <IconButton size='small' onClick={handleCloseDrawer}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -159,8 +159,8 @@ const AddUserDrawer = (props: Props) => {
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              label='Há» vÃ  tÃªn'
-              {...register('fullName', { required: 'Há» vÃ  tÃªn lÃ  báº¯t buá»™c' })}
+              label='Họ và tên'
+              {...register('fullName', { required: 'Họ và tên là bắt buộc' })}
               error={!!errors.fullName}
               helperText={errors.fullName?.message}
             />
@@ -171,10 +171,10 @@ const AddUserDrawer = (props: Props) => {
               label='Email'
               type='email'
               {...register('email', {
-                required: 'Email lÃ  báº¯t buá»™c',
+                required: 'Email là bắt buộc',
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Email khÃ´ng há»£p lá»‡'
+                  message: 'Email không hợp lệ'
                 }
               })}
               error={!!errors.email}
@@ -184,7 +184,7 @@ const AddUserDrawer = (props: Props) => {
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label='TÃªn Ä‘Äƒng nháº­p'
+              label='Tên đăng nhập'
               {...register('username')}
               error={!!errors.username}
               helperText={errors.username?.message}
@@ -193,7 +193,7 @@ const AddUserDrawer = (props: Props) => {
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label='Máº­t kháº©u'
+              label='Mật khẩu'
               type='password'
               {...register('password')}
               error={!!errors.password}
@@ -202,8 +202,8 @@ const AddUserDrawer = (props: Props) => {
           </Grid>
           <Grid size={{ xs: 12 }}>
             <FormControl fullWidth error={!!errors.role}>
-              <InputLabel>Vai trÃ²</InputLabel>
-              <Select value={watch('role')} label='Vai trÃ²' onChange={e => setValue('role', e.target.value)}>
+              <InputLabel>Vai trò</InputLabel>
+              <Select value={watch('role')} label='Vai trò' onChange={e => setValue('role', e.target.value)}>
                 {roles && roles.length > 0 ? (
                   Array.from(new Map(roles.map(r => [r.id, r])).values()).map(role => (
                     <MenuItem key={role.id} value={role.id}>
@@ -212,7 +212,7 @@ const AddUserDrawer = (props: Props) => {
                   ))
                 ) : (
                   <MenuItem value='' disabled>
-                    Äang táº£i vai trÃ²...
+                    Đang tải vai trò...
                   </MenuItem>
                 )}
               </Select>
@@ -226,7 +226,7 @@ const AddUserDrawer = (props: Props) => {
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label='Sá»‘ Ä‘iá»‡n thoáº¡i'
+              label='Số điện thoại'
               {...register('phoneNumber')}
               error={!!errors.phoneNumber}
               helperText={errors.phoneNumber?.message}
@@ -235,7 +235,7 @@ const AddUserDrawer = (props: Props) => {
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label='TrÃ¬nh Ä‘á»™'
+              label='Trình độ'
               {...register('skillLevel')}
               error={!!errors.skillLevel}
               helperText={errors.skillLevel?.message}
@@ -244,7 +244,7 @@ const AddUserDrawer = (props: Props) => {
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              label='Chá»©ng chá»‰'
+              label='Chứng chỉ'
               {...register('certification')}
               error={!!errors.certification}
               helperText={errors.certification?.message}
@@ -253,10 +253,10 @@ const AddUserDrawer = (props: Props) => {
         </Grid>
         <Box className='flex gap-2 justify-end'>
           <Button variant='outlined' onClick={handleCloseDrawer}>
-            Há»§y
+            Hủy
           </Button>
           <Button type='submit' variant='contained' disabled={loading}>
-            {loading ? 'Äang táº¡o...' : 'Táº¡o ngÆ°á»i dÃ¹ng'}
+            {loading ? 'Đang tạo...' : 'Tạo người dùng'}
           </Button>
         </Box>
       </form>

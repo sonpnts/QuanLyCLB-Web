@@ -1,7 +1,6 @@
-﻿'use client'
+'use client'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useEffect, useState, useCallback } from 'react'
 
 // MUI Imports
@@ -56,11 +55,11 @@ return dateB.localeCompare(dateA)
           setPayroll(sorted[0])
         }
       } else {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ táº£i báº£ng lÆ°Æ¡ng.', 'error')
+        showNotification(response.message || 'Không thể tải bảng lương.', 'error')
       }
     } catch (error) {
-      logger.error('index', 'Error loading payroll', error)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi táº£i báº£ng lÆ°Æ¡ng.', 'error')
+      console.error('Error loading payroll:', error)
+      showNotification('Đã có lỗi khi tải bảng lương.', 'error')
     } finally {
       setLoading(false)
     }
@@ -83,12 +82,12 @@ return dateB.localeCompare(dateA)
       <Grid container spacing={6}>
         <Grid size={{ xs: 12 }}>
           <Card>
-            <CardHeader title='Báº£ng lÆ°Æ¡ng' />
+            <CardHeader title='Bảng lương' />
             <CardContent>
               <Box className='text-center py-12'>
                 <i className='ri-money-dollar-circle-line text-6xl text-textDisabled mb-4' />
                 <Typography variant='body1' color='text.secondary'>
-                  ChÆ°a cÃ³ báº£ng lÆ°Æ¡ng nÃ o
+                  Chưa có bảng lương nào
                 </Typography>
               </Box>
             </CardContent>
@@ -128,8 +127,8 @@ return new Intl.NumberFormat('vi-VN', {
       <Grid size={{ xs: 12 }}>
         <Card>
           <CardHeader
-            title='Báº£ng lÆ°Æ¡ng'
-            subheader={`ThÃ¡ng ${payroll.month}/${payroll.year}`}
+            title='Bảng lương'
+            subheader={`Tháng ${payroll.month}/${payroll.year}`}
             className='p-4 sm:p-6'
             subheaderTypographyProps={{
               className: 'text-xs sm:text-sm'
@@ -142,7 +141,7 @@ return new Intl.NumberFormat('vi-VN', {
                 <Grid container spacing={{ xs: 3, sm: 4 }}>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <Typography variant='body2' color='text.secondary' className='mb-1 text-xs sm:text-sm'>
-                      ThÃ¡ng/NÄƒm
+                      Tháng/Năm
                     </Typography>
                     <Typography variant='h6' className='font-semibold text-base sm:text-lg'>
                       {payroll.month}/{payroll.year}
@@ -150,7 +149,7 @@ return new Intl.NumberFormat('vi-VN', {
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <Typography variant='body2' color='text.secondary' className='mb-1 text-xs sm:text-sm'>
-                      NgÃ y táº¡o
+                      Ngày tạo
                     </Typography>
                     <Typography variant='body1' className='font-medium text-sm sm:text-base'>
                       {formatDate(payroll.generatedAt || payroll.createdDate)}
@@ -164,7 +163,7 @@ return new Intl.NumberFormat('vi-VN', {
               {/* Payroll Details */}
               <Box>
                 <Typography variant='h6' className='mb-3 sm:mb-4 font-semibold text-base sm:text-lg'>
-                  Chi tiáº¿t báº£ng lÆ°Æ¡ng
+                  Chi tiết bảng lương
                 </Typography>
 
                 <Box className='flex flex-col gap-3 sm:gap-4'>
@@ -172,10 +171,10 @@ return new Intl.NumberFormat('vi-VN', {
                   {payroll.totalHours !== undefined && (
                     <Box className='flex justify-between items-center p-3 border rounded'>
                       <Typography variant='body1' className='text-sm sm:text-base'>
-                        Tá»•ng sá»‘ giá»:
+                        Tổng số giờ:
                       </Typography>
                       <Typography variant='body1' className='font-medium text-sm sm:text-base'>
-                        {payroll.totalHours} giá»
+                        {payroll.totalHours} giờ
                       </Typography>
                     </Box>
                   )}
@@ -183,10 +182,10 @@ return new Intl.NumberFormat('vi-VN', {
                   {payroll.totalSessions !== undefined && (
                     <Box className='flex justify-between items-center p-3 border rounded'>
                       <Typography variant='body1' className='text-sm sm:text-base'>
-                        Tá»•ng sá»‘ buá»•i:
+                        Tổng số buổi:
                       </Typography>
                       <Typography variant='body1' className='font-medium text-sm sm:text-base'>
-                        {payroll.totalSessions} buá»•i
+                        {payroll.totalSessions} buổi
                       </Typography>
                     </Box>
                   )}
@@ -194,7 +193,7 @@ return new Intl.NumberFormat('vi-VN', {
                   {payroll.hourlyRate !== undefined && (
                     <Box className='flex justify-between items-center p-3 border rounded'>
                       <Typography variant='body1' className='text-sm sm:text-base'>
-                        Má»©c lÆ°Æ¡ng/giá»:
+                        Mức lương/giờ:
                       </Typography>
                       <Typography variant='body1' className='font-medium text-sm sm:text-base break-words text-right'>
                         {formatCurrency(payroll.hourlyRate)}
@@ -207,7 +206,7 @@ return new Intl.NumberFormat('vi-VN', {
                   {/* Total Amount */}
                   <Box className='flex justify-between items-center p-3 sm:p-4 border rounded bg-primaryLight'>
                     <Typography variant='h6' className='font-semibold text-base sm:text-lg'>
-                      Tá»•ng lÆ°Æ¡ng:
+                      Tổng lương:
                     </Typography>
                     <Typography
                       variant='h5'
@@ -225,7 +224,7 @@ return new Intl.NumberFormat('vi-VN', {
                   <Divider />
                   <Box>
                     <Typography variant='subtitle2' className='mb-2 font-medium text-sm sm:text-base'>
-                      Ghi chÃº:
+                      Ghi chú:
                     </Typography>
                     <Typography variant='body2' color='text.secondary' className='text-xs sm:text-sm break-words'>
                       {payroll.notes || payroll.description}

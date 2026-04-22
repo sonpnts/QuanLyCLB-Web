@@ -1,6 +1,6 @@
-﻿'use client'
-
+'use client'
 import { logger } from '@/utils/logger'
+
 import { useState, useEffect, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import Button from '@mui/material/Button'
@@ -64,24 +64,24 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
   }, [sessionId, refreshTrigger])
 
   const deleteRegistration = async (id: string) => {
-    if (!confirm('Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n xÃ³a thÃ­ sinh nÃ y khá»i danh sÃ¡ch dá»± thi?')) return
-    alert('TÃ­nh nÄƒng xÃ³a Ä‘ang Ä‘Æ°á»£c phÃ¡t triá»ƒn') // TODO: call APi
+    if (!confirm('Bạn có chắc chắn muốn xóa thí sinh này khỏi danh sách dự thi?')) return
+    alert('Tính năng xóa đang được phát triển') // TODO: call APi
   }
 
   const rejectRegistration = async (id: string) => {
-    if (!confirm('Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n tá»« chá»‘i/huá»· dá»± thi cá»§a há»c viÃªn nÃ y? Thao tÃ¡c nÃ y sáº½ xoÃ¡ luÃ´n hoÃ¡ Ä‘Æ¡n náº¿u há»c viÃªn Ä‘Ã£ Ä‘Ã³ng tiá»n.')) return
+    if (!confirm('Bạn có chắc chắn muốn từ chối/huỷ dự thi của học viên này? Thao tác này sẽ xoá luôn hoá đơn nếu học viên đã đóng tiền.')) return
     
     try {
       const res = await beltExamService.rejectExamRegistration(id)
       if (res.success) {
-        toast.success(res.message || 'Huá»· dá»± thi thÃ nh cÃ´ng')
+        toast.success(res.message || 'Huỷ dự thi thành công')
         fetchRegistrations()
       } else {
-        toast.error(res.message || 'CÃ³ lá»—i xáº£y ra')
+        toast.error(res.message || 'Có lỗi xảy ra')
       }
     } catch (error) {
-      logger.error('RegistrationListTable', 'unknown', error)
-      toast.error('Lá»—i káº¿t ná»‘i mÃ¡y chá»§')
+      logger.error('RegistrationListTable', 'error', error)
+      toast.error('Lỗi kết nối máy chủ')
     }
   }
 
@@ -89,30 +89,30 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
     () => {
       const cols = [
         columnHelper.accessor('studentName', {
-          header: 'Há»c viÃªn',
+          header: 'Học viên',
           cell: ({ row }) => <Typography color='text.primary' fontWeight={500}>{row.original.studentName}</Typography>
         }),
         columnHelper.accessor('className', {
-          header: 'Lá»›p',
+          header: 'Lớp',
           cell: ({ row }) => <Typography>{row.original.className}</Typography>
         }),
         columnHelper.accessor('currentBeltLevelName', {
-          header: 'Cáº¥p hiá»‡n táº¡i',
-          cell: ({ row }) => <Typography>{row.original.currentBeltLevelName || 'KhÃ´ng cÃ³'}</Typography>
+          header: 'Cấp hiện tại',
+          cell: ({ row }) => <Typography>{row.original.currentBeltLevelName || 'Không có'}</Typography>
         }),
         columnHelper.accessor('targetBeltLevelName', {
-          header: 'Cáº¥p Ä‘ai thi lÃªn',
+          header: 'Cấp đai thi lên',
           cell: ({ row }) => <Typography color='primary' fontWeight={500}>{row.original.targetBeltLevelName}</Typography>
         }),
         columnHelper.accessor('isFeePaid', {
-          header: 'Lá»‡ phÃ­',
+          header: 'Lệ phí',
           cell: ({ row }) => {
             const isPaid = row.original.isFeePaid
             return (
               <Box display='flex' flexDirection='column' alignItems='flex-start' gap={1}>
                 <Typography variant='body2'>{formatCurrency(row.original.feeAmount ?? 0)}</Typography>
                 <Chip
-                  label={isPaid ? 'ÄÃ£ thu' : 'ChÆ°a thu'}
+                  label={isPaid ? 'Đã thu' : 'Chưa thu'}
                   color={isPaid ? 'success' : 'error'}
                   variant='tonal'
                   size='small'
@@ -122,7 +122,7 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
           }
         }),
         columnHelper.accessor('status', {
-          header: 'Tráº¡ng thÃ¡i',
+          header: 'Trạng thái',
           cell: ({ row }) => (
             <Chip
               label={row.original.status}
@@ -138,7 +138,7 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
         cols.push(
           columnHelper.display({
             id: 'actions',
-            header: 'HÃ nh Ä‘á»™ng',
+            header: 'Hành động',
             cell: ({ row }) => (
               <IconButton color='error' onClick={() => deleteRegistration(row.original.id)}>
                 <i className='ri-delete-bin-7-line' />
@@ -150,10 +150,10 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
         cols.push(
           columnHelper.display({
             id: 'actions',
-            header: 'HÃ nh Ä‘á»™ng',
+            header: 'Hành động',
             cell: ({ row }) => (
               row.original.status !== 'Rejected' ? (
-                <IconButton color='error' title='Huá»· dá»± thi' onClick={() => rejectRegistration(row.original.id)}>
+                <IconButton color='error' title='Huỷ dự thi' onClick={() => rejectRegistration(row.original.id)}>
                   <i className='ri-close-circle-line' />
                 </IconButton>
               ) : null
@@ -208,7 +208,7 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
               {data.length === 0 && !loading && (
                 <tr>
                   <td colSpan={columns.length} className='px-4 py-8 text-center text-textSecondary'>
-                    ChÆ°a cÃ³ há»c viÃªn Ä‘Äƒng kÃ½
+                    Chưa có học viên đăng ký
                   </td>
                 </tr>
               )}

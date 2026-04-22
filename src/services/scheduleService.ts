@@ -10,6 +10,8 @@ export interface GetSchedulesParams {
   BranchId?: string
   DayOfWeek?: number // 0=Sunday, 1=Monday...
   IsActive?: boolean
+  PageSize?: number
+  PageNumber?: number
 }
 
 export interface CreateClassScheduleRequest {
@@ -74,13 +76,30 @@ export interface ResponseResult<T = any> {
   errors?: string[]
 }
 
+// Backend dùng JsonStringEnumConverter nên DayOfWeek trả về string ("Monday", "Tuesday"...)
+// Map về số nguyên cho đúng với DAY_OF_WEEK_NAMES (0=Chủ nhật, 1=Thứ hai...)
+const DAY_OF_WEEK_STRING_MAP: Record<string, number> = {
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6
+}
+
+function parseDayOfWeek(value: number | string): number {
+  if (typeof value === 'number') return value
+  return DAY_OF_WEEK_STRING_MAP[value] ?? 0
+}
+
 class ScheduleService {
   private mapApiScheduleToScheduleType(apiSchedule: ApiScheduleResponse): ScheduleType {
     return {
       id: apiSchedule.id,
       classId: apiSchedule.classId,
       class: apiSchedule.class as ClassInfo,
-      dayOfWeek: apiSchedule.dayOfWeek,
+      dayOfWeek: parseDayOfWeek(apiSchedule.dayOfWeek as unknown as string),
       startTime: apiSchedule.startTime,
       endTime: apiSchedule.endTime,
       branchId: apiSchedule.branchId,

@@ -1,7 +1,6 @@
-﻿'use client'
+'use client'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 
 // MUI Imports
@@ -54,14 +53,14 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
   // Notification Hook
   const { showNotification } = useNotification()
 
-  // Refs Ä‘á»ƒ trÃ¡nh duplicate calls
+  // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
   const currentFilterRef = useRef<string>('')
   const branchesLoadedRef = useRef(false)
 
-  // Load branches - chá»‰ 1 láº§n
+  // Load branches - chỉ 1 lần
   useEffect(() => {
     if (branchesLoadedRef.current) return
 
@@ -74,7 +73,7 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
           setBranches(response.data)
         }
       } catch (error) {
-        logger.error('ScheduleListTable', 'Error loading branches', error)
+        console.error('Error loading branches:', error)
         branchesLoadedRef.current = false
       }
     }
@@ -111,7 +110,7 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
           showNotificationRef.current(response.message || Messages.schedule.error.load, 'error')
         }
       } catch (error) {
-        logger.error('ScheduleListTable', 'Error loading schedules', error)
+        console.error('Error loading schedules:', error)
         showNotificationRef.current(Messages.schedule.error.loadGeneric, 'error')
       }
     }
@@ -138,7 +137,7 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
           showNotification(response.message || Messages.schedule.error.delete, 'error')
         }
       } catch (error) {
-        logger.error('ScheduleListTable', 'Error deleting schedule', error)
+        console.error('Error deleting schedule:', error)
         showNotification(Messages.schedule.error.deleteGeneric, 'error')
       }
     },
@@ -159,7 +158,7 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
           showNotification(response.message || Messages.schedule.error.restore, 'error')
         }
       } catch (error) {
-        logger.error('ScheduleListTable', 'Error restoring schedule', error)
+        console.error('Error restoring schedule:', error)
         showNotification(Messages.schedule.error.restoreGeneric, 'error')
       }
     },
@@ -186,7 +185,7 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
   const columns = useMemo(
     () => [
       columnHelper.accessor('class', {
-        header: 'Lá»›p há»c',
+        header: 'Lớp học',
         cell: ({ row }) => (
           <Typography variant='body2' className='font-medium'>
             {row.original.class.name}
@@ -194,13 +193,13 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
         )
       }),
       columnHelper.accessor('dayOfWeek', {
-        header: 'Thá»©',
+        header: 'Thứ',
         cell: ({ row }) => (
           <Chip label={getDayName(row.original.dayOfWeek)} color='primary' variant='tonal' size='small' />
         )
       }),
       columnHelper.accessor('startTime', {
-        header: 'Giá» báº¯t Ä‘áº§u',
+        header: 'Giờ bắt đầu',
         cell: ({ row }) => (
           <Typography variant='body2' className='font-medium'>
             {row.original.startTime}
@@ -208,7 +207,7 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
         )
       }),
       columnHelper.accessor('endTime', {
-        header: 'Giá» káº¿t thÃºc',
+        header: 'Giờ kết thúc',
         cell: ({ row }) => (
           <Typography variant='body2' className='font-medium'>
             {row.original.endTime}
@@ -216,11 +215,11 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
         )
       }),
       columnHelper.accessor('branch', {
-        header: 'Chi nhÃ¡nh',
+        header: 'Chi nhánh',
         cell: ({ row }) => <Typography variant='body2'>{row.original.branch.name}</Typography>
       }),
       columnHelper.accessor('isActive', {
-        header: 'Tráº¡ng thÃ¡i',
+        header: 'Trạng thái',
         cell: ({ row }) => (
           <Chip
             label={getStatusLabel(row.original.isActive)}
@@ -232,20 +231,20 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
       }),
       columnHelper.display({
         id: 'actions',
-        header: 'Thao tÃ¡c',
+        header: 'Thao tác',
         cell: ({ row }) => (
           <Box className='flex items-center gap-2'>
             {row.original.isActive && (
-              <IconButton size='small' onClick={() => handleEdit(row.original)} color='primary' title='Chá»‰nh sá»­a'>
+              <IconButton size='small' onClick={() => handleEdit(row.original)} color='primary' title='Chỉnh sửa'>
                 <i className='ri-edit-box-line text-xl' />
               </IconButton>
             )}
             {!row.original.isActive ? (
-              <IconButton size='small' onClick={() => handleRestore(row.original.id)} color='success' title='KhÃ´i phá»¥c'>
+              <IconButton size='small' onClick={() => handleRestore(row.original.id)} color='success' title='Khôi phục'>
                 <i className='ri-restart-line text-xl' />
               </IconButton>
             ) : (
-              <IconButton size='small' onClick={() => handleDelete(row.original.id)} color='error' title='XÃ³a'>
+              <IconButton size='small' onClick={() => handleDelete(row.original.id)} color='error' title='Xóa'>
                 <i className='ri-delete-bin-7-line text-xl' />
               </IconButton>
             )}
@@ -270,10 +269,10 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
     <>
       <Card>
         <CardHeader
-          title='Danh sÃ¡ch lá»‹ch há»c'
+          title='Danh sách lịch học'
           action={
             <Button variant='contained' onClick={() => setAddScheduleOpen(true)}>
-              ThÃªm lá»‹ch há»c má»›i
+              Thêm lịch học mới
             </Button>
           }
         />

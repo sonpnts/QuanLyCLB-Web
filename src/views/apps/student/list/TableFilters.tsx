@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useState, useEffect, useRef, memo } from 'react'
 
 // MUI Imports
@@ -28,11 +28,11 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
   const [enrollmentStatus, setEnrollmentStatus] = useState<string>('')
   const [classes, setClasses] = useState<any[]>([])
 
-  // Refs Ä‘á»ƒ track
+  // Refs để track
   const isFirstRender = useRef(true)
   const classesLoaded = useRef(false)
 
-  // Load classes for filter - chá»‰ load 1 láº§n
+  // Load classes for filter - chỉ load 1 lần
   useEffect(() => {
     if (classesLoaded.current) return
 
@@ -45,13 +45,13 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
         }
       } catch (error) {
         logger.error('TableFilters', 'Error loading classes', error)
-        classesLoaded.current = false // Cho phÃ©p retry náº¿u lá»—i
+        classesLoaded.current = false // Cho phép retry nếu lỗi
       }
     }
     loadClasses()
   }, [])
 
-  // Handle filter changes - chá»‰ gá»i khi filter thá»±c sá»± thay Ä‘á»•i
+  // Handle filter changes - chỉ gọi khi filter thực sự thay đổi
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
@@ -70,16 +70,16 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
       <Grid container spacing={5}>
         <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <InputLabel id='class-select'>Lá»›p há»c</InputLabel>
+            <InputLabel id='class-select'>Lớp học</InputLabel>
             <Select
               fullWidth
               id='select-class'
               value={classId}
               onChange={(e: SelectChangeEvent) => setClassId(e.target.value)}
-              label='Lá»›p há»c'
+              label='Lớp học'
               labelId='class-select'
             >
-              <MenuItem value=''>Táº¥t cáº£</MenuItem>
+              <MenuItem value=''>Tất cả</MenuItem>
               {classes.map(cls => (
                 <MenuItem key={cls.id} value={cls.id}>
                   {cls.name}
@@ -90,36 +90,36 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
         </Grid>
         <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <InputLabel id='gender-select'>Giá»›i tÃ­nh</InputLabel>
+            <InputLabel id='gender-select'>Giới tính</InputLabel>
             <Select
               fullWidth
               id='select-gender'
               value={gender}
               onChange={(e: SelectChangeEvent) => setGender(e.target.value)}
-              label='Giá»›i tÃ­nh'
+              label='Giới tính'
               labelId='gender-select'
             >
-              <MenuItem value=''>Táº¥t cáº£</MenuItem>
+              <MenuItem value=''>Tất cả</MenuItem>
               <MenuItem value='true'>Nam</MenuItem>
-              <MenuItem value='false'>Ná»¯</MenuItem>
+              <MenuItem value='false'>Nữ</MenuItem>
             </Select>
           </FormControl>
         </Grid>
         <Grid item xs={12} sm={4}>
           <FormControl fullWidth>
-            <InputLabel id='status-select'>Tráº¡ng thÃ¡i</InputLabel>
+            <InputLabel id='status-select'>Trạng thái</InputLabel>
             <Select
               fullWidth
               id='select-status'
               value={enrollmentStatus}
               onChange={(e: SelectChangeEvent) => setEnrollmentStatus(e.target.value)}
-              label='Tráº¡ng thÃ¡i'
+              label='Trạng thái'
               labelId='status-select'
             >
-              <MenuItem value=''>Táº¥t cáº£</MenuItem>
-              <MenuItem value='Active'>Äang há»c</MenuItem>
-              <MenuItem value='Inactive'>Táº¡m nghá»‰</MenuItem>
-              <MenuItem value='Completed'>HoÃ n thÃ nh</MenuItem>
+              <MenuItem value=''>Tất cả</MenuItem>
+              <MenuItem value='Active'>Đang học</MenuItem>
+              <MenuItem value='Inactive'>Tạm nghỉ</MenuItem>
+              <MenuItem value='Completed'>Hoàn thành</MenuItem>
             </Select>
           </FormControl>
         </Grid>

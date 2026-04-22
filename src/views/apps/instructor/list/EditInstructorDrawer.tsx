@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 
 // MUI Imports
@@ -16,53 +16,43 @@ import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 
-// Type Imports
-import type { InstructorType, CreateInstructorRequest } from '@/services/instructorService'
-import type { BeltLevelType } from '@/types/apps/beltExamTypes'
-
-// Service Imports
+// Type & Service Imports
+import type { InstructorType, UpdateInstructorRequest } from '@/services/instructorService'
 import instructorService from '@/services/instructorService'
 import beltLevelService from '@/services/beltLevelService'
-
-// Context Imports
+import type { BeltLevelType } from '@/types/apps/beltExamTypes'
 import { useNotification } from '@/contexts/notificationContext'
 import { logger } from '@/utils/logger'
 
 type Props = {
   open: boolean
+  instructor: InstructorType | null
   handleClose: () => void
-  instructorData?: InstructorType[]
-  setData: (data: InstructorType[]) => void
-  setFilteredData: (data: InstructorType[]) => void
+  onUpdated: (updated: InstructorType) => void
 }
 
-type FormValidateType = {
+type FormValues = {
   fullName: string
-  email: string
-  phoneNumber?: string
-  skillLevelId?: string
-  certification?: string
+  phoneNumber: string
+  skillLevelId: string
+  certification: string
 }
 
-const AddInstructorDrawer = (props: Props) => {
-  const { open, handleClose, instructorData, setData, setFilteredData } = props
-
+const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Props) => {
   const [loading, setLoading] = useState(false)
   const [beltLevels, setBeltLevels] = useState<BeltLevelType[]>([])
   const [beltLevelsLoading, setBeltLevelsLoading] = useState(false)
-
   const { showNotification } = useNotification()
 
   const {
     register,
     handleSubmit,
+    reset,
     control,
-    formState: { errors },
-    reset
-  } = useForm<FormValidateType>({
+    formState: { errors }
+  } = useForm<FormValues>({
     defaultValues: {
       fullName: '',
-      email: '',
       phoneNumber: '',
       skillLevelId: '',
       certification: ''
@@ -80,7 +70,7 @@ const AddInstructorDrawer = (props: Props) => {
           setBeltLevels(res.data.filter(b => b.isActive !== false))
         }
       } catch (err) {
-        logger.error('AddInstructorDrawer', 'fetchBeltLevels', err)
+        logger.error('EditInstructorDrawer', 'fetchBeltLevels', err)
       } finally {
         setBeltLevelsLoading(false)
       }
@@ -88,36 +78,48 @@ const AddInstructorDrawer = (props: Props) => {
     fetchBeltLevels()
   }, [open])
 
+  // Điền dữ liệu hiện tại khi mở drawer
+  useEffect(() => {
+    if (instructor && open) {
+      reset({
+        fullName: instructor.fullName || '',
+        phoneNumber: instructor.phoneNumber || '',
+        skillLevelId: instructor.skillLevelId || '',
+        certification: instructor.certification || ''
+      })
+    }
+  }, [instructor, open, reset])
+
   const handleCloseDrawer = () => {
     reset()
     handleClose()
   }
 
-  const onSubmit = async (data: FormValidateType) => {
+  const onSubmit = async (formData: FormValues) => {
+    if (!instructor) return
+
     try {
       setLoading(true)
 
-      const createData: CreateInstructorRequest = {
-        fullName: data.fullName,
-        email: data.email,
-        phoneNumber: data.phoneNumber || undefined,
-        skillLevelId: data.skillLevelId || null,
-        certification: data.certification || undefined
+      const payload: UpdateInstructorRequest = {
+        fullName: formData.fullName,
+        phoneNumber: formData.phoneNumber || undefined,
+        skillLevelId: formData.skillLevelId || null,
+        certification: formData.certification || undefined
       }
 
-      const response = await instructorService.createInstructor(createData)
+      const response = await instructorService.updateInstructor(instructor.id, payload)
 
       if (response.success && response.data) {
-        setData([response.data, ...(instructorData || [])])
-        setFilteredData([response.data, ...(instructorData || [])])
-        showNotification(response.message || 'Tạo huấn luyện viên thành công.', 'success')
+        onUpdated(response.data)
+        showNotification(response.message || 'Cập nhật huấn luyện viên thành công.', 'success')
         handleCloseDrawer()
       } else {
-        showNotification(response.message || 'Không thể tạo huấn luyện viên.', 'error')
+        showNotification(response.message || 'Không thể cập nhật huấn luyện viên.', 'error')
       }
     } catch (error) {
-      logger.error('AddInstructorDrawer', 'Error creating instructor', error)
-      showNotification('Đã có lỗi khi tạo huấn luyện viên.', 'error')
+      logger.error('EditInstructorDrawer', 'onSubmit', error)
+      showNotification('Đã có lỗi khi cập nhật huấn luyện viên.', 'error')
     } finally {
       setLoading(false)
     }
@@ -133,46 +135,43 @@ const AddInstructorDrawer = (props: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 500, md: 600 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Thêm huấn luyện viên mới</Typography>
+        <Typography variant='h5'>Chỉnh sửa huấn luyện viên</Typography>
         <IconButton size='small' onClick={handleCloseDrawer}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
       </div>
       <Divider />
+
+      {instructor && (
+        <Box className='px-5 py-3' sx={{ bgcolor: 'action.hover' }}>
+          <Typography variant='body2' color='text.secondary'>
+            Email: <strong>{instructor.email || '—'}</strong>
+          </Typography>
+        </Box>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-4 p-5'>
         <Grid container spacing={4}>
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
               label='Họ và tên'
+              InputLabelProps={{ shrink: true }}
               {...register('fullName', { required: 'Họ và tên là bắt buộc' })}
               error={!!errors.fullName}
               helperText={errors.fullName?.message}
             />
           </Grid>
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              label='Email'
-              type='email'
-              {...register('email', {
-                required: 'Email là bắt buộc',
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Email không hợp lệ'
-                }
-              })}
-              error={!!errors.email}
-              helperText={errors.email?.message}
-            />
-          </Grid>
+
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
               label='Số điện thoại'
+              InputLabelProps={{ shrink: true }}
               {...register('phoneNumber')}
             />
           </Grid>
+
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='skillLevelId'
@@ -183,6 +182,7 @@ const AddInstructorDrawer = (props: Props) => {
                   select
                   fullWidth
                   label='Cấp đai'
+                  InputLabelProps={{ shrink: true }}
                   disabled={beltLevelsLoading}
                   InputProps={{
                     endAdornment: beltLevelsLoading ? <CircularProgress size={18} sx={{ mr: 1 }} /> : undefined
@@ -209,21 +209,24 @@ const AddInstructorDrawer = (props: Props) => {
               )}
             />
           </Grid>
+
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
               label='Chứng chỉ'
+              InputLabelProps={{ shrink: true }}
               {...register('certification')}
               placeholder='Ví dụ: ACE, NASM, ACSM'
             />
           </Grid>
         </Grid>
-        <Box className='flex gap-2 justify-end'>
-          <Button variant='outlined' onClick={handleCloseDrawer}>
+
+        <Box className='flex gap-2 justify-end mt-2'>
+          <Button variant='outlined' onClick={handleCloseDrawer} disabled={loading}>
             Hủy
           </Button>
           <Button type='submit' variant='contained' disabled={loading}>
-            {loading ? 'Đang tạo...' : 'Tạo huấn luyện viên'}
+            {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
           </Button>
         </Box>
       </form>
@@ -231,4 +234,4 @@ const AddInstructorDrawer = (props: Props) => {
   )
 }
 
-export default AddInstructorDrawer
+export default EditInstructorDrawer

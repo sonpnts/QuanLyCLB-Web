@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
+import { logger } from '@/utils/logger'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useEffect, useMemo, useState } from 'react'
 
 // MUI Imports
@@ -132,15 +132,15 @@ const EditStudentDrawer = (props: Props) => {
       const res = await studentService.updateStudent(student.id, payload)
 
       if (res.success && res.data) {
-        showNotification(res.message || 'Cáº­p nháº­t há»c viÃªn thÃ nh cÃ´ng.', 'success')
+        showNotification(res.message || 'Cập nhật học viên thành công.', 'success')
         onSaved(res.data as StudentType)
         onClose()
       } else {
-        showNotification(res.message || 'KhÃ´ng thá»ƒ cáº­p nháº­t há»c viÃªn.', 'error')
+        showNotification(res.message || 'Không thể cập nhật học viên.', 'error')
       }
     } catch (err) {
       logger.error('EditStudentDrawer', 'Error updating student', err)
-      showNotification('ÄÃ£ cÃ³ lá»—i khi cáº­p nháº­t há»c viÃªn.', 'error')
+      showNotification('Đã có lỗi khi cập nhật học viên.', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -156,7 +156,7 @@ const EditStudentDrawer = (props: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 320, sm: 420 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Chá»‰nh sá»­a há»c viÃªn</Typography>
+        <Typography variant='h5'>Chỉnh sửa học viên</Typography>
         <IconButton size='small' onClick={onClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -168,12 +168,12 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='code'
               control={control}
-              rules={{ required: 'MÃ£ há»c viÃªn lÃ  báº¯t buá»™c' }}
+              rules={{ required: 'Mã học viên là bắt buộc' }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label='MÃ£ há»c viÃªn *'
+                  label='Mã học viên *'
                   error={!!errors.code}
                   helperText={errors.code?.message}
                 />
@@ -184,12 +184,12 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='fullName'
               control={control}
-              rules={{ required: 'Há» tÃªn lÃ  báº¯t buá»™c' }}
+              rules={{ required: 'Họ tên là bắt buộc' }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label='Há» vÃ  tÃªn *'
+                  label='Họ và tên *'
                   error={!!errors.fullName}
                   helperText={errors.fullName?.message}
                 />
@@ -200,7 +200,7 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='phoneNumber'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Sá»‘ Ä‘iá»‡n thoáº¡i' />}
+              render={({ field }) => <TextField {...field} fullWidth label='Số điện thoại' />}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -214,7 +214,7 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='address'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Äá»‹a chá»‰' />}
+              render={({ field }) => <TextField {...field} fullWidth label='Địa chỉ' />}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -229,7 +229,7 @@ const EditStudentDrawer = (props: Props) => {
               name='dateOfBirth'
               control={control}
               render={({ field }) => (
-                <TextField {...field} fullWidth label='NgÃ y sinh' type='date' InputLabelProps={{ shrink: true }} />
+                <TextField {...field} fullWidth label='Ngày sinh' type='date' InputLabelProps={{ shrink: true }} />
               )}
             />
           </Grid>
@@ -239,11 +239,11 @@ const EditStudentDrawer = (props: Props) => {
               control={control}
               render={({ field }) => (
                 <FormControl fullWidth>
-                  <InputLabel>Giá»›i tÃ­nh</InputLabel>
-                  <Select {...field} label='Giá»›i tÃ­nh'>
-                    <MenuItem value=''>Chá»n giá»›i tÃ­nh</MenuItem>
+                  <InputLabel>Giới tính</InputLabel>
+                  <Select {...field} label='Giới tính'>
+                    <MenuItem value=''>Chọn giới tính</MenuItem>
                     <MenuItem value='true'>Nam</MenuItem>
-                    <MenuItem value='false'>Ná»¯</MenuItem>
+                    <MenuItem value='false'>Nữ</MenuItem>
                   </Select>
                 </FormControl>
               )}
@@ -255,9 +255,9 @@ const EditStudentDrawer = (props: Props) => {
               control={control}
               render={({ field }) => (
                 <FormControl fullWidth>
-                  <InputLabel>Cáº¥p Ä‘ai hiá»‡n táº¡i</InputLabel>
-                  <Select {...field} label='Cáº¥p Ä‘ai hiá»‡n táº¡i'>
-                    <MenuItem value=''>ChÆ°a cÃ³ cáº¥p Ä‘ai</MenuItem>
+                  <InputLabel>Cấp đai hiện tại</InputLabel>
+                  <Select {...field} label='Cấp đai hiện tại'>
+                    <MenuItem value=''>Chưa có cấp đai</MenuItem>
                     {beltLevels.map(belt => (
                       <MenuItem key={belt.id} value={belt.id}>
                         {belt.name}
@@ -272,16 +272,16 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='notes'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Ghi chÃº' multiline rows={3} />}
+              render={({ field }) => <TextField {...field} fullWidth label='Ghi chú' multiline rows={3} />}
             />
           </Grid>
         </Grid>
         <div className='flex gap-2 justify-end'>
           <Button variant='outlined' onClick={onClose}>
-            Há»§y
+            Hủy
           </Button>
           <Button type='submit' variant='contained' disabled={submitting}>
-            {submitting ? 'Äang lÆ°u...' : 'LÆ°u thay Ä‘á»•i'}
+            {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}
           </Button>
         </div>
       </form>
