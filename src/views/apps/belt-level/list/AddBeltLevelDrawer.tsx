@@ -11,6 +11,8 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 import Box from '@mui/material/Box'
+import Switch from '@mui/material/Switch'
+import FormControlLabel from '@mui/material/FormControlLabel'
 
 // Type Imports
 import type { BeltLevelType } from '@/types/apps/beltExamTypes'
@@ -33,7 +35,8 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
     name: '',
     order: '',
     description: '',
-    color: '#000000'
+    color: '#000000',
+    isDang: false
   })
 
   const [loading, setLoading] = useState(false)
@@ -62,7 +65,8 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
         name: formData.name,
         order: Number(formData.order),
         description: formData.description || undefined,
-        colorCode: formData.color || undefined
+        colorCode: formData.color || undefined,
+        isDang: formData.isDang
       })
 
       if (response.success && response.data) {
@@ -84,7 +88,8 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
       name: '',
       order: '',
       description: '',
-      color: '#000000'
+      color: '#000000',
+      isDang: false
     })
     onClose()
   }
@@ -131,6 +136,15 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
             value={formData.description}
             onChange={e => setFormData({ ...formData, description: e.target.value })}
             placeholder='Mô tả về cấp đai này...'
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formData.isDang}
+                onChange={e => setFormData({ ...formData, isDang: e.target.checked })}
+              />
+            }
+            label='Là Đẳng (đai đen có cấp độ)'
           />
           <Box>
             <Typography variant='body2' className='mb-2'>

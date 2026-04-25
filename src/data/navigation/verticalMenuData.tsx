@@ -1,7 +1,25 @@
 // Type Imports
 import type { VerticalMenuDataType } from '@/types/menuTypes'
 
+// This is the FALLBACK menu used only when the API is unavailable.
+// Keep it minimal — the backend returns the real role-filtered menu via menuService.getMenuByRole().
 const verticalMenuData = (): VerticalMenuDataType[] => [
+  {
+    label: 'Trang chủ',
+    isSection: true,
+    children: [
+      {
+        label: 'Dashboard',
+        icon: 'ri-dashboard-line',
+        href: '/dashboards/home'
+      }
+    ]
+  }
+]
+
+// Full menu kept here for reference only — not used at runtime.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _fullMenuData = (): VerticalMenuDataType[] => [
   {
     label: 'Trang chủ',
     isSection: true,
@@ -192,3 +210,4 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
 ]
 
 export default verticalMenuData
+

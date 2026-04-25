@@ -1,8 +1,10 @@
-// Component Imports
 import PermissionManagement from '@/views/apps/permissions'
+import RoleGuard from '@/hocs/RoleGuard'
 
-const PermissionManagementPage = () => {
-  return <PermissionManagement />
-}
+const PermissionManagementPage = () => (
+  <RoleGuard>
+    <PermissionManagement />
+  </RoleGuard>
+)
 
 export default PermissionManagementPage

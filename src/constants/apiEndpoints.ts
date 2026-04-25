@@ -109,7 +109,9 @@ export const API_ENDPOINTS = {
   },
   menu: {
     byRole: '/menu/by-role',
-    seed: '/menu/seed'
+    seed: '/menu/seed',
+    rbac: '/menu/rbac',
+    patchRoles: (id: string) => `/menu/${id}/roles`
   },
   payments: {
     root: '/payments',

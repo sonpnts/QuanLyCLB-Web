@@ -54,9 +54,9 @@ export type Config = {
 }
 
 const themeConfig: Config = {
-  templateName: 'Hệ thống quản lý Tấn Đạt System',
+  templateName: 'Hệ thống quản lý câu lạc bộ (CMIS) - Tấn Đạt Taekwondo',
   homePageUrl: '/dashboards/home',
-  settingsCookieName: 'quan-ly-clb-tandatsystem',
+  settingsCookieName: 'mis-tandattaekwondo',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
   semiDark: false, // true, false

@@ -21,9 +21,9 @@ import '@/app/globals.css'
 import '@assets/iconify-icons/generated-icons.css'
 
 export const metadata = {
-  title: 'Quản Lý CLB - Hệ thống quản lý câu lạc bộ',
+  title: 'CMIS - Tan Dat Taekwondo',
   description:
-    'Hệ thống quản lý câu lạc bộ - Quản lý thành viên, hoạt động và tài chính câu lạc bộ.'
+    'Club Management Information System - Hệ thống quản lý thông tin câu lạc bộ'
 }
 
 const RootLayout = async (props: ChildrenType) => {

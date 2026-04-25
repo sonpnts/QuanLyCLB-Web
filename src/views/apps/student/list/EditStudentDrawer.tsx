@@ -117,7 +117,7 @@ const EditStudentDrawer = (props: Props) => {
       setSubmitting(true)
 
       const payload = {
-        code: values.code,
+        code: values.code?.trim() || undefined,
         fullName: values.fullName,
         phoneNumber: values.phoneNumber || undefined,
         email: values.email || undefined,
@@ -168,14 +168,13 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='code'
               control={control}
-              rules={{ required: 'Mã học viên là bắt buộc' }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label='Mã học viên *'
-                  error={!!errors.code}
-                  helperText={errors.code?.message}
+                  label='Mã học viên'
+                  placeholder='Để trống nếu chưa có mã'
+                  helperText='Mã học viên được tạo khi import danh sách'
                 />
               )}
             />

@@ -21,7 +21,8 @@ import type {
   DashboardStatisticsDto,
   RevenueStatisticsDto,
   StudentStatisticsDto,
-  AttendanceStatisticsDto
+  AttendanceStatisticsDto,
+  DailyAttendanceStat
 } from '@/services/dashboardService'
 
 // Components
@@ -39,6 +40,18 @@ const formatCurrency = (value: number) => {
 }
 
 const MONTH_LABELS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12']
+
+// Helper: backend trả về value có thể là number hoặc {checkIns, checkOuts, totalScheduledSessions}
+const extractCheckIns = (v: DailyAttendanceStat | number): number =>
+  typeof v === 'object' ? (v.checkIns ?? 0) : (v ?? 0)
+
+const extractTodayAttendance = (
+  v: number | { checkIns: number; checkOuts: number; totalScheduledSessions: number } | undefined
+): number => {
+  if (v === undefined || v === null) return 0
+  if (typeof v === 'object') return v.checkIns ?? 0
+  return v
+}
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
@@ -258,7 +271,7 @@ const AttendanceChart = ({ data }: AttendanceChartProps) => {
     const d = new Date(k)
     return `${d.getDate()}/${d.getMonth() + 1}`
   })
-  const values = dayEntries.map(([, v]) => v)
+  const values = dayEntries.map(([, v]) => extractCheckIns(v as DailyAttendanceStat | number))
 
   const series = [{ name: 'Điểm danh', data: values }]
 
@@ -306,7 +319,7 @@ const AttendanceChart = ({ data }: AttendanceChartProps) => {
           <Typography variant='body2' color='text.secondary'>
             Tỉ lệ chuyên cần:{' '}
             <strong style={{ color: 'var(--mui-palette-success-main)' }}>
-              {(data.attendanceRate * 100).toFixed(1)}%
+              {typeof data.attendanceRate === 'number' ? (data.attendanceRate * 100).toFixed(1) : '0.0'}%
             </strong>
           </Typography>
         }
@@ -475,7 +488,7 @@ const DashboardHome = () => {
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <StatCard
           title='Điểm danh hôm nay'
-          value={stats?.todayAttendance ?? 0}
+          value={extractTodayAttendance(stats?.todayAttendance)}
           icon='ri-calendar-check-line'
           color='error'
           subtitle='lượt điểm danh'

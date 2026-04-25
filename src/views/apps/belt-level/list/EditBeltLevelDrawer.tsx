@@ -12,6 +12,8 @@ import Divider from '@mui/material/Divider'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
+import Switch from '@mui/material/Switch'
+import FormControlLabel from '@mui/material/FormControlLabel'
 
 // Form
 import { useForm, Controller } from 'react-hook-form'
@@ -37,6 +39,7 @@ type FormValues = {
   order: string
   description: string
   colorCode: string
+  isDang: boolean
 }
 
 const EditBeltLevelDrawer = (props: Props) => {
@@ -49,7 +52,8 @@ const EditBeltLevelDrawer = (props: Props) => {
       name: beltLevel?.name || '',
       order: beltLevel?.order?.toString() || '',
       description: beltLevel?.description || '',
-      colorCode: beltLevel?.colorCode || '#000000'
+      colorCode: beltLevel?.colorCode || '#000000',
+      isDang: beltLevel?.isDang ?? false
     }),
     [beltLevel]
   )
@@ -93,7 +97,8 @@ const EditBeltLevelDrawer = (props: Props) => {
         name: values.name,
         order: Number(values.order),
         description: values.description || undefined,
-        colorCode: values.colorCode || undefined
+        colorCode: values.colorCode || undefined,
+        isDang: values.isDang
       }
 
       const res = await beltLevelService.updateBeltLevel(beltLevel.id, payload)
@@ -108,7 +113,8 @@ const EditBeltLevelDrawer = (props: Props) => {
           name: values.name,
           order: Number(values.order),
           description: values.description || undefined,
-          colorCode: values.colorCode || undefined
+          colorCode: values.colorCode || undefined,
+          isDang: values.isDang
         }
 
         onSaved(updatedBeltLevel)
@@ -179,6 +185,16 @@ const EditBeltLevelDrawer = (props: Props) => {
           control={control}
           render={({ field }) => (
             <TextField {...field} fullWidth multiline rows={3} label='Mô tả' placeholder='Mô tả về cấp đai này...' />
+          )}
+        />
+        <Controller
+          name='isDang'
+          control={control}
+          render={({ field }) => (
+            <FormControlLabel
+              control={<Switch {...field} checked={field.value} />}
+              label='Là Đẳng (đai đen có cấp độ)'
+            />
           )}
         />
         <Box>

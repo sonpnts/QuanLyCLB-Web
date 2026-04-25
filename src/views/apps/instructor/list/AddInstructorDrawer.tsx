@@ -11,7 +11,6 @@ import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 import TextField from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
-import ListSubheader from '@mui/material/ListSubheader'
 import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
@@ -191,20 +190,16 @@ const AddInstructorDrawer = (props: Props) => {
                   <MenuItem value=''>
                     <em>— Chưa xác định —</em>
                   </MenuItem>
-                  {(() => {
-                    const capItems = beltLevels.filter(b => !b.isDang).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                    const dangItems = beltLevels.filter(b => b.isDang).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                    return [
-                      capItems.length > 0 && <ListSubheader key='cap-header'>Cấp đai</ListSubheader>,
-                      ...capItems.map(belt => (
-                        <MenuItem key={belt.id} value={belt.id}>{belt.name}</MenuItem>
-                      )),
-                      dangItems.length > 0 && <ListSubheader key='dang-header'>Đẳng</ListSubheader>,
-                      ...dangItems.map(belt => (
-                        <MenuItem key={belt.id} value={belt.id}>{belt.name}</MenuItem>
-                      ))
-                    ]
-                  })()}
+                  {[...beltLevels]
+                    .sort((a, b) => {
+                      if ((a.isDang ?? false) !== (b.isDang ?? false)) return (a.isDang ? 1 : 0) - (b.isDang ? 1 : 0)
+                      return (a.order ?? 0) - (b.order ?? 0)
+                    })
+                    .map(belt => (
+                      <MenuItem key={belt.id} value={belt.id}>
+                        {belt.name}
+                      </MenuItem>
+                    ))}
                 </TextField>
               )}
             />

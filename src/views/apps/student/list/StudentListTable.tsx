@@ -14,6 +14,7 @@ import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import TablePagination from '@mui/material/TablePagination'
 import Chip from '@mui/material/Chip'
+import Tooltip from '@mui/material/Tooltip'
 import ToggleButton from '@mui/material/ToggleButton'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import Dialog from '@mui/material/Dialog'
@@ -298,7 +299,23 @@ const StudentListTable = () => {
                   {row.original.fullName}
                 </Typography>
                 {row.original.isSuspended && (
-                  <Chip label='Tạm nghỉ' size='small' color='warning' variant='tonal' />
+                  <Tooltip
+                    arrow
+                    placement='top'
+                    title={
+                      row.original.suspendReason
+                        ? `Lý do tạm nghỉ: ${row.original.suspendReason}`
+                        : 'Đang tạm nghỉ (không có lý do)'
+                    }
+                  >
+                    <Chip
+                      label='Tạm nghỉ'
+                      size='small'
+                      color='warning'
+                      variant='tonal'
+                      icon={<i className='ri-information-line' />}
+                    />
+                  </Tooltip>
                 )}
               </div>
               <Typography variant='body2'>{row.original.email}</Typography>
@@ -335,16 +352,6 @@ const StudentListTable = () => {
           <Chip label={row.original.currentBeltLevelName || 'Chưa có'} size='small' color='warning' variant='tonal' />
         )
       }),
-      {
-        id: 'suspendReason',
-        header: 'Lý do tạm nghỉ',
-        cell: ({ row }) =>
-          row.original.isSuspended ? (
-            <Typography variant='body2' color='text.secondary' className='max-w-[160px] truncate' title={row.original.suspendReason || ''}>
-              {row.original.suspendReason || '—'}
-            </Typography>
-          ) : null
-      },
       {
         id: 'actions',
         header: 'Thao tác',

@@ -13,7 +13,7 @@ export interface DashboardStatisticsDto {
   monthlyRevenue: number
   pendingTransfers: number
   upcomingExams: number
-  todayAttendance: number
+  todayAttendance: number | { checkIns: number; checkOuts: number; totalScheduledSessions: number }
 }
 
 export interface RevenueStatisticsDto {
@@ -43,12 +43,19 @@ export interface ClassStatisticsDto {
   classesByBranch: Record<string, number>
 }
 
+export interface DailyAttendanceStat {
+  checkIns: number
+  checkOuts: number
+  totalScheduledSessions: number
+}
+
 export interface AttendanceStatisticsDto {
   totalSessions: number
   completedSessions: number
   missedSessions: number
   attendanceRate: number
-  attendanceByDay: Record<string, number>
+  attendanceByDay: Record<string, DailyAttendanceStat | number>
+  todayStats?: DailyAttendanceStat
 }
 
 class DashboardService {

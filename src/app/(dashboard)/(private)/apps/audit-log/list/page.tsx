@@ -1,8 +1,10 @@
-// Component Imports
 import AuditLogList from '@views/apps/audit-log/list'
+import RoleGuard from '@/hocs/RoleGuard'
 
-const AuditLogListApp = async () => {
-  return <AuditLogList />
-}
+const AuditLogListApp = () => (
+  <RoleGuard>
+    <AuditLogList />
+  </RoleGuard>
+)
 
 export default AuditLogListApp

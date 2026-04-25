@@ -4,210 +4,274 @@ import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Grid2'
 import Divider from '@mui/material/Divider'
-
-// Type Imports
-import type { InvoiceType } from '@/types/apps/invoiceTypes'
+import CircularProgress from '@mui/material/CircularProgress'
+import Box from '@mui/material/Box'
+import Chip from '@mui/material/Chip'
 
 // Component Imports
 import Logo from '@components/layout/shared/Logo'
+
+// Type Imports
+import type { PaymentRecordType } from '@/types/apps/paymentTypes'
+import { paymentTypeLabels, paymentMethodLabels } from '@/types/apps/paymentTypes'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 import './print.css'
 
-// Vars
-const data = [
-  {
-    Item: 'Premium Branding Package',
-    Description: 'Branding & Promotion',
-    Hours: 48,
-    Qty: 1,
-    Total: '$32'
-  },
-  {
-    Item: 'Social Media',
-    Description: 'Social media templates',
-    Hours: 42,
-    Qty: 1,
-    Total: '$28'
-  },
-  {
-    Item: 'Web Design',
-    Description: 'Web designing package',
-    Hours: 46,
-    Qty: 1,
-    Total: '$24'
-  },
-  {
-    Item: 'SEO',
-    Description: 'Search engine optimization',
-    Hours: 40,
-    Qty: 1,
-    Total: '$22'
-  }
-]
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount)
 
-const PreviewCard = ({ invoiceData, id }: { invoiceData?: InvoiceType; id: string }) => {
+const formatDateTime = (dateStr: string) =>
+  new Date(dateStr).toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+
+type Props = {
+  items: PaymentRecordType[]
+  receiptNumber: string
+  loading: boolean
+}
+
+const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
+  if (loading) {
+    return (
+      <Card className='previewCard'>
+        <CardContent className='sm:!p-12'>
+          <Box display='flex' justifyContent='center' p={8}>
+            <CircularProgress />
+          </Box>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (items.length === 0) {
+    return (
+      <Card className='previewCard'>
+        <CardContent className='sm:!p-12'>
+          <Typography textAlign='center' color='text.secondary' p={6}>
+            Không tìm thấy biên lai.
+          </Typography>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const firstItem = items[0]
+  const totalAmount = items.reduce((sum, i) => sum + i.amount, 0)
+  const totalDiscount = items.reduce((sum, i) => sum + (i.discountAmount ?? 0), 0)
+  const originalTotal = items.reduce((sum, i) => sum + (i.originalAmount ?? i.amount), 0)
+
   return (
     <Card className='previewCard'>
       <CardContent className='sm:!p-12'>
         <Grid container spacing={6}>
+          {/* Header */}
           <Grid size={{ xs: 12 }}>
             <div className='p-6 bg-actionHover rounded'>
               <div className='flex justify-between gap-y-4 flex-col sm:flex-row'>
-                <div className='flex flex-col gap-6'>
+                <div className='flex flex-col gap-4'>
                   <div className='flex items-center'>
                     <Logo />
                   </div>
                   <div>
-                    <Typography color='text.primary'>Office 149, 450 South Brand Brooklyn</Typography>
-                    <Typography color='text.primary'>San Diego County, CA 91905, USA</Typography>
-                    <Typography color='text.primary'>+1 (123) 456 7891, +44 (876) 543 2198</Typography>
+                    <Typography color='text.primary' className='font-medium'>
+                      Câu lạc bộ
+                    </Typography>
+                    <Typography color='text.secondary' variant='body2'>
+                      Hệ thống quản lý câu lạc bộ
+                    </Typography>
                   </div>
                 </div>
-                <div className='flex flex-col gap-6'>
-                  <Typography variant='h5'>{`Invoice #${id}`}</Typography>
-                  <div className='flex flex-col gap-1'>
-                    <Typography color='text.primary'>{`Date Issued: ${invoiceData?.issuedDate}`}</Typography>
-                    <Typography color='text.primary'>{`Date Due: ${invoiceData?.dueDate}`}</Typography>
-                  </div>
+                <div className='flex flex-col gap-2'>
+                  <Typography variant='h5' color='primary'>
+                    BIÊN LAI THU TIỀN
+                  </Typography>
+                  <Typography color='text.secondary' variant='body2'>
+                    Số biên lai: <strong className='text-text-primary'>{receiptNumber}</strong>
+                  </Typography>
+                  <Typography color='text.secondary' variant='body2'>
+                    Ngày thu: <strong className='text-text-primary'>{formatDateTime(firstItem.paymentDate)}</strong>
+                  </Typography>
+                  <Typography color='text.secondary' variant='body2'>
+                    Người thu: <strong className='text-text-primary'>{firstItem.collectedByUserName || '—'}</strong>
+                  </Typography>
                 </div>
               </div>
             </div>
           </Grid>
+
+          {/* Student & Payment Info */}
           <Grid size={{ xs: 12 }}>
             <Grid container spacing={6}>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <div className='flex flex-col gap-4'>
+                <div className='flex flex-col gap-3'>
                   <Typography className='font-medium' color='text.primary'>
-                    Invoice To:
+                    Thông tin học viên:
                   </Typography>
-                  <div>
-                    <Typography>{invoiceData?.name}</Typography>
-                    <Typography>{invoiceData?.company}</Typography>
-                    <Typography>{invoiceData?.address}</Typography>
-                    <Typography>{invoiceData?.contact}</Typography>
-                    <Typography>{invoiceData?.companyEmail}</Typography>
+                  <div className='flex flex-col gap-1'>
+                    <Typography>
+                      <span className='text-textSecondary'>Họ tên: </span>
+                      <strong>{firstItem.studentName || '—'}</strong>
+                    </Typography>
+                    {firstItem.className && (
+                      <Typography>
+                        <span className='text-textSecondary'>Lớp: </span>
+                        {firstItem.className}
+                      </Typography>
+                    )}
                   </div>
                 </div>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <div className='flex flex-col gap-4'>
+                <div className='flex flex-col gap-3'>
                   <Typography className='font-medium' color='text.primary'>
-                    Bill To:
+                    Thông tin thanh toán:
                   </Typography>
-                  <div>
-                    <div className='flex items-center gap-4'>
-                      <Typography className='min-is-[100px]'>Total Due:</Typography>
-                      <Typography>$12,110.55</Typography>
-                    </div>
-                    <div className='flex items-center gap-4'>
-                      <Typography className='min-is-[100px]'>Bank name:</Typography>
-                      <Typography>American Bank</Typography>
-                    </div>
-                    <div className='flex items-center gap-4'>
-                      <Typography className='min-is-[100px]'>Country:</Typography>
-                      <Typography>United States</Typography>
-                    </div>
-                    <div className='flex items-center gap-4'>
-                      <Typography className='min-is-[100px]'>IBAN:</Typography>
-                      <Typography>ETD95476213874685</Typography>
-                    </div>
-                    <div className='flex items-center gap-4'>
-                      <Typography className='min-is-[100px]'>SWIFT code:</Typography>
-                      <Typography>BR91905</Typography>
-                    </div>
+                  <div className='flex flex-col gap-1'>
+                    <Typography>
+                      <span className='text-textSecondary'>Phương thức: </span>
+                      <Chip
+                        label={paymentMethodLabels[firstItem.method] ?? '—'}
+                        size='small'
+                        color={firstItem.method === 1 ? 'info' : 'default'}
+                        variant='tonal'
+                      />
+                    </Typography>
+                    {firstItem.transactionRef && (
+                      <Typography>
+                        <span className='text-textSecondary'>Mã GD: </span>
+                        {firstItem.transactionRef}
+                      </Typography>
+                    )}
                   </div>
                 </div>
               </Grid>
             </Grid>
           </Grid>
+
+          {/* Items Table */}
           <Grid size={{ xs: 12 }}>
             <div className='overflow-x-auto border rounded'>
               <table className={tableStyles.table}>
                 <thead>
                   <tr className='border-be'>
-                    <th className='!bg-transparent'>Item</th>
-                    <th className='!bg-transparent'>Description</th>
-                    <th className='!bg-transparent'>Hours</th>
-                    <th className='!bg-transparent'>Qty</th>
-                    <th className='!bg-transparent'>Total</th>
+                    <th className='!bg-transparent'>Mô tả</th>
+                    <th className='!bg-transparent'>Loại thu</th>
+                    <th className='!bg-transparent text-right'>Số tiền gốc</th>
+                    <th className='!bg-transparent text-right'>Giảm giá</th>
+                    <th className='!bg-transparent text-right'>Thực thu</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.map((item, index) => (
-                    <tr key={index}>
-                      <td>
-                        <Typography color='text.primary'>{item.Item}</Typography>
-                      </td>
-                      <td>
-                        <Typography color='text.primary'>{item.Description}</Typography>
-                      </td>
-                      <td>
-                        <Typography color='text.primary'>{item.Hours}</Typography>
-                      </td>
-                      <td>
-                        <Typography color='text.primary'>{item.Qty}</Typography>
-                      </td>
-                      <td>
-                        <Typography color='text.primary'>{item.Total}</Typography>
-                      </td>
-                    </tr>
-                  ))}
+                  {items.map((item, idx) => {
+                    const desc =
+                      item.description ||
+                      (item.type === 0 && item.forMonth && item.forYear
+                        ? `Học phí tháng ${item.forMonth}/${item.forYear}${item.className ? ` — ${item.className}` : ''}`
+                        : item.type === 1
+                          ? `Lệ phí thi cấp${item.className ? ` — ${item.className}` : ''}`
+                          : item.productName || paymentTypeLabels[item.type])
+
+                    return (
+                      <tr key={item.id ?? idx}>
+                        <td>
+                          <Typography color='text.primary'>{desc}</Typography>
+                        </td>
+                        <td>
+                          <Chip label={paymentTypeLabels[item.type]} size='small' variant='tonal' color='info' />
+                        </td>
+                        <td className='text-right'>
+                          <Typography color='text.secondary'>
+                            {formatCurrency(item.originalAmount ?? item.amount)}
+                          </Typography>
+                        </td>
+                        <td className='text-right'>
+                          <Typography color={item.discountAmount ? 'error' : 'text.secondary'}>
+                            {item.discountAmount ? `- ${formatCurrency(item.discountAmount)}` : '—'}
+                          </Typography>
+                        </td>
+                        <td className='text-right'>
+                          <Typography color='text.primary' className='font-medium'>
+                            {formatCurrency(item.amount)}
+                          </Typography>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
           </Grid>
+
+          {/* Totals */}
           <Grid size={{ xs: 12 }}>
-            <div className='flex justify-between flex-col gap-y-4 sm:flex-row'>
-              <div className='flex flex-col gap-1 order-2 sm:order-[unset]'>
-                <div className='flex items-center gap-2'>
-                  <Typography className='font-medium' color='text.primary'>
-                    Salesperson:
-                  </Typography>
-                  <Typography>Tommy Shelby</Typography>
-                </div>
-                <Typography>Thanks for your business</Typography>
-              </div>
-              <div className='min-is-[200px]'>
+            <div className='flex justify-end'>
+              <div className='min-is-[220px] flex flex-col gap-1'>
+                {totalDiscount > 0 && (
+                  <>
+                    <div className='flex items-center justify-between'>
+                      <Typography color='text.secondary'>Tổng gốc:</Typography>
+                      <Typography color='text.primary'>{formatCurrency(originalTotal)}</Typography>
+                    </div>
+                    <div className='flex items-center justify-between'>
+                      <Typography color='text.secondary'>Tổng giảm:</Typography>
+                      <Typography color='error'>- {formatCurrency(totalDiscount)}</Typography>
+                    </div>
+                    <Divider className='mlb-2' />
+                  </>
+                )}
                 <div className='flex items-center justify-between'>
-                  <Typography>Subtotal:</Typography>
                   <Typography className='font-medium' color='text.primary'>
-                    $1800
+                    Tổng thực thu:
                   </Typography>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <Typography>Discount:</Typography>
-                  <Typography className='font-medium' color='text.primary'>
-                    $28
-                  </Typography>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <Typography>Tax:</Typography>
-                  <Typography className='font-medium' color='text.primary'>
-                    21%
-                  </Typography>
-                </div>
-                <Divider className='mlb-2' />
-                <div className='flex items-center justify-between'>
-                  <Typography>Total:</Typography>
-                  <Typography className='font-medium' color='text.primary'>
-                    $1690
+                  <Typography variant='h6' color='primary'>
+                    {formatCurrency(totalAmount)}
                   </Typography>
                 </div>
               </div>
             </div>
           </Grid>
+
+          {/* Transfer proof image */}
+          {firstItem.transferProofImageUrl && (
+            <>
+              <Grid size={{ xs: 12 }}>
+                <Divider className='border-dashed' />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography className='font-medium' color='text.primary' mb={2}>
+                  Ảnh minh chứng chuyển khoản:
+                </Typography>
+                <Box
+                  component='img'
+                  src={firstItem.transferProofImageUrl}
+                  alt='Minh chứng chuyển khoản'
+                  sx={{
+                    maxWidth: 400,
+                    maxHeight: 400,
+                    objectFit: 'contain',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1
+                  }}
+                />
+              </Grid>
+            </>
+          )}
+
+          {/* Footer note */}
           <Grid size={{ xs: 12 }}>
             <Divider className='border-dashed' />
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <Typography>
-              <Typography component='span' className='font-medium' color='text.primary'>
-                Note:
-              </Typography>{' '}
-              It was a pleasure working with you and your team. We hope you will keep us in mind for future freelance
-              projects. Thank You!
+            <Typography variant='body2' color='text.secondary' textAlign='center'>
+              Biên lai này là chứng từ hợp lệ cho khoản thu từ hệ thống quản lý câu lạc bộ.
             </Typography>
           </Grid>
         </Grid>

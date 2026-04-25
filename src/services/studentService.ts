@@ -17,6 +17,7 @@ export interface GetStudentsParams {
 
 export interface CreateStudentRequest {
   fullName: string
+  code?: string
   phoneNumber?: string
   address?: string
   identityNumber?: string

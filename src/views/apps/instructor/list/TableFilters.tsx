@@ -7,7 +7,6 @@ import CardContent from '@mui/material/CardContent'
 import Grid from '@mui/material/Grid2'
 import TextField from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
-import ListSubheader from '@mui/material/ListSubheader'
 import Button from '@mui/material/Button'
 
 // Type Imports
@@ -68,20 +67,16 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
             <MenuItem value=''>
               <em>Tất cả cấp đai</em>
             </MenuItem>
-            {(() => {
-              const capItems = beltLevels.filter(b => !b.isDang).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-              const dangItems = beltLevels.filter(b => b.isDang).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-              return [
-                capItems.length > 0 && <ListSubheader key='cap-header'>Cấp đai</ListSubheader>,
-                ...capItems.map(belt => (
-                  <MenuItem key={belt.id} value={belt.id}>{belt.name}</MenuItem>
-                )),
-                dangItems.length > 0 && <ListSubheader key='dang-header'>Đẳng</ListSubheader>,
-                ...dangItems.map(belt => (
-                  <MenuItem key={belt.id} value={belt.id}>{belt.name}</MenuItem>
-                ))
-              ]
-            })()}
+            {[...beltLevels]
+              .sort((a, b) => {
+                if ((a.isDang ?? false) !== (b.isDang ?? false)) return (a.isDang ? 1 : 0) - (b.isDang ? 1 : 0)
+                return (a.order ?? 0) - (b.order ?? 0)
+              })
+              .map(belt => (
+                <MenuItem key={belt.id} value={belt.id}>
+                  {belt.name}
+                </MenuItem>
+              ))}
           </TextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>

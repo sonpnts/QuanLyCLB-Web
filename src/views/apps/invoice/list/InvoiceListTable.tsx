@@ -9,437 +9,257 @@ import Link from 'next/link'
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
-import Checkbox from '@mui/material/Checkbox'
-import Chip from '@mui/material/Chip'
 import IconButton from '@mui/material/IconButton'
 import TextField from '@mui/material/TextField'
+import TablePagination from '@mui/material/TablePagination'
+import Chip from '@mui/material/Chip'
+import CircularProgress from '@mui/material/CircularProgress'
+import Box from '@mui/material/Box'
+import InputAdornment from '@mui/material/InputAdornment'
+import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
-import MenuItem from '@mui/material/MenuItem'
-import Tooltip from '@mui/material/Tooltip'
-import TablePagination from '@mui/material/TablePagination'
-import type { TextFieldProps } from '@mui/material/TextField'
 
-// Third-party Imports
-import classnames from 'classnames'
-import { rankItem } from '@tanstack/match-sorter-utils'
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getFilteredRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFacetedMinMaxValues,
-  getPaginationRowModel,
-  getSortedRowModel
-} from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
-import type { RankingInfo } from '@tanstack/match-sorter-utils'
-
-// Type Imports
-import type { ThemeColor } from '@core/types'
-import type { InvoiceType } from '@/types/apps/invoiceTypes'
-
-// Component Imports
-import OptionMenu from '@core/components/option-menu'
-import CustomAvatar from '@core/components/mui/Avatar'
-
-// Util Imports
-import { getInitials } from '@/utils/getInitials'
+// Type & Service Imports
+import type { PaymentRecordType } from '@/types/apps/paymentTypes'
+import { paymentTypeLabels, paymentMethodLabels } from '@/types/apps/paymentTypes'
+import paymentService from '@/services/paymentService'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
-declare module '@tanstack/table-core' {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
+// One row in the table = one receipt (may group multiple payment records)
+type ReceiptRow = {
+  receiptNumber: string
+  studentName: string
+  paymentDate: string
+  method: number
+  types: number[]
+  totalAmount: number
+  items: PaymentRecordType[]
 }
 
-type InvoiceTypeWithAction = InvoiceType & {
-  action?: string
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount)
+
+const formatDate = (dateStr: string) =>
+  new Date(dateStr).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+
+const typeColorMap: Record<number, 'primary' | 'info' | 'success' | 'secondary'> = {
+  0: 'primary',
+  1: 'info',
+  2: 'success',
+  3: 'secondary'
 }
 
-type InvoiceStatusObj = {
-  [key: string]: {
-    icon: string
-    color: ThemeColor
-  }
-}
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
-
-  // Store the itemRank info
-  addMeta({
-    itemRank
-  })
-
-  // Return if the item should be filtered in/out
-  return itemRank.passed
-}
-
-const DebouncedInput = ({
-  value: initialValue,
-  onChange,
-  debounce = 500,
-  ...props
-}: {
-  value: string | number
-  onChange: (value: string | number) => void
-  debounce?: number
-} & Omit<TextFieldProps, 'onChange'>) => {
-  // States
-  const [value, setValue] = useState(initialValue)
+const InvoiceListTable = () => {
+  const [loading, setLoading] = useState(true)
+  const [receipts, setReceipts] = useState<ReceiptRow[]>([])
+  const [search, setSearch] = useState('')
+  const [methodFilter, setMethodFilter] = useState<string>('')
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
 
   useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
+    const load = async () => {
+      setLoading(true)
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
+      try {
+        const res = await paymentService.getPayments({ pageSize: 1000 })
 
-    return () => clearTimeout(timeout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
+        if (res.success && res.data) {
+          // Group by receiptNumber; payments without one get their own row keyed by id
+          const grouped = new Map<string, PaymentRecordType[]>()
 
-  return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
-}
+          res.data.forEach(payment => {
+            const key = payment.receiptNumber || payment.id
 
-// Vars
-const invoiceStatusObj: InvoiceStatusObj = {
-  Sent: { color: 'secondary', icon: 'ri-send-plane-2-line' },
-  Paid: { color: 'success', icon: 'ri-check-line' },
-  Draft: { color: 'primary', icon: 'ri-mail-line' },
-  'Partial Payment': { color: 'warning', icon: 'ri-pie-chart-2-line' },
-  'Past Due': { color: 'error', icon: 'ri-information-line' },
-  Downloaded: { color: 'info', icon: 'ri-arrow-down-line' }
-}
+            if (!grouped.has(key)) grouped.set(key, [])
+            grouped.get(key)!.push(payment)
+          })
 
-// Column Definitions
-const columnHelper = createColumnHelper<InvoiceTypeWithAction>()
+          const rows: ReceiptRow[] = Array.from(grouped.entries()).map(([receiptNumber, items]) => {
+            const first = items[0]
 
-const InvoiceListTable = ({ invoiceData }: { invoiceData?: InvoiceType[] }) => {
-  // States
-  const [status, setStatus] = useState<InvoiceType['invoiceStatus']>('')
-  const [rowSelection, setRowSelection] = useState({})
-  const [data, setData] = useState(...[invoiceData])
-  const [filteredData, setFilteredData] = useState(data)
-  const [globalFilter, setGlobalFilter] = useState('')
-
-  // Hooks
-  const columns = useMemo<ColumnDef<InvoiceTypeWithAction, any>[]>(
-    () => [
-      {
-        id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
-      columnHelper.accessor('id', {
-        header: '#',
-        cell: ({ row }) => (
-          <Typography
-            component={Link}
-            href={`/apps/invoice/preview/${row.original.id}`}
-            color='primary.main'
-          >{`#${row.original.id}`}</Typography>
-        )
-      }),
-      columnHelper.accessor('invoiceStatus', {
-        header: 'Status',
-        cell: ({ row }) => (
-          <Tooltip
-            title={
-              <div>
-                <Typography variant='body2' component='span' className='text-inherit'>
-                  {row.original.invoiceStatus}
-                </Typography>
-                <br />
-                <Typography variant='body2' component='span' className='text-inherit'>
-                  Balance:
-                </Typography>{' '}
-                {row.original.balance}
-                <br />
-                <Typography variant='body2' component='span' className='text-inherit'>
-                  Due Date:
-                </Typography>{' '}
-                {row.original.dueDate}
-              </div>
+            return {
+              receiptNumber,
+              studentName: first.studentName || '—',
+              paymentDate: first.paymentDate,
+              method: first.method,
+              types: [...new Set(items.map(i => i.type))],
+              totalAmount: items.reduce((sum, i) => sum + i.amount, 0),
+              items
             }
-          >
-            <CustomAvatar skin='light' color={invoiceStatusObj[row.original.invoiceStatus].color} size={28}>
-              <i className={classnames('bs-4 is-4', invoiceStatusObj[row.original.invoiceStatus].icon)} />
-            </CustomAvatar>
-          </Tooltip>
-        )
-      }),
-      columnHelper.accessor('name', {
-        header: 'Client',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-3'>
-            {getAvatar({ avatar: row.original.avatar, name: row.original.name })}
-            <div className='flex flex-col'>
-              <Typography className='font-medium' color='text.primary'>
-                {row.original.name}
-              </Typography>
-              <Typography variant='body2'>{row.original.companyEmail}</Typography>
-            </div>
-          </div>
-        )
-      }),
-      columnHelper.accessor('total', {
-        header: 'Total',
-        cell: ({ row }) => <Typography>{`$${row.original.total}`}</Typography>
-      }),
-      columnHelper.accessor('issuedDate', {
-        header: 'Issued Date',
-        cell: ({ row }) => <Typography>{row.original.issuedDate}</Typography>
-      }),
-      columnHelper.accessor('balance', {
-        header: 'Balance',
-        cell: ({ row }) => {
-          return row.original.balance === 0 ? (
-            <Chip variant='tonal' label='Paid' color='success' size='small' />
-          ) : (
-            <Typography color='text.primary'>{row.original.balance}</Typography>
-          )
+          })
+
+          // Sort newest first
+          rows.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())
+          setReceipts(rows)
         }
-      }),
-      columnHelper.accessor('action', {
-        header: 'Action',
-        cell: ({ row }) => (
-          <div className='flex items-center'>
-            <IconButton onClick={() => setData(data?.filter(invoice => invoice.id !== row.original.id))}>
-              <i className='ri-delete-bin-7-line text-textSecondary' />
-            </IconButton>
-            <IconButton>
-              <Link
-                href={`/apps/invoice/preview/${row.original.id}`}
-                className='flex'
-              >
-                <i className='ri-eye-line text-textSecondary' />
-              </Link>
-            </IconButton>
-            <OptionMenu
-              iconButtonProps={{ size: 'medium' }}
-              iconClassName='text-textSecondary'
-              options={[
-                {
-                  text: 'Download',
-                  icon: 'ri-download-line',
-                  menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
-                },
-                {
-                  text: 'Edit',
-                  icon: 'ri-pencil-line',
-                  href: `/apps/invoice/edit/${row.original.id}`,
-                  linkProps: {
-                    className: 'flex items-center is-full plb-2 pli-4 gap-2 text-textSecondary'
-                  }
-                },
-                {
-                  text: 'Duplicate',
-                  icon: 'ri-file-copy-line',
-                  menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
-                }
-              ]}
-            />
-          </div>
-        ),
-        enableSorting: false
-      })
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, filteredData]
-  )
-
-  const table = useReactTable({
-    data: filteredData as InvoiceType[],
-    columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
-    state: {
-      rowSelection,
-      globalFilter
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10
+      } finally {
+        setLoading(false)
       }
-    },
-    enableRowSelection: true, //enable row selection for all rows
-    // enableRowSelection: row => row.original.age > 18, // or enable row selection conditionally per row
-    globalFilterFn: fuzzyFilter,
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues()
-  })
-
-  const getAvatar = (params: Pick<InvoiceType, 'avatar' | 'name'>) => {
-    const { avatar, name } = params
-
-    if (avatar) {
-      return <CustomAvatar src={avatar} skin='light' size={34} />
-    } else {
-      return (
-        <CustomAvatar skin='light' size={34}>
-          {getInitials(name as string)}
-        </CustomAvatar>
-      )
     }
-  }
 
-  useEffect(() => {
-    const filteredData = data?.filter(invoice => {
-      if (status && invoice.invoiceStatus.toLowerCase().replace(/\s+/g, '-') !== status) return false
+    load()
+  }, [])
 
-      return true
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+
+    return receipts.filter(r => {
+      const matchSearch =
+        !q || r.receiptNumber.toLowerCase().includes(q) || r.studentName.toLowerCase().includes(q)
+      const matchMethod = methodFilter === '' || String(r.method) === methodFilter
+
+      return matchSearch && matchMethod
     })
+  }, [receipts, search, methodFilter])
 
-    setFilteredData(filteredData)
-  }, [status, data, setFilteredData])
+  const paged = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
   return (
     <Card>
       <CardContent className='flex justify-between gap-4 flex-wrap flex-col sm:flex-row items-center'>
-        <Button
-          variant='contained'
-          component={Link}
-          startIcon={<i className='ri-add-line' />}
-          href={'apps/invoice/add'}
-          className='max-sm:is-full'
-        >
-          Create Invoice
-        </Button>
-        <div className='flex flex-col sm:flex-row max-sm:is-full items-center gap-4'>
-          <DebouncedInput
-            value={globalFilter ?? ''}
-            onChange={value => setGlobalFilter(String(value))}
-            placeholder='Search Invoice'
-            className='max-sm:is-full min-is-[200px]'
+        <Typography variant='h6'>Danh sách biên lai</Typography>
+        <div className='flex gap-3 flex-wrap items-center'>
+          <TextField
+            size='small'
+            placeholder='Tìm theo học viên, số biên lai...'
+            value={search}
+            onChange={e => {
+              setSearch(e.target.value)
+              setPage(0)
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position='start'>
+                  <i className='ri-search-line text-textSecondary' />
+                </InputAdornment>
+              )
+            }}
+            className='min-is-[220px]'
           />
-          <FormControl fullWidth size='small' className='min-is-[175px]'>
-            <InputLabel id='status-select'>Invoice Status</InputLabel>
+          <FormControl size='small' className='min-is-[160px]'>
+            <InputLabel>Phương thức</InputLabel>
             <Select
-              fullWidth
-              id='select-status'
-              value={status}
-              onChange={e => setStatus(e.target.value)}
-              label='Invoice Status'
-              labelId='status-select'
+              value={methodFilter}
+              label='Phương thức'
+              onChange={e => {
+                setMethodFilter(e.target.value)
+                setPage(0)
+              }}
             >
-              <MenuItem value=''>none</MenuItem>
-              <MenuItem value='downloaded'>Downloaded</MenuItem>
-              <MenuItem value='draft'>Draft</MenuItem>
-              <MenuItem value='paid'>Paid</MenuItem>
-              <MenuItem value='partial-payment'>Partial Payment</MenuItem>
-              <MenuItem value='past-due'>Past Due</MenuItem>
-              <MenuItem value='sent'>Sent</MenuItem>
+              <MenuItem value=''>Tất cả</MenuItem>
+              <MenuItem value='0'>Tiền mặt</MenuItem>
+              <MenuItem value='1'>Chuyển khoản</MenuItem>
+              <MenuItem value='2'>Khác</MenuItem>
             </Select>
           </FormControl>
         </div>
       </CardContent>
+
       <div className='overflow-x-auto'>
-        <table className={tableStyles.table}>
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th key={header.id}>
-                    {header.isPlaceholder ? null : (
-                      <>
-                        <div
-                          className={classnames({
-                            'flex items-center': header.column.getIsSorted(),
-                            'cursor-pointer select-none': header.column.getCanSort()
-                          })}
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          {{
-                            asc: <i className='ri-arrow-up-s-line text-xl' />,
-                            desc: <i className='ri-arrow-down-s-line text-xl' />
-                          }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
-                        </div>
-                      </>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          {table.getFilteredRowModel().rows.length === 0 ? (
-            <tbody>
+        {loading ? (
+          <Box display='flex' justifyContent='center' p={8}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <table className={tableStyles.table}>
+            <thead>
               <tr>
-                <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                  No data available
-                </td>
+                <th>Số biên lai</th>
+                <th>Học viên</th>
+                <th>Ngày thu</th>
+                <th>Phương thức</th>
+                <th>Loại thu</th>
+                <th>Tổng tiền</th>
+                <th>Thao tác</th>
               </tr>
-            </tbody>
-          ) : (
-            <tbody>
-              {table
-                .getRowModel()
-                .rows.slice(0, table.getState().pagination.pageSize)
-                .map(row => {
-                  return (
-                    <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-                      {row.getVisibleCells().map(cell => (
-                        <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                      ))}
-                    </tr>
-                  )
-                })}
-            </tbody>
-          )}
-        </table>
+            </thead>
+            {paged.length === 0 ? (
+              <tbody>
+                <tr>
+                  <td colSpan={7} className='text-center'>
+                    Không có biên lai nào
+                  </td>
+                </tr>
+              </tbody>
+            ) : (
+              <tbody>
+                {paged.map(row => (
+                  <tr key={row.receiptNumber}>
+                    <td>
+                      <Typography
+                        component={Link}
+                        href={`/apps/invoice/preview/${encodeURIComponent(row.receiptNumber)}`}
+                        color='primary.main'
+                        className='font-mono text-sm'
+                      >
+                        {row.receiptNumber}
+                      </Typography>
+                    </td>
+                    <td>
+                      <Typography color='text.primary'>{row.studentName}</Typography>
+                    </td>
+                    <td>
+                      <Typography>{formatDate(row.paymentDate)}</Typography>
+                    </td>
+                    <td>
+                      <Typography>{paymentMethodLabels[row.method] ?? '—'}</Typography>
+                    </td>
+                    <td>
+                      <div className='flex gap-1 flex-wrap'>
+                        {row.types.map(t => (
+                          <Chip
+                            key={t}
+                            label={paymentTypeLabels[t]}
+                            size='small'
+                            variant='tonal'
+                            color={typeColorMap[t] ?? 'default'}
+                          />
+                        ))}
+                      </div>
+                    </td>
+                    <td>
+                      <Typography color='text.primary' className='font-medium'>
+                        {formatCurrency(row.totalAmount)}
+                      </Typography>
+                    </td>
+                    <td>
+                      <IconButton
+                        size='small'
+                        component={Link}
+                        href={`/apps/invoice/preview/${encodeURIComponent(row.receiptNumber)}`}
+                        title='Xem biên lai'
+                      >
+                        <i className='ri-eye-line text-textSecondary' />
+                      </IconButton>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            )}
+          </table>
+        )}
       </div>
+
       <TablePagination
         rowsPerPageOptions={[10, 25, 50]}
         component='div'
         className='border-bs'
-        count={table.getFilteredRowModel().rows.length}
-        rowsPerPage={table.getState().pagination.pageSize}
-        page={table.getState().pagination.pageIndex}
-        onPageChange={(_, page) => {
-          table.setPageIndex(page)
+        count={filtered.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={(_, p) => setPage(p)}
+        onRowsPerPageChange={e => {
+          setRowsPerPage(Number(e.target.value))
+          setPage(0)
         }}
-        onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+        labelRowsPerPage='Số dòng:'
+        labelDisplayedRows={({ from, to, count }) => `${from}–${to} / ${count}`}
       />
     </Card>
   )

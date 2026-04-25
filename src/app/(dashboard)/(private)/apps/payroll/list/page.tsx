@@ -1,13 +1,10 @@
-// Component Imports
 import PayrollList from '@views/apps/payroll/list'
+import RoleGuard from '@/hocs/RoleGuard'
 
-const PayrollListApp = async () => {
-  return <PayrollList />
-}
+const PayrollListApp = () => (
+  <RoleGuard>
+    <PayrollList />
+  </RoleGuard>
+)
 
 export default PayrollListApp
-
-
-
-
-

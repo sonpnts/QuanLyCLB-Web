@@ -27,6 +27,7 @@ import type { RoleType } from '@/services/roleService'
 import TableFilters from './TableFilters'
 import AddUserDrawer from './AddUserDrawer'
 import EditUserDrawer from './EditUserDrawer'
+import UserRoleDrawer from './UserRoleDrawer'
 
 // Service Imports
 import userService from '@/services/userService'
@@ -52,6 +53,8 @@ const UserManagementTable = () => {
   const [roles, setRoles] = useState<RoleType[]>([])
   const [selectedUser, setSelectedUser] = useState<UsersType | null>(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [roleDrawerUser, setRoleDrawerUser] = useState<UsersType | null>(null)
+  const [roleDrawerOpen, setRoleDrawerOpen] = useState(false)
 
   // Notification Hook
   const { showNotification } = useNotification()
@@ -260,8 +263,20 @@ const UserManagementTable = () => {
                 setEditDialogOpen(true)
               }}
               color='primary'
+              title='Chỉnh sửa thông tin'
             >
               <i className='ri-edit-line text-xl' />
+            </IconButton>
+            <IconButton
+              size='small'
+              onClick={() => {
+                setRoleDrawerUser(row.original)
+                setRoleDrawerOpen(true)
+              }}
+              color='secondary'
+              title='Phân vai trò'
+            >
+              <i className='ri-shield-user-line text-xl' />
             </IconButton>
             {!row.original.isActive ? (
               <IconButton size='small' onClick={() => handleRestore(row.original.id)} color='success'>
@@ -353,6 +368,16 @@ const UserManagementTable = () => {
         setData={setData}
         setFilteredData={setFilteredData}
         roles={roles}
+      />
+      <UserRoleDrawer
+        open={roleDrawerOpen}
+        onClose={() => { setRoleDrawerOpen(false); setRoleDrawerUser(null) }}
+        user={roleDrawerUser}
+        allRoles={roles}
+        onSaved={updated => {
+          setData(prev => prev.map(u => (u.id === updated.id ? updated : u)))
+          setFilteredData(prev => prev.map(u => (u.id === updated.id ? updated : u)))
+        }}
       />
     </>
   )

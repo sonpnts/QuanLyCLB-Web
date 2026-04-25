@@ -26,21 +26,8 @@ const AccountSettings = ({ tabContentList }: { tabContentList: { [key: string]: 
       <Grid container spacing={6}>
         <Grid size={{ xs: 12 }}>
           <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
-            <Tab label='Account' icon={<i className='ri-group-line' />} iconPosition='start' value='account' />
-            <Tab label='Security' icon={<i className='ri-lock-unlock-line' />} iconPosition='start' value='security' />
-            <Tab
-              label='Billing & Plans'
-              icon={<i className='ri-bookmark-line' />}
-              iconPosition='start'
-              value='billing-plans'
-            />
-            <Tab
-              label='Notifications'
-              icon={<i className='ri-notification-3-line' />}
-              iconPosition='start'
-              value='notifications'
-            />
-            <Tab label='Connections' icon={<i className='ri-link' />} iconPosition='start' value='connections' />
+            <Tab label='Thông tin tài khoản' icon={<i className='ri-group-line' />} iconPosition='start' value='account' />
+            <Tab label='Liên kết' icon={<i className='ri-link' />} iconPosition='start' value='connections' />
           </CustomTabList>
         </Grid>
         <Grid size={{ xs: 12 }}>

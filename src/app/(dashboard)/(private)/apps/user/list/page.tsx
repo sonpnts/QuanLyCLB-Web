@@ -1,8 +1,10 @@
-// Component Imports
 import UserList from '@views/apps/user/list'
+import RoleGuard from '@/hocs/RoleGuard'
 
-const UserListApp = () => {
-  return <UserList />
-}
+const UserListApp = () => (
+  <RoleGuard>
+    <UserList />
+  </RoleGuard>
+)
 
 export default UserListApp

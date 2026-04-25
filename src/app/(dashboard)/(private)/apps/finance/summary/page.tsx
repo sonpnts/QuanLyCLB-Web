@@ -1,7 +1,10 @@
 import FinanceSummaryView from '@views/apps/finance/summary'
+import RoleGuard from '@/hocs/RoleGuard'
 
-const FinanceSummaryPage = () => {
-  return <FinanceSummaryView />
-}
+const FinanceSummaryPage = () => (
+  <RoleGuard>
+    <FinanceSummaryView />
+  </RoleGuard>
+)
 
 export default FinanceSummaryPage

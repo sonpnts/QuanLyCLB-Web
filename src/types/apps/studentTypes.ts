@@ -3,7 +3,7 @@ import type { ThemeColor } from '@core/types'
 
 export type StudentType = {
   id: string
-  code: string
+  code?: string
   fullName: string
   phoneNumber?: string
   address?: string

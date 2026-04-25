@@ -8,6 +8,7 @@ export type AuthUser = {
   skillLevel?: string | null
   certification?: string | null
   isActive?: boolean
+  avatarUrl?: string | null
 }
 
 export type AuthSnapshot = {

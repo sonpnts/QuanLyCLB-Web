@@ -76,6 +76,10 @@ const UserDropdown = () => {
     }, 0)
   }
 
+  // Logo hệ thống dùng làm fallback khi user chưa có avatar
+  const SYSTEM_LOGO = '/favicon.ico'
+  const avatarSrc = auth?.user?.avatarUrl && auth.user.avatarUrl.trim() !== '' ? auth.user.avatarUrl : SYSTEM_LOGO
+
   return (
     <>
       <Badge
@@ -88,7 +92,7 @@ const UserDropdown = () => {
         <Avatar
           ref={anchorRef}
           alt={auth?.user?.fullName || ''}
-          src=''
+          src={avatarSrc}
           onClick={handleDropdownOpen}
           className='cursor-pointer bs-[38px] is-[38px]'
         />
@@ -112,7 +116,7 @@ const UserDropdown = () => {
               <ClickAwayListener onClickAway={e => handleDropdownClose(e as MouseEvent | TouchEvent)}>
                 <MenuList>
                   <div className='flex items-center plb-2 pli-4 gap-2' tabIndex={-1}>
-                    <Avatar alt={auth?.user?.fullName || ''} src='' />
+                    <Avatar alt={auth?.user?.fullName || ''} src={avatarSrc} />
                     <div className='flex items-start flex-col'>
                       <Typography className='font-medium' color='text.primary'>
                         {auth?.user?.fullName || ''}
@@ -121,13 +125,9 @@ const UserDropdown = () => {
                     </div>
                   </div>
                   <Divider className='mlb-1' />
-                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/user-profile')}>
-                    <i className='ri-user-3-line' />
-                    <Typography color='text.primary'>My Profile</Typography>
-                  </MenuItem>
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/account-settings')}>
                     <i className='ri-settings-4-line' />
-                    <Typography color='text.primary'>Settings</Typography>
+                    <Typography color='text.primary'>Thông tin tài khoản</Typography>
                   </MenuItem>
                   {/*<MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/pricing')}>*/}
                   {/*  <i className='ri-money-dollar-circle-line' />*/}

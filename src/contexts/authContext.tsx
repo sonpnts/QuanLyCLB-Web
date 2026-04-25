@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }: ChildrenType) => {
   const handleLoginError = useCallback((error: unknown): LoginResult => {
     const axiosError = error as AxiosError<ApiLoginResponse>
     const responseMessage = axiosError.response?.data?.message
-    const fallbackMessage = axiosError.message || 'Login failed.'
+    const fallbackMessage = axiosError.message || 'Đăng nhập thất bại.'
 
     return {
       success: false,

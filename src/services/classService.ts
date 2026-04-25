@@ -46,6 +46,24 @@ export interface ClassInfo {
 }
 
 // API response type from /api/Classes
+export interface ApiClassCoach {
+  userId: string
+  fullName: string
+  email?: string | null
+  phoneNumber?: string | null
+  skillLevel?: string | null
+  isLeadInstructor: boolean
+}
+
+export interface ApiClassAssistant {
+  assistantId: string
+  fullName: string
+  email?: string | null
+  phoneNumber?: string | null
+  skillLevel?: string | null
+  roleName: string
+}
+
 export interface ApiClassResponse {
   id: string
   code: string
@@ -53,6 +71,8 @@ export interface ApiClassResponse {
   description?: string
   maxStudents: number
   userIds?: string[] // API trả về userIds thay vì coachIds
+  coaches?: ApiClassCoach[]
+  assistants?: ApiClassAssistant[]
   isActive?: boolean
   createdAt?: string
   updatedAt?: string | null
@@ -74,7 +94,9 @@ class ClassService {
       createdBy: apiClass.createdByUserId || undefined,
       updatedDate: apiClass.updatedAt || undefined,
       updatedBy: apiClass.updatedByUserId || undefined,
-      coachIds: apiClass.userIds || [] // Map userIds sang coachIds cho frontend
+      coachIds: apiClass.userIds || [], // Map userIds sang coachIds cho frontend
+      coaches: apiClass.coaches || [],
+      assistants: apiClass.assistants || []
     }
   }
 

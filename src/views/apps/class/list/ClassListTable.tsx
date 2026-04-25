@@ -244,29 +244,60 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
       columnHelper.accessor('coachIds', {
         header: 'Huấn luyện viên & Trợ giảng',
         cell: ({ row }) => {
-          const coachIds = row.original.coachIds || []
+          const coaches = row.original.coaches ?? []
+          const assistants = row.original.assistants ?? []
 
-          if (coachIds.length === 0) {
+          // Fallback: if backend chưa trả coaches (cũ), dùng coachIds + lookup users
+          const fallbackCoaches =
+            coaches.length === 0
+              ? (row.original.coachIds ?? []).map(id => {
+                  const u = users.find(x => x.id === id)
+                  return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
+                })
+              : coaches
+
+          if (fallbackCoaches.length === 0 && assistants.length === 0) {
             return <Typography variant='body2'>-</Typography>
           }
 
           return (
-            <Box className='flex flex-wrap gap-1'>
-              {coachIds.map((coachId: string, index: number) => {
-                const user = users.find(u => u.id === coachId)
-                const displayName = user ? user.fullName : coachId
-
-                return (
-                  <Chip
-                    key={`${coachId}-${index}`}
-                    label={displayName}
-                    size='small'
-                    color='primary'
-                    variant='tonal'
-                    className='text-xs'
-                  />
-                )
-              })}
+            <Box className='flex flex-col gap-1'>
+              {fallbackCoaches.length > 0 && (
+                <Box className='flex flex-wrap items-center gap-1'>
+                  <Typography variant='caption' color='text.secondary' className='min-w-[36px]'>
+                    HLV:
+                  </Typography>
+                  {fallbackCoaches.map((coach, index) => (
+                    <Chip
+                      key={`coach-${coach.userId}-${index}`}
+                      label={
+                        coach.isLeadInstructor ? `${coach.fullName} (Chính)` : coach.fullName
+                      }
+                      size='small'
+                      color={coach.isLeadInstructor ? 'primary' : 'default'}
+                      variant='tonal'
+                      className='text-xs'
+                    />
+                  ))}
+                </Box>
+              )}
+              {assistants.length > 0 && (
+                <Box className='flex flex-wrap items-center gap-1'>
+                  <Typography variant='caption' color='text.secondary' className='min-w-[36px]'>
+                    TG:
+                  </Typography>
+                  {assistants.map((assistant, index) => (
+                    <Chip
+                      key={`assistant-${assistant.assistantId}-${index}`}
+                      label={assistant.fullName}
+                      size='small'
+                      color='info'
+                      variant='tonal'
+                      className='text-xs'
+                    />
+                  ))}
+                </Box>
+              )}
             </Box>
           )
         }

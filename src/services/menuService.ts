@@ -134,6 +134,12 @@ class MenuService {
     return this.inFlightGetMenu
   }
 
+  /** Clear the local menu cache so the next call re-fetches from the server. */
+  invalidateCache(): void {
+    this.menuCache = null
+    this.inFlightGetMenu = null
+  }
+
   /**
    * Seed initial menu data (Admin only - for development/initial setup)
    */

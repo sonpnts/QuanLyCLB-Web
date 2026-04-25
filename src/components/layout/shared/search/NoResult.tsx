@@ -21,8 +21,8 @@ const noResultData: NoResultData[] = [
     icon: 'ri-bar-chart-line'
   },
   {
-    label: 'User Profile',
-    href: '/pages/user-profile',
+    label: 'Thông tin tài khoản',
+    href: '/pages/account-settings',
     icon: 'ri-user-3-line'
   },
   {
