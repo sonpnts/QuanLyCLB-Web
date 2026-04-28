@@ -69,6 +69,8 @@ const EditBeltLevelDrawer = (props: Props) => {
     defaultValues
   })
 
+  const isDangValue = watch('isDang')
+
   useEffect(() => {
     if (beltLevel) {
       reset(defaultValues)
@@ -84,7 +86,8 @@ const EditBeltLevelDrawer = (props: Props) => {
       return
     }
 
-    if (!values.order || isNaN(Number(values.order))) {
+    // Đẳng không cần thứ tự
+    if (!values.isDang && (!values.order || isNaN(Number(values.order)))) {
       showNotification('Vui lòng nhập thứ tự hợp lệ.', 'error')
 
       return
@@ -95,7 +98,7 @@ const EditBeltLevelDrawer = (props: Props) => {
 
       const payload = {
         name: values.name,
-        order: Number(values.order),
+        order: values.isDang ? 0 : Number(values.order),
         description: values.description || undefined,
         colorCode: values.colorCode || undefined,
         isDang: values.isDang
@@ -165,36 +168,47 @@ const EditBeltLevelDrawer = (props: Props) => {
           )}
         />
         <Controller
-          name='order'
+          name='isDang'
           control={control}
-          rules={{ required: 'Thứ tự là bắt buộc' }}
           render={({ field }) => (
-            <TextField
-              {...field}
-              fullWidth
-              type='number'
-              label='Thứ tự *'
-              error={!!errors.order}
-              helperText={errors.order?.message || 'Thứ tự từ thấp đến cao (1 là thấp nhất)'}
-              placeholder='VD: 1, 2, 3...'
+            <FormControlLabel
+              control={
+                <Switch
+                  {...field}
+                  checked={field.value}
+                  onChange={e => {
+                    field.onChange(e)
+                    if (e.target.checked) setValue('order', '')
+                  }}
+                />
+              }
+              label='Là Đẳng (đai đen có cấp độ)'
             />
           )}
         />
+        {!isDangValue && (
+          <Controller
+            name='order'
+            control={control}
+            rules={{ required: !isDangValue ? 'Thứ tự là bắt buộc' : false }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                type='number'
+                label='Thứ tự *'
+                error={!!errors.order}
+                helperText={errors.order?.message || 'Thứ tự từ thấp đến cao (1 là thấp nhất). Đẳng không cần nhập.'}
+                placeholder='VD: 1, 2, 3...'
+              />
+            )}
+          />
+        )}
         <Controller
           name='description'
           control={control}
           render={({ field }) => (
             <TextField {...field} fullWidth multiline rows={3} label='Mô tả' placeholder='Mô tả về cấp đai này...' />
-          )}
-        />
-        <Controller
-          name='isDang'
-          control={control}
-          render={({ field }) => (
-            <FormControlLabel
-              control={<Switch {...field} checked={field.value} />}
-              label='Là Đẳng (đai đen có cấp độ)'
-            />
           )}
         />
         <Box>

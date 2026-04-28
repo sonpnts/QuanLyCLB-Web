@@ -38,6 +38,7 @@ import {
 import type { ColumnDef } from '@tanstack/react-table'
 
 import { fuzzyFilter } from '@/utils/tableHelpers'
+import { exportToExcel, formatBool } from '@/utils/exportToExcel'
 
 // Type Imports
 import type { ClassType } from '@/types/apps/classTypes'
@@ -488,12 +489,49 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <Button
-            color='secondary'
+            color='success'
             variant='outlined'
-            startIcon={<i className='ri-upload-2-line text-xl' />}
+            startIcon={<i className='ri-file-excel-2-line text-xl' />}
             className='max-sm:is-full'
+            disabled={data.length === 0}
+            onClick={() => {
+              exportToExcel({
+                filename: 'danh-sach-lop-hoc',
+                rows: data,
+                columns: [
+                  { header: 'Mã lớp', accessor: 'code' as any },
+                  { header: 'Tên lớp', accessor: 'name' as any },
+                  { header: 'Mô tả', accessor: 'description' as any },
+                  { header: 'Số học viên tối đa', accessor: 'maxStudents' as any },
+                  {
+                    header: 'HLV chính',
+                    accessor: r =>
+                      Array.isArray((r as any).coaches)
+                        ? (r as any).coaches.find((c: any) => c.isLeadInstructor)?.fullName ||
+                          (r as any).coaches[0]?.fullName ||
+                          ''
+                        : ''
+                  },
+                  {
+                    header: 'HLV phụ',
+                    accessor: r =>
+                      Array.isArray((r as any).coaches)
+                        ? (r as any).coaches.filter((c: any) => !c.isLeadInstructor).map((c: any) => c.fullName).join(', ')
+                        : ''
+                  },
+                  {
+                    header: 'Trợ giảng',
+                    accessor: r =>
+                      Array.isArray((r as any).assistants)
+                        ? (r as any).assistants.map((a: any) => a.fullName).join(', ')
+                        : ''
+                  },
+                  { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }
+                ]
+              })
+            }}
           >
-            Export
+            Xuất Excel
           </Button>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput

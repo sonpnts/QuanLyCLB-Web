@@ -36,6 +36,7 @@ import {
 import type { ColumnDef } from '@tanstack/react-table'
 
 import { fuzzyFilter } from '@/utils/tableHelpers'
+import { exportToExcel, formatVnDate, formatVnCurrency } from '@/utils/exportToExcel'
 
 // Type Imports
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
@@ -374,6 +375,41 @@ const PaymentListTable = () => {
               placeholder='Tìm kiếm...'
               className='max-sm:is-full'
             />
+            <Button
+              variant='outlined'
+              color='success'
+              startIcon={<i className='ri-file-excel-2-line' />}
+              disabled={data.length === 0}
+              onClick={() => {
+                exportToExcel({
+                  filename: 'danh-sach-thanh-toan',
+                  rows: data,
+                  columns: [
+                    { header: 'Số biên lai', accessor: 'receiptNumber' as any },
+                    { header: 'Ngày thanh toán', accessor: 'paymentDate', formatter: formatVnDate },
+                    { header: 'Học viên', accessor: 'studentName' as any },
+                    { header: 'Lớp', accessor: 'className' as any },
+                    {
+                      header: 'Loại',
+                      accessor: 'type',
+                      formatter: v => paymentTypeLabels[v as number] || ''
+                    },
+                    { header: 'Số tiền', accessor: 'amount', formatter: formatVnCurrency },
+                    { header: 'Đã giảm', accessor: 'discountAmount' as any, formatter: formatVnCurrency },
+                    { header: 'Lý do giảm', accessor: 'discountReason' as any },
+                    {
+                      header: 'Phương thức',
+                      accessor: 'method',
+                      formatter: v => paymentMethodLabels[v as number] || ''
+                    },
+                    { header: 'Người thu', accessor: 'collectedByUserName' as any },
+                    { header: 'Ghi chú', accessor: 'description' as any }
+                  ]
+                })
+              }}
+            >
+              Xuất Excel
+            </Button>
             <Button variant='contained' onClick={() => setAddPaymentOpen(true)}>
               Thêm thanh toán
             </Button>

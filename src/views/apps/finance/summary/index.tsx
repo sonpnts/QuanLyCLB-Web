@@ -29,6 +29,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 
 import tableStyles from '@core/styles/table.module.css'
+import { exportToExcel, formatVnCurrency, formatVnDate } from '@/utils/exportToExcel'
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
@@ -294,9 +295,53 @@ const FinanceSummaryView = () => {
             </Grid>
           </Grid>
 
-          <div className='mt-4'>
+          <div className='mt-4 flex gap-2 flex-wrap'>
             <Button variant='contained' onClick={loadSummary} startIcon={<i className='ri-refresh-line' />}>
               Làm mới thống kê
+            </Button>
+            <Button
+              variant='outlined'
+              color='success'
+              startIcon={<i className='ri-file-excel-2-line' />}
+              disabled={loading}
+              onClick={() => {
+                // 1. Xuất các chỉ số tổng quan
+                const summaryRows = [
+                  { ten: 'Tổng học phí (lớp đã chọn)', soTien: classTuitionAmount },
+                  { ten: 'Tổng doanh thu bán sản phẩm', soTien: productSalesAmount },
+                  { ten: 'Tổng tiền HLV đã thu (lớp)', soTien: instructorTotal },
+                  { ten: 'Tổng doanh thu chi nhánh', soTien: branchAmount }
+                ]
+                exportToExcel({
+                  filename: 'thong-ke-tai-chinh_tong-quan',
+                  rows: summaryRows,
+                  columns: [
+                    { header: 'Chỉ số', accessor: 'ten' },
+                    { header: 'Số tiền (VNĐ)', accessor: 'soTien', formatter: formatVnCurrency }
+                  ]
+                })
+
+                // 2. Xuất chi tiết thu theo lớp nếu có
+                if (collections.length > 0) {
+                  exportToExcel({
+                    filename: 'thong-ke-tai-chinh_chi-tiet-theo-lop',
+                    rows: collections,
+                    columns: [
+                      { header: 'Lớp', accessor: r => r.className || r.classId },
+                      { header: 'Học phí thu', accessor: 'tuitionCollectedToDate', formatter: formatVnCurrency },
+                      { header: 'Bán sản phẩm', accessor: 'productSalesCollectedToDate', formatter: formatVnCurrency },
+                      { header: 'Tổng thu', accessor: 'totalCollectedToDate', formatter: formatVnCurrency },
+                      { header: 'Đã bàn giao', accessor: 'totalHandedOver', formatter: formatVnCurrency },
+                      { header: 'Còn lại', accessor: 'availableToHandover', formatter: formatVnCurrency },
+                      { header: 'Tính đến ngày', accessor: 'asOf', formatter: formatVnDate }
+                    ]
+                  })
+                }
+
+                showNotification('Đã xuất báo cáo tài chính ra file Excel.', 'success')
+              }}
+            >
+              Xuất báo cáo Excel
             </Button>
           </div>
         </CardContent>

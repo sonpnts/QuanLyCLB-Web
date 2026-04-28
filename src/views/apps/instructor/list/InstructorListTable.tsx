@@ -32,6 +32,7 @@ import { useNotification } from '@/contexts/notificationContext'
 
 // Utils Imports
 import { getInitials } from '@/utils/getInitials'
+import { exportToExcel, formatBool } from '@/utils/exportToExcel'
 
 // Styled Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -235,9 +236,33 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
         <CardHeader
           title='Danh sách huấn luyện viên'
           action={
-            <Button variant='contained' onClick={() => setAddInstructorOpen(true)}>
-              Thêm huấn luyện viên mới
-            </Button>
+            <div className='flex gap-2'>
+              <Button
+                variant='outlined'
+                color='success'
+                startIcon={<i className='ri-file-excel-2-line' />}
+                disabled={filteredData.length === 0}
+                onClick={() => {
+                  exportToExcel({
+                    filename: 'danh-sach-huan-luyen-vien',
+                    rows: filteredData,
+                    columns: [
+                      { header: 'Họ và tên', accessor: 'fullName' as any },
+                      { header: 'Email', accessor: 'email' as any },
+                      { header: 'Số điện thoại', accessor: 'phoneNumber' as any },
+                      { header: 'Cấp đai / Trình độ', accessor: 'skillLevel' as any },
+                      { header: 'Chứng chỉ', accessor: 'certification' as any },
+                      { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }
+                    ]
+                  })
+                }}
+              >
+                Xuất Excel
+              </Button>
+              <Button variant='contained' onClick={() => setAddInstructorOpen(true)}>
+                Thêm huấn luyện viên mới
+              </Button>
+            </div>
           }
         />
         <TableFilters onFilterChange={handleFilterChange} />

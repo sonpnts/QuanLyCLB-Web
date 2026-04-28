@@ -52,7 +52,8 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
       return
     }
 
-    if (!formData.order || isNaN(Number(formData.order))) {
+    // Đẳng không cần thứ tự (đã có tên riêng: Nhất Đẳng, Nhị Đẳng...)
+    if (!formData.isDang && (!formData.order || isNaN(Number(formData.order)))) {
       showNotification('Vui lòng nhập thứ tự hợp lệ.', 'error')
 
       return
@@ -63,7 +64,8 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
 
       const response = await beltLevelService.createBeltLevel({
         name: formData.name,
-        order: Number(formData.order),
+        // Với Đẳng: gán order = 0 (backend coi như không có thứ tự kup)
+        order: formData.isDang ? 0 : Number(formData.order),
         description: formData.description || undefined,
         colorCode: formData.color || undefined,
         isDang: formData.isDang
@@ -119,15 +121,26 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
             onChange={e => setFormData({ ...formData, name: e.target.value })}
             placeholder='VD: Đai trắng, Đai vàng...'
           />
-          <TextField
-            label='Thứ tự *'
-            type='number'
-            fullWidth
-            value={formData.order}
-            onChange={e => setFormData({ ...formData, order: e.target.value })}
-            placeholder='VD: 1, 2, 3...'
-            helperText='Thứ tự từ thấp đến cao (1 là thấp nhất)'
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formData.isDang}
+                onChange={e => setFormData({ ...formData, isDang: e.target.checked, order: e.target.checked ? '' : formData.order })}
+              />
+            }
+            label='Là Đẳng (đai đen có cấp độ)'
           />
+          {!formData.isDang && (
+            <TextField
+              label='Thứ tự *'
+              type='number'
+              fullWidth
+              value={formData.order}
+              onChange={e => setFormData({ ...formData, order: e.target.value })}
+              placeholder='VD: 1, 2, 3...'
+              helperText='Thứ tự từ thấp đến cao (1 là thấp nhất). Đẳng không cần nhập thứ tự.'
+            />
+          )}
           <TextField
             label='Mô tả'
             fullWidth
@@ -136,15 +149,6 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
             value={formData.description}
             onChange={e => setFormData({ ...formData, description: e.target.value })}
             placeholder='Mô tả về cấp đai này...'
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formData.isDang}
-                onChange={e => setFormData({ ...formData, isDang: e.target.checked })}
-              />
-            }
-            label='Là Đẳng (đai đen có cấp độ)'
           />
           <Box>
             <Typography variant='body2' className='mb-2'>

@@ -30,6 +30,10 @@ import paymentService from '@/services/paymentService'
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
+// Utils
+import Button from '@mui/material/Button'
+import { exportToExcel, formatVnDate, formatVnCurrency } from '@/utils/exportToExcel'
+
 // One row in the table = one receipt (may group multiple payment records)
 type ReceiptRow = {
   receiptNumber: string
@@ -158,6 +162,38 @@ const InvoiceListTable = () => {
               <MenuItem value='2'>Khác</MenuItem>
             </Select>
           </FormControl>
+          <Button
+            variant='outlined'
+            color='success'
+            startIcon={<i className='ri-file-excel-2-line' />}
+            disabled={filtered.length === 0}
+            onClick={() => {
+              exportToExcel({
+                filename: 'danh-sach-bien-lai',
+                rows: filtered,
+                columns: [
+                  { header: 'Số biên lai', accessor: 'receiptNumber' },
+                  { header: 'Ngày', accessor: 'paymentDate', formatter: formatVnDate },
+                  { header: 'Học viên', accessor: 'studentName' },
+                  {
+                    header: 'Loại',
+                    accessor: 'types',
+                    formatter: v =>
+                      Array.isArray(v) ? v.map((t: number) => paymentTypeLabels[t] || '').filter(Boolean).join(', ') : ''
+                  },
+                  {
+                    header: 'Phương thức',
+                    accessor: 'method',
+                    formatter: v => paymentMethodLabels[v as number] || ''
+                  },
+                  { header: 'Tổng tiền (VNĐ)', accessor: 'totalAmount', formatter: formatVnCurrency },
+                  { header: 'Số khoản', accessor: r => (r as ReceiptRow).items.length }
+                ]
+              })
+            }}
+          >
+            Xuất Excel
+          </Button>
         </div>
       </CardContent>
 

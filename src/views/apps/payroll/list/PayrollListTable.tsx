@@ -27,6 +27,7 @@ import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '
 // Type Imports
 import type { GetPayrollParams, GeneratePayrollRequest } from '@/services/payrollService'
 import { fuzzyFilter } from '@/utils/tableHelpers'
+import { exportToExcel, formatVnDate, formatVnCurrency } from '@/utils/exportToExcel'
 // Service Imports
 import payrollService from '@/services/payrollService'
 
@@ -178,9 +179,37 @@ const PayrollListTable = () => {
         <CardHeader
           title='Bảng lương'
           action={
-            <Button variant='contained' onClick={() => setGeneratePayrollOpen(true)}>
-              Tạo bảng lương
-            </Button>
+            <div className='flex gap-2'>
+              <Button
+                variant='outlined'
+                color='success'
+                startIcon={<i className='ri-file-excel-2-line' />}
+                disabled={filteredData.length === 0}
+                onClick={() => {
+                  exportToExcel({
+                    filename: 'bang-luong',
+                    rows: filteredData,
+                    columns: [
+                      { header: 'Mã HLV', accessor: 'coachId' as any },
+                      { header: 'Năm', accessor: 'year' as any },
+                      { header: 'Tháng', accessor: 'month' as any },
+                      { header: 'Tổng tiền (VNĐ)', accessor: 'totalAmount' as any, formatter: formatVnCurrency },
+                      { header: 'Ngày tạo', accessor: 'generatedAt' as any, formatter: formatVnDate },
+                      {
+                        header: 'Trạng thái',
+                        accessor: 'isActive' as any,
+                        formatter: v => (v ? 'Hoạt động' : 'Không hoạt động')
+                      }
+                    ]
+                  })
+                }}
+              >
+                Xuất Excel
+              </Button>
+              <Button variant='contained' onClick={() => setGeneratePayrollOpen(true)}>
+                Tạo bảng lương
+              </Button>
+            </div>
           }
         />
         <div className='p-5'>

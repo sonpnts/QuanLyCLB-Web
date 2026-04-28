@@ -59,6 +59,7 @@ import { useNotification } from '@/contexts/notificationContext'
 
 // Utils
 import { logger } from '@/utils/logger'
+import { exportToExcel, formatVnDate, formatBool } from '@/utils/exportToExcel'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -441,6 +442,45 @@ const StudentListTable = () => {
               placeholder='Tìm kiếm học viên'
               className='max-sm:is-full'
             />
+            <Button
+              variant='outlined'
+              color='success'
+              startIcon={<i className='ri-file-excel-2-line' />}
+              disabled={data.length === 0}
+              onClick={() => {
+                const tabLabel =
+                  statusFilter === 'active' ? 'dang-hoc' : statusFilter === 'suspended' ? 'tam-nghi' : 'tat-ca'
+                exportToExcel({
+                  filename: `danh-sach-hoc-vien_${tabLabel}`,
+                  rows: data,
+                  columns: [
+                    { header: 'Mã học viên', accessor: 'code' },
+                    { header: 'Họ và tên', accessor: 'fullName' },
+                    { header: 'Email', accessor: 'email' },
+                    { header: 'Số điện thoại', accessor: 'phoneNumber' },
+                    {
+                      header: 'Giới tính',
+                      accessor: 'gender',
+                      formatter: v => (v === true ? 'Nam' : v === false ? 'Nữ' : '')
+                    },
+                    { header: 'Ngày sinh', accessor: 'dateOfBirth', formatter: formatVnDate },
+                    { header: 'Cấp đai', accessor: 'currentBeltLevelName' as any },
+                    {
+                      header: 'Trạng thái',
+                      accessor: 'isSuspended',
+                      formatter: v => (v ? 'Tạm nghỉ' : 'Đang học')
+                    },
+                    { header: 'Lý do tạm nghỉ', accessor: 'suspendReason' as any },
+                    { header: 'Ngày tạm nghỉ', accessor: 'suspendedAt' as any, formatter: formatVnDate },
+                    { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }
+                  ]
+                })
+                showNotificationRef.current(`Đã xuất ${data.length} học viên ra file Excel.`, 'success')
+              }}
+              className='max-sm:is-full'
+            >
+              Xuất Excel
+            </Button>
             <Button variant='contained' onClick={() => setAddStudentOpen(true)} className='max-sm:is-full'>
               Thêm học viên
             </Button>
