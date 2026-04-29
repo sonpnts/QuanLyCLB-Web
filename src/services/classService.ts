@@ -244,7 +244,11 @@ class ClassService {
         return { success: true, data: [] }
       }
 
-      return { success: true, data: apiResponse.data || [] }
+      // Backend có thể trả về plain array, paginated { records: [...] } hoặc { items: [...] }
+      const raw = apiResponse.data
+      const data = Array.isArray(raw) ? raw : raw?.records || raw?.items || []
+
+      return { success: true, data }
     } catch (error) {
       logger.error('ClassService', 'getClassSchedules', error)
       return { success: true, data: [] }

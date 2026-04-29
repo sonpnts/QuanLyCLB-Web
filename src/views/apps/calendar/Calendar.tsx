@@ -3,6 +3,8 @@ import { useEffect, useRef } from 'react'
 
 // MUI Imports
 import { useTheme } from '@mui/material/styles'
+import viLocale from '@fullcalendar/core/locales/vi'
+
 
 // Third-party imports
 import type { Dispatch } from '@reduxjs/toolkit'
@@ -75,6 +77,8 @@ const Calendar = (props: CalenderProps) => {
     events: calendarStore.events,
     plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
     initialView: 'dayGridMonth',
+    firstDay: 1,
+    locale: viLocale,
     headerToolbar: {
       start: 'sidebarToggle, prev, next, title',
       end: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
@@ -107,7 +111,7 @@ const Calendar = (props: CalenderProps) => {
       Max number of events within a given day
       ? Docs: https://fullcalendar.io/docs/dayMaxEvents
     */
-    dayMaxEvents: 2,
+    dayMaxEvents: 3,
 
     /*
       Determines if day names and week names are clickable

@@ -43,7 +43,6 @@ type FormValidateType = {
   code: string
   name: string
   description?: string
-  maxStudents: number
   userIds?: string[]
 }
 
@@ -70,7 +69,6 @@ const AddClassDrawer = (props: Props) => {
       code: '',
       name: '',
       description: '',
-      maxStudents: 30,
       userIds: []
     }
   })
@@ -106,7 +104,8 @@ const AddClassDrawer = (props: Props) => {
         code: data.code,
         name: data.name,
         description: data.description,
-        maxStudents: data.maxStudents,
+        // Backend yêu cầu maxStudents — set giá trị mặc định lớn để bỏ giới hạn
+        maxStudents: 9999,
         userIds: data.userIds
       })
 
@@ -150,7 +149,7 @@ const AddClassDrawer = (props: Props) => {
       <div className='p-5'>
         <form onSubmit={handleSubmit(data => onSubmit(data))} className='flex flex-col gap-5'>
           <Grid container spacing={4}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12 }}>
               <Controller
                 name='code'
                 control={control}
@@ -162,26 +161,6 @@ const AddClassDrawer = (props: Props) => {
                     label='Mã lớp học *'
                     placeholder='VD: LOP-001'
                     {...(errors.code && { error: true, helperText: 'Trường này là bắt buộc.' })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Controller
-                name='maxStudents'
-                control={control}
-                rules={{ required: true, min: 1 }}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    type='number'
-                    label='Sỉ số tối đa *'
-                    placeholder='30'
-                    {...(errors.maxStudents && {
-                      error: true,
-                      helperText: 'Trường này là bắt buộc và phải lớn hơn 0.'
-                    })}
                   />
                 )}
               />

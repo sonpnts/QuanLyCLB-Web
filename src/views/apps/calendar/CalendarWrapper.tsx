@@ -3,6 +3,11 @@ import { logger } from '@/utils/logger'
 
 // React Imports
 import { useState, useEffect, useCallback } from 'react'
+import { registerLocale, setDefaultLocale } from 'react-datepicker'
+import vi from 'date-fns/locale/vi'
+
+registerLocale('vi', vi)
+setDefaultLocale('vi')
 
 // MUI Imports
 import { useMediaQuery } from '@mui/material'

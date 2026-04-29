@@ -32,6 +32,9 @@ import type { ClassType } from '@/types/apps/classTypes'
 // Services
 import classService from '@/services/classService'
 
+// Utils
+import { getDayName } from '@/utils/constants'
+
 // Components
 import AddStudentsToClassDrawer from '../list/AddStudentsToClassDrawer'
 
@@ -57,16 +60,6 @@ type ScheduleType = {
   startTime: string
   endTime: string
   branchName?: string
-}
-
-const dayOfWeekLabels: { [key: number]: string } = {
-  0: 'Chủ nhật',
-  1: 'Thứ 2',
-  2: 'Thứ 3',
-  3: 'Thứ 4',
-  4: 'Thứ 5',
-  5: 'Thứ 6',
-  6: 'Thứ 7'
 }
 
 const ClassViewPage = ({ classId }: Props) => {
@@ -219,14 +212,16 @@ const ClassViewPage = ({ classId }: Props) => {
         <Grid size={{ xs: 12 }}>
           <Card>
             <TabContext value={activeTab}>
-              <TabList onChange={handleTabChange}>
-                <Tab label='Thông tin' value='1' />
-                <Tab label='Học viên' value='2' />
-                <Tab label='Lịch học' value='3' />
-              </TabList>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 5 }}>
+                <TabList onChange={handleTabChange}>
+                  <Tab label='Thông tin' value='1' />
+                  <Tab label='Học viên' value='2' />
+                  <Tab label='Lịch học' value='3' />
+                </TabList>
+              </Box>
 
               {/* Tab 1: Thông tin */}
-              <TabPanel value='1'>
+              <TabPanel value='1' sx={{ p: 5 }}>
                 <Grid container spacing={4}>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
@@ -242,14 +237,6 @@ const ClassViewPage = ({ classId }: Props) => {
                     </Typography>
                     <Typography variant='body1' className='font-medium'>
                       {classData.name}
-                    </Typography>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      Sĩ số tối đa
-                    </Typography>
-                    <Typography variant='body1' className='font-medium'>
-                      {classData.maxStudents} học viên
                     </Typography>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
@@ -272,7 +259,7 @@ const ClassViewPage = ({ classId }: Props) => {
               </TabPanel>
 
               {/* Tab 2: Học viên */}
-              <TabPanel value='2'>
+              <TabPanel value='2' sx={{ p: 5 }}>
                 <Box className='flex justify-between items-center mb-4'>
                   <Typography variant='subtitle1'>Danh sách học viên ({students.length})</Typography>
                   <Button
@@ -341,7 +328,7 @@ const ClassViewPage = ({ classId }: Props) => {
               </TabPanel>
 
               {/* Tab 3: Lịch học */}
-              <TabPanel value='3'>
+              <TabPanel value='3' sx={{ p: 5 }}>
                 {loadingSchedules ? (
                   <Box className='flex justify-center py-8'>
                     <CircularProgress size={32} />
@@ -364,7 +351,7 @@ const ClassViewPage = ({ classId }: Props) => {
                           <TableRow key={schedule.id}>
                             <TableCell>
                               <Chip
-                                label={dayOfWeekLabels[schedule.dayOfWeek] || schedule.dayOfWeek}
+                                label={getDayName(schedule.dayOfWeek)}
                                 size='small'
                                 color='primary'
                                 variant='tonal'
@@ -372,7 +359,7 @@ const ClassViewPage = ({ classId }: Props) => {
                             </TableCell>
                             <TableCell>{schedule.startTime}</TableCell>
                             <TableCell>{schedule.endTime}</TableCell>
-                            <TableCell>{schedule.branchName || '-'}</TableCell>
+                            <TableCell>{schedule.branch.name || '-'}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

@@ -7,9 +7,11 @@ import Typography from '@mui/material/Typography'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import FormGroup from '@mui/material/FormGroup'
 
+
+
 // Third-party imports
 import classnames from 'classnames'
-
+import vi from 'date-fns/locale/vi'
 // Types Imports
 import type { SidebarLeftProps } from '@/types/apps/calendarTypes'
 
@@ -18,6 +20,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 // Slice Imports
 import { selectedEvent, filterClassesSet } from '@/redux-store/slices/calendar'
+
 
 const SidebarLeft = (props: SidebarLeftProps) => {
   // Props
@@ -30,6 +33,7 @@ const SidebarLeft = (props: SidebarLeftProps) => {
     handleLeftSidebarToggle,
     handleAddEventSidebarToggle
   } = props
+
 
   // Build class filters from events (unique class names)
   const availableClasses = Array.from(
@@ -75,20 +79,21 @@ const SidebarLeft = (props: SidebarLeftProps) => {
         }
       }}
     >
-      <div className='is-full p-5'>
-        <Button
-          fullWidth
-          variant='contained'
-          onClick={handleSidebarToggleSidebar}
-          startIcon={<i className='ri-add-line' />}
-        >
-          Add Event
-        </Button>
-      </div>
+      {/*<div className='is-full p-5'>*/}
+      {/*  <Button*/}
+      {/*    fullWidth*/}
+      {/*    variant='contained'*/}
+      {/*    onClick={handleSidebarToggleSidebar}*/}
+      {/*    startIcon={<i className='ri-add-line' />}*/}
+      {/*  >*/}
+      {/*    Add Event*/}
+      {/*  </Button>*/}
+      {/*</div>*/}
       <Divider className='is-full' />
       <AppReactDatepicker
         inline
         onChange={date => calendarApi.gotoDate(date)}
+        locale='vi'
         boxProps={{
           className: 'flex justify-center is-full',
           sx: { '& .react-datepicker': { boxShadow: 'none !important', border: 'none !important' } }

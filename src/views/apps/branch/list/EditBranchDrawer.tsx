@@ -155,6 +155,7 @@ const EditBranchDrawer = (props: Props) => {
             <TextField
               fullWidth
               label='Tên chi nhánh'
+              slotProps={{ inputLabel: { shrink: true } }}
               {...register('name', { required: 'Tên chi nhánh là bắt buộc' })}
               error={!!errors.name}
               helperText={errors.name?.message}
@@ -164,6 +165,7 @@ const EditBranchDrawer = (props: Props) => {
             <TextField
               fullWidth
               label='Địa chỉ'
+              slotProps={{ inputLabel: { shrink: true } }}
               {...register('address')}
               error={!!errors.address}
               helperText={errors.address?.message}
@@ -173,6 +175,7 @@ const EditBranchDrawer = (props: Props) => {
             <TextField
               fullWidth
               label='Vĩ độ'
+              slotProps={{ inputLabel: { shrink: true } }}
               {...register('latitude', {
                 required: 'Vĩ độ là bắt buộc',
                 validate: {
@@ -189,6 +192,7 @@ const EditBranchDrawer = (props: Props) => {
             <TextField
               fullWidth
               label='Kinh độ'
+              slotProps={{ inputLabel: { shrink: true } }}
               {...register('longitude', {
                 required: 'Kinh độ là bắt buộc',
                 validate: {
@@ -206,6 +210,7 @@ const EditBranchDrawer = (props: Props) => {
               fullWidth
               label='Bán kính cho phép (mét)'
               type='number'
+              slotProps={{ inputLabel: { shrink: true } }}
               {...register('allowedRadiusMeters', {
                 required: 'Bán kính là bắt buộc',
                 validate: {
@@ -222,6 +227,7 @@ const EditBranchDrawer = (props: Props) => {
               fullWidth
               label='Học phí cơ sở'
               type='number'
+              slotProps={{ inputLabel: { shrink: true } }}
               {...register('tuitionFee', {
                 required: 'Học phí là bắt buộc',
                 validate: {
@@ -237,6 +243,7 @@ const EditBranchDrawer = (props: Props) => {
             <TextField
               fullWidth
               label='Google Maps Embed URL'
+              slotProps={{ inputLabel: { shrink: true } }}
               {...register('googleMapsEmbedUrl')}
               error={!!errors.googleMapsEmbedUrl}
               helperText={errors.googleMapsEmbedUrl?.message}

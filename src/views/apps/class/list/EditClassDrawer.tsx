@@ -42,7 +42,6 @@ type Props = {
 type FormValidateType = {
   name: string
   description?: string
-  maxStudents: number
   userIds?: string[]
 }
 
@@ -67,7 +66,6 @@ const EditClassDrawer = (props: Props) => {
     defaultValues: {
       name: classData.name || '',
       description: classData.description || '',
-      maxStudents: classData.maxStudents || 30,
       userIds: classData.coachIds || []
     }
   })
@@ -78,7 +76,6 @@ const EditClassDrawer = (props: Props) => {
       resetForm({
         name: classData.name || '',
         description: classData.description || '',
-        maxStudents: classData.maxStudents || 30,
         userIds: classData.coachIds || []
       })
     }
@@ -116,7 +113,8 @@ const EditClassDrawer = (props: Props) => {
       const response = await classService.updateClass(classData.id, {
         name: data.name,
         description: data.description,
-        maxStudents: data.maxStudents,
+        // Giữ nguyên giá trị maxStudents hiện tại (đã bỏ field input — backend vẫn yêu cầu)
+        maxStudents: classData.maxStudents || 9999,
         userIds: data.userIds
       })
 
@@ -158,26 +156,13 @@ const EditClassDrawer = (props: Props) => {
       <div className='p-5'>
         <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-5'>
           <Grid container spacing={4}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth label='Mã lớp học' value={classData.code} disabled />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Controller
-                name='maxStudents'
-                control={control}
-                rules={{ required: true, min: 1 }}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    type='number'
-                    label='Sỉ số tối đa *'
-                    {...(errors.maxStudents && {
-                      error: true,
-                      helperText: 'Trường này là bắt buộc và phải lớn hơn 0.'
-                    })}
-                  />
-                )}
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                label='Mã lớp học'
+                value={classData.code}
+                disabled
+                slotProps={{ inputLabel: { shrink: true } }}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

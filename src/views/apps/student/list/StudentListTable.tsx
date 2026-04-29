@@ -421,7 +421,13 @@ const StudentListTable = () => {
           <ToggleButtonGroup
             value={statusFilter}
             exclusive
-            onChange={(_, v) => { if (v) { setStatusFilter(v); studentsLoadedRef.current = false; currentFilterRef.current = '' } }}
+            onChange={(_, v) => {
+              if (v) {
+                setStatusFilter(v)
+                studentsLoadedRef.current = false
+                currentFilterRef.current = ''
+              }
+            }}
             size='small'
             color='primary'
           >
@@ -538,6 +544,7 @@ const StudentListTable = () => {
           </table>
         </div>
         <TablePagination
+          labelRowsPerPage='Số dòng mỗi trang:'
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
@@ -568,7 +575,9 @@ const StudentListTable = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSuspendDialogOpen(false)} disabled={suspendLoading}>Hủy</Button>
+          <Button onClick={() => setSuspendDialogOpen(false)} disabled={suspendLoading}>
+            Hủy
+          </Button>
           <Button variant='contained' color='warning' onClick={handleSuspendConfirm} disabled={suspendLoading}>
             {suspendLoading ? 'Đang xử lý...' : 'Xác nhận tạm nghỉ'}
           </Button>

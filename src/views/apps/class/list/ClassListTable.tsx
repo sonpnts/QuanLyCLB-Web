@@ -303,13 +303,10 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
           )
         }
       }),
-      columnHelper.accessor('maxStudents', {
-        header: 'Sỉ số',
+      columnHelper.accessor('currentStudents', {
+        header: 'Học viên',
         cell: ({ row }) => (
-          <div className='flex items-center gap-2'>
-            <Typography color='text.primary'>{row.original.currentStudents || 0}</Typography>
-            <Typography color='text.disabled'>/ {row.original.maxStudents}</Typography>
-          </div>
+          <Typography color='text.primary'>{row.original.currentStudents || 0}</Typography>
         )
       }),
 
@@ -502,7 +499,6 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   { header: 'Mã lớp', accessor: 'code' as any },
                   { header: 'Tên lớp', accessor: 'name' as any },
                   { header: 'Mô tả', accessor: 'description' as any },
-                  { header: 'Số học viên tối đa', accessor: 'maxStudents' as any },
                   {
                     header: 'HLV chính',
                     accessor: r =>
