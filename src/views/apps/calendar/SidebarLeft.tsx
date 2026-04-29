@@ -1,5 +1,5 @@
 // MUI Imports
-import Button from '@mui/material/Button'
+// import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
 import Divider from '@mui/material/Divider'
 import Checkbox from '@mui/material/Checkbox'
@@ -11,7 +11,7 @@ import FormGroup from '@mui/material/FormGroup'
 
 // Third-party imports
 import classnames from 'classnames'
-import vi from 'date-fns/locale/vi'
+
 // Types Imports
 import type { SidebarLeftProps } from '@/types/apps/calendarTypes'
 
@@ -19,7 +19,7 @@ import type { SidebarLeftProps } from '@/types/apps/calendarTypes'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 // Slice Imports
-import { selectedEvent, filterClassesSet } from '@/redux-store/slices/calendar'
+import {  filterClassesSet } from '@/redux-store/slices/calendar'
 
 
 const SidebarLeft = (props: SidebarLeftProps) => {
@@ -30,8 +30,7 @@ const SidebarLeft = (props: SidebarLeftProps) => {
     calendarStore,
     calendarApi,
     dispatch,
-    handleLeftSidebarToggle,
-    handleAddEventSidebarToggle
+    handleLeftSidebarToggle
   } = props
 
 
@@ -44,10 +43,10 @@ const SidebarLeft = (props: SidebarLeftProps) => {
     )
   ).sort() // Sort alphabetically
 
-  const handleSidebarToggleSidebar = () => {
-    dispatch(selectedEvent(null))
-    handleAddEventSidebarToggle()
-  }
+  // const handleSidebarToggleSidebar = () => {
+  //   dispatch(selectedEvent(null))
+  //   handleAddEventSidebarToggle()
+  // }
 
   // Always show sidebar for calendar navigation
   return (
@@ -132,7 +131,7 @@ const SidebarLeft = (props: SidebarLeftProps) => {
                         checked={isSelected}
                         onChange={(_, checked) => {
                           const currentSelected = [...(calendarStore.selectedClasses || [])]
-                          let newSelected: string[] = []
+                          let newSelected: string[]
 
                           if (checked) {
                             // Add class to selection
