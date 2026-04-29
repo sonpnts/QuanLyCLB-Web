@@ -4,11 +4,6 @@
 // React Imports
 import { useState, useEffect, useCallback } from 'react'
 
-import { registerLocale, setDefaultLocale } from 'react-datepicker'
-
-import { vi } from 'date-fns/locale'
-
-
 
 // MUI Imports
 
@@ -127,9 +122,9 @@ const convertScheduleToEvent = (schedule: ScheduleType, year: number, month: num
   return events
 }
 
+
 const AppCalendar = () => {
-  registerLocale('vi', vi)
-  setDefaultLocale('vi')
+
 
   // States
 

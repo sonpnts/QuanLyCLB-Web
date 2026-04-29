@@ -8,6 +8,9 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import FormGroup from '@mui/material/FormGroup'
 
 
+import { registerLocale, setDefaultLocale } from 'react-datepicker'
+
+import { vi } from 'date-fns/locale'
 
 // Third-party imports
 import classnames from 'classnames'
@@ -22,6 +25,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import {  filterClassesSet } from '@/redux-store/slices/calendar'
 
 
+
 const SidebarLeft = (props: SidebarLeftProps) => {
   // Props
   const {
@@ -32,6 +36,9 @@ const SidebarLeft = (props: SidebarLeftProps) => {
     dispatch,
     handleLeftSidebarToggle
   } = props
+
+  registerLocale('vi', vi)
+  setDefaultLocale('vi')
 
 
   // Build class filters from events (unique class names)
