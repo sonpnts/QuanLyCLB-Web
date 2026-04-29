@@ -20,7 +20,7 @@ import type { BranchType } from '@/types/apps/branchTypes'
 // Service Imports
 import scheduleService from '@/services/scheduleService'
 import { useNotification } from '@/contexts/notificationContext'
-import { DAY_OF_WEEK_OPTIONS } from '@/utils/constants'
+import { DAY_OF_WEEK_OPTIONS, getDayName } from '@/utils/constants'
 import { Messages } from '@/utils/messages'
 
 type FormData = {
@@ -80,10 +80,12 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
     if (schedule) {
       reset(
         {
-          dayOfWeek: schedule.dayOfWeek ?? 0,
+          // dayOfWeek backend trả số 0-6 (0=CN, 1=T2... 6=T7) — bind trực tiếp
+          dayOfWeek: typeof schedule.dayOfWeek === 'number' ? schedule.dayOfWeek : 0,
           startTime: formatTimeForInput(schedule.startTime),
           endTime: formatTimeForInput(schedule.endTime),
-          branchId: schedule.branchId || ''
+          // PHẢI dùng branchId (Guid), không phải branch.name
+          branchId: schedule.branchId || schedule.branch?.id || ''
         },
         { keepDefaultValues: false }
       )
@@ -180,7 +182,7 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
                 render={({ field }) => (
                   <FormControl fullWidth error={!!errors.dayOfWeek}>
                     <InputLabel id='day-select-label'>Ngày</InputLabel>
-                    <Select labelId='day-select-label' {...field}>
+                    <Select label='Ngày' labelId='day-select-label' {...field}>
                       {DAY_OF_WEEK_OPTIONS.map(opt => (
                         <MenuItem key={opt.value} value={opt.value}>
                           {opt.label}
@@ -256,7 +258,6 @@ export default function EditScheduleDialog({ open, onClose, schedule, branches, 
               <Controller
                 name='branchId'
                 control={control}
-
                 // Không bắt buộc vì branchId là optional trong UpdateClassScheduleRequest
 
                 // Nhưng đảm bảo luôn có giá trị từ schedule nếu form không có

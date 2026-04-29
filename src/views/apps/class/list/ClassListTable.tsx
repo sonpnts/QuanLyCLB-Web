@@ -423,23 +423,32 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   <i className='ri-eye-line text-textSecondary' />
                 </Link>
               </IconButton>
-              <OptionMenu
-                iconButtonProps={{ size: 'medium' }}
-                iconClassName='text-textSecondary'
-                options={[
-                  {
-                    text: 'Chỉnh sửa',
-                    icon: 'ri-edit-box-line',
-                    menuItemProps: {
-                      className: 'flex items-center gap-2 text-textSecondary',
-                      onClick: () => {
-                        setSelectedClass(row.original)
-                        setEditClassOpen(true)
-                      }
-                    }
-                  }
-                ]}
-              />
+              <IconButton
+                onClick={() => {
+                  setSelectedClass(row.original)
+                  setEditClassOpen(true)
+                }}
+                title='Chỉnh sửa'
+              >
+                <i className='ri-edit-box-line text-textSecondary' />
+              </IconButton>
+              {/*<OptionMenu*/}
+              {/*  iconButtonProps={{ size: 'medium' }}*/}
+              {/*  iconClassName='text-textSecondary'*/}
+              {/*  options={[*/}
+              {/*    {*/}
+              {/*      text: 'Chỉnh sửa',*/}
+              {/*      icon: 'ri-edit-box-line',*/}
+              {/*      menuItemProps: {*/}
+              {/*        className: 'flex items-center gap-2 text-textSecondary',*/}
+              {/*        onClick: () => {*/}
+              {/*          setSelectedClass(row.original)*/}
+              {/*          setEditClassOpen(true)*/}
+              {/*        }*/}
+              {/*      }*/}
+              {/*    }*/}
+              {/*  ]}*/}
+              {/*/>*/}
             </div>
           )
         },

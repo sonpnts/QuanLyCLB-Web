@@ -354,6 +354,37 @@ const StudentListTable = () => {
         )
       }),
       {
+        id: 'classes',
+        header: 'Lớp đang học',
+        cell: ({ row }) => {
+          // Chỉ hiển thị enrollment đang Active (đang theo học)
+          const activeClasses = (row.original.classes || []).filter(
+            c => !c.status || c.status === 'Active'
+          )
+          if (activeClasses.length === 0) {
+            return (
+              <Typography variant='body2' color='text.disabled'>
+                Chưa đăng ký
+              </Typography>
+            )
+          }
+          return (
+            <div className='flex flex-wrap gap-1 max-w-[220px]'>
+              {activeClasses.map(cls => (
+                <Chip
+                  key={cls.classId}
+                  label={cls.className}
+                  size='small'
+                  color='primary'
+                  variant='tonal'
+                  title={`Đăng ký: ${cls.enrollmentDate ? new Date(cls.enrollmentDate).toLocaleDateString('vi-VN') : ''}`}
+                />
+              ))}
+            </div>
+          )
+        }
+      },
+      {
         id: 'actions',
         header: 'Thao tác',
         cell: ({ row }) => (
@@ -472,6 +503,16 @@ const StudentListTable = () => {
                     { header: 'Ngày sinh', accessor: 'dateOfBirth', formatter: formatVnDate },
                     { header: 'Cấp đai', accessor: 'currentBeltLevelName' as any },
                     {
+                      header: 'Lớp đang học',
+                      accessor: r =>
+                        Array.isArray(r.classes)
+                          ? r.classes
+                              .filter((c: any) => !c.status || c.status === 'Active')
+                              .map((c: any) => c.className)
+                              .join(', ')
+                          : ''
+                    },
+                    {
                       header: 'Trạng thái',
                       accessor: 'isSuspended',
                       formatter: v => (v ? 'Tạm nghỉ' : 'Đang học')
@@ -545,6 +586,7 @@ const StudentListTable = () => {
         </div>
         <TablePagination
           labelRowsPerPage='Số dòng mỗi trang:'
+          labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'

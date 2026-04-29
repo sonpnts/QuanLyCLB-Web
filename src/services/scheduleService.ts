@@ -76,8 +76,9 @@ export interface ResponseResult<T = any> {
   errors?: string[]
 }
 
-// Backend dùng JsonStringEnumConverter nên DayOfWeek trả về string ("Monday", "Tuesday"...)
-// Map về số nguyên cho đúng với DAY_OF_WEEK_NAMES (0=Chủ nhật, 1=Thứ hai...)
+// Backend giờ trả về int (0-6) trực tiếp.
+// Giữ map fallback cho trường hợp backward-compat (data cũ trả "Monday", "Tuesday"...).
+// 0=Chủ nhật, 1=Thứ hai, 2=Thứ ba, ..., 6=Thứ bảy
 const DAY_OF_WEEK_STRING_MAP: Record<string, number> = {
   Sunday: 0,
   Monday: 1,

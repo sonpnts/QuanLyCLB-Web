@@ -294,7 +294,7 @@ const InvoiceListTable = () => {
           setRowsPerPage(Number(e.target.value))
           setPage(0)
         }}
-        labelRowsPerPage='Số dòng:'
+        labelRowsPerPage='Số dòng mỗi trang:'
         labelDisplayedRows={({ from, to, count }) => `${from}–${to} / ${count}`}
       />
     </Card>
