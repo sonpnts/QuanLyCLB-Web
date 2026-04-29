@@ -1,15 +1,17 @@
 'use client'
-import { logger } from '@/utils/logger'
+
 
 // React Imports
 import { useState, useEffect, useCallback } from 'react'
-import { registerLocale, setDefaultLocale } from 'react-datepicker'
-import vi from 'date-fns/locale/vi'
 
-registerLocale('vi', vi)
-setDefaultLocale('vi')
+import { registerLocale, setDefaultLocale } from 'react-datepicker'
+
+import { vi } from 'date-fns/locale'
+
+
 
 // MUI Imports
+
 import { useMediaQuery } from '@mui/material'
 import type { Theme } from '@mui/material/styles'
 
@@ -32,6 +34,8 @@ import AddEventSidebar from './AddEventSidebar'
 
 // Slice Imports
 import { setScheduleEvents } from '@/redux-store/slices/calendar'
+
+import { logger } from '@/utils/logger'
 
 // CalendarColors Object
 const calendarsColor: CalendarColors = {
@@ -124,7 +128,11 @@ const convertScheduleToEvent = (schedule: ScheduleType, year: number, month: num
 }
 
 const AppCalendar = () => {
+  registerLocale('vi', vi)
+  setDefaultLocale('vi')
+
   // States
+
   const [calendarApi, setCalendarApi] = useState<null | any>(null)
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)

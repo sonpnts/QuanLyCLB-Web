@@ -1,7 +1,7 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 import { useEffect, useState, useRef } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 // MUI Imports
@@ -13,7 +13,6 @@ import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
-import Divider from '@mui/material/Divider'
 import CircularProgress from '@mui/material/CircularProgress'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -25,6 +24,8 @@ import Tab from '@mui/material/Tab'
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
+
+import type {BranchType} from '@/types/apps/branchTypes'
 
 // Types
 import type { ClassType } from '@/types/apps/classTypes'
@@ -40,6 +41,9 @@ import AddStudentsToClassDrawer from '../list/AddStudentsToClassDrawer'
 
 // Context
 import { useNotification } from '@/contexts/notificationContext'
+
+import { logger } from '@/utils/logger'
+
 
 type Props = {
   classId: string
@@ -60,6 +64,7 @@ type ScheduleType = {
   startTime: string
   endTime: string
   branchName?: string
+  branch: BranchType
 }
 
 const ClassViewPage = ({ classId }: Props) => {
@@ -77,6 +82,7 @@ const ClassViewPage = ({ classId }: Props) => {
 
   // Refs
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
   const studentsLoadedRef = useRef(false)
   const schedulesLoadedRef = useRef(false)
@@ -128,6 +134,7 @@ const ClassViewPage = ({ classId }: Props) => {
   // Reload students sau khi thêm
   const handleStudentsAdded = () => {
     studentsLoadedRef.current = false
+
     loadStudents()
   }
 
@@ -193,8 +200,8 @@ const ClassViewPage = ({ classId }: Props) => {
                   <Typography variant='h5'>{classData.name}</Typography>
                   <Chip label={classData.code} color='primary' variant='tonal' />
                   <Chip
-                    label={classData.isActive !== false ? 'Hoạt động' : 'Không hoạt động'}
-                    color={classData.isActive !== false ? 'success' : 'error'}
+                    label={classData.isActive ? 'Hoạt động' : 'Không hoạt động'}
+                    color={classData.isActive ? 'success' : 'error'}
                     variant='tonal'
                   />
                 </Box>
