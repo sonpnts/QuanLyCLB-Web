@@ -1,6 +1,14 @@
 // Type Imports
 import type { ThemeColor } from '@core/types'
 
+export type StudentClassInfo = {
+  classId: string
+  className: string
+  enrollmentId: string
+  enrollmentDate?: string
+  status?: string
+}
+
 export type StudentType = {
   id: string
   code?: string
@@ -21,6 +29,7 @@ export type StudentType = {
   avatarColor?: ThemeColor
   createdAt?: string
   updatedAt?: string
+  classes?: StudentClassInfo[]
 }
 
 export type EnrollmentStatus = 'Active' | 'Inactive' | 'Completed'

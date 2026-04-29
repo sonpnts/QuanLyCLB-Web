@@ -78,6 +78,7 @@ export interface ApiClassResponse {
   updatedAt?: string | null
   createdByUserId?: string | null
   updatedByUserId?: string | null
+  currentStudents?: number
 }
 
 class ClassService {
@@ -88,6 +89,7 @@ class ClassService {
       name: apiClass.name,
       description: apiClass.description,
       maxStudents: apiClass.maxStudents,
+      currentStudents: apiClass.currentStudents ?? 0,
       instructorId: apiClass.userIds?.[0],
       isActive: apiClass.isActive !== undefined ? apiClass.isActive : true,
       createdDate: apiClass.createdAt,
@@ -246,7 +248,21 @@ class ClassService {
 
       // Backend có thể trả về plain array, paginated { records: [...] } hoặc { items: [...] }
       const raw = apiResponse.data
-      const data = Array.isArray(raw) ? raw : raw?.records || raw?.items || []
+      const list = Array.isArray(raw) ? raw : raw?.records || raw?.items || []
+
+      // Chuẩn hóa dayOfWeek về kiểu number (0=CN, 1=T2... 6=T7).
+      // Backend có thể trả số (int) hoặc chuỗi tên ngày tiếng Anh ("Monday"...) tùy version.
+      const STR_TO_NUM: Record<string, number> = {
+        Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6
+      }
+      const data = list.map((s: any) => ({
+        ...s,
+        dayOfWeek: typeof s.dayOfWeek === 'number'
+          ? s.dayOfWeek
+          : (STR_TO_NUM[s.dayOfWeek] ?? Number(s.dayOfWeek) ?? 0),
+        // Map branchName từ branch.name nếu chưa có (dùng cho display ở tab Lịch học)
+        branchName: s.branchName || s.branch?.name || undefined
+      }))
 
       return { success: true, data }
     } catch (error) {

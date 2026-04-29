@@ -3,6 +3,26 @@ import type { Theme } from '@mui/material/styles'
 
 const tablePagination: Theme['components'] = {
   MuiTablePagination: {
+    // Localize default props sang tiếng Việt cho TOÀN BỘ dự án
+    defaultProps: {
+      labelRowsPerPage: 'Số dòng mỗi trang:',
+      labelDisplayedRows: ({ from, to, count }) =>
+        `${from}–${to} / ${count !== -1 ? count : `nhiều hơn ${to}`}`,
+      getItemAriaLabel: (type: 'first' | 'last' | 'next' | 'previous') => {
+        switch (type) {
+          case 'first':
+            return 'Trang đầu'
+          case 'last':
+            return 'Trang cuối'
+          case 'next':
+            return 'Trang kế tiếp'
+          case 'previous':
+            return 'Trang trước'
+          default:
+            return ''
+        }
+      }
+    },
     styleOverrides: {
       toolbar: ({ theme }) => ({
         paddingInlineEnd: `${theme.spacing(3)} !important`

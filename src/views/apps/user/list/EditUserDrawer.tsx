@@ -19,6 +19,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Checkbox from '@mui/material/Checkbox'
 import ListItemText from '@mui/material/ListItemText'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import Chip from '@mui/material/Chip'
+import Box from '@mui/material/Box'
 
 // Form
 import { useForm, Controller } from 'react-hook-form'
@@ -49,6 +51,7 @@ type FormValues = {
   certification?: string
   isActive: boolean
   roleIds: string[]
+  memberCode?: string
 }
 
 const EditUserDrawer = (props: Props) => {
@@ -64,7 +67,8 @@ const EditUserDrawer = (props: Props) => {
       skillLevel: user?.skillLevel || '',
       certification: user?.certification || '',
       isActive: Boolean(user?.isActive),
-      roleIds: []
+      roleIds: [],
+      memberCode: user?.memberCode || ''
     }),
     [user]
   )
@@ -107,7 +111,8 @@ const EditUserDrawer = (props: Props) => {
         isActive: values.isActive,
         skillLevel: values.skillLevel || undefined,
         certification: values.certification || undefined,
-        roleIds: values.roleIds
+        roleIds: values.roleIds,
+        memberCode: values.memberCode?.trim() || null
       }
 
       const res = await userService.updateUser(user.id, payload)
@@ -200,6 +205,46 @@ const EditUserDrawer = (props: Props) => {
               control={control}
               render={({ field }) => <TextField {...field} fullWidth label='Chứng chỉ' />}
             />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Controller
+              name='memberCode'
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label='Mã hội viên liên đoàn'
+                  placeholder='VD: HV00123'
+                  helperText='Dùng để tra cứu cấp đai liên đoàn tự động'
+                />
+              )}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant='caption' color='text.secondary'>
+                Cấp đai liên đoàn
+              </Typography>
+              <Chip
+                label={user?.federationBeltRank || 'Cấp 10 hoặc chuyển mã'}
+                size='small'
+                sx={{
+                  alignSelf: 'flex-start',
+                  bgcolor: user?.federationBeltLevelColorCode
+                    ? `${user.federationBeltLevelColorCode}22`
+                    : 'action.hover',
+                  borderLeft: user?.federationBeltLevelColorCode
+                    ? `3px solid ${user.federationBeltLevelColorCode}`
+                    : undefined,
+                  fontWeight: user?.federationBeltRank ? 600 : 400,
+                  color: user?.federationBeltLevelColorCode || 'text.secondary'
+                }}
+              />
+              <Typography variant='caption' color='text.disabled'>
+                Chỉ đọc — tra cứu từ liên đoàn theo mã hội viên
+              </Typography>
+            </Box>
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Controller

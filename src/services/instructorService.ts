@@ -15,6 +15,7 @@ export interface CreateInstructorRequest {
   phoneNumber?: string
   skillLevelId?: string | null
   certification?: string
+  memberCode?: string | null
 }
 
 export interface UpdateInstructorRequest {
@@ -22,6 +23,7 @@ export interface UpdateInstructorRequest {
   phoneNumber?: string
   skillLevelId?: string | null
   certification?: string
+  memberCode?: string | null
 }
 
 export interface ApiInstructorResponse {
@@ -37,6 +39,13 @@ export interface ApiInstructorResponse {
   updatedAt?: string | null
   createdByUserId?: string | null
   updatedByUserId?: string | null
+  // Federation (read-only display)
+  memberCode?: string | null
+  federationBeltRank?: string
+  federationBeltLevelId?: string | null
+  federationBeltLevelColorCode?: string | null
+  federationBeltLevelOrder?: number | null
+  federationBeltLevelIsDang?: boolean | null
 }
 
 export interface InstructorType {
@@ -52,6 +61,13 @@ export interface InstructorType {
   createdBy?: string
   updatedDate?: string
   updatedBy?: string
+  // Federation (read-only display)
+  memberCode?: string | null
+  federationBeltRank?: string
+  federationBeltLevelId?: string | null
+  federationBeltLevelColorCode?: string | null
+  federationBeltLevelOrder?: number | null
+  federationBeltLevelIsDang?: boolean | null
 }
 
 class InstructorService {
@@ -68,7 +84,13 @@ class InstructorService {
       createdDate: apiInstructor.createdAt,
       createdBy: apiInstructor.createdByUserId || undefined,
       updatedDate: apiInstructor.updatedAt || undefined,
-      updatedBy: apiInstructor.updatedByUserId || undefined
+      updatedBy: apiInstructor.updatedByUserId || undefined,
+      memberCode: apiInstructor.memberCode,
+      federationBeltRank: apiInstructor.federationBeltRank,
+      federationBeltLevelId: apiInstructor.federationBeltLevelId,
+      federationBeltLevelColorCode: apiInstructor.federationBeltLevelColorCode,
+      federationBeltLevelOrder: apiInstructor.federationBeltLevelOrder,
+      federationBeltLevelIsDang: apiInstructor.federationBeltLevelIsDang
     }
   }
 

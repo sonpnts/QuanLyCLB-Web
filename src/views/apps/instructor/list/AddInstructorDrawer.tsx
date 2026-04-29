@@ -43,6 +43,7 @@ type FormValidateType = {
   userId: string
   skillLevelId?: string
   certification?: string
+  memberCode?: string
 }
 
 const AddInstructorDrawer = (props: Props) => {
@@ -67,7 +68,8 @@ const AddInstructorDrawer = (props: Props) => {
     defaultValues: {
       userId: '',
       skillLevelId: '',
-      certification: ''
+      certification: '',
+      memberCode: ''
     }
   })
 
@@ -135,7 +137,8 @@ const AddInstructorDrawer = (props: Props) => {
         email: selectedUser.email,
         phoneNumber: selectedUser.phoneNumber || undefined,
         skillLevelId: data.skillLevelId || null,
-        certification: data.certification || undefined
+        certification: data.certification || undefined,
+        memberCode: data.memberCode?.trim() || selectedUser.memberCode?.trim() || null
       }
 
       const response = await instructorService.createInstructor(createData)
@@ -188,6 +191,7 @@ const AddInstructorDrawer = (props: Props) => {
               onChange={(_, val) => {
                 setSelectedUser(val)
                 setValue('userId', val?.id || '')
+                setValue('memberCode', val?.memberCode || '')
               }}
               getOptionLabel={(option) => `${option.fullName} (${option.email})`}
               isOptionEqualToValue={(o, v) => o.id === v.id}
@@ -282,6 +286,21 @@ const AddInstructorDrawer = (props: Props) => {
                   fullWidth
                   label='Chứng chỉ'
                   placeholder='Ví dụ: ACE, NASM, ACSM'
+                />
+              )}
+            />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <Controller
+              name='memberCode'
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label='Mã hội viên liên đoàn'
+                  placeholder='VD: HV00123'
+                  helperText='Dùng để tra cứu cấp đai liên đoàn tự động. Nếu người dùng đã có mã, hệ thống sẽ tự điền.'
                 />
               )}
             />

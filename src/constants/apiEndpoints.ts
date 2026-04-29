@@ -1,7 +1,7 @@
 export const API_ENDPOINTS = {
   auth: {
     password: process.env.NEXT_PUBLIC_LOGINPASS_ENDPOINT ?? '/Auth/password',
-    google: process.env.NEXT_PUBLIC_LOGINGG_ENDPOINT ?? '/Auth/google',
+    google: process.env.NEXT_PUBLIC_LOGGING_ENDPOINT ?? '/Auth/google',
     refresh: process.env.NEXT_PUBLIC_REFRESH_ENDPOINT ?? '/Auth/refresh',
     register: '/Auth/register'
   },
@@ -184,6 +184,10 @@ export const API_ENDPOINTS = {
     byId: (id: string) => `/Users/${id}`,
     restore: (id: string) => `/Users/${id}/restore`,
     updateRoles: (id: string) => `/Users/${id}/roles`
+  },
+  federationMembers: {
+    root: '/FederationMembers',
+    sync: '/FederationMembers/sync'
   },
   instructorClassSalaries: {
     root: '/instructor-class-salaries',

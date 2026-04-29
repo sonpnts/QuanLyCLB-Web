@@ -14,6 +14,7 @@ import MenuItem from '@mui/material/MenuItem'
 import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
+import Chip from '@mui/material/Chip'
 
 // Type & Service Imports
 import type { InstructorType, UpdateInstructorRequest } from '@/services/instructorService'
@@ -35,6 +36,7 @@ type FormValues = {
   phoneNumber: string
   skillLevelId: string
   certification: string
+  memberCode: string
 }
 
 const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Props) => {
@@ -54,7 +56,8 @@ const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Prop
       fullName: '',
       phoneNumber: '',
       skillLevelId: '',
-      certification: ''
+      certification: '',
+      memberCode: ''
     }
   })
 
@@ -84,7 +87,8 @@ const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Prop
         fullName: instructor.fullName || '',
         phoneNumber: instructor.phoneNumber || '',
         skillLevelId: instructor.skillLevelId || '',
-        certification: instructor.certification || ''
+        certification: instructor.certification || '',
+        memberCode: instructor.memberCode || ''
       })
     }
   }, [instructor, open, reset])
@@ -104,7 +108,8 @@ const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Prop
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber || undefined,
         skillLevelId: formData.skillLevelId || null,
-        certification: formData.certification || undefined
+        certification: formData.certification || undefined,
+        memberCode: formData.memberCode?.trim() || null
       }
 
       const response = await instructorService.updateInstructor(instructor.id, payload)
@@ -213,6 +218,41 @@ const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Prop
               {...register('certification')}
               placeholder='Ví dụ: ACE, NASM, ACSM'
             />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              label='Mã hội viên liên đoàn'
+              InputLabelProps={{ shrink: true }}
+              {...register('memberCode')}
+              placeholder='VD: HV00123'
+              helperText='Dùng để tra cứu cấp đai liên đoàn tự động'
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant='caption' color='text.secondary'>
+                Cấp đai liên đoàn
+              </Typography>
+              <Chip
+                label={instructor?.federationBeltRank || 'Cấp 10 hoặc chuyển mã'}
+                size='small'
+                sx={{
+                  alignSelf: 'flex-start',
+                  bgcolor: instructor?.federationBeltLevelColorCode
+                    ? `${instructor.federationBeltLevelColorCode}22`
+                    : 'action.hover',
+                  borderLeft: instructor?.federationBeltLevelColorCode
+                    ? `3px solid ${instructor.federationBeltLevelColorCode}`
+                    : undefined,
+                  fontWeight: instructor?.federationBeltRank ? 600 : 400,
+                  color: instructor?.federationBeltLevelColorCode || 'text.secondary'
+                }}
+              />
+              <Typography variant='caption' color='text.disabled'>
+                Chỉ đọc — tra cứu từ liên đoàn theo mã hội viên
+              </Typography>
+            </Box>
           </Grid>
         </Grid>
 

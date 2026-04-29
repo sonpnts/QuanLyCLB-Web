@@ -26,12 +26,13 @@ export interface CreateUserRequest {
   fullName: string
   email: string
   username?: string
-  roles?: string[] // Array of role names or IDs
+  roles?: string[]
   password?: string
   phoneNumber?: string
   skillLevel?: string
   certification?: string
   isActive?: boolean
+  memberCode?: string | null
 }
 
 // Request body for PUT /api/Users/{id}
@@ -44,6 +45,7 @@ export interface UpdateUserRequest {
   skillLevel?: string
   certification?: string
   isActive?: boolean
+  memberCode?: string | null
 }
 
 // Response type for all API endpoints
@@ -76,7 +78,13 @@ class UserService {
       createdAt: (apiUser as any).createdAt,
       updatedAt: (apiUser as any).updatedAt,
       createdByUserId: (apiUser as any).createdByUserId,
-      updatedByUserId: (apiUser as any).updatedByUserId
+      updatedByUserId: (apiUser as any).updatedByUserId,
+      memberCode: apiUser.memberCode,
+      federationBeltRank: apiUser.federationBeltRank,
+      federationBeltLevelId: apiUser.federationBeltLevelId,
+      federationBeltLevelColorCode: apiUser.federationBeltLevelColorCode,
+      federationBeltLevelOrder: apiUser.federationBeltLevelOrder,
+      federationBeltLevelIsDang: apiUser.federationBeltLevelIsDang
     }
   }
 

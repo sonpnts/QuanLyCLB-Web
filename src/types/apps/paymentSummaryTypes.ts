@@ -31,6 +31,8 @@ export type ClassPaymentSummary = {
   className: string
   tuition: TuitionSummary
   examFees: ExamFeeSummary[]
+  branchName?: string | null
+  branchId?: string | null
 }
 
 export type CoachPaymentSummaryType = {

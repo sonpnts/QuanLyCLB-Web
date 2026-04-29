@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
@@ -11,10 +11,11 @@ import CardHeader from '@mui/material/CardHeader'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
 import Collapse from '@mui/material/Collapse'
-import Divider from '@mui/material/Divider'
 import FormControl from '@mui/material/FormControl'
+import InputAdornment from '@mui/material/InputAdornment'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
+import Pagination from '@mui/material/Pagination'
 import Select from '@mui/material/Select'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -22,6 +23,7 @@ import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
+import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
 import { useNotification } from '@/contexts/notificationContext'
@@ -54,6 +56,13 @@ const PaymentCollectView = () => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const [collectTarget, setCollectTarget] = useState<CollectTarget | null>(null)
 
+  // Filter + pagination
+  const [searchQuery, setSearchQuery] = useState('')
+  const [branchFilter, setBranchFilter] = useState<string>('')
+  const [unpaidOnlyFilter, setUnpaidOnlyFilter] = useState<boolean>(false)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(5)
+
   useEffect(() => {
     loadSummary()
   }, [month, year])
@@ -74,6 +83,52 @@ const PaymentCollectView = () => {
   }
 
   const toggle = (key: string) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))
+
+  // Danh sách chi nhánh duy nhất từ classes (cho dropdown filter)
+  const branchOptions = useMemo(() => {
+    if (!summary?.classes) return [] as { id: string; name: string }[]
+    const map = new Map<string, string>()
+    for (const cls of summary.classes) {
+      if (cls.branchId && cls.branchName) map.set(cls.branchId, cls.branchName)
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
+  }, [summary])
+
+  // Áp dụng filter
+  const filteredClasses = useMemo(() => {
+    if (!summary?.classes) return [] as ClassPaymentSummary[]
+    const q = searchQuery.trim().toLowerCase()
+
+    return summary.classes.filter(cls => {
+      // Search theo tên lớp HOẶC tên chi nhánh
+      if (q) {
+        const matchName = cls.className?.toLowerCase().includes(q)
+        const matchBranch = cls.branchName?.toLowerCase().includes(q)
+        if (!matchName && !matchBranch) return false
+      }
+      // Filter theo chi nhánh
+      if (branchFilter && cls.branchId !== branchFilter) return false
+      // Chỉ hiện lớp còn công nợ
+      if (unpaidOnlyFilter) {
+        const totalUnpaid = cls.tuition.unpaidAmount + cls.examFees.reduce((acc, ef) => acc + ef.unpaidAmount, 0)
+        if (totalUnpaid <= 0) return false
+      }
+      return true
+    })
+  }, [summary, searchQuery, branchFilter, unpaidOnlyFilter])
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredClasses.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const pagedClasses = useMemo(
+    () => filteredClasses.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filteredClasses, currentPage, pageSize]
+  )
+
+  // Reset page khi filter đổi
+  useEffect(() => {
+    setPage(1)
+  }, [searchQuery, branchFilter, unpaidOnlyFilter, pageSize])
 
   const handleCollectSuccess = () => {
     setCollectTarget(null)
@@ -142,19 +197,93 @@ const PaymentCollectView = () => {
             </Card>
           )}
 
+          {/* Filter + Search bar */}
+          {summary && summary.classes.length > 0 && (
+            <Card className='mb-4'>
+              <CardContent>
+                <Box className='flex flex-wrap gap-3 items-center'>
+                  <TextField
+                    size='small'
+                    placeholder='Tìm theo tên lớp hoặc chi nhánh...'
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    sx={{ minWidth: 280, flex: 1 }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position='start'>
+                          <i className='ri-search-line text-textSecondary' />
+                        </InputAdornment>
+                      ),
+                      endAdornment: searchQuery ? (
+                        <InputAdornment position='end'>
+                          <i
+                            className='ri-close-circle-line cursor-pointer text-textSecondary'
+                            onClick={() => setSearchQuery('')}
+                          />
+                        </InputAdornment>
+                      ) : null
+                    }}
+                  />
+                  <FormControl size='small' sx={{ minWidth: 200 }}>
+                    <InputLabel>Chi nhánh</InputLabel>
+                    <Select value={branchFilter} label='Chi nhánh' onChange={e => setBranchFilter(e.target.value)}>
+                      <MenuItem value=''>— Tất cả chi nhánh —</MenuItem>
+                      {branchOptions.map(b => (
+                        <MenuItem key={b.id} value={b.id}>
+                          {b.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Button
+                    variant={unpaidOnlyFilter ? 'contained' : 'outlined'}
+                    color='warning'
+                    size='small'
+                    onClick={() => setUnpaidOnlyFilter(v => !v)}
+                    startIcon={<i className='ri-money-dollar-circle-line' />}
+                  >
+                    {unpaidOnlyFilter ? 'Chỉ lớp còn nợ' : 'Hiện tất cả'}
+                  </Button>
+                  <Box className='flex items-center gap-2 ml-auto'>
+                    <Typography variant='body2' color='text.secondary'>
+                      Hiển thị {filteredClasses.length}/{summary.classes.length} lớp
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          )}
+
           {!summary || summary.classes.length === 0 ? (
             <Alert severity='success'>
               Không có công nợ nào trong tháng {month}/{year}!
             </Alert>
+          ) : filteredClasses.length === 0 ? (
+            <Alert severity='info'>
+              Không có lớp nào khớp bộ lọc. Hãy điều chỉnh tìm kiếm hoặc bỏ lọc.
+            </Alert>
           ) : (
-            summary.classes.map((cls: ClassPaymentSummary) => {
+            pagedClasses.map((cls: ClassPaymentSummary) => {
               const totalUnpaid =
                 cls.tuition.unpaidAmount + cls.examFees.reduce((acc, ef) => acc + ef.unpaidAmount, 0)
 
               return (
                 <Card key={cls.classId} className='mb-4'>
                   <CardHeader
-                    title={cls.className}
+                    title={
+                      <Box className='flex items-center gap-2 flex-wrap'>
+                        <Typography variant='h6'>{cls.className}</Typography>
+                        {cls.branchName && (
+                          <Chip
+                            label={cls.branchName}
+                            size='small'
+                            color='info'
+                            variant='tonal'
+                            icon={<i className='ri-building-line' />}
+                          />
+                        )}
+                      </Box>
+                    }
                     subheader={`Tổng công nợ: ${totalUnpaid.toLocaleString('vi-VN')}đ`}
                   />
                   <CardContent className='p-0'>
@@ -311,6 +440,40 @@ const PaymentCollectView = () => {
                 </Card>
               )
             })
+          )}
+
+          {/* Pagination controls */}
+          {filteredClasses.length > 0 && totalPages > 1 && (
+            <Card className='mt-4'>
+              <CardContent>
+                <Box className='flex flex-wrap items-center justify-between gap-3'>
+                  <Box className='flex items-center gap-2'>
+                    <Typography variant='body2' color='text.secondary'>
+                      Hiển thị mỗi trang:
+                    </Typography>
+                    <FormControl size='small' sx={{ minWidth: 80 }}>
+                      <Select value={pageSize} onChange={e => setPageSize(Number(e.target.value))}>
+                        {[5, 10, 20, 50].map(n => (
+                          <MenuItem key={n} value={n}>
+                            {n}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <Typography variant='body2' color='text.secondary'>
+                      Trang {currentPage}/{totalPages} • Tổng {filteredClasses.length} lớp
+                    </Typography>
+                  </Box>
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={(_, p) => setPage(p)}
+                    color='primary'
+                    shape='rounded'
+                  />
+                </Box>
+              </CardContent>
+            </Card>
           )}
         </>
       )}

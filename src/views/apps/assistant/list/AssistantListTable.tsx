@@ -19,6 +19,8 @@ import DialogActions from '@mui/material/DialogActions'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
 import Alert from '@mui/material/Alert'
+import TablePagination from '@mui/material/TablePagination'
+import InputAdornment from '@mui/material/InputAdornment'
 
 // Types & Services
 import type { UsersType } from '@/types/apps/userTypes'
@@ -43,6 +45,11 @@ const AssistantListTable = () => {
   const [addOpen, setAddOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UsersType | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // Search + pagination
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
 
   const { showNotification } = useNotification()
   const showNotificationRef = useRef(showNotification)
@@ -133,6 +140,29 @@ const AssistantListTable = () => {
     }
   }
 
+  // Filter data theo search query
+  const filteredData = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return data
+    return data.filter(u =>
+      (u.fullName || '').toLowerCase().includes(q) ||
+      (u.email || '').toLowerCase().includes(q) ||
+      (u.phoneNumber || '').toLowerCase().includes(q) ||
+      (u.skillLevel || '').toLowerCase().includes(q)
+    )
+  }, [data, search])
+
+  // Phân trang
+  const pagedData = useMemo(
+    () => filteredData.slice(page * pageSize, page * pageSize + pageSize),
+    [filteredData, page, pageSize]
+  )
+
+  // Reset page khi filter đổi
+  useEffect(() => {
+    setPage(0)
+  }, [search])
+
   return (
     <>
       <Card>
@@ -169,6 +199,32 @@ const AssistantListTable = () => {
           }
         />
 
+        {/* Search bar */}
+        <Box className='px-5 pb-3'>
+          <TextField
+            size='small'
+            fullWidth
+            placeholder='Tìm theo họ tên, email, SĐT, cấp đai...'
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position='start'>
+                  <i className='ri-search-line text-textSecondary' />
+                </InputAdornment>
+              ),
+              endAdornment: search ? (
+                <InputAdornment position='end'>
+                  <i
+                    className='ri-close-circle-line cursor-pointer text-textSecondary'
+                    onClick={() => setSearch('')}
+                  />
+                </InputAdornment>
+              ) : null
+            }}
+          />
+        </Box>
+
         {loading ? (
           <Box className='flex justify-center p-8'>
             <CircularProgress />
@@ -177,6 +233,12 @@ const AssistantListTable = () => {
           <Box className='p-8'>
             <Typography color='text.secondary' align='center'>
               Chưa có trợ giảng nào.
+            </Typography>
+          </Box>
+        ) : filteredData.length === 0 ? (
+          <Box className='p-8'>
+            <Typography color='text.secondary' align='center'>
+              Không có kết quả khớp với "{search}".
             </Typography>
           </Box>
         ) : (
@@ -193,7 +255,7 @@ const AssistantListTable = () => {
                 </tr>
               </thead>
               <tbody>
-                {data.map(user => (
+                {pagedData.map(user => (
                   <tr key={user.id} className='border-t'>
                     <td className='p-3'>
                       <Box className='flex items-center gap-3'>
@@ -232,6 +294,24 @@ const AssistantListTable = () => {
               </tbody>
             </table>
           </Box>
+        )}
+
+        {/* Pagination */}
+        {filteredData.length > 0 && (
+          <TablePagination
+            component='div'
+            count={filteredData.length}
+            page={page}
+            onPageChange={(_, p) => setPage(p)}
+            rowsPerPage={pageSize}
+            onRowsPerPageChange={e => {
+              setPageSize(parseInt(e.target.value, 10))
+              setPage(0)
+            }}
+            rowsPerPageOptions={[5, 10, 20, 50]}
+            labelRowsPerPage='Số dòng mỗi trang:'
+            labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
+          />
         )}
       </Card>
 

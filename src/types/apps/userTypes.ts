@@ -18,6 +18,13 @@ export type UsersType = {
   createdByUserId?: string | null
   updatedByUserId?: string | null
   avatarColor?: ThemeColor
+  // Federation (read-only display)
+  memberCode?: string | null
+  federationBeltRank?: string
+  federationBeltLevelId?: string | null
+  federationBeltLevelColorCode?: string | null
+  federationBeltLevelOrder?: number | null
+  federationBeltLevelIsDang?: boolean | null
 }
 
 // API response type from /api/Users
@@ -33,7 +40,14 @@ export type ApiUserResponse = {
   isActive: boolean
   hasPassword?: boolean
   isGoogleAccount?: boolean
-  roles: string[] // Array of roles
+  roles: string[]
+  // Federation (read-only display)
+  memberCode?: string | null
+  federationBeltRank?: string
+  federationBeltLevelId?: string | null
+  federationBeltLevelColorCode?: string | null
+  federationBeltLevelOrder?: number | null
+  federationBeltLevelIsDang?: boolean | null
 }
 
 // API paginated response
