@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import Alert from '@mui/material/Alert'
@@ -31,6 +31,7 @@ import paymentService, { type ExamFeeOptionType, type TuitionQuoteType } from '@
 import productService from '@/services/productService'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 type Props = {
   open: boolean
@@ -64,11 +65,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
 
-  const isAdmin = useMemo(() => {
-    const roles = auth?.roles || []
-
-    return roles.includes('Admin') || roles.includes('Administrator')
-  }, [auth?.roles])
+  const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth?.roles])
 
   const [classes, setClasses] = useState<ClassType[]>([])
   const [students, setStudents] = useState<StudentType[]>([])
@@ -172,7 +169,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
 
       try {
         const [classRes, productRes] = await Promise.all([
-          classService.getClasses({ pageSize: 300 }),
+          classService.getClasses({ isActive: true, pageSize: 1000 }),
           productService.getProducts({ pageSize: 300, isActive: true })
         ])
 

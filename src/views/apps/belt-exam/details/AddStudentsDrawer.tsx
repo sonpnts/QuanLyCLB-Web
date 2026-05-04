@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
 import { useState, useEffect } from 'react'
@@ -59,7 +59,7 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
   const fetchClasses = async () => {
     setLoadingClasses(true)
     try {
-      const res = await classService.getClasses()
+      const res = await classService.getClasses({ isActive: true, pageSize: 1000 })
       if (res.success && res.data) {
         setClasses(res.data)
       }

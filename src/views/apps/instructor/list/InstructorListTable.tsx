@@ -178,7 +178,7 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
       columnHelper.accessor('skillLevelName', {
         header: 'Cấp đai',
         cell: ({ row }) => (
-          <Chip label={row.original.skillLevelName || 'Chưa xác định'} color='info' variant='tonal' size='small' />
+          <Chip label={row.original.federationBeltRank || 'Chưa xác định'} color='info' variant='tonal' size='small' />
         )
       }),
       columnHelper.accessor('certification', {

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, memo } from 'react'
 import CardContent from '@mui/material/CardContent'
@@ -36,7 +36,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
     const loadClasses = async () => {
       try {
         classesLoaded.current = true
-        const response = await classService.getClasses({})
+        const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
         if (response.success && response.data) {
           setClasses(response.data)
         }

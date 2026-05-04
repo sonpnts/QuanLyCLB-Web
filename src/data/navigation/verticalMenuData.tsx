@@ -25,7 +25,7 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
     isSection: true,
     children: [
       {
-        label: 'Dashboard',
+        label: 'Trang chủ',
         icon: 'ri-dashboard-line',
         href: '/dashboards/home'
       }
@@ -96,11 +96,11 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         icon: 'ri-bar-chart-box-line',
         href: '/apps/attendance/admin-stats'
       },
-      {
-        label: 'Xin nghỉ phép',
-        icon: 'ri-calendar-close-line',
-        href: '/apps/leave-request/list'
-      }
+      // {
+      //   label: 'Xin nghỉ phép',
+      //   icon: 'ri-calendar-close-line',
+      //   href: '/apps/leave-request/list'
+      // }
     ]
   },
   {

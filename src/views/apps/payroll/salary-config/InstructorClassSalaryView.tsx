@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useEffect, useState, useCallback } from 'react'
@@ -103,7 +103,7 @@ const InstructorClassSalaryView = () => {
       const [salaryRes, instructorRes, classRes] = await Promise.all([
         instructorClassSalaryService.getAll(),
         userService.getCoaches(),
-        classService.getClasses(),
+        classService.getClasses({ isActive: true, pageSize: 1000 }),
       ])
 
       setData(salaryRes.data || [])

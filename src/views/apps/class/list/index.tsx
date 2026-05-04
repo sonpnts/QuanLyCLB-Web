@@ -7,7 +7,8 @@ import type { ClassType } from '@/types/apps/classTypes'
 // Component Imports
 import ClassListTable from './ClassListTable'
 
-const ClassList = ({ classData }: { classData?: ClassType[] }) => {
+// Data is loaded client-side; classData prop is optional (for server-side future use)
+const ClassList = ({ classData }: { classData?: ClassType[] } = {}) => {
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
@@ -18,5 +19,3 @@ const ClassList = ({ classData }: { classData?: ClassType[] }) => {
 }
 
 export default ClassList
-
-

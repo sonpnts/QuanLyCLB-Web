@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useState, useEffect, useRef, memo } from 'react'
@@ -47,7 +47,7 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
     const loadData = async () => {
       try {
         dataLoaded.current = true
-        const [classRes, branchRes] = await Promise.all([classService.getClasses({}), branchService.getBranches({})])
+        const [classRes, branchRes] = await Promise.all([classService.getClasses({ isActive: true, pageSize: 1000 }), branchService.getBranches({})])
 
         if (classRes.success && classRes.data) {
           setClasses(classRes.data)

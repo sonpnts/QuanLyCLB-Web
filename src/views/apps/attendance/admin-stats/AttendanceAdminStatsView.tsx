@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useEffect, useState, useCallback } from 'react'
@@ -64,7 +64,7 @@ const AttendanceAdminStatsView = () => {
       try {
         const [instructorRes, classRes] = await Promise.all([
           userService.getCoaches(),
-          classService.getClasses({ pageSize: 200 })
+          classService.getClasses({ isActive: true, pageSize: 1000 })
         ])
         if (instructorRes.success && instructorRes.data) {
           setInstructors(instructorRes.data)

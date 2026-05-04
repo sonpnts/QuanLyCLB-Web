@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 
@@ -54,7 +54,7 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
       try {
         const [productsRes, classesRes, coachesRes] = await Promise.all([
           productService.getProducts({ isActive: true }),
-          classService.getClasses({}),
+          classService.getClasses({ isActive: true, pageSize: 1000 }),
           userService.getCoaches()
         ])
 

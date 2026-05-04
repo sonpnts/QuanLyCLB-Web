@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -39,7 +39,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
     const loadClasses = async () => {
       try {
         classesLoaded.current = true
-        const response = await classService.getClasses({})
+        const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
         if (response.success && response.data) {
           setClasses(response.data)
         }

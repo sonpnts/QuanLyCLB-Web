@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import Grid from '@mui/material/Grid'
@@ -77,7 +77,7 @@ const CollectPayment = () => {
   useEffect(() => {
     let mounted = true
     const fetchClasses = async () => {
-      const res = await classService.getClasses()
+      const res = await classService.getClasses({ isActive: true, pageSize: 1000 })
       if (mounted && res.success && res.data) {
         setClasses(res.data)
       }

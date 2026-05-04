@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -71,7 +71,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
     let mounted = true
     const loadReferences = async () => {
       try {
-        const [classRes, instructorRes] = await Promise.all([classService.getClasses({}), userService.getCoaches()])
+        const [classRes, instructorRes] = await Promise.all([classService.getClasses({ isActive: true, pageSize: 1000 }), userService.getCoaches()])
 
         if (mounted && classRes.success && classRes.data) setClasses(classRes.data)
         if (mounted && instructorRes.success && instructorRes.data) {

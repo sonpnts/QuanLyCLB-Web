@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -61,7 +61,8 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
       try {
         setLoading(true)
         classesLoadedRef.current = true
-        const response = await classService.getClasses({})
+        // Chỉ lấy các lớp đang hoạt động để đăng ký học viên
+        const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
 
         if (response.success && response.data) {
           setClasses(response.data)

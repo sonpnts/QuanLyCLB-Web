@@ -2,7 +2,7 @@
 import { logger } from '@/utils/logger'
 
 // React Imports
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -50,9 +50,6 @@ import EditClassDrawer from './EditClassDrawer'
 import AddClassScheduleDrawer from './AddClassScheduleDrawer'
 import ClassScheduleView from './ClassScheduleView'
 import AddStudentsToClassDrawer from './AddStudentsToClassDrawer'
-import OptionMenu from '@core/components/option-menu'
-
-// Util Imports
 
 // Service Imports
 import classService from '@/services/classService'
@@ -79,7 +76,6 @@ const DebouncedInput = ({
   onChange: (value: string | number) => void
   debounce?: number
 } & Omit<TextFieldProps, 'onChange'>) => {
-  // States
   const [value, setValue] = useState(initialValue)
 
   useEffect(() => {
@@ -110,87 +106,85 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   const [addStudentsOpen, setAddStudentsOpen] = useState(false)
   const [selectedClass, setSelectedClass] = useState<ClassType | null>(null)
   const [rowSelection, setRowSelection] = useState({})
-  const [data, setData] = useState<ClassType[]>(tableData || [])
-  const [filteredData, setFilteredData] = useState(data)
+  const [data, setData] = useState<ClassType[]>([])
+  const [filteredData, setFilteredData] = useState<ClassType[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
-  const [, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetClassesParams>({})
   const [users, setUsers] = useState<any[]>([])
 
   // Notification Hook
   const { showNotification } = useNotification()
 
-  // Refs để tránh duplicate calls
-  const showNotificationRef = useRef(showNotification)
-  showNotificationRef.current = showNotification
-  const dataLoadedRef = useRef(false)
-  const currentFilterRef = useRef<string>('')
-  const usersLoadedRef = useRef(false)
-
   // Handle filter change from TableFilters
   const handleFilterChange = useCallback((params: GetClassesParams) => {
     setFilterParams(params)
   }, [])
 
-  // Load classes when filter params change
+  // Load classes – re-runs whenever filterParams change; uses AbortController to cancel stale requests
   useEffect(() => {
-    const filterKey = JSON.stringify(filterParams)
-
-    // Tránh load lại nếu filter không đổi
-    if (dataLoadedRef.current && currentFilterRef.current === filterKey) {
+    // If caller provided server-side data, skip client-side fetch
+    if (tableData && tableData.length > 0) {
+      setData(tableData)
+      setFilteredData(tableData)
       return
     }
 
-    const loadClasses = async () => {
-      // Only load if tableData is not provided or empty
-      if (tableData && tableData.length > 0) {
-        return
-      }
+    let cancelled = false
 
+    const loadClasses = async () => {
       try {
         setLoading(true)
-        currentFilterRef.current = filterKey
-        dataLoadedRef.current = true
-
         const response = await classService.getClasses(filterParams)
 
-        setData(response.data || [])
-        setFilteredData(response.data || [])
-      } catch {
-        setData([])
-        setFilteredData([])
+        if (!cancelled) {
+          setData(response.data || [])
+          setFilteredData(response.data || [])
+        }
+      } catch (err) {
+        logger.error('ClassListTable', 'Error loading classes', err)
+        if (!cancelled) {
+          setData([])
+          setFilteredData([])
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
     loadClasses()
-  }, [filterParams, tableData])
+
+    return () => {
+      cancelled = true
+    }
+  }, [filterParams]) // tableData intentionally excluded – it's always [] from the server page
 
   // Update filteredData when data changes
   useEffect(() => {
     setFilteredData(data)
   }, [data])
 
-  // Load users for display (coaches/instructors) - chỉ load 1 lần
+  // Load users for display (coaches/instructors) – only once
   useEffect(() => {
-    if (usersLoadedRef.current) return
+    let cancelled = false
 
     const loadUsers = async () => {
       try {
-        usersLoadedRef.current = true
         const response = await userService.getUsers({})
 
-        if (response.success && response.data) {
+        if (!cancelled && response.success && response.data) {
           setUsers(response.data)
         }
       } catch (error) {
         logger.error('ClassListTable', 'Error loading users', error)
-        usersLoadedRef.current = false
       }
     }
 
     loadUsers()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Hooks
@@ -220,19 +214,30 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
       },
       columnHelper.accessor('name', {
         header: 'Tên',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-4'>
-            {/*<CustomAvatar skin='light' size={34}>*/}
-            {/*  {getInitials(row.original.name)}*/}
-            {/*</CustomAvatar>*/}
-            <div className='flex flex-col'>
-              <Typography className='font-medium' color='text.primary'>
-                {row.original.name}
-              </Typography>
-              <Typography variant='body2'>{row.original.description}</Typography>
+        cell: ({ row }) => {
+          const isInactive = row.original.isActive === false
+          return (
+            <div className='flex items-center gap-2'>
+              <div className='flex flex-col'>
+                <Box className='flex items-center gap-1'>
+                  <Typography
+                    className='font-medium'
+                    color={isInactive ? 'text.disabled' : 'text.primary'}
+                    sx={{ textDecoration: isInactive ? 'line-through' : 'none' }}
+                  >
+                    {row.original.name}
+                  </Typography>
+                  {isInactive && (
+                    <Chip label='Đã xóa' size='small' color='error' variant='tonal' sx={{ height: 18, fontSize: '0.65rem' }} />
+                  )}
+                </Box>
+                <Typography variant='body2' color='text.secondary'>
+                  {row.original.description}
+                </Typography>
+              </div>
             </div>
-          </div>
-        )
+          )
+        }
       }),
       columnHelper.accessor('code', {
         header: 'Mã',
@@ -309,28 +314,11 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
           <Typography color='text.primary'>{row.original.currentStudents || 0}</Typography>
         )
       }),
-
-      // columnHelper.accessor('status', {
-      //   header: 'Status',
-      //   cell: ({ row }) => (
-      //     <div className='flex items-center gap-3'>
-      //       <Chip
-      //         variant='tonal'
-      //         label={row.original.status}
-      //         size='small'
-      //         color={classStatusObj[row.original.status]}
-      //         className='capitalize'
-      //       />
-      //     </div>
-      //   )
-      // }),
       columnHelper.accessor('action', {
         header: 'Thao tác',
         cell: ({ row }) => {
-          // Check if class is inactive - explicitly check for false
-          // Treat undefined/null as active (default behavior)
-          const isActiveValue = row.original.isActive
-          const isInactive = isActiveValue === false || isActiveValue === null
+          // Explicitly check isActive === false (not undefined/null = active)
+          const isInactive = row.original.isActive === false
 
           const handleRestore = async () => {
             try {
@@ -338,12 +326,9 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
               const response = await classService.restoreClass(row.original.id)
 
               if (response.success && response.data) {
-                // Update the class in data state with restored class data
-                const restoredClass = response.data
-
-                setData(prevData => prevData?.map(clazz => (clazz.id === row.original.id ? restoredClass : clazz)))
-                setFilteredData(prevData =>
-                  prevData?.map(clazz => (clazz.id === row.original.id ? restoredClass : clazz))
+                // Cập nhật lại class trong state với dữ liệu đã khôi phục
+                setData(prevData =>
+                  prevData.map(clazz => (clazz.id === row.original.id ? response.data! : clazz))
                 )
                 showNotification('Khôi phục lớp học thành công!', 'success')
               } else {
@@ -363,9 +348,14 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
               const response = await classService.deleteClass(row.original.id)
 
               if (response.success) {
-                setData(prevData => prevData?.filter(clazz => clazz.id !== row.original.id))
-                setFilteredData(prevData => prevData?.filter(clazz => clazz.id !== row.original.id))
-                showNotification('Xóa lớp học thành công!', 'success')
+                // Cập nhật isActive = false trong state thay vì xóa khỏi danh sách
+                // (để người dùng có thể thấy và khôi phục)
+                setData(prevData =>
+                  prevData.map(clazz =>
+                    clazz.id === row.original.id ? { ...clazz, isActive: false } : clazz
+                  )
+                )
+                showNotification('Xóa lớp học thành công! Học viên thuộc lớp đã bị tạm nghỉ.', 'success')
               } else {
                 showNotification(response.message || 'Không thể xóa lớp học.', 'error')
               }
@@ -379,36 +369,42 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
 
           return (
             <div className='flex items-center'>
-              <IconButton
-                onClick={() => {
-                  setSelectedClass(row.original)
-                  setAddStudentsOpen(true)
-                }}
-                title='Thêm học viên'
-                color='success'
-              >
-                <i className='ri-user-add-line' />
-              </IconButton>
-              <IconButton
-                onClick={() => {
-                  setSelectedClass(row.original)
-                  setAddScheduleOpen(true)
-                }}
-                title='Thêm lịch học'
-                color='info'
-              >
-                <i className='ri-calendar-line' />
-              </IconButton>
-              <IconButton
-                onClick={() => {
-                  setSelectedClass(row.original)
-                  setViewScheduleOpen(true)
-                }}
-                title='Xem lịch học'
-                color='primary'
-              >
-                <i className='ri-calendar-check-line' />
-              </IconButton>
+              {/* Các thao tác chỉ hiện khi lớp đang hoạt động */}
+              {!isInactive && (
+                <>
+                  <IconButton
+                    onClick={() => {
+                      setSelectedClass(row.original)
+                      setAddStudentsOpen(true)
+                    }}
+                    title='Thêm học viên'
+                    color='success'
+                  >
+                    <i className='ri-user-add-line' />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      setSelectedClass(row.original)
+                      setAddScheduleOpen(true)
+                    }}
+                    title='Thêm lịch học'
+                    color='info'
+                  >
+                    <i className='ri-calendar-line' />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      setSelectedClass(row.original)
+                      setViewScheduleOpen(true)
+                    }}
+                    title='Xem lịch học'
+                    color='primary'
+                  >
+                    <i className='ri-calendar-check-line' />
+                  </IconButton>
+                </>
+              )}
+
               {isInactive ? (
                 <IconButton onClick={handleRestore} title='Khôi phục lớp học' color='success'>
                   <i className='ri-restart-line' style={{ color: '#2e7d32' }} />
@@ -418,37 +414,24 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   <i className='ri-delete-bin-7-line' />
                 </IconButton>
               )}
+
               <IconButton>
                 <Link href={`/apps/class/view/${row.original.id}`} className='flex' title='Xem chi tiết'>
                   <i className='ri-eye-line text-textSecondary' />
                 </Link>
               </IconButton>
-              <IconButton
-                onClick={() => {
-                  setSelectedClass(row.original)
-                  setEditClassOpen(true)
-                }}
-                title='Chỉnh sửa'
-              >
-                <i className='ri-edit-box-line text-textSecondary' />
-              </IconButton>
-              {/*<OptionMenu*/}
-              {/*  iconButtonProps={{ size: 'medium' }}*/}
-              {/*  iconClassName='text-textSecondary'*/}
-              {/*  options={[*/}
-              {/*    {*/}
-              {/*      text: 'Chỉnh sửa',*/}
-              {/*      icon: 'ri-edit-box-line',*/}
-              {/*      menuItemProps: {*/}
-              {/*        className: 'flex items-center gap-2 text-textSecondary',*/}
-              {/*        onClick: () => {*/}
-              {/*          setSelectedClass(row.original)*/}
-              {/*          setEditClassOpen(true)*/}
-              {/*        }*/}
-              {/*      }*/}
-              {/*    }*/}
-              {/*  ]}*/}
-              {/*/>*/}
+
+              {!isInactive && (
+                <IconButton
+                  onClick={() => {
+                    setSelectedClass(row.original)
+                    setEditClassOpen(true)
+                  }}
+                  title='Chỉnh sửa'
+                >
+                  <i className='ri-edit-box-line text-textSecondary' />
+                </IconButton>
+              )}
             </div>
           )
         },
@@ -456,7 +439,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
       })
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, filteredData, showNotification, setData, setLoading, users]
+    [data, showNotification, users]
   )
 
   const table = useReactTable({
@@ -474,7 +457,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
         pageSize: 10
       }
     },
-    enableRowSelection: true, //enable row selection for all rows
+    enableRowSelection: true,
     globalFilterFn: fuzzyFilter,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
@@ -542,11 +525,11 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
             <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
-              placeholder='Search Class'
+              placeholder='Tìm kiếm...'
               className='max-sm:is-full'
             />
             <Button variant='contained' onClick={() => setAddClassOpen(!addClassOpen)} className='max-sm:is-full'>
-              Add New Class
+              Thêm lớp học
             </Button>
           </div>
         </div>
@@ -579,11 +562,19 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                 </tr>
               ))}
             </thead>
-            {table.getFilteredRowModel().rows.length === 0 ? (
+            {loading ? (
               <tbody>
                 <tr>
-                  <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                    No data available
+                  <td colSpan={table.getVisibleFlatColumns().length} className='text-center py-8'>
+                    <Typography color='text.secondary'>Đang tải dữ liệu...</Typography>
+                  </td>
+                </tr>
+              </tbody>
+            ) : table.getFilteredRowModel().rows.length === 0 ? (
+              <tbody>
+                <tr>
+                  <td colSpan={table.getVisibleFlatColumns().length} className='text-center py-8'>
+                    <Typography color='text.secondary'>Không có dữ liệu</Typography>
                   </td>
                 </tr>
               </tbody>
@@ -591,10 +582,14 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
               <tbody>
                 {table
                   .getRowModel()
-                  .rows.slice(0, table.getState().pagination.pageSize)
-                  .map(row => {
+                  .rows.map(row => {
+                    const isInactive = row.original.isActive === false
                     return (
-                      <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                      <tr
+                        key={row.id}
+                        className={classnames({ selected: row.getIsSelected() })}
+                        style={isInactive ? { opacity: 0.6, backgroundColor: 'rgba(0,0,0,0.02)' } : undefined}
+                      >
                         {row.getVisibleCells().map(cell => (
                           <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                         ))}
@@ -646,7 +641,6 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
             }}
             classData={selectedClass}
             onScheduleAdded={() => {
-              // Refresh data if needed
               console.log('Schedule added for class:', selectedClass.name)
             }}
           />
@@ -667,9 +661,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
             }}
             classData={selectedClass}
             onStudentsAdded={() => {
-              // Refresh data
-              dataLoadedRef.current = false
-              currentFilterRef.current = ''
+              // Re-fetch with current filter
               setFilterParams(prev => ({ ...prev }))
             }}
           />

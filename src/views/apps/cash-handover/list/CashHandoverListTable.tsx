@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -37,6 +37,7 @@ import classService from '@/services/classService'
 import userService from '@/services/userService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 import AddCashHandoverDrawer from './AddCashHandoverDrawer'
 import CashHandoverDetailDialog from './CashHandoverDetailDialog'
@@ -79,7 +80,7 @@ const CashHandoverListTable = () => {
   const { auth } = useAuth()
 
   const isAdmin = useMemo(
-    () => auth?.roles?.some((r: string) => r === 'Admin' || r === 'SuperAdmin') ?? false,
+    () => hasAdminRole(auth?.roles),
     [auth]
   )
 
@@ -101,7 +102,7 @@ const CashHandoverListTable = () => {
   useEffect(() => {
     const loadReferences = async () => {
       try {
-        const [classRes, instructorRes] = await Promise.all([classService.getClasses({}), userService.getCoaches()])
+        const [classRes, instructorRes] = await Promise.all([classService.getClasses({ isActive: true, pageSize: 1000 }), userService.getCoaches()])
 
         setClasses(classRes.data || [])
         setInstructors(instructorRes.data || [])

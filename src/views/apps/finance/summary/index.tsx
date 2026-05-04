@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -84,7 +84,7 @@ const FinanceSummaryView = () => {
     const loadReferences = async () => {
       try {
         const [classRes, branchRes, instructorRes] = await Promise.all([
-          classService.getClasses({}),
+          classService.getClasses({ isActive: true, pageSize: 1000 }), // Chỉ hiển thị lớp đang hoạt động trong thống kê
           branchService.getBranches({}),
           userService.getCoaches()
         ])

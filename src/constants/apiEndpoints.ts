@@ -187,7 +187,8 @@ export const API_ENDPOINTS = {
   },
   federationMembers: {
     root: '/FederationMembers',
-    sync: '/FederationMembers/sync'
+    sync: '/FederationMembers/sync',
+    byCode: (code: string) => `/FederationMembers/${encodeURIComponent(code)}`
   },
   instructorClassSalaries: {
     root: '/instructor-class-salaries',

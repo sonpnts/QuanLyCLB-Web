@@ -2,10 +2,14 @@
 import { logger } from '@/utils/logger'
 
 // React Imports
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 
 // MUI Imports
+import Autocomplete from '@mui/material/Autocomplete'
+import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
 import FormControl from '@mui/material/FormControl'
 import IconButton from '@mui/material/IconButton'
@@ -14,8 +18,6 @@ import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import Divider from '@mui/material/Divider'
-import Autocomplete from '@mui/material/Autocomplete'
 
 // Type Imports
 import type { ClassTransferType } from '@/types/apps/classTransferTypes'
@@ -29,6 +31,7 @@ import studentService from '@/services/studentService'
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 type Props = {
   open: boolean
@@ -36,68 +39,129 @@ type Props = {
   setData: React.Dispatch<React.SetStateAction<ClassTransferType[]>>
 }
 
+/** Lấy lớp đang học (Active) đầu tiên của học viên */
+const getActiveClass = (student: StudentType) =>
+  student.classes?.find(c => c.status === 'Active') ?? student.classes?.[0] ?? null
+
+/** Hiển thị học viên trong dropdown: "Tên – Lớp A, Lớp B" */
+const studentLabel = (s: StudentType) => {
+  const classNames = s.classes?.filter(c => c.status === 'Active').map(c => c.className).join(', ')
+  return classNames ? `${s.fullName}  –  ${classNames}` : s.fullName
+}
+
 const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
   const { auth } = useAuth()
-  const isAdmin = auth?.roles?.some(role => role.toLowerCase() === 'admin') ?? false
+  const isAdmin = hasAdminRole(auth?.roles)
   const currentUserId = auth?.user.id
 
-  const [formData, setFormData] = useState({
-    studentId: '',
-    fromClassId: '',
-    toClassId: '',
-    reason: ''
-  })
-  const [loading, setLoading] = useState(false)
-  const [classes, setClasses] = useState<any[]>([])
-  const [students, setStudents] = useState<StudentType[]>([])
+  // ── Form state ────────────────────────────────────────────────────────────
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
+  const [fromClassId, setFromClassId] = useState('')
+  const [fromClassName, setFromClassName] = useState('')
+  const [toClassId, setToClassId] = useState('')
+  const [reason, setReason] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  // ── Student search (debounced) ────────────────────────────────────────────
+  const [studentInput, setStudentInput] = useState('')
+  const [studentOptions, setStudentOptions] = useState<StudentType[]>([])
+  const [studentLoading, setStudentLoading] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ── All active classes ────────────────────────────────────────────────────
+  const [classes, setClasses] = useState<any[]>([])
 
   const { showNotification } = useNotification()
 
+  // ── Load classes on open ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!open) return
+    const load = async () => {
+      try {
+        const res = await classService.getClasses({ isActive: true, pageSize: 1000 })
+        if (res.success && res.data) setClasses(res.data)
+      } catch (err) {
+        logger.error('AddTransferDrawer', 'Error loading classes', err)
+      }
+    }
+    load()
+  }, [open])
+
+  // ── Load initial students when drawer opens ───────────────────────────────
+  useEffect(() => {
+    if (!open) return
+    searchStudents('')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  // ── Debounced student search ──────────────────────────────────────────────
+  const searchStudents = useCallback(async (keyword: string) => {
+    setStudentLoading(true)
+    try {
+      const res = await studentService.getStudents({ keyword, pageSize: 50 })
+      if (res.success && res.data) setStudentOptions(res.data)
+    } catch (err) {
+      logger.error('AddTransferDrawer', 'Error searching students', err)
+    } finally {
+      setStudentLoading(false)
+    }
+  }, [])
+
+  const handleStudentInputChange = (_: React.SyntheticEvent, value: string) => {
+    setStudentInput(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => searchStudents(value), 350)
+  }
+
+  // ── When student is selected, auto-fill from-class ───────────────────────
+  const handleStudentChange = (_: React.SyntheticEvent, student: StudentType | null) => {
+    setSelectedStudent(student)
+    setToClassId('')
+
+    if (student) {
+      const active = getActiveClass(student)
+      setFromClassId(active?.classId ?? '')
+      setFromClassName(active?.className ?? 'Chưa có lớp')
+    } else {
+      setFromClassId('')
+      setFromClassName('')
+    }
+  }
+
+  // ── Class options filtered by role ────────────────────────────────────────
   const fromClassOptions = useMemo(() => {
     if (isAdmin) return classes
     if (!currentUserId) return []
-
     return classes.filter(
-      item => item.instructorId === currentUserId || (Array.isArray(item.coachIds) && item.coachIds.includes(currentUserId))
+      c => c.instructorId === currentUserId || (Array.isArray(c.coachIds) && c.coachIds.includes(currentUserId))
     )
   }, [classes, isAdmin, currentUserId])
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [classRes, studentRes] = await Promise.all([classService.getClasses({}), studentService.getStudents({})])
-        if (classRes.success && classRes.data) setClasses(classRes.data)
-        if (studentRes.success && studentRes.data) setStudents(studentRes.data)
-      } catch (error) {
-        logger.error('AddTransferDrawer', 'Error loading data', error)
-      }
-    }
-    if (open) loadData()
-  }, [open])
+  // To-class: exclude the from-class, only from active classes
+  const toClassOptions = useMemo(
+    () => classes.filter(c => c.id !== fromClassId),
+    [classes, fromClassId]
+  )
 
+  // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.studentId || !formData.fromClassId || !formData.toClassId) {
-      showNotification('Vui lòng điền đầy đủ thông tin.', 'error')
+    if (!selectedStudent || !fromClassId || !toClassId) {
+      showNotification('Vui lòng chọn học viên và lớp đích.', 'error')
       return
     }
-
-    if (!formData.reason.trim()) {
+    if (!reason.trim()) {
       showNotification('Vui lòng nhập lý do chuyển lớp.', 'error')
       return
     }
-
-    if (formData.fromClassId === formData.toClassId) {
+    if (fromClassId === toClassId) {
       showNotification('Lớp đích phải khác lớp hiện tại.', 'error')
       return
     }
-
     if (!isAdmin) {
-      const canCreateFromClass = fromClassOptions.some(item => item.id === formData.fromClassId)
-
-      if (!canCreateFromClass) {
+      const allowed = fromClassOptions.some(c => c.id === fromClassId)
+      if (!allowed) {
         showNotification('Bạn chỉ có thể tạo yêu cầu từ lớp mình đang phụ trách.', 'error')
         return
       }
@@ -106,10 +170,10 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
     try {
       setLoading(true)
       const response = await classTransferService.createClassTransfer({
-        studentId: formData.studentId,
-        fromClassId: formData.fromClassId,
-        toClassId: formData.toClassId,
-        reason: formData.reason.trim()
+        studentId: selectedStudent.id,
+        fromClassId,
+        toClassId,
+        reason: reason.trim()
       })
 
       if (response.success && response.data) {
@@ -119,10 +183,8 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
       } else {
         showNotification(response.message || 'Không thể tạo yêu cầu.', 'error')
       }
-    } catch (error) {
-      const responseStatus = (error as { response?: { status?: number } })?.response?.status
-
-      if (responseStatus === 403) {
+    } catch (error: any) {
+      if (error?.response?.status === 403) {
         showNotification('Không có quyền tạo yêu cầu chuyển lớp từ lớp nguồn này.', 'error')
       } else {
         showNotification('Đã có lỗi khi tạo yêu cầu.', 'error')
@@ -133,8 +195,12 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
   }
 
   const handleReset = () => {
-    setFormData({ studentId: '', fromClassId: '', toClassId: '', reason: '' })
     setSelectedStudent(null)
+    setStudentInput('')
+    setFromClassId('')
+    setFromClassName('')
+    setToClassId('')
+    setReason('')
     handleClose()
   }
 
@@ -145,7 +211,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
       variant='temporary'
       onClose={handleReset}
       ModalProps={{ keepMounted: true }}
-      sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
+      sx={{ '& .MuiDrawer-paper': { width: { xs: 320, sm: 440 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
         <Typography variant='h5'>Tạo yêu cầu chuyển lớp</Typography>
@@ -154,6 +220,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
         </IconButton>
       </div>
       <Divider />
+
       <div className='p-5'>
         <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
           {!isAdmin && (
@@ -161,59 +228,102 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
               Chỉ hiển thị lớp bạn đang được phân công để tạo yêu cầu chuyển lớp.
             </Typography>
           )}
+
+          {/* ── Tìm kiếm học viên ─────────────────────────────────── */}
           <Autocomplete
-            options={students}
-            getOptionLabel={option => option.fullName}
+            options={studentOptions}
+            getOptionLabel={studentLabel}
             value={selectedStudent}
-            onChange={(_, newValue) => {
-              setSelectedStudent(newValue)
-              setFormData({ ...formData, studentId: newValue?.id || '' })
+            inputValue={studentInput}
+            onInputChange={handleStudentInputChange}
+            onChange={handleStudentChange}
+            loading={studentLoading}
+            filterOptions={x => x}   // tắt client-side filter, để server filter
+            isOptionEqualToValue={(opt, val) => opt.id === val.id}
+            noOptionsText='Không tìm thấy học viên'
+            loadingText='Đang tìm...'
+            renderOption={(props, option) => {
+              const activeClass = getActiveClass(option)
+              return (
+                <Box component='li' {...props} key={option.id}>
+                  <Box>
+                    <Typography variant='body2' fontWeight={500}>
+                      {option.fullName}
+                    </Typography>
+                    {activeClass && (
+                      <Typography variant='caption' color='text.secondary'>
+                        {activeClass.className}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              )
             }}
-            renderInput={params => <TextField {...params} label='Học viên *' />}
+            renderInput={params => (
+              <TextField
+                {...params}
+                label='Học viên *'
+                placeholder='Tìm theo tên...'
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {studentLoading && <CircularProgress size={16} />}
+                      {params.InputProps.endAdornment}
+                    </>
+                  )
+                }}
+              />
+            )}
           />
+
+          {/* ── Lớp hiện tại (read-only, tự điền khi chọn HV) ────── */}
+          <TextField
+            label='Lớp hiện tại'
+            value={fromClassName}
+            disabled
+            fullWidth
+            placeholder='Tự động điền khi chọn học viên'
+            helperText={
+              selectedStudent && !fromClassId
+                ? 'Học viên này chưa được ghi danh vào lớp nào'
+                : ''
+            }
+            InputProps={{ readOnly: true }}
+          />
+
+          {/* ── Lớp đích ──────────────────────────────────────────── */}
           <FormControl fullWidth>
-            <InputLabel>Từ lớp *</InputLabel>
+            <InputLabel>Chuyển đến lớp *</InputLabel>
             <Select
-              label='Từ lớp *'
-              value={formData.fromClassId}
-              onChange={e => setFormData({ ...formData, fromClassId: e.target.value })}
+              label='Chuyển đến lớp *'
+              value={toClassId}
+              onChange={e => setToClassId(e.target.value)}
+              disabled={!fromClassId}
             >
-              {fromClassOptions.map(cls => (
+              {toClassOptions.map(cls => (
                 <MenuItem key={cls.id} value={cls.id}>
                   {cls.name}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
-          <FormControl fullWidth>
-            <InputLabel>Đến lớp *</InputLabel>
-            <Select
-              label='Đến lớp *'
-              value={formData.toClassId}
-              onChange={e => setFormData({ ...formData, toClassId: e.target.value })}
-            >
-              {classes
-                .filter(cls => cls.id !== formData.fromClassId)
-                .map(cls => (
-                <MenuItem key={cls.id} value={cls.id}>
-                  {cls.name}
-                </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
+
+          {/* ── Lý do ─────────────────────────────────────────────── */}
           <TextField
             label='Lý do chuyển lớp *'
             fullWidth
             multiline
             rows={3}
-            value={formData.reason}
-            onChange={e => setFormData({ ...formData, reason: e.target.value })}
+            value={reason}
+            onChange={e => setReason(e.target.value)}
           />
+
           <div className='flex items-center gap-4'>
-            <Button variant='contained' type='submit' disabled={loading}>
+            <Button variant='contained' type='submit' disabled={loading || !fromClassId}>
               {loading ? 'Đang xử lý...' : 'Tạo yêu cầu'}
             </Button>
-            <Button variant='outlined' color='error' onClick={handleReset}>
+            <Button variant='outlined' color='error' onClick={handleReset} disabled={loading}>
               Hủy
             </Button>
           </div>

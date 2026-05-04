@@ -9,6 +9,7 @@ export interface GetClassesParams {
   pageNumber?: number
   pageSize?: number
   keyword?: string
+  isActive?: boolean
 }
 
 // Request body for POST /api/Classes

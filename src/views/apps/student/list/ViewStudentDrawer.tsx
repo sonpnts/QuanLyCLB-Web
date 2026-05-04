@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -276,7 +276,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
     setTransferReason('')
 
     // Load all classes
-    const response = await classService.getClasses({ pageSize: 200 })
+    const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
     if (response.success && response.data) {
       setAvailableClasses(response.data)
     }

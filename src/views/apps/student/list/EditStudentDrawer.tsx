@@ -5,31 +5,38 @@ import { logger } from '@/utils/logger'
 import { useEffect, useMemo, useState } from 'react'
 
 // MUI Imports
-import Drawer from '@mui/material/Drawer'
-import Grid from '@mui/material/Grid2'
-import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
-import Divider from '@mui/material/Divider'
-import TextField from '@mui/material/TextField'
+import Alert from '@mui/material/Alert'
+import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import Chip from '@mui/material/Chip'
+import Divider from '@mui/material/Divider'
+import Drawer from '@mui/material/Drawer'
 import FormControl from '@mui/material/FormControl'
+import Grid from '@mui/material/Grid2'
+import IconButton from '@mui/material/IconButton'
 import InputLabel from '@mui/material/InputLabel'
-import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
+import Select from '@mui/material/Select'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
 
 // Form
-import { useForm, Controller } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 
 // Types
-import type { StudentType } from '@/types/apps/studentTypes'
 import type { BeltLevelType } from '@/types/apps/beltExamTypes'
+import type { StudentType } from '@/types/apps/studentTypes'
 
 // Services
-import studentService from '@/services/studentService'
 import beltExamService from '@/services/beltExamService'
+import studentService from '@/services/studentService'
 
 // Context
 import { useNotification } from '@/contexts/notificationContext'
+
+// Components
+import MemberCodeField from './MemberCodeField'
+import type { MemberInfo } from './MemberCodeField'
 
 type Props = {
   open: boolean
@@ -56,27 +63,23 @@ const EditStudentDrawer = (props: Props) => {
   const { showNotification } = useNotification()
   const [submitting, setSubmitting] = useState(false)
   const [beltLevels, setBeltLevels] = useState<BeltLevelType[]>([])
+  // Mã HV state (quản lý độc lập ngoài form vì cần truyền cho MemberCodeField)
+  const [memberCode, setMemberCode] = useState('')
 
   // Load belt levels
   useEffect(() => {
-    const loadBeltLevels = async () => {
+    if (!open) return
+
+    const load = async () => {
       try {
         const response = await beltExamService.getBeltLevels()
-
-        if (response.success && Array.isArray(response.data)) {
-          setBeltLevels(response.data)
-        } else {
-          setBeltLevels([])
-        }
+        setBeltLevels(response.success && Array.isArray(response.data) ? response.data : [])
       } catch (error) {
         logger.error('EditStudentDrawer', 'Error loading belt levels', error)
-        setBeltLevels([])
       }
     }
 
-    if (open) {
-      loadBeltLevels()
-    }
+    load()
   }, [open])
 
   const defaultValues = useMemo<FormValues>(
@@ -99,16 +102,37 @@ const EditStudentDrawer = (props: Props) => {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors }
-  } = useForm<FormValues>({
-    defaultValues
-  })
+  } = useForm<FormValues>({ defaultValues })
 
   useEffect(() => {
     if (student) {
       reset(defaultValues)
+      setMemberCode(student?.code || '')
     }
   }, [student, defaultValues, reset])
+
+  /**
+   * Học viên đã có mã HV (đã lưu trong DB) → khoá toàn bộ thông tin cá nhân.
+   * Chỉ cho phép chỉnh sửa: currentBeltLevelId, notes.
+   */
+  const isLocked = Boolean(student?.code)
+
+  /** Áp dụng thông tin từ liên đoàn vào form (chỉ khi chưa khoá) */
+  const handleMemberInfoConfirmed = (info: MemberInfo) => {
+    if (isLocked) return
+
+    setValue('fullName', info.fullName || defaultValues.fullName)
+    if (info.gender !== undefined) setValue('gender', String(info.gender))
+    if (info.dateOfBirth) setValue('dateOfBirth', info.dateOfBirth)
+    if (info.phoneNumber) setValue('phoneNumber', info.phoneNumber)
+    if (info.address) setValue('address', info.address)
+    if (info.email) setValue('email', info.email)
+    if (info.identityNumber) setValue('identityNumber', info.identityNumber)
+
+    showNotification('Đã áp dụng thông tin từ liên đoàn.', 'info')
+  }
 
   const onSubmit = async (values: FormValues) => {
     if (!student) return
@@ -116,17 +140,22 @@ const EditStudentDrawer = (props: Props) => {
     try {
       setSubmitting(true)
 
-      const payload = {
-        code: values.code?.trim() || undefined,
-        fullName: values.fullName,
-        phoneNumber: values.phoneNumber || undefined,
-        email: values.email || undefined,
-        address: values.address || undefined,
-        identityNumber: values.identityNumber || undefined,
-        dateOfBirth: values.dateOfBirth || undefined,
-        gender: values.gender !== '' ? values.gender === 'true' : undefined,
-        currentBeltLevelId: values.currentBeltLevelId || undefined,
-        notes: values.notes || undefined
+      const payload: any = {
+        // Mã HV luôn được phép cập nhật (dù đã khoá, vẫn có thể đổi mã)
+        code: memberCode.trim() || undefined,
+        notes: values.notes || undefined,
+        currentBeltLevelId: values.currentBeltLevelId || undefined
+      }
+
+      // Chỉ gửi thông tin cá nhân nếu chưa khoá
+      if (!isLocked) {
+        payload.fullName = values.fullName
+        payload.phoneNumber = values.phoneNumber || undefined
+        payload.email = values.email || undefined
+        payload.address = values.address || undefined
+        payload.identityNumber = values.identityNumber || undefined
+        payload.dateOfBirth = values.dateOfBirth || undefined
+        payload.gender = values.gender !== '' ? values.gender === 'true' : undefined
       }
 
       const res = await studentService.updateStudent(student.id, payload)
@@ -153,32 +182,54 @@ const EditStudentDrawer = (props: Props) => {
       variant='temporary'
       onClose={onClose}
       ModalProps={{ keepMounted: true }}
-      sx={{ '& .MuiDrawer-paper': { width: { xs: 320, sm: 420 } } }}
+      sx={{ '& .MuiDrawer-paper': { width: { xs: 320, sm: 480 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Chỉnh sửa học viên</Typography>
+        <Box className='flex items-center gap-2'>
+          <Typography variant='h5'>Chỉnh sửa học viên</Typography>
+          {isLocked && (
+            <Chip
+              label='Đã khoá'
+              size='small'
+              color='warning'
+              variant='tonal'
+              icon={<i className='ri-lock-line text-xs' />}
+            />
+          )}
+        </Box>
         <IconButton size='small' onClick={onClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
       </div>
       <Divider />
+
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-4 p-5'>
-        <Grid container spacing={4}>
-          <Grid size={{ xs: 12 }}>
-            <Controller
-              name='code'
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label='Mã học viên'
-                  placeholder='Để trống nếu chưa có mã'
-                  helperText='Mã học viên được tạo khi import danh sách'
-                />
-              )}
-            />
-          </Grid>
+        {isLocked && (
+          <Alert severity='info' icon={<i className='ri-lock-line' />}>
+            Học viên đã có mã HV — thông tin cá nhân (tên, giới tính, ngày sinh, …) bị khoá.
+            Chỉ có thể chỉnh sửa <strong>cấp đai</strong> và <strong>ghi chú</strong>.
+            Để mở khoá, xoá mã HV trước rồi lưu lại.
+          </Alert>
+        )}
+
+        {/* Mã HV */}
+        <MemberCodeField
+          value={memberCode}
+          onChange={code => {
+            setMemberCode(code)
+            setValue('code', code)
+          }}
+          onMemberInfoConfirmed={handleMemberInfoConfirmed}
+          locked={false}   // mã HV luôn có thể cập nhật (chỉ khoá các trường còn lại)
+          helperText={
+            isLocked
+              ? 'Xoá mã và lưu để mở khoá toàn bộ thông tin'
+              : 'Nhấn Enter/Tab để tra cứu thông tin từ liên đoàn'
+          }
+        />
+
+        <Grid container spacing={3}>
+          {/* Họ và tên */}
           <Grid size={{ xs: 12 }}>
             <Controller
               name='fullName'
@@ -189,38 +240,53 @@ const EditStudentDrawer = (props: Props) => {
                   {...field}
                   fullWidth
                   label='Họ và tên *'
+                  disabled={isLocked}
                   error={!!errors.fullName}
                   helperText={errors.fullName?.message}
                 />
               )}
             />
           </Grid>
+
+          {/* Phone + Email */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='phoneNumber'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Số điện thoại' />}
+              render={({ field }) => (
+                <TextField {...field} fullWidth label='Số điện thoại' disabled={isLocked} />
+              )}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='email'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Email' type='email' />}
+              render={({ field }) => (
+                <TextField {...field} fullWidth label='Email' type='email' disabled={isLocked} />
+              )}
             />
           </Grid>
+
+          {/* Địa chỉ */}
           <Grid size={{ xs: 12 }}>
             <Controller
               name='address'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Địa chỉ' />}
+              render={({ field }) => (
+                <TextField {...field} fullWidth label='Địa chỉ' disabled={isLocked} />
+              )}
             />
           </Grid>
+
+          {/* CCCD + Ngày sinh */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='identityNumber'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='CMND/CCCD' />}
+              render={({ field }) => (
+                <TextField {...field} fullWidth label='CMND/CCCD' disabled={isLocked} />
+              )}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -228,16 +294,25 @@ const EditStudentDrawer = (props: Props) => {
               name='dateOfBirth'
               control={control}
               render={({ field }) => (
-                <TextField {...field} fullWidth label='Ngày sinh' type='date' InputLabelProps={{ shrink: true }} />
+                <TextField
+                  {...field}
+                  fullWidth
+                  label='Ngày sinh'
+                  type='date'
+                  disabled={isLocked}
+                  InputLabelProps={{ shrink: true }}
+                />
               )}
             />
           </Grid>
+
+          {/* Giới tính + Cấp đai */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='gender'
               control={control}
               render={({ field }) => (
-                <FormControl fullWidth>
+                <FormControl fullWidth disabled={isLocked}>
                   <InputLabel>Giới tính</InputLabel>
                   <Select {...field} label='Giới tính'>
                     <MenuItem value=''>Chọn giới tính</MenuItem>
@@ -267,16 +342,21 @@ const EditStudentDrawer = (props: Props) => {
               )}
             />
           </Grid>
+
+          {/* Ghi chú */}
           <Grid size={{ xs: 12 }}>
             <Controller
               name='notes'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Ghi chú' multiline rows={3} />}
+              render={({ field }) => (
+                <TextField {...field} fullWidth label='Ghi chú' multiline rows={3} />
+              )}
             />
           </Grid>
         </Grid>
-        <div className='flex gap-2 justify-end'>
-          <Button variant='outlined' onClick={onClose}>
+
+        <div className='flex gap-2 justify-end mt-2'>
+          <Button variant='outlined' onClick={onClose} disabled={submitting}>
             Hủy
           </Button>
           <Button type='submit' variant='contained' disabled={submitting}>

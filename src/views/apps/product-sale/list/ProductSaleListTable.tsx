@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -98,7 +98,7 @@ const ProductSaleListTable = () => {
       try {
         const [productsRes, classesRes, coachesRes] = await Promise.all([
           productService.getProducts({}),
-          classService.getClasses({}),
+          classService.getClasses({ isActive: true, pageSize: 1000 }),
           userService.getCoaches()
         ])
 
