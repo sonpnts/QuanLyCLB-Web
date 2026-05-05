@@ -40,7 +40,7 @@ const PermissionMatrix = () => {
   const [original, setOriginal] = useState<MatrixState>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [seeding, setSeeding] = useState(false)
+  // const [seeding, setSeeding] = useState(false)
 
   // Fetch matrix data and roles in parallel
   useEffect(() => {
@@ -137,36 +137,36 @@ const PermissionMatrix = () => {
 
   const handleReset = () => setMatrix({ ...original })
 
-  const handleSeedMenu = async () => {
-    setSeeding(true)
-    try {
-      const res = await menuService.seedMenuData()
-      if (res.success) {
-        showNotification('Đã cập nhật cấu trúc menu. Đang tải lại...', 'success')
-        menuService.invalidateCache()
-        // Reload matrix sau khi seed
-        const [matrixRes, rolesRes] = await Promise.all([
-          menuAdminService.getRbacMatrix(),
-          roleService.getRoles({ PageSize: 100 })
-        ])
-        if (matrixRes.success && matrixRes.data) {
-          setMenuItems(matrixRes.data)
-          const refreshed: MatrixState = {}
-          for (const item of matrixRes.data) {
-            refreshed[item.id] = item.requiredRoles == null ? null : [...item.requiredRoles]
-          }
-          setMatrix(refreshed)
-          setOriginal(refreshed)
-        }
-        if (rolesRes.success && rolesRes.data) setRoles(rolesRes.data)
-      } else {
-        showNotification(res.message || 'Cập nhật menu thất bại', 'error')
-      }
-    } catch {
-      showNotification('Lỗi khi cập nhật menu', 'error')
-    }
-    setSeeding(false)
-  }
+  // const handleSeedMenu = async () => {
+  //   setSeeding(true)
+  //   try {
+  //     const res = await menuService.seedMenuData()
+  //     if (res.success) {
+  //       showNotification('Đã cập nhật cấu trúc menu. Đang tải lại...', 'success')
+  //       menuService.invalidateCache()
+  //       // Reload matrix sau khi seed
+  //       const [matrixRes, rolesRes] = await Promise.all([
+  //         menuAdminService.getRbacMatrix(),
+  //         roleService.getRoles({ PageSize: 100 })
+  //       ])
+  //       if (matrixRes.success && matrixRes.data) {
+  //         setMenuItems(matrixRes.data)
+  //         const refreshed: MatrixState = {}
+  //         for (const item of matrixRes.data) {
+  //           refreshed[item.id] = item.requiredRoles == null ? null : [...item.requiredRoles]
+  //         }
+  //         setMatrix(refreshed)
+  //         setOriginal(refreshed)
+  //       }
+  //       if (rolesRes.success && rolesRes.data) setRoles(rolesRes.data)
+  //     } else {
+  //       showNotification(res.message || 'Cập nhật menu thất bại', 'error')
+  //     }
+  //   } catch {
+  //     showNotification('Lỗi khi cập nhật menu', 'error')
+  //   }
+  //   setSeeding(false)
+  // }
 
   if (loading) {
     return (
@@ -183,17 +183,17 @@ const PermissionMatrix = () => {
         subheader='Cấu hình vai trò nào được truy cập từng mục menu. "Công khai" = tất cả người dùng đã đăng nhập.'
         action={
           <Box className='flex gap-2'>
-            <Tooltip title='Thêm các mục menu còn thiếu vào DB (chạy seeder), sau đó tải lại danh sách'>
-              <Button
-                variant='outlined'
-                color='secondary'
-                onClick={handleSeedMenu}
-                disabled={seeding || saving}
-                startIcon={seeding ? <CircularProgress size={16} color='inherit' /> : <i className='ri-refresh-line' />}
-              >
-                {seeding ? 'Đang cập nhật...' : 'Cập nhật menu'}
-              </Button>
-            </Tooltip>
+            {/*<Tooltip title='Thêm các mục menu còn thiếu vào DB (chạy seeder), sau đó tải lại danh sách'>*/}
+            {/*  <Button*/}
+            {/*    variant='outlined'*/}
+            {/*    color='secondary'*/}
+            {/*    onClick={handleSeedMenu}*/}
+            {/*    disabled={seeding || saving}*/}
+            {/*    startIcon={seeding ? <CircularProgress size={16} color='inherit' /> : <i className='ri-refresh-line' />}*/}
+            {/*  >*/}
+            {/*    {seeding ? 'Đang cập nhật...' : 'Cập nhật menu'}*/}
+            {/*  </Button>*/}
+            {/*</Tooltip>*/}
             <Button variant='outlined' onClick={handleReset} disabled={changedIds.length === 0 || saving}>
               Hoàn tác
             </Button>

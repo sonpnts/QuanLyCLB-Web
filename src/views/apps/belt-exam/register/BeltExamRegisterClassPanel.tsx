@@ -98,8 +98,8 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     const result = await beltExamService.getBeltLevels()
 
     if (result.success && result.data) {
-      // Chỉ lấy cấp (không phải đẳng), order 1-10
-      const levels = result.data.filter(b => !b.isDang && b.order >= 1 && b.order <= 10)
+      // Chỉ lấy cấp kup (order 1-10), đẳng (order > 10) không dùng cho đăng ký thi kup
+      const levels = result.data.filter(b => b.order >= 1 && b.order <= 10)
 
       setBeltLevels(levels)
     }

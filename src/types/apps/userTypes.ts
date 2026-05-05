@@ -22,12 +22,10 @@ export type UsersType = {
   memberCode?: string | null
   federationBeltRank?: string
   federationBeltLevelId?: string | null
-  federationBeltLevelColorCode?: string | null
   federationBeltLevelOrder?: number | null
-  federationBeltLevelIsDang?: boolean | null
 }
 
-// API response type from /api/Users
+// API response type from /api/Users — field names match JSON from backend UserDto
 export type ApiUserResponse = {
   id: string
   username: string
@@ -41,13 +39,11 @@ export type ApiUserResponse = {
   hasPassword?: boolean
   isGoogleAccount?: boolean
   roles: string[]
-  // Federation (read-only display)
+  // Federation (read-only display) — camelCase from BeltLevel* properties in UserDto
   memberCode?: string | null
-  federationBeltRank?: string
-  federationBeltLevelId?: string | null
-  federationBeltLevelColorCode?: string | null
-  federationBeltLevelOrder?: number | null
-  federationBeltLevelIsDang?: boolean | null
+  beltLevelId?: string | null
+  beltLevelName?: string | null
+  beltLevelOrder?: number | null
 }
 
 // API paginated response

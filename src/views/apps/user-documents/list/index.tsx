@@ -481,9 +481,9 @@ const UserDocumentListTable = () => {
             )}
           />
 
-          <Button variant='outlined' size='small' onClick={load} disabled={loading}>
-            {loading ? <CircularProgress size={16} /> : 'Lọc'}
-          </Button>
+          {/*<Button variant='outlined' size='small' onClick={load} disabled={loading}>*/}
+          {/*  {loading ? <CircularProgress size={16} /> : 'Lọc'}*/}
+          {/*</Button>*/}
 
           <TextField
             size='small' placeholder='Tìm trong bảng...'
@@ -652,13 +652,13 @@ const UserDocumentListTable = () => {
                     </Typography>
                   </Box>
 
-                  <Chip
-                    label={documentStatusLabels[doc.status]}
-                    size='small'
-                    color={documentStatusColors[doc.status]}
-                    variant='tonal'
-                    sx={{ flexShrink: 0 }}
-                  />
+                  {/*<Chip*/}
+                  {/*  label={documentStatusLabels[doc.status]}*/}
+                  {/*  size='small'*/}
+                  {/*  color={documentStatusColors[doc.status]}*/}
+                  {/*  variant='tonal'*/}
+                  {/*  sx={{ flexShrink: 0 }}*/}
+                  {/*/>*/}
 
                   {/* Actions */}
                   <Box className='flex gap-0.5'>
@@ -672,13 +672,13 @@ const UserDocumentListTable = () => {
                         <i className='ri-download-line' />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title='Yêu cầu nộp lại'>
-                      <IconButton size='small' color='warning' onClick={() => {
-                        setResubmitTarget(doc); setResubmitReason(''); setHistoryGroup(null)
-                      }}>
-                        <i className='ri-mail-send-line' />
-                      </IconButton>
-                    </Tooltip>
+                    {/*<Tooltip title='Yêu cầu nộp lại'>*/}
+                    {/*  <IconButton size='small' color='warning' onClick={() => {*/}
+                    {/*    setResubmitTarget(doc); setResubmitReason(''); setHistoryGroup(null)*/}
+                    {/*  }}>*/}
+                    {/*    <i className='ri-close-circle-line' />*/}
+                    {/*  </IconButton>*/}
+                    {/*</Tooltip>*/}
                   </Box>
                 </Box>
               )
@@ -735,7 +735,7 @@ const UserDocumentListTable = () => {
             disabled={loading || !resubmitReason.trim()}
             startIcon={loading ? <CircularProgress size={16} color='inherit' /> : <i className='ri-mail-send-line' />}
           >
-            Gửi yêu cầu & Email
+            Gửi yêu cầu
           </Button>
         </DialogActions>
       </Dialog>

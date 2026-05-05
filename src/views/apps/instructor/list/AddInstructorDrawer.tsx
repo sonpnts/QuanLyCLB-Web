@@ -263,10 +263,7 @@ const AddInstructorDrawer = (props: Props) => {
                     <em>— Chưa xác định —</em>
                   </MenuItem>
                   {[...beltLevels]
-                    .sort((a, b) => {
-                      if ((a.isDang ?? false) !== (b.isDang ?? false)) return (a.isDang ? 1 : 0) - (b.isDang ? 1 : 0)
-                      return (a.order ?? 0) - (b.order ?? 0)
-                    })
+                    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
                     .map(belt => (
                       <MenuItem key={belt.id} value={belt.id}>
                         {belt.name}

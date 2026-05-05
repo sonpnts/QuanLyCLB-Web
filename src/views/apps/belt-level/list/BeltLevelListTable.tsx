@@ -74,11 +74,7 @@ const BeltLevelListTable = () => {
 
         const response = await beltLevelService.getBeltLevels({ keyword: keyword || undefined })
 
-        const sorted = [...(response.data || [])].sort((a, b) => {
-        // Non-Đẳng (cấp kup) lên trước, sắp theo order. Đẳng xuống cuối.
-        if ((a.isDang ?? false) !== (b.isDang ?? false)) return a.isDang ? 1 : -1
-        return (a.order || 0) - (b.order || 0)
-      })
+        const sorted = [...(response.data || [])].sort((a, b) => (a.order || 0) - (b.order || 0))
         setData(sorted)
       } catch {
         setData([])
@@ -123,11 +119,7 @@ const BeltLevelListTable = () => {
     setData(prev => {
       const newData = prev.map(item => (item.id === updated.id ? updated : item))
 
-      return newData.sort((a, b) => {
-        // Non-Đẳng (cấp kup) lên trước, sắp theo order. Đẳng xuống cuối.
-        if ((a.isDang ?? false) !== (b.isDang ?? false)) return a.isDang ? 1 : -1
-        return (a.order || 0) - (b.order || 0)
-      })
+      return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
     })
   }, [])
 
@@ -136,11 +128,7 @@ const BeltLevelListTable = () => {
     setData(prev => {
       const newData = [...prev, newBeltLevel]
 
-      return newData.sort((a, b) => {
-        // Non-Đẳng (cấp kup) lên trước, sắp theo order. Đẳng xuống cuối.
-        if ((a.isDang ?? false) !== (b.isDang ?? false)) return a.isDang ? 1 : -1
-        return (a.order || 0) - (b.order || 0)
-      })
+      return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
     })
   }, [])
 
@@ -148,62 +136,23 @@ const BeltLevelListTable = () => {
   const columns = useMemo(
     () => [
       columnHelper.accessor('order', {
-        header: 'Cấp / Đẳng',
+        header: 'Thứ tự',
         cell: ({ row }) => {
-          // Đẳng / đai đen: không hiển thị thứ tự (đã có tên riêng: Nhất Đẳng, 1 Đẳng, ...)
-          const name = (row.original.name || '').toLowerCase()
-          const isBlackOrDan =
-            row.original.isDang === true ||
-            name.includes('đẳng') ||
-            name.includes('dang') ||
-            (row.original.colorCode || '').toLowerCase() === '#000000'
-
-          if (isBlackOrDan) return null
-
-          return <Chip label={`Cấp ${row.original.order}`} size='small' color='primary' variant='tonal' />
+          const order = row.original.order || 0
+          // Order > 10 = Đẳng; Order <= 10 = Cấp kup
+          if (order > 10) {
+            return <Chip label={`${order - 10} Đẳng`} size='small' color='warning' variant='tonal' />
+          }
+          return <Chip label={`Cấp ${order}`} size='small' color='primary' variant='tonal' />
         }
       }),
       columnHelper.accessor('name', {
         header: 'Tên cấp đai',
         cell: ({ row }) => (
           <Box className='flex items-center gap-3'>
-            <Box
-              sx={{
-                width: 24,
-                height: 24,
-                borderRadius: '4px',
-                backgroundColor: row.original.colorCode || '#ccc',
-                border: '1px solid #ddd'
-              }}
-            />
             <Typography className='font-medium' color='text.primary'>
               {row.original.name}
             </Typography>
-          </Box>
-        )
-      }),
-      columnHelper.accessor('description', {
-        header: 'Mô tả',
-        cell: ({ row }) => (
-          <Typography variant='body2' color='text.secondary'>
-            {row.original.description || '-'}
-          </Typography>
-        )
-      }),
-      columnHelper.accessor('colorCode', {
-        header: 'Màu sắc',
-        cell: ({ row }) => (
-          <Box className='flex items-center gap-2'>
-            <Box
-              sx={{
-                width: 20,
-                height: 20,
-                borderRadius: '50%',
-                backgroundColor: row.original.colorCode || '#ccc',
-                border: '1px solid #ddd'
-              }}
-            />
-            <Typography variant='body2'>{row.original.colorCode || '-'}</Typography>
           </Box>
         )
       }),

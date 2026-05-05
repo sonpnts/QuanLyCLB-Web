@@ -10,9 +10,6 @@ import IconButton from '@mui/material/IconButton'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
-import Box from '@mui/material/Box'
-import Switch from '@mui/material/Switch'
-import FormControlLabel from '@mui/material/FormControlLabel'
 
 // Type Imports
 import type { BeltLevelType } from '@/types/apps/beltExamTypes'
@@ -30,17 +27,8 @@ type Props = {
 }
 
 const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
-  // States
-  const [formData, setFormData] = useState({
-    name: '',
-    order: '',
-    description: '',
-    color: '#000000',
-    isDang: false
-  })
-
+  const [formData, setFormData] = useState({ name: '', order: '', description: '' })
   const [loading, setLoading] = useState(false)
-
   const { showNotification } = useNotification()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,14 +36,11 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
 
     if (!formData.name.trim()) {
       showNotification('Vui lòng nhập tên cấp đai.', 'error')
-
       return
     }
 
-    // Đẳng không cần thứ tự (đã có tên riêng: Nhất Đẳng, Nhị Đẳng...)
-    if (!formData.isDang && (!formData.order || isNaN(Number(formData.order)))) {
-      showNotification('Vui lòng nhập thứ tự hợp lệ.', 'error')
-
+    if (!formData.order || isNaN(Number(formData.order)) || Number(formData.order) < 1) {
+      showNotification('Vui lòng nhập thứ tự hợp lệ (≥ 1).', 'error')
       return
     }
 
@@ -64,11 +49,8 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
 
       const response = await beltLevelService.createBeltLevel({
         name: formData.name,
-        // Với Đẳng: gán order = 0 (backend coi như không có thứ tự kup)
-        order: formData.isDang ? 0 : Number(formData.order),
-        description: formData.description || undefined,
-        colorCode: formData.color || undefined,
-        isDang: formData.isDang
+        order: Number(formData.order),
+        description: formData.description || undefined
       })
 
       if (response.success && response.data) {
@@ -78,7 +60,7 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
       } else {
         showNotification(response.message || 'Không thể thêm cấp đai.', 'error')
       }
-    } catch (error) {
+    } catch {
       showNotification('Đã có lỗi khi thêm cấp đai.', 'error')
     } finally {
       setLoading(false)
@@ -86,13 +68,7 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
   }
 
   const handleReset = () => {
-    setFormData({
-      name: '',
-      order: '',
-      description: '',
-      color: '#000000',
-      isDang: false
-    })
+    setFormData({ name: '', order: '', description: '' })
     onClose()
   }
 
@@ -119,28 +95,18 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
             fullWidth
             value={formData.name}
             onChange={e => setFormData({ ...formData, name: e.target.value })}
-            placeholder='VD: Đai trắng, Đai vàng...'
+            placeholder='VD: Đai trắng, Đai vàng, Nhất đẳng...'
           />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formData.isDang}
-                onChange={e => setFormData({ ...formData, isDang: e.target.checked, order: e.target.checked ? '' : formData.order })}
-              />
-            }
-            label='Là Đẳng (đai đen có cấp độ)'
+          <TextField
+            label='Thứ tự *'
+            type='number'
+            fullWidth
+            value={formData.order}
+            onChange={e => setFormData({ ...formData, order: e.target.value })}
+            placeholder='VD: 1, 2, ... 10, 11, 12...'
+            helperText='Cấp kup: 1–10. Đẳng: 11 trở lên (11 = Nhất đẳng, 12 = Nhị đẳng...)'
+            inputProps={{ min: 1 }}
           />
-          {!formData.isDang && (
-            <TextField
-              label='Thứ tự *'
-              type='number'
-              fullWidth
-              value={formData.order}
-              onChange={e => setFormData({ ...formData, order: e.target.value })}
-              placeholder='VD: 1, 2, 3...'
-              helperText='Thứ tự từ thấp đến cao (1 là thấp nhất). Đẳng không cần nhập thứ tự.'
-            />
-          )}
           <TextField
             label='Mô tả'
             fullWidth
@@ -150,26 +116,6 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
             onChange={e => setFormData({ ...formData, description: e.target.value })}
             placeholder='Mô tả về cấp đai này...'
           />
-          <Box>
-            <Typography variant='body2' className='mb-2'>
-              Màu sắc
-            </Typography>
-            <Box className='flex items-center gap-3'>
-              <input
-                type='color'
-                value={formData.color}
-                onChange={e => setFormData({ ...formData, color: e.target.value })}
-                style={{ width: 50, height: 40, cursor: 'pointer', border: '1px solid #ddd', borderRadius: 4 }}
-              />
-              <TextField
-                size='small'
-                value={formData.color}
-                onChange={e => setFormData({ ...formData, color: e.target.value })}
-                placeholder='#000000'
-                sx={{ width: 120 }}
-              />
-            </Box>
-          </Box>
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
               {loading ? 'Đang xử lý...' : 'Thêm mới'}

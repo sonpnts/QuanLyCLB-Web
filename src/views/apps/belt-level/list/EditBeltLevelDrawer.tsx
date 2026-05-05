@@ -11,9 +11,6 @@ import IconButton from '@mui/material/IconButton'
 import Divider from '@mui/material/Divider'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
-import Box from '@mui/material/Box'
-import Switch from '@mui/material/Switch'
-import FormControlLabel from '@mui/material/FormControlLabel'
 
 // Form
 import { useForm, Controller } from 'react-hook-form'
@@ -38,8 +35,6 @@ type FormValues = {
   name: string
   order: string
   description: string
-  colorCode: string
-  isDang: boolean
 }
 
 const EditBeltLevelDrawer = (props: Props) => {
@@ -51,9 +46,7 @@ const EditBeltLevelDrawer = (props: Props) => {
     () => ({
       name: beltLevel?.name || '',
       order: beltLevel?.order?.toString() || '',
-      description: beltLevel?.description || '',
-      colorCode: beltLevel?.colorCode || '#000000',
-      isDang: beltLevel?.isDang ?? false
+      description: beltLevel?.description || ''
     }),
     [beltLevel]
   )
@@ -62,19 +55,11 @@ const EditBeltLevelDrawer = (props: Props) => {
     control,
     handleSubmit,
     reset,
-    watch,
-    setValue,
     formState: { errors }
-  } = useForm<FormValues>({
-    defaultValues
-  })
-
-  const isDangValue = watch('isDang')
+  } = useForm<FormValues>({ defaultValues })
 
   useEffect(() => {
-    if (beltLevel) {
-      reset(defaultValues)
-    }
+    if (beltLevel) reset(defaultValues)
   }, [beltLevel, defaultValues, reset])
 
   const onSubmit = async (values: FormValues) => {
@@ -82,42 +67,31 @@ const EditBeltLevelDrawer = (props: Props) => {
 
     if (!values.name.trim()) {
       showNotification('Vui lòng nhập tên cấp đai.', 'error')
-
       return
     }
 
-    // Đẳng không cần thứ tự
-    if (!values.isDang && (!values.order || isNaN(Number(values.order)))) {
-      showNotification('Vui lòng nhập thứ tự hợp lệ.', 'error')
-
+    if (!values.order || isNaN(Number(values.order)) || Number(values.order) < 1) {
+      showNotification('Vui lòng nhập thứ tự hợp lệ (≥ 1).', 'error')
       return
     }
 
     try {
       setSubmitting(true)
 
-      const payload = {
+      const res = await beltLevelService.updateBeltLevel(beltLevel.id, {
         name: values.name,
-        order: values.isDang ? 0 : Number(values.order),
-        description: values.description || undefined,
-        colorCode: values.colorCode || undefined,
-        isDang: values.isDang
-      }
-
-      const res = await beltLevelService.updateBeltLevel(beltLevel.id, payload)
+        order: Number(values.order),
+        description: values.description || undefined
+      })
 
       if (res.success) {
         showNotification(res.message || 'Cập nhật cấp đai thành công.', 'success')
-
-        // Nếu API không trả về data, tạo object với dữ liệu đã cập nhật
 
         const updatedBeltLevel: BeltLevelType = res.data || {
           ...beltLevel,
           name: values.name,
           order: Number(values.order),
-          description: values.description || undefined,
-          colorCode: values.colorCode || undefined,
-          isDang: values.isDang
+          description: values.description || undefined
         }
 
         onSaved(updatedBeltLevel)
@@ -132,8 +106,6 @@ const EditBeltLevelDrawer = (props: Props) => {
       setSubmitting(false)
     }
   }
-
-  const colorValue = watch('colorCode')
 
   return (
     <Drawer
@@ -163,47 +135,30 @@ const EditBeltLevelDrawer = (props: Props) => {
               label='Tên cấp đai *'
               error={!!errors.name}
               helperText={errors.name?.message}
-              placeholder='VD: Đai trắng, Đai vàng...'
+              placeholder='VD: Đai trắng, Đai vàng, Nhất đẳng...'
             />
           )}
         />
         <Controller
-          name='isDang'
+          name='order'
           control={control}
+          rules={{
+            required: 'Thứ tự là bắt buộc',
+            min: { value: 1, message: 'Thứ tự phải ≥ 1' }
+          }}
           render={({ field }) => (
-            <FormControlLabel
-              control={
-                <Switch
-                  {...field}
-                  checked={field.value}
-                  onChange={e => {
-                    field.onChange(e)
-                    if (e.target.checked) setValue('order', '')
-                  }}
-                />
-              }
-              label='Là Đẳng (đai đen có cấp độ)'
+            <TextField
+              {...field}
+              fullWidth
+              type='number'
+              label='Thứ tự *'
+              error={!!errors.order}
+              helperText={errors.order?.message || 'Cấp kup: 1–10. Đẳng: 11 trở lên (11 = Nhất đẳng, 12 = Nhị đẳng...)'}
+              placeholder='VD: 1, 2, ... 10, 11, 12...'
+              inputProps={{ min: 1 }}
             />
           )}
         />
-        {!isDangValue && (
-          <Controller
-            name='order'
-            control={control}
-            rules={{ required: !isDangValue ? 'Thứ tự là bắt buộc' : false }}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                fullWidth
-                type='number'
-                label='Thứ tự *'
-                error={!!errors.order}
-                helperText={errors.order?.message || 'Thứ tự từ thấp đến cao (1 là thấp nhất). Đẳng không cần nhập.'}
-                placeholder='VD: 1, 2, 3...'
-              />
-            )}
-          />
-        )}
         <Controller
           name='description'
           control={control}
@@ -211,24 +166,6 @@ const EditBeltLevelDrawer = (props: Props) => {
             <TextField {...field} fullWidth multiline rows={3} label='Mô tả' placeholder='Mô tả về cấp đai này...' />
           )}
         />
-        <Box>
-          <Typography variant='body2' className='mb-2'>
-            Màu sắc
-          </Typography>
-          <Box className='flex items-center gap-3'>
-            <input
-              type='color'
-              value={colorValue}
-              onChange={e => setValue('colorCode', e.target.value)}
-              style={{ width: 50, height: 40, cursor: 'pointer', border: '1px solid #ddd', borderRadius: 4 }}
-            />
-            <Controller
-              name='colorCode'
-              control={control}
-              render={({ field }) => <TextField {...field} size='small' placeholder='#000000' sx={{ width: 120 }} />}
-            />
-          </Box>
-        </Box>
         <div className='flex gap-4'>
           <Button variant='contained' type='submit' disabled={submitting}>
             {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}

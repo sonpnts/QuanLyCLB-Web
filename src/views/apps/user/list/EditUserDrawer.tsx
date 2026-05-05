@@ -218,18 +218,11 @@ const EditUserDrawer = (props: Props) => {
                 Cấp đai liên đoàn
               </Typography>
               <Chip
-                label={user?.federationBeltRank || 'Cấp 10 hoặc chuyển mã'}
+                label={user?.federationBeltRank || 'Chưa có'}
                 size='small'
                 sx={{
                   alignSelf: 'flex-start',
-                  bgcolor: user?.federationBeltLevelColorCode
-                    ? `${user.federationBeltLevelColorCode}22`
-                    : 'action.hover',
-                  borderLeft: user?.federationBeltLevelColorCode
-                    ? `3px solid ${user.federationBeltLevelColorCode}`
-                    : undefined,
-                  fontWeight: user?.federationBeltRank ? 600 : 400,
-                  color: user?.federationBeltLevelColorCode || 'text.secondary'
+                  fontWeight: user?.federationBeltRank ? 600 : 400
                 }}
               />
               <Typography variant='caption' color='text.disabled'>

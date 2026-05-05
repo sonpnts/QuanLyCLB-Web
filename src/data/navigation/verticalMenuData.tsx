@@ -9,7 +9,7 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
     isSection: true,
     children: [
       {
-        label: 'Dashboard',
+        label: 'Trang chủ',
         icon: 'ri-dashboard-line',
         href: '/dashboards/home'
       }

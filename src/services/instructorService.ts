@@ -39,13 +39,11 @@ export interface ApiInstructorResponse {
   updatedAt?: string | null
   createdByUserId?: string | null
   updatedByUserId?: string | null
-  // Federation (read-only display)
+  // Federation (read-only display) — camelCase from BeltLevel* properties in InstructorDto
   memberCode?: string | null
-  federationBeltRank?: string
-  federationBeltLevelId?: string | null
-  federationBeltLevelColorCode?: string | null
-  federationBeltLevelOrder?: number | null
-  federationBeltLevelIsDang?: boolean | null
+  beltLevelId?: string | null
+  beltLevelName?: string | null
+  beltLevelOrder?: number | null
 }
 
 export interface InstructorType {
@@ -65,9 +63,7 @@ export interface InstructorType {
   memberCode?: string | null
   federationBeltRank?: string
   federationBeltLevelId?: string | null
-  federationBeltLevelColorCode?: string | null
   federationBeltLevelOrder?: number | null
-  federationBeltLevelIsDang?: boolean | null
 }
 
 class InstructorService {
@@ -86,11 +82,9 @@ class InstructorService {
       updatedDate: apiInstructor.updatedAt || undefined,
       updatedBy: apiInstructor.updatedByUserId || undefined,
       memberCode: apiInstructor.memberCode,
-      federationBeltRank: apiInstructor.federationBeltRank,
-      federationBeltLevelId: apiInstructor.federationBeltLevelId,
-      federationBeltLevelColorCode: apiInstructor.federationBeltLevelColorCode,
-      federationBeltLevelOrder: apiInstructor.federationBeltLevelOrder,
-      federationBeltLevelIsDang: apiInstructor.federationBeltLevelIsDang
+      federationBeltRank: apiInstructor.beltLevelName ?? undefined,
+      federationBeltLevelId: apiInstructor.beltLevelId,
+      federationBeltLevelOrder: apiInstructor.beltLevelOrder
     }
   }
 

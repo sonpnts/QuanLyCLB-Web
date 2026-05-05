@@ -148,49 +148,38 @@ const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Prop
             />
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              label='Chứng chỉ'
-              InputLabelProps={{ shrink: true }}
-              {...register('certification')}
-              placeholder='Ví dụ: ACE, NASM, ACSM'
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              label='Mã hội viên liên đoàn'
-              InputLabelProps={{ shrink: true }}
-              {...register('memberCode')}
-              placeholder='VD: HV00123'
-              helperText='Dùng để tra cứu cấp đai liên đoàn tự động'
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              <Typography variant='caption' color='text.secondary'>
-                Cấp đai liên đoàn
-              </Typography>
-              <Chip
-                label={instructor?.federationBeltRank || 'Cấp 10 hoặc chuyển mã'}
-                size='small'
-                sx={{
-                  alignSelf: 'flex-start',
-                  bgcolor: instructor?.federationBeltLevelColorCode
-                    ? `${instructor.federationBeltLevelColorCode}22`
-                    : 'action.hover',
-                  borderLeft: instructor?.federationBeltLevelColorCode
-                    ? `3px solid ${instructor.federationBeltLevelColorCode}`
-                    : undefined,
-                  fontWeight: instructor?.federationBeltRank ? 600 : 400,
-                  color: instructor?.federationBeltLevelColorCode || 'text.secondary'
-                }}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Cấp đai
+                </Typography>
+
+                <Chip
+                  label={instructor?.federationBeltRank || 'Chưa có'}
+                  size="small"
+                  sx={{
+                    alignSelf: 'flex-start',
+                    fontWeight: instructor?.federationBeltRank ? 600 : 400,
+                  }}
+                />
+
+                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                  Cấp đai được cập nhật tự động từ hệ thống liên đoàn
+                </Typography>
+              </Box>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label="Mã hội viên"
+                InputLabelProps={{ shrink: true }}
+                {...register('memberCode')}
+                placeholder="VD: V26-001234"
+                helperText="Dùng để tra cứu cấp đai"
               />
-              <Typography variant='caption' color='text.disabled'>
-                Chỉ đọc — tra cứu từ liên đoàn theo mã hội viên
-              </Typography>
-            </Box>
+            </Grid>
           </Grid>
         </Grid>
 

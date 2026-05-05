@@ -16,8 +16,6 @@ export interface CreateBeltLevelRequest {
   name: string
   order: number
   description?: string
-  colorCode?: string
-  isDang?: boolean
 }
 
 // Request body for PUT /api/belt-levels/{id}
@@ -25,8 +23,6 @@ export interface UpdateBeltLevelRequest {
   name?: string
   order?: number
   description?: string
-  colorCode?: string
-  isDang?: boolean
 }
 
 class BeltLevelService {

@@ -110,3 +110,86 @@
     at async http://localhost:3000/_next/static/chunks/node_modules_199f44._.js:10803:21
 ==END==
 
+==05/05/2026 22:00:32==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:4938:34
+==END==
+
+==05/05/2026 22:00:32==
+- Level: ERROR
+- ClassName: UserService
+- Method: getUsers
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getUsers (http://localhost:3000/_next/static/chunks/src_73d005._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FuserService.ts+%255Bapp-client%255D+%2528ecmascript%2529:46:30)
+    at async AssistantService.getAssistants (http://localhost:3000/_next/static/chunks/src_8f7871._.js:304:25)
+    at async loadAssistants (http://localhost:3000/_next/static/chunks/src_8f7871._.js:580:25)
+==END==
+
+==05/05/2026 22:00:33==
+- Level: ERROR
+- ClassName: UserService
+- Method: getUsers
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getUsers (http://localhost:3000/_next/static/chunks/src_73d005._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FuserService.ts+%255Bapp-client%255D+%2528ecmascript%2529:46:30)
+    at async AssistantService.getAssistants (http://localhost:3000/_next/static/chunks/src_8f7871._.js:304:25)
+    at async loadAssistants (http://localhost:3000/_next/static/chunks/src_8f7871._.js:580:25)
+==END==
+
+==05/05/2026 22:00:42==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:4938:34
+==END==
+
+==05/05/2026 22:00:45==
+- Level: ERROR
+- ClassName: UserService
+- Method: getUsers
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getUsers (http://localhost:3000/_next/static/chunks/src_73d005._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FuserService.ts+%255Bapp-client%255D+%2528ecmascript%2529:46:30)
+    at async UserManagementTable.useEffect.loadUsers (http://localhost:3000/_next/static/chunks/src_976359._.js:2362:42)
+==END==
+
+==05/05/2026 22:00:45==
+- Level: ERROR
+- ClassName: RoleService
+- Method: getRoles
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_976359._.js:2114:34
+==END==
+
+==05/05/2026 22:00:45==
+- Level: ERROR
+- ClassName: UserService
+- Method: getUsers
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getUsers (http://localhost:3000/_next/static/chunks/src_73d005._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FuserService.ts+%255Bapp-client%255D+%2528ecmascript%2529:46:30)
+    at async UserManagementTable.useEffect.loadUsers (http://localhost:3000/_next/static/chunks/src_976359._.js:2362:42)
+==END==
+

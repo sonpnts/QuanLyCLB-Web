@@ -59,8 +59,6 @@ export type BeltLevelType = {
   name: string
   order: number
   description?: string
-  colorCode?: string
-  isDang?: boolean
   examFee?: number
   isActive?: boolean
 }

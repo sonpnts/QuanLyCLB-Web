@@ -80,11 +80,9 @@ class UserService {
       createdByUserId: (apiUser as any).createdByUserId,
       updatedByUserId: (apiUser as any).updatedByUserId,
       memberCode: apiUser.memberCode,
-      federationBeltRank: apiUser.federationBeltRank,
-      federationBeltLevelId: apiUser.federationBeltLevelId,
-      federationBeltLevelColorCode: apiUser.federationBeltLevelColorCode,
-      federationBeltLevelOrder: apiUser.federationBeltLevelOrder,
-      federationBeltLevelIsDang: apiUser.federationBeltLevelIsDang
+      federationBeltRank: apiUser.beltLevelName ?? undefined,
+      federationBeltLevelId: apiUser.beltLevelId,
+      federationBeltLevelOrder: apiUser.beltLevelOrder
     }
   }
 
