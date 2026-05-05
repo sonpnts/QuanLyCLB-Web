@@ -22,9 +22,11 @@ const SecurityTab = dynamic(() => import('@views/apps/user/view/user-right/secur
 const BillingPlans = dynamic(() => import('@views/apps/user/view/user-right/billing-plans'))
 const NotificationsTab = dynamic(() => import('@views/apps/user/view/user-right/notifications'))
 const ConnectionsTab = dynamic(() => import('@views/apps/user/view/user-right/connections'))
+const DocumentsTab = dynamic(() => import('@views/apps/user/view/user-right/documents'))
 
 // Vars
 const tabContentList = (data?: PricingPlanType[]): { [key: string]: ReactElement } => ({
+  documents: <DocumentsTab />,
   overview: <OverViewTab />,
   security: <SecurityTab />,
   'billing-plans': <BillingPlans data={data} />,

@@ -47,7 +47,6 @@ type FormValues = {
   fullName: string
   email: string
   phoneNumber?: string
-  skillLevel?: string
   certification?: string
   isActive: boolean
   roleIds: string[]
@@ -64,7 +63,6 @@ const EditUserDrawer = (props: Props) => {
       fullName: user?.fullName || '',
       email: user?.email || '',
       phoneNumber: user?.phoneNumber || '',
-      skillLevel: user?.skillLevel || '',
       certification: user?.certification || '',
       isActive: Boolean(user?.isActive),
       roleIds: [],
@@ -105,11 +103,11 @@ const EditUserDrawer = (props: Props) => {
       setSubmitting(true)
 
       const payload: any = {
+        email: values.email,
         fullName: values.fullName,
         phoneNumber: values.phoneNumber || undefined,
         avatarUrl: undefined,
         isActive: values.isActive,
-        skillLevel: values.skillLevel || undefined,
         certification: values.certification || undefined,
         roleIds: values.roleIds,
         memberCode: values.memberCode?.trim() || null
@@ -170,7 +168,7 @@ const EditUserDrawer = (props: Props) => {
             <Controller
               name='email'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Email' disabled />}
+              render={({ field }) => <TextField {...field} fullWidth label='Email' />}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -190,13 +188,6 @@ const EditUserDrawer = (props: Props) => {
                   label='Hoạt động'
                 />
               )}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name='skillLevel'
-              control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Trình độ' />}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>

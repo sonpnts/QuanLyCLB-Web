@@ -34,8 +34,11 @@ class MenuAdminService {
 
   async updateItemRoles(id: string, requiredRoles: string[] | null): Promise<ResponseResult<void>> {
     try {
+      // null  = công khai (gửi null)
+      // []    = không ai được xem (gửi [] — KHÔNG convert sang null)
+      // [...] = specific roles (gửi nguyên)
       const response = await apiClient.patch<any>(API_ENDPOINTS.menu.patchRoles(id), {
-        requiredRoles: requiredRoles && requiredRoles.length > 0 ? requiredRoles : null
+        requiredRoles: requiredRoles  // giữ nguyên, backend phân biệt null vs []
       })
       const apiResponse = response.data
 

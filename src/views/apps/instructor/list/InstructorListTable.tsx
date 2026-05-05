@@ -175,6 +175,10 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
         header: 'Số điện thoại',
         cell: ({ row }) => <Typography variant='body2'>{row.original.phoneNumber || '-'}</Typography>
       }),
+      columnHelper.accessor('memberCode', {
+        header: 'Mã HV',
+        cell: ({ row }) => <Typography variant='body2'>{row.original.memberCode || '-'}</Typography>
+      }),
       columnHelper.accessor('skillLevelName', {
         header: 'Cấp đai',
         cell: ({ row }) => (

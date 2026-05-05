@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 
 // MUI Imports
 import Button from '@mui/material/Button'
@@ -13,14 +13,11 @@ import TextField from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
 import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
-import CircularProgress from '@mui/material/CircularProgress'
 import Chip from '@mui/material/Chip'
 
 // Type & Service Imports
 import type { InstructorType, UpdateInstructorRequest } from '@/services/instructorService'
 import instructorService from '@/services/instructorService'
-import beltLevelService from '@/services/beltLevelService'
-import type { BeltLevelType } from '@/types/apps/beltExamTypes'
 import { useNotification } from '@/contexts/notificationContext'
 import { logger } from '@/utils/logger'
 
@@ -34,51 +31,27 @@ type Props = {
 type FormValues = {
   fullName: string
   phoneNumber: string
-  skillLevelId: string
   certification: string
   memberCode: string
 }
 
 const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Props) => {
   const [loading, setLoading] = useState(false)
-  const [beltLevels, setBeltLevels] = useState<BeltLevelType[]>([])
-  const [beltLevelsLoading, setBeltLevelsLoading] = useState(false)
   const { showNotification } = useNotification()
 
   const {
     register,
     handleSubmit,
     reset,
-    control,
     formState: { errors }
   } = useForm<FormValues>({
     defaultValues: {
       fullName: '',
       phoneNumber: '',
-      skillLevelId: '',
       certification: '',
       memberCode: ''
     }
   })
-
-  // Load danh sách cấp đai
-  useEffect(() => {
-    if (!open) return
-    const fetchBeltLevels = async () => {
-      setBeltLevelsLoading(true)
-      try {
-        const res = await beltLevelService.getBeltLevels({ pageSize: 100 })
-        if (res.success && res.data) {
-          setBeltLevels(res.data.filter(b => b.isActive !== false))
-        }
-      } catch (err) {
-        logger.error('EditInstructorDrawer', 'fetchBeltLevels', err)
-      } finally {
-        setBeltLevelsLoading(false)
-      }
-    }
-    fetchBeltLevels()
-  }, [open])
 
   // Điền dữ liệu hiện tại khi mở drawer
   useEffect(() => {
@@ -86,7 +59,6 @@ const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Prop
       reset({
         fullName: instructor.fullName || '',
         phoneNumber: instructor.phoneNumber || '',
-        skillLevelId: instructor.skillLevelId || '',
         certification: instructor.certification || '',
         memberCode: instructor.memberCode || ''
       })
@@ -107,7 +79,7 @@ const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Prop
       const payload: UpdateInstructorRequest = {
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber || undefined,
-        skillLevelId: formData.skillLevelId || null,
+        skillLevelId: null,
         certification: formData.certification || undefined,
         memberCode: formData.memberCode?.trim() || null
       }
@@ -173,40 +145,6 @@ const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Prop
               label='Số điện thoại'
               InputLabelProps={{ shrink: true }}
               {...register('phoneNumber')}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name='skillLevelId'
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  select
-                  fullWidth
-                  label='Cấp đai'
-                  InputLabelProps={{ shrink: true }}
-                  disabled={beltLevelsLoading}
-                  InputProps={{
-                    endAdornment: beltLevelsLoading ? <CircularProgress size={18} sx={{ mr: 1 }} /> : undefined
-                  }}
-                >
-                  <MenuItem value=''>
-                    <em>— Chưa xác định —</em>
-                  </MenuItem>
-                  {[...beltLevels]
-                    .sort((a, b) => {
-                      if ((a.isDang ?? false) !== (b.isDang ?? false)) return (a.isDang ? 1 : 0) - (b.isDang ? 1 : 0)
-                      return (a.order ?? 0) - (b.order ?? 0)
-                    })
-                    .map(belt => (
-                      <MenuItem key={belt.id} value={belt.id}>
-                        {belt.name}
-                      </MenuItem>
-                    ))}
-                </TextField>
-              )}
             />
           </Grid>
 

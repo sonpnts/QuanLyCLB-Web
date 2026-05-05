@@ -2,7 +2,7 @@
 import { logger } from '@/utils/logger'
 
 // React Imports
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 // MUI Imports
 import Button from '@mui/material/Button'
@@ -19,11 +19,9 @@ import Typography from '@mui/material/Typography'
 
 // Type Imports
 import type { StudentType } from '@/types/apps/studentTypes'
-import type { BeltLevelType } from '@/types/apps/beltExamTypes'
 
 // Service Imports
 import studentService from '@/services/studentService'
-import beltExamService from '@/services/beltExamService'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
@@ -47,32 +45,14 @@ const initialForm = {
   identityNumber: '',
   dateOfBirth: '',
   gender: '',
-  currentBeltLevelId: '',
   notes: ''
 }
 
 const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
   const [formData, setFormData] = useState(initialForm)
   const [loading, setLoading] = useState(false)
-  const [beltLevels, setBeltLevels] = useState<BeltLevelType[]>([])
 
   const { showNotification } = useNotification()
-
-  // Load belt levels
-  useEffect(() => {
-    if (!open) return
-
-    const load = async () => {
-      try {
-        const response = await beltExamService.getBeltLevels()
-        setBeltLevels(response.success && Array.isArray(response.data) ? response.data : [])
-      } catch (error) {
-        logger.error('AddStudentDrawer', 'Error loading belt levels', error)
-      }
-    }
-
-    load()
-  }, [open])
 
   const handleReset = () => {
     setFormData(initialForm)
@@ -99,7 +79,6 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
         identityNumber: formData.identityNumber || undefined,
         dateOfBirth: formData.dateOfBirth || undefined,
         gender: formData.gender !== '' ? formData.gender === 'true' : undefined,
-        currentBeltLevelId: formData.currentBeltLevelId || undefined,
         notes: formData.notes || undefined
       })
 
@@ -225,23 +204,6 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
                   <MenuItem value=''>Chọn giới tính</MenuItem>
                   <MenuItem value='true'>Nam</MenuItem>
                   <MenuItem value='false'>Nữ</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Cấp đai hiện tại</InputLabel>
-                <Select
-                  label='Cấp đai hiện tại'
-                  value={formData.currentBeltLevelId}
-                  onChange={e => setFormData({ ...formData, currentBeltLevelId: e.target.value })}
-                >
-                  <MenuItem value=''>Chưa có cấp đai</MenuItem>
-                  {beltLevels.map(belt => (
-                    <MenuItem key={belt.id} value={belt.id}>
-                      {belt.name}
-                    </MenuItem>
-                  ))}
                 </Select>
               </FormControl>
             </Grid>

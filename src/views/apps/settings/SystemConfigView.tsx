@@ -228,7 +228,8 @@ const SystemConfigView = () => {
                       <td className='p-4'>
                         <Box>
                           <Typography variant='body2' className='font-medium'>
-                            {CONFIG_DISPLAY[item.keyName] || item.keyName}
+                            {item.keyName}
+                            {/*{CONFIG_DISPLAY[item.keyName] || item.keyName}*/}
                           </Typography>
                           {CONFIG_DISPLAY[item.keyName] && (
                             <Typography variant='caption' color='text.secondary'>

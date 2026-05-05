@@ -16,7 +16,21 @@ const systemConfigService = {
   async getAll(): Promise<ResponseResult<SystemConfigType[]>> {
     return apiList(
       () => apiClient.get<any>(API_ENDPOINTS.systemConfig.root),
-      (data) => (Array.isArray(data) ? data : data?.records || []).map(toConfig)
+      (data) => {
+        // Backend trả về mảng SystemConfigDto[]
+        if (Array.isArray(data)) return data.map(toConfig)
+        // Fallback: nếu vẫn là dict { key: value } (API cũ) thì chuyển đổi
+        if (data && typeof data === 'object' && !data.records) {
+          return Object.entries(data as Record<string, string>).map(([k, v]) => ({
+            keyName: k,
+            value: v,
+            description: undefined,
+            createdAt: '',
+            updatedAt: undefined,
+          } as SystemConfigType))
+        }
+        return (data?.records || []).map(toConfig)
+      }
     )
   },
 

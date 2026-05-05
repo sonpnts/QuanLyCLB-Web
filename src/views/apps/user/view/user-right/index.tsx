@@ -15,7 +15,7 @@ import CustomTabList from '@core/components/mui/TabList'
 
 const UserRight = ({ tabContentList }: { tabContentList: { [key: string]: ReactElement } }) => {
   // States
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState('documents')
 
   const handleChange = (event: SyntheticEvent, value: string) => {
     setActiveTab(value)
@@ -27,20 +27,9 @@ const UserRight = ({ tabContentList }: { tabContentList: { [key: string]: ReactE
         <Grid container spacing={6}>
           <Grid size={{ xs: 12 }}>
             <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
+              <Tab icon={<i className='ri-folder-line' />} value='documents' label='Tài liệu' iconPosition='start' />
               <Tab icon={<i className='ri-user-3-line' />} value='overview' label='Overview' iconPosition='start' />
               <Tab icon={<i className='ri-lock-line' />} value='security' label='Security' iconPosition='start' />
-              {/*<Tab*/}
-              {/*  icon={<i className='ri-bookmark-line' />}*/}
-              {/*  value='billing-plans'*/}
-              {/*  label='Billing & Plans'*/}
-              {/*  iconPosition='start'*/}
-              {/*/>*/}
-              {/*<Tab*/}
-              {/*  icon={<i className='ri-notification-2-line' />}*/}
-              {/*  value='notifications'*/}
-              {/*  label='Notifications'*/}
-              {/*  iconPosition='start'*/}
-              {/*/>*/}
               <Tab icon={<i className='ri-link-m' />} value='connections' label='Connections' iconPosition='start' />
             </CustomTabList>
           </Grid>

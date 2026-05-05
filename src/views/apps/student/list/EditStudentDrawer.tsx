@@ -24,11 +24,9 @@ import Typography from '@mui/material/Typography'
 import { Controller, useForm } from 'react-hook-form'
 
 // Types
-import type { BeltLevelType } from '@/types/apps/beltExamTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 
 // Services
-import beltExamService from '@/services/beltExamService'
 import studentService from '@/services/studentService'
 
 // Context
@@ -54,7 +52,6 @@ type FormValues = {
   identityNumber?: string
   dateOfBirth?: string
   gender?: string
-  currentBeltLevelId?: string
   notes?: string
 }
 
@@ -62,25 +59,8 @@ const EditStudentDrawer = (props: Props) => {
   const { open, onClose, student, onSaved } = props
   const { showNotification } = useNotification()
   const [submitting, setSubmitting] = useState(false)
-  const [beltLevels, setBeltLevels] = useState<BeltLevelType[]>([])
   // Mã HV state (quản lý độc lập ngoài form vì cần truyền cho MemberCodeField)
   const [memberCode, setMemberCode] = useState('')
-
-  // Load belt levels
-  useEffect(() => {
-    if (!open) return
-
-    const load = async () => {
-      try {
-        const response = await beltExamService.getBeltLevels()
-        setBeltLevels(response.success && Array.isArray(response.data) ? response.data : [])
-      } catch (error) {
-        logger.error('EditStudentDrawer', 'Error loading belt levels', error)
-      }
-    }
-
-    load()
-  }, [open])
 
   const defaultValues = useMemo<FormValues>(
     () => ({
@@ -92,7 +72,6 @@ const EditStudentDrawer = (props: Props) => {
       identityNumber: student?.identityNumber || '',
       dateOfBirth: student?.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
       gender: student?.gender !== undefined ? String(student.gender) : '',
-      currentBeltLevelId: student?.currentBeltLevelId || '',
       notes: student?.notes || ''
     }),
     [student]
@@ -143,8 +122,7 @@ const EditStudentDrawer = (props: Props) => {
       const payload: any = {
         // Mã HV luôn được phép cập nhật (dù đã khoá, vẫn có thể đổi mã)
         code: memberCode.trim() || undefined,
-        notes: values.notes || undefined,
-        currentBeltLevelId: values.currentBeltLevelId || undefined
+        notes: values.notes || undefined
       }
 
       // Chỉ gửi thông tin cá nhân nếu chưa khoá
@@ -207,7 +185,7 @@ const EditStudentDrawer = (props: Props) => {
         {isLocked && (
           <Alert severity='info' icon={<i className='ri-lock-line' />}>
             Học viên đã có mã HV — thông tin cá nhân (tên, giới tính, ngày sinh, …) bị khoá.
-            Chỉ có thể chỉnh sửa <strong>cấp đai</strong> và <strong>ghi chú</strong>.
+            Chỉ có thể chỉnh sửa <strong>ghi chú</strong>.
             Để mở khoá, xoá mã HV trước rồi lưu lại.
           </Alert>
         )}
@@ -306,7 +284,7 @@ const EditStudentDrawer = (props: Props) => {
             />
           </Grid>
 
-          {/* Giới tính + Cấp đai */}
+          {/* Giới tính + Cấp đai liên đoàn (chỉ đọc) */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='gender'
@@ -324,23 +302,24 @@ const EditStudentDrawer = (props: Props) => {
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name='currentBeltLevelId'
-              control={control}
-              render={({ field }) => (
-                <FormControl fullWidth>
-                  <InputLabel>Cấp đai hiện tại</InputLabel>
-                  <Select {...field} label='Cấp đai hiện tại'>
-                    <MenuItem value=''>Chưa có cấp đai</MenuItem>
-                    {beltLevels.map(belt => (
-                      <MenuItem key={belt.id} value={belt.id}>
-                        {belt.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant='caption' color='text.secondary'>
+                Cấp đai liên đoàn
+              </Typography>
+              <Chip
+                label={student?.currentBeltLevelName || 'Chưa có'}
+                size='small'
+                sx={{
+                  alignSelf: 'flex-start',
+                  bgcolor: student?.currentBeltLevelName ? 'primary.light' : 'action.hover',
+                  fontWeight: student?.currentBeltLevelName ? 600 : 400,
+                  color: student?.currentBeltLevelName ? 'primary.main' : 'text.secondary'
+                }}
+              />
+              <Typography variant='caption' color='text.disabled'>
+                Chỉ đọc — tra cứu từ liên đoàn theo mã HV
+              </Typography>
+            </Box>
           </Grid>
 
           {/* Ghi chú */}

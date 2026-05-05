@@ -207,6 +207,19 @@ export const API_ENDPOINTS = {
     classes: '/dashboard/classes',
     attendance: '/dashboard/attendance',
   },
+  userDocuments: {
+    // User-facing
+    my: '/user-documents/my',
+    myDelete: (id: string) => `/user-documents/my/${id}`,
+    // Student-facing
+    student: (studentId: string) => `/user-documents/students/${studentId}`,
+    studentDelete: (studentId: string, docId: string) => `/user-documents/students/${studentId}/${docId}`,
+    // Admin
+    root: '/user-documents',
+    byId: (id: string) => `/user-documents/${id}`,
+    approve: (id: string) => `/user-documents/${id}/approve`,
+    requestResubmission: (id: string) => `/user-documents/${id}/request-resubmission`,
+  },
 } as const
 
 export type ApiEndpoints = typeof API_ENDPOINTS

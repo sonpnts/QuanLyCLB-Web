@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -40,6 +40,7 @@ const PermissionMatrix = () => {
   const [original, setOriginal] = useState<MatrixState>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [seeding, setSeeding] = useState(false)
 
   // Fetch matrix data and roles in parallel
   useEffect(() => {
@@ -54,7 +55,10 @@ const PermissionMatrix = () => {
         setMenuItems(matrixRes.data)
         const initial: MatrixState = {}
         for (const item of matrixRes.data) {
-          initial[item.id] = item.requiredRoles && item.requiredRoles.length > 0 ? [...item.requiredRoles] : null
+          // null = server trả về null/undefined → công khai
+          // []   = server trả về mảng rỗng → giới hạn nhưng chưa chọn role
+          // [...] = danh sách role cụ thể
+          initial[item.id] = item.requiredRoles == null ? null : [...item.requiredRoles]
         }
         setMatrix(initial)
         setOriginal(initial)
@@ -87,7 +91,10 @@ const PermissionMatrix = () => {
     [matrix, original]
   )
 
-  const isOpenToAll = (id: string) => !matrix[id] || matrix[id]!.length === 0
+  // null  = công khai (tất cả user đăng nhập đều thấy)
+  // []    = giới hạn nhưng chưa chọn role nào (không ai thấy)
+  // [...] = giới hạn theo các role cụ thể
+  const isOpenToAll = (id: string) => matrix[id] === null
 
   const hasRole = (id: string, role: string) => {
     if (isOpenToAll(id)) return false
@@ -130,6 +137,37 @@ const PermissionMatrix = () => {
 
   const handleReset = () => setMatrix({ ...original })
 
+  const handleSeedMenu = async () => {
+    setSeeding(true)
+    try {
+      const res = await menuService.seedMenuData()
+      if (res.success) {
+        showNotification('Đã cập nhật cấu trúc menu. Đang tải lại...', 'success')
+        menuService.invalidateCache()
+        // Reload matrix sau khi seed
+        const [matrixRes, rolesRes] = await Promise.all([
+          menuAdminService.getRbacMatrix(),
+          roleService.getRoles({ PageSize: 100 })
+        ])
+        if (matrixRes.success && matrixRes.data) {
+          setMenuItems(matrixRes.data)
+          const refreshed: MatrixState = {}
+          for (const item of matrixRes.data) {
+            refreshed[item.id] = item.requiredRoles == null ? null : [...item.requiredRoles]
+          }
+          setMatrix(refreshed)
+          setOriginal(refreshed)
+        }
+        if (rolesRes.success && rolesRes.data) setRoles(rolesRes.data)
+      } else {
+        showNotification(res.message || 'Cập nhật menu thất bại', 'error')
+      }
+    } catch {
+      showNotification('Lỗi khi cập nhật menu', 'error')
+    }
+    setSeeding(false)
+  }
+
   if (loading) {
     return (
       <Box className='flex justify-center items-center p-12'>
@@ -145,6 +183,17 @@ const PermissionMatrix = () => {
         subheader='Cấu hình vai trò nào được truy cập từng mục menu. "Công khai" = tất cả người dùng đã đăng nhập.'
         action={
           <Box className='flex gap-2'>
+            <Tooltip title='Thêm các mục menu còn thiếu vào DB (chạy seeder), sau đó tải lại danh sách'>
+              <Button
+                variant='outlined'
+                color='secondary'
+                onClick={handleSeedMenu}
+                disabled={seeding || saving}
+                startIcon={seeding ? <CircularProgress size={16} color='inherit' /> : <i className='ri-refresh-line' />}
+              >
+                {seeding ? 'Đang cập nhật...' : 'Cập nhật menu'}
+              </Button>
+            </Tooltip>
             <Button variant='outlined' onClick={handleReset} disabled={changedIds.length === 0 || saving}>
               Hoàn tác
             </Button>
@@ -184,9 +233,9 @@ const PermissionMatrix = () => {
             </thead>
             <tbody>
               {sections.map(({ section, children }) => (
-                <>
+                <React.Fragment key={section.id}>
                   {/* Section header row */}
-                  <tr key={section.id} className='bg-action-selected'>
+                  <tr className='bg-action-selected'>
                     <td
                       colSpan={2 + roles.length}
                       className='p-3 font-semibold'
@@ -203,6 +252,7 @@ const PermissionMatrix = () => {
                   {/* Child item rows */}
                   {children.map((item, idx) => {
                     const openAll = isOpenToAll(item.id)
+                    const noRoles = !openAll && (matrix[item.id]?.length ?? 0) === 0
                     const changed = !setsEqual(matrix[item.id], original[item.id])
 
                     return (
@@ -224,12 +274,15 @@ const PermissionMatrix = () => {
                             {changed && (
                               <Chip label='Thay đổi' size='small' color='warning' variant='tonal' className='ml-1' />
                             )}
+                            {noRoles && (
+                              <Chip label='Không ai thấy' size='small' color='error' variant='tonal' className='ml-1' />
+                            )}
                           </Box>
                         </td>
 
                         {/* Open to all checkbox */}
                         <td className='p-3 text-center'>
-                          <Tooltip title={openAll ? 'Tất cả người dùng có thể xem' : 'Chỉ các vai trò được chọn'}>
+                          <Tooltip title={openAll ? 'Đang công khai — tất cả user đăng nhập đều thấy. Bỏ chọn để giới hạn theo role.' : 'Chỉ các vai trò được tick mới thấy'}>
                             <Checkbox
                               checked={openAll}
                               onChange={e => toggleOpenToAll(item.id, e.target.checked)}
@@ -242,7 +295,7 @@ const PermissionMatrix = () => {
                         {/* Per-role checkboxes */}
                         {roles.map(role => (
                           <td key={role.id} className='p-3 text-center'>
-                            <Tooltip title={openAll ? 'Đang mở cho tất cả — bỏ chọn "Công khai" để giới hạn' : `${openAll ? '' : hasRole(item.id, role.name) ? 'Có quyền' : 'Không có quyền'}`}>
+                            <Tooltip title={openAll ? 'Đang công khai — bỏ chọn "Công khai" để giới hạn theo role' : (hasRole(item.id, role.name) ? `Role "${role.name}" có quyền` : `Role "${role.name}" không có quyền`)}>
                               <span>
                                 <Checkbox
                                   checked={hasRole(item.id, role.name)}
@@ -259,7 +312,7 @@ const PermissionMatrix = () => {
                   })}
 
                   {children.length === 0 && (
-                    <tr key={`${section.id}-empty`} className='border-t'>
+                    <tr className='border-t'>
                       <td colSpan={2 + roles.length} className='p-3 pl-8'>
                         <Typography variant='body2' color='text.disabled'>
                           (Không có mục con)
@@ -267,7 +320,7 @@ const PermissionMatrix = () => {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>

@@ -440,12 +440,12 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Cấp đai hiện tại
+                      Cấp đai liên đoàn
                     </Typography>
                     {student.currentBeltLevelName ? (
                       <Chip label={student.currentBeltLevelName} size='small' color='warning' variant='tonal' />
                     ) : (
-                      <Typography variant='body1'>Chưa có cấp đai</Typography>
+                      <Typography variant='body1' color='text.disabled'>Chưa có / chưa đồng bộ</Typography>
                     )}
                   </Grid>
                   <Grid size={{ xs: 6 }}>
