@@ -1,30 +1,28 @@
 // Type Imports
 import type { ThemeColor } from '@core/types'
 
-export type ClassCoach = {
+/** Unified assignment DTO — dùng cho cả HLV (Coach) và trợ giảng (Assistant) */
+export type ClassUserAssignment = {
   userId: string
   fullName: string
   email?: string | null
   phoneNumber?: string | null
   skillLevel?: string | null
+  roleName: string
   isLeadInstructor: boolean
 }
 
-export type ClassAssistant = {
-  assistantId: string
-  fullName: string
-  email?: string | null
-  phoneNumber?: string | null
-  skillLevel?: string | null
-  roleName: string
-}
+/** @deprecated dùng ClassUserAssignment */
+export type ClassCoach = ClassUserAssignment
+
+/** @deprecated dùng ClassUserAssignment */
+export type ClassAssistant = ClassUserAssignment & { assistantId?: string }
 
 export type ClassType = {
   id: string
   code: string
   name: string
   description?: string
-  maxStudents: number
   currentStudents?: number
   instructorId?: string
   instructorName?: string
@@ -35,8 +33,8 @@ export type ClassType = {
   updatedBy?: string
   avatarColor?: ThemeColor
   coachIds?: string[]
-  coaches?: ClassCoach[]
-  assistants?: ClassAssistant[]
+  coaches?: ClassUserAssignment[]
+  assistants?: ClassUserAssignment[]
 }
 
 export type ClassStatusType = {

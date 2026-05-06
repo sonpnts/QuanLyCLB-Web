@@ -5,9 +5,7 @@ export type AuthUser = {
   fullName: string
   email: string
   phoneNumber?: string | null
-  skillLevel?: string | null
-  certification?: string | null
-  isActive?: boolean
+  beltLevelName?: string | null
   avatarUrl?: string | null
 }
 

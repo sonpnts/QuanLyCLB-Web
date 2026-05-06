@@ -231,15 +231,6 @@ const MemberCodeSearchDialog = ({ open, onClose, onSelect }: Props) => {
                           <Typography variant='body2' fontFamily='monospace' fontWeight={600} color='primary.main'>
                             {m.memberCode}
                           </Typography>
-                          {/*{m.isEffective === 'x' && (*/}
-                          {/*  <Chip*/}
-                          {/*    label='HH'*/}
-                          {/*    size='small'*/}
-                          {/*    color='success'*/}
-                          {/*    variant='tonal'*/}
-                          {/*    sx={{ height: 18, fontSize: '0.6rem', px: 0.2 }}*/}
-                          {/*  />*/}
-                          {/*)}*/}
                         </Box>
                       </TableCell>
 

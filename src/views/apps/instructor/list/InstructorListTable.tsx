@@ -155,9 +155,7 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
         header: 'Họ tên',
         cell: ({ row }) => (
           <Box className='flex items-center gap-3'>
-            <CustomAvatar skin='light' color='primary'>
-              {getInitials(row.original.fullName)}
-            </CustomAvatar>
+            <CustomAvatar skin='light' color='primary' src={row.original.avatar} />
             <Box className='flex flex-col'>
               <Typography className='font-medium' color='text.primary'>
                 {row.original.fullName}
@@ -179,15 +177,9 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
         header: 'Mã HV',
         cell: ({ row }) => <Typography variant='body2'>{row.original.memberCode || '-'}</Typography>
       }),
-      columnHelper.accessor('skillLevelName', {
+      columnHelper.accessor('beltLevelName', {
         header: 'Cấp đai',
-        cell: ({ row }) => (
-          <Chip label={row.original.federationBeltRank || 'Chưa xác định'} color='info' variant='tonal' size='small' />
-        )
-      }),
-      columnHelper.accessor('certification', {
-        header: 'Chứng chỉ',
-        cell: ({ row }) => <Typography variant='body2'>{row.original.certification || '-'}</Typography>
+        cell: ({ row }) => <Typography variant='body2'>{row.original.beltLevelName || '-'}</Typography>
       }),
       columnHelper.accessor('isActive', {
         header: 'Trạng thái',
@@ -254,8 +246,8 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
                       { header: 'Họ và tên', accessor: 'fullName' as any },
                       { header: 'Email', accessor: 'email' as any },
                       { header: 'Số điện thoại', accessor: 'phoneNumber' as any },
-                      { header: 'Cấp đai / Trình độ', accessor: 'skillLevel' as any },
-                      { header: 'Chứng chỉ', accessor: 'certification' as any },
+                      { header: 'Cấp đai', accessor: 'beltLevelName' as any },
+                      // { header: 'Chứng chỉ', accessor: 'certification' as any },
                       { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }
                     ]
                   })

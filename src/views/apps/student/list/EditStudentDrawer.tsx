@@ -33,8 +33,8 @@ import studentService from '@/services/studentService'
 import { useNotification } from '@/contexts/notificationContext'
 
 // Components
-import MemberCodeField from './MemberCodeField'
-import type { MemberInfo } from './MemberCodeField'
+import MemberCodeField from '@/components/member/MemberCodeField'
+import type { MemberInfo } from '@/components/member/MemberCodeField'
 
 type Props = {
   open: boolean

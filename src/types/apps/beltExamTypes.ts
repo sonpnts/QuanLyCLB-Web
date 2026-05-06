@@ -25,6 +25,7 @@ export type ExamSessionType = {
   updatedAt?: string
   registrationDeadline?: string
   isLocked?: boolean
+  examFee?: number
 }
 
 export type ExamRegistrationStatus = 'Pending' | 'Approved' | 'Rejected'
@@ -59,7 +60,6 @@ export type BeltLevelType = {
   name: string
   order: number
   description?: string
-  examFee?: number
   isActive?: boolean
 }
 

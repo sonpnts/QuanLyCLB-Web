@@ -18,6 +18,7 @@ export interface CreateExamSessionRequest {
   examDate: string
   location?: string
   registrationDeadline?: string
+  examFee?: number
 }
 
 // Request body for POST /belt-exams/registrations

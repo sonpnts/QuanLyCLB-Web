@@ -17,7 +17,6 @@ export interface CreateClassRequest {
   code: string
   name: string
   description?: string
-  maxStudents: number
   userIds?: string[] // Array of instructor UUIDs
 }
 
@@ -25,7 +24,6 @@ export interface CreateClassRequest {
 export interface UpdateClassRequest {
   name?: string
   description?: string
-  maxStudents?: number
   userIds?: string[]
 }
 
@@ -42,38 +40,35 @@ export interface ClassInfo {
   code?: string
   name: string
   description?: string
-  maxStudents?: number
   isActive?: boolean
 }
 
 // API response type from /api/Classes
-export interface ApiClassCoach {
+/** Unified assignment shape cho cả Coach lẫn Assistant */
+export interface ApiClassUserAssignment {
   userId: string
   fullName: string
   email?: string | null
   phoneNumber?: string | null
   skillLevel?: string | null
+  roleName: string
   isLeadInstructor: boolean
 }
 
-export interface ApiClassAssistant {
-  assistantId: string
-  fullName: string
-  email?: string | null
-  phoneNumber?: string | null
-  skillLevel?: string | null
-  roleName: string
-}
+/** @deprecated dùng ApiClassUserAssignment */
+export type ApiClassCoach = ApiClassUserAssignment
+
+/** @deprecated dùng ApiClassUserAssignment */
+export type ApiClassAssistant = ApiClassUserAssignment
 
 export interface ApiClassResponse {
   id: string
   code: string
   name: string
   description?: string
-  maxStudents: number
   userIds?: string[] // API trả về userIds thay vì coachIds
-  coaches?: ApiClassCoach[]
-  assistants?: ApiClassAssistant[]
+  coaches?: ApiClassUserAssignment[]
+  assistants?: ApiClassUserAssignment[]
   isActive?: boolean
   createdAt?: string
   updatedAt?: string | null
@@ -89,7 +84,6 @@ class ClassService {
       code: apiClass.code,
       name: apiClass.name,
       description: apiClass.description,
-      maxStudents: apiClass.maxStudents,
       currentStudents: apiClass.currentStudents ?? 0,
       instructorId: apiClass.userIds?.[0],
       isActive: apiClass.isActive !== undefined ? apiClass.isActive : true,
@@ -115,6 +109,25 @@ class ClassService {
       return { success: true, data: records.map(this.mapApiClassToClassType) }
     } catch (error) {
       logger.error('ClassService', 'getClasses', error)
+      return { success: true, data: [] }
+    }
+  }
+
+  /** Lấy danh sách lớp học được phân công cho một user (HLV/trợ giảng). */
+  async getClassesByUserId(userId: string, params?: GetClassesParams): Promise<ResponseResult<ClassType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.users.classes(userId), { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
+
+      // Backend có thể trả records hoặc items tùy endpoint
+      const records: ApiClassResponse[] =
+        apiResponse.data?.records || apiResponse.data?.items || apiResponse.data || []
+
+      return { success: true, data: (Array.isArray(records) ? records : []).map(c => this.mapApiClassToClassType(c)) }
+    } catch (error) {
+      logger.error('ClassService', 'getClassesByUserId', error)
       return { success: true, data: [] }
     }
   }

@@ -84,6 +84,8 @@ const CashHandoverListTable = () => {
     [auth]
   )
 
+  const userId = auth?.user?.id
+
   const [data, setData] = useState<CashHandoverType[]>([])
   const [classes, setClasses] = useState<ClassType[]>([])
   const [instructors, setInstructors] = useState<UsersType[]>([])
@@ -102,22 +104,39 @@ const CashHandoverListTable = () => {
   useEffect(() => {
     const loadReferences = async () => {
       try {
-        const [classRes, instructorRes] = await Promise.all([classService.getClasses({ isActive: true, pageSize: 1000 }), userService.getCoaches()])
+        if (isAdmin) {
+          // Admin: load tất cả lớp và danh sách HLV
+          const [classRes, instructorRes] = await Promise.all([
+            classService.getClasses({ isActive: true, pageSize: 1000 }),
+            userService.getCoaches()
+          ])
 
-        setClasses(classRes.data || [])
-        setInstructors(instructorRes.data || [])
+          setClasses(classRes.data || [])
+          setInstructors(instructorRes.data || [])
+        } else if (userId) {
+          // HLV/Trợ giảng: chỉ load lớp được phân công
+          const classRes = await classService.getClassesByUserId(userId)
+          setClasses((classRes.data || []).filter(c => c.isActive !== false))
+          setInstructors([]) // không cần danh sách HLV
+        }
       } catch {
         // Silently fail — list shows empty state
       }
     }
 
     loadReferences()
-  }, [])
+  }, [isAdmin, userId])
 
   const loadHandovers = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await cashHandoverService.getCashHandovers(filterParams)
+
+      // HLV / trợ giảng: tự động lọc theo instructorId của họ
+      const effectiveParams: GetCashHandoversParams = isAdmin
+        ? filterParams
+        : { ...filterParams, instructorId: userId }
+
+      const response = await cashHandoverService.getCashHandovers(effectiveParams)
 
       setData(response.data || [])
     } catch {
@@ -125,7 +144,7 @@ const CashHandoverListTable = () => {
     } finally {
       setLoading(false)
     }
-  }, [filterParams])
+  }, [filterParams, isAdmin, userId])
 
   useEffect(() => {
     loadHandovers()
@@ -272,7 +291,12 @@ const CashHandoverListTable = () => {
     <>
       <Card>
         <CardHeader title='Lịch sử bàn giao tiền' />
-        <TableFilters classes={classes} instructors={instructors} onFilterChange={handleFilterChange} />
+        <TableFilters
+          classes={classes}
+          instructors={instructors}
+          onFilterChange={handleFilterChange}
+          showInstructorFilter={isAdmin}
+        />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <DebouncedInput

@@ -113,8 +113,6 @@ const EditClassDrawer = (props: Props) => {
       const response = await classService.updateClass(classData.id, {
         name: data.name,
         description: data.description,
-        // Giữ nguyên giá trị maxStudents hiện tại (đã bỏ field input — backend vẫn yêu cầu)
-        maxStudents: classData.maxStudents || 9999,
         userIds: data.userIds
       })
 

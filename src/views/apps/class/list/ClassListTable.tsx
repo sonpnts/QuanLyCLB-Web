@@ -58,6 +58,10 @@ import type { GetClassesParams } from '@/services/classService'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
+import { useAuth } from '@/contexts/authContext'
+
+// Role utils
+import { hasAdminRole, isInstructorUser } from '@/utils/roleUtils'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -116,12 +120,18 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   // Notification Hook
   const { showNotification } = useNotification()
 
+  // Auth & role detection
+  const { auth } = useAuth()
+  const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth])
+  const isInstructor = useMemo(() => isInstructorUser(auth?.roles), [auth])
+  const userId = auth?.user?.id
+
   // Handle filter change from TableFilters
   const handleFilterChange = useCallback((params: GetClassesParams) => {
     setFilterParams(params)
   }, [])
 
-  // Load classes – re-runs whenever filterParams change; uses AbortController to cancel stale requests
+  // Load classes – re-runs whenever filterParams or auth/role changes
   useEffect(() => {
     // If caller provided server-side data, skip client-side fetch
     if (tableData && tableData.length > 0) {
@@ -135,7 +145,16 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
     const loadClasses = async () => {
       try {
         setLoading(true)
-        const response = await classService.getClasses(filterParams)
+
+        let response
+
+        if (isInstructor && userId) {
+          // HLV / trợ giảng: chỉ lấy lớp được phân công
+          response = await classService.getClassesByUserId(userId)
+        } else {
+          // Admin / chưa xác định: lấy tất cả theo filter
+          response = await classService.getClasses(filterParams)
+        }
 
         if (!cancelled) {
           setData(response.data || [])
@@ -157,7 +176,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
     return () => {
       cancelled = true
     }
-  }, [filterParams]) // tableData intentionally excluded – it's always [] from the server page
+  }, [filterParams, isInstructor, userId]) // tableData intentionally excluded – it's always [] from the server page
 
   // Update filteredData when data changes
   useEffect(() => {
@@ -294,7 +313,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   </Typography>
                   {assistants.map((assistant, index) => (
                     <Chip
-                      key={`assistant-${assistant.assistantId}-${index}`}
+                      key={`assistant-${assistant.userId}-${index}`}
                       label={assistant.fullName}
                       size='small'
                       color='info'
@@ -372,16 +391,18 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
               {/* Các thao tác chỉ hiện khi lớp đang hoạt động */}
               {!isInactive && (
                 <>
-                  <IconButton
-                    onClick={() => {
-                      setSelectedClass(row.original)
-                      setAddStudentsOpen(true)
-                    }}
-                    title='Thêm học viên'
-                    color='success'
-                  >
-                    <i className='ri-user-add-line' />
-                  </IconButton>
+                  {isAdmin && (
+                    <IconButton
+                      onClick={() => {
+                        setSelectedClass(row.original)
+                        setAddStudentsOpen(true)
+                      }}
+                      title='Thêm học viên'
+                      color='success'
+                    >
+                      <i className='ri-user-add-line' />
+                    </IconButton>
+                  )}
                   <IconButton
                     onClick={() => {
                       setSelectedClass(row.original)
@@ -405,14 +426,16 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                 </>
               )}
 
-              {isInactive ? (
-                <IconButton onClick={handleRestore} title='Khôi phục lớp học' color='success'>
-                  <i className='ri-restart-line' style={{ color: '#2e7d32' }} />
-                </IconButton>
-              ) : (
-                <IconButton onClick={handleDelete} title='Xóa lớp học' color='error'>
-                  <i className='ri-delete-bin-7-line' />
-                </IconButton>
+              {isAdmin && (
+                isInactive ? (
+                  <IconButton onClick={handleRestore} title='Khôi phục lớp học' color='success'>
+                    <i className='ri-restart-line' style={{ color: '#2e7d32' }} />
+                  </IconButton>
+                ) : (
+                  <IconButton onClick={handleDelete} title='Xóa lớp học' color='error'>
+                    <i className='ri-delete-bin-7-line' />
+                  </IconButton>
+                )
               )}
 
               <IconButton>
@@ -421,7 +444,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                 </Link>
               </IconButton>
 
-              {!isInactive && (
+              {isAdmin && !isInactive && (
                 <IconButton
                   onClick={() => {
                     setSelectedClass(row.original)
@@ -439,7 +462,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
       })
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, showNotification, users]
+    [data, showNotification, users, isAdmin]
   )
 
   const table = useReactTable({
@@ -473,8 +496,13 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   return (
     <>
       <Card>
-        <CardHeader title='Bộ lọc' />
-        <TableFilters onFilterChange={handleFilterChange} />
+        {/* Bộ lọc nâng cao chỉ hiển thị cho admin */}
+        {isAdmin && (
+          <>
+            <CardHeader title='Bộ lọc' />
+            <TableFilters onFilterChange={handleFilterChange} />
+          </>
+        )}
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <Button
@@ -528,9 +556,11 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
               placeholder='Tìm kiếm...'
               className='max-sm:is-full'
             />
-            <Button variant='contained' onClick={() => setAddClassOpen(!addClassOpen)} className='max-sm:is-full'>
-              Thêm lớp học
-            </Button>
+            {isAdmin && (
+              <Button variant='contained' onClick={() => setAddClassOpen(!addClassOpen)} className='max-sm:is-full'>
+                Thêm lớp học
+              </Button>
+            )}
           </div>
         </div>
         <div className='overflow-x-auto'>
@@ -613,12 +643,14 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
           onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
         />
       </Card>
-      <AddClassDrawer
-        open={addClassOpen}
-        handleClose={() => setAddClassOpen(!addClassOpen)}
-        classData={data}
-        setData={setData}
-      />
+      {isAdmin && (
+        <AddClassDrawer
+          open={addClassOpen}
+          handleClose={() => setAddClassOpen(!addClassOpen)}
+          classData={data}
+          setData={setData}
+        />
+      )}
       {selectedClass && (
         <>
           <EditClassDrawer

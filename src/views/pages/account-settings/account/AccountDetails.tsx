@@ -20,8 +20,7 @@ type FormData = {
   fullName: string
   email: string
   phoneNumber: string
-  skillLevel: string
-  certification: string
+  beltLevelName: string
 }
 
 const SYSTEM_LOGO = '/favicon.ico'
@@ -33,8 +32,7 @@ const AccountDetails = () => {
     fullName: '',
     email: '',
     phoneNumber: '',
-    skillLevel: '',
-    certification: ''
+    beltLevelName:''
   })
 
   const [imgSrc, setImgSrc] = useState<string>(SYSTEM_LOGO)
@@ -58,9 +56,9 @@ const AccountDetails = () => {
             fullName: u.fullName || '',
             email: u.email || '',
             phoneNumber: u.phoneNumber || '',
-            skillLevel: u.skillLevel || '',
-            certification: u.certification || ''
+            beltLevelName: auth.user.beltLevelName || ''
           })
+
           if (u.avatarUrl && u.avatarUrl.trim() !== '') {
             setImgSrc(u.avatarUrl)
           } else {
@@ -72,8 +70,7 @@ const AccountDetails = () => {
             fullName: auth.user.fullName || '',
             email: auth.user.email || '',
             phoneNumber: auth.user.phoneNumber || '',
-            skillLevel: auth.user.skillLevel || '',
-            certification: auth.user.certification || ''
+            beltLevelName: auth.user.beltLevelName|| ''
           })
         }
       } catch {
@@ -82,8 +79,7 @@ const AccountDetails = () => {
             fullName: auth.user.fullName || '',
             email: auth.user.email || '',
             phoneNumber: auth.user.phoneNumber || '',
-            skillLevel: auth.user.skillLevel || '',
-            certification: auth.user.certification || ''
+            beltLevelName: auth.user.beltLevelName || ''
           })
         }
       } finally {
@@ -113,8 +109,8 @@ const AccountDetails = () => {
       </CardContent>
       <CardContent>
         <Alert severity='warning' className='mbe-5' icon={<i className='ri-alert-line' />}>
-          Thông tin tài khoản chỉ hiển thị và <strong>không thể tự chỉnh sửa</strong>. Nếu cần cập nhật
-          thông tin, vui lòng <strong>liên hệ Admin</strong> để được hỗ trợ.
+          Thông tin tài khoản chỉ hiển thị và <strong>không thể tự chỉnh sửa</strong>. Nếu cần cập nhật thông tin, vui
+          lòng <strong>liên hệ Admin</strong> để được hỗ trợ.
         </Alert>
 
         {loading ? (
@@ -133,13 +129,7 @@ const AccountDetails = () => {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label='Email'
-                value={formData.email}
-                disabled
-                InputProps={{ readOnly: true }}
-              />
+              <TextField fullWidth label='Email' value={formData.email} disabled InputProps={{ readOnly: true }} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
@@ -154,22 +144,22 @@ const AccountDetails = () => {
               <TextField
                 fullWidth
                 label='Cấp đai / Trình độ'
-                value={formData.skillLevel || '(chưa cập nhật)'}
+                value={formData.beltLevelName || '(chưa cập nhật)'}
                 disabled
                 InputProps={{ readOnly: true }}
               />
             </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                multiline
-                minRows={2}
-                label='Chứng chỉ / Bằng cấp'
-                value={formData.certification || '(chưa cập nhật)'}
-                disabled
-                InputProps={{ readOnly: true }}
-              />
-            </Grid>
+            {/*<Grid size={{ xs: 12 }}>*/}
+            {/*  <TextField*/}
+            {/*    fullWidth*/}
+            {/*    multiline*/}
+            {/*    minRows={2}*/}
+            {/*    label='Chứng chỉ / Bằng cấp'*/}
+            {/*    value={formData.certification || '(chưa cập nhật)'}*/}
+            {/*    disabled*/}
+            {/*    InputProps={{ readOnly: true }}*/}
+            {/*  />*/}
+            {/*</Grid>*/}
           </Grid>
         )}
       </CardContent>

@@ -228,7 +228,7 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
                     <span>{cls.name}</span>
                     <Chip label={cls.code} size='small' variant='outlined' />
                     <Typography variant='caption' color='text.secondary'>
-                      ({cls.currentStudents || 0}/{cls.maxStudents})
+                      ({cls.currentStudents || 0} học viên)
                     </Typography>
                   </Box>
                 </MenuItem>
@@ -245,7 +245,7 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
               Mã lớp: {selectedClass.code}
             </Typography>
             <Typography variant='body2' color='text.secondary'>
-              Sĩ số: {selectedClass.currentStudents || 0}/{selectedClass.maxStudents}
+              Sĩ số: {selectedClass.currentStudents || 0} học viên
             </Typography>
             {selectedClass.description && (
               <Typography variant='body2' color='text.secondary'>

@@ -30,7 +30,8 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
     description: '',
     examDate: '',
     location: '',
-    registrationDeadline: ''
+    registrationDeadline: '',
+    examFee: ''
   })
   const [loading, setLoading] = useState(false)
   const { showNotification } = useNotification()
@@ -50,7 +51,8 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
         description: formData.description || undefined,
         examDate: formData.examDate,
         location: formData.location || undefined,
-        registrationDeadline: formData.registrationDeadline || undefined
+        registrationDeadline: formData.registrationDeadline || undefined,
+        examFee: formData.examFee ? parseFloat(formData.examFee) : undefined
       })
 
       if (response.success && response.data) {
@@ -73,7 +75,8 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
       description: '',
       examDate: '',
       location: '',
-      registrationDeadline: ''
+      registrationDeadline: '',
+      examFee: ''
     })
     handleClose()
   }
@@ -115,6 +118,18 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
             label='Địa điểm thi'
             value={formData.location}
             onChange={e => setFormData({ ...formData, location: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            type='number'
+            label='Lệ phí thi (VNĐ)'
+            value={formData.examFee}
+            onChange={e => setFormData({ ...formData, examFee: e.target.value })}
+            inputProps={{ min: 0, step: 1000 }}
+            helperText='Lệ phí chung áp dụng cho tất cả học viên trong kỳ thi này'
+            InputProps={{
+              endAdornment: <InputAdornment position='end'>VNĐ</InputAdornment>
+            }}
           />
           <TextField
             fullWidth

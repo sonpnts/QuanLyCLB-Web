@@ -35,6 +35,10 @@ import userService from '@/services/userService'
 // Context
 import { useNotification } from '@/contexts/notificationContext'
 
+// Member code search
+import MemberCodeField from '@/views/apps/student/list/MemberCodeField'
+import type { MemberInfo } from '@/views/apps/student/list/MemberCodeField'
+
 type Props = {
   open: boolean
   onClose: () => void
@@ -57,6 +61,7 @@ const EditUserDrawer = (props: Props) => {
   const { open, onClose, user, roles, onSaved } = props
   const { showNotification } = useNotification()
   const [submitting, setSubmitting] = useState(false)
+  const [memberCodeLocal, setMemberCodeLocal] = useState(user?.memberCode || '')
 
   const defaultValues = useMemo<FormValues>(
     () => ({
@@ -77,7 +82,8 @@ const EditUserDrawer = (props: Props) => {
     reset,
     formState: { errors },
     setValue,
-    watch
+    watch,
+    getValues
   } = useForm<FormValues>({
     defaultValues
   })
@@ -86,6 +92,7 @@ const EditUserDrawer = (props: Props) => {
   useEffect(() => {
     if (user) {
       reset(defaultValues)
+      setMemberCodeLocal(user.memberCode || '')
 
       const currentRoleIds = (user.roles || [])
         .map(rn => roles.find(r => r.name === rn)?.id)
@@ -95,6 +102,13 @@ const EditUserDrawer = (props: Props) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, roles])
+
+  // Khi xác nhận thông tin từ liên đoàn → tự điền vào form nếu trường chưa có
+  const handleMemberInfoConfirmed = (info: MemberInfo) => {
+    if (!getValues('fullName') && info.fullName) setValue('fullName', info.fullName)
+    if (!getValues('phoneNumber') && info.phoneNumber) setValue('phoneNumber', info.phoneNumber)
+    if (!getValues('email') && info.email) setValue('email', info.email)
+  }
 
   const onSubmit = async (values: FormValues) => {
     if (!user) return
@@ -110,7 +124,7 @@ const EditUserDrawer = (props: Props) => {
         isActive: values.isActive,
         certification: values.certification || undefined,
         roleIds: values.roleIds,
-        memberCode: values.memberCode?.trim() || null
+        memberCode: memberCodeLocal.trim() || null
       }
 
       const res = await userService.updateUser(user.id, payload)
@@ -197,34 +211,38 @@ const EditUserDrawer = (props: Props) => {
               render={({ field }) => <TextField {...field} fullWidth label='Chứng chỉ' />}
             />
           </Grid>
+          {/* Mã hội viên liên đoàn — có nút tìm kiếm giống học viên */}
           <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name='memberCode'
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label='Mã hội viên liên đoàn'
-                  placeholder='VD: HV00123'
-                  helperText='Dùng để tra cứu cấp đai liên đoàn tự động'
-                />
-              )}
+            <MemberCodeField
+              value={memberCodeLocal}
+              onChange={setMemberCodeLocal}
+              onMemberInfoConfirmed={handleMemberInfoConfirmed}
+              helperText='Nhập mã hoặc dùng kính lúp tìm theo tên'
             />
           </Grid>
+          {/* Cấp đai — chỉ đọc, tra cứu từ liên đoàn */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Typography variant='caption' color='text.secondary'>
                 Cấp đai liên đoàn
               </Typography>
-              <Chip
-                label={user?.federationBeltRank || 'Chưa có'}
-                size='small'
-                sx={{
-                  alignSelf: 'flex-start',
-                  fontWeight: user?.federationBeltRank ? 600 : 400
-                }}
-              />
+              {user?.federationBeltRank ? (
+                <Chip
+                  label={user.federationBeltRank}
+                  size='small'
+                  color='warning'
+                  variant='tonal'
+                  icon={<i className='ri-medal-line text-sm' />}
+                  sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
+                />
+              ) : (
+                <Chip
+                  label='Chưa có'
+                  size='small'
+                  variant='outlined'
+                  sx={{ alignSelf: 'flex-start' }}
+                />
+              )}
               <Typography variant='caption' color='text.disabled'>
                 Chỉ đọc — tra cứu từ liên đoàn theo mã hội viên
               </Typography>

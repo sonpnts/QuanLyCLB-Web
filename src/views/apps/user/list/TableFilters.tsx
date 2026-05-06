@@ -177,34 +177,34 @@ const TableFilters = ({ onFilterChange, roles }: Props) => {
           {/*    </Select>*/}
           {/*  </FormControl>*/}
           {/*</Grid>*/}
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <TextField
-              fullWidth
-              label='Trình độ'
-              value={skillLevel}
-              onChange={e => setSkillLevel(e.target.value)}
-              placeholder='Nhập trình độ...'
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <TextField
-              fullWidth
-              label='Chứng chỉ'
-              value={certification}
-              onChange={e => setCertification(e.target.value)}
-              placeholder='Nhập chứng chỉ...'
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <TextField
-              fullWidth
-              label='Ngày tạo'
-              type='date'
-              value={createdDate}
-              onChange={e => setCreatedDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
+          {/*<Grid size={{ xs: 12, sm: 6, md: 3 }}>*/}
+          {/*  <TextField*/}
+          {/*    fullWidth*/}
+          {/*    label='Trình độ'*/}
+          {/*    value={skillLevel}*/}
+          {/*    onChange={e => setSkillLevel(e.target.value)}*/}
+          {/*    placeholder='Nhập trình độ...'*/}
+          {/*  />*/}
+          {/*</Grid>*/}
+          {/*<Grid size={{ xs: 12, sm: 6, md: 3 }}>*/}
+          {/*  <TextField*/}
+          {/*    fullWidth*/}
+          {/*    label='Chứng chỉ'*/}
+          {/*    value={certification}*/}
+          {/*    onChange={e => setCertification(e.target.value)}*/}
+          {/*    placeholder='Nhập chứng chỉ...'*/}
+          {/*  />*/}
+          {/*</Grid>*/}
+          {/*<Grid size={{ xs: 12, sm: 6, md: 3 }}>*/}
+          {/*  <TextField*/}
+          {/*    fullWidth*/}
+          {/*    label='Ngày tạo'*/}
+          {/*    type='date'*/}
+          {/*    value={createdDate}*/}
+          {/*    onChange={e => setCreatedDate(e.target.value)}*/}
+          {/*    InputLabelProps={{ shrink: true }}*/}
+          {/*  />*/}
+          {/*</Grid>*/}
           {/*<Grid size={{ xs: 12, sm: 6, md: 3 }}>*/}
           {/*  <TextField*/}
           {/*    fullWidth*/}
@@ -214,7 +214,7 @@ const TableFilters = ({ onFilterChange, roles }: Props) => {
           {/*    placeholder='Nhập ID người tạo...'*/}
           {/*  />*/}
           {/*</Grid>*/}
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Box className='flex gap-2'>
               <Button variant='outlined' onClick={handleReset}>
                 Đặt lại bộ lọc

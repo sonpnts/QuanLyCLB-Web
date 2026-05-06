@@ -52,10 +52,15 @@ import CustomAvatar from '@core/components/mui/Avatar'
 
 // Service Imports
 import studentService from '@/services/studentService'
+import classService from '@/services/classService'
 import type { GetStudentsParams } from '@/services/studentService'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
+import { useAuth } from '@/contexts/authContext'
+
+// Role utils
+import { hasAdminRole, isInstructorUser } from '@/utils/roleUtils'
 
 // Utils
 import { logger } from '@/utils/logger'
@@ -126,6 +131,12 @@ const StudentListTable = () => {
 
   const { showNotification } = useNotification()
 
+  // Auth & role detection
+  const { auth } = useAuth()
+  const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth])
+  const isInstructor = useMemo(() => isInstructorUser(auth?.roles), [auth])
+  const userId = auth?.user?.id
+
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
 
@@ -149,9 +160,9 @@ const StudentListTable = () => {
     return p
   }, [filterParams, statusFilter])
 
-  // Load students - phụ thuộc vào effectiveParams
+  // Load students - phụ thuộc vào effectiveParams và role
   useEffect(() => {
-    const filterKey = JSON.stringify(effectiveParams)
+    const filterKey = JSON.stringify(effectiveParams) + `|${userId}|${isInstructor}`
 
     if (studentsLoadedRef.current && currentFilterRef.current === filterKey) return
 
@@ -161,8 +172,34 @@ const StudentListTable = () => {
         currentFilterRef.current = filterKey
         studentsLoadedRef.current = true
 
-        const response = await studentService.getStudents(effectiveParams)
-        setData(response.data || [])
+        if (isInstructor && userId) {
+          // HLV / trợ giảng: lấy lớp được phân công, sau đó lấy học viên từng lớp
+          const classRes = await classService.getClassesByUserId(userId)
+          const classIds = (classRes.data || []).filter(c => c.isActive !== false).map(c => c.id)
+
+          if (classIds.length === 0) {
+            setData([])
+            return
+          }
+
+          // Fetch students per class in parallel, then deduplicate by student.id
+          const results = await Promise.all(
+            classIds.map(classId => studentService.getStudents({ classId, pageSize: 1000 }))
+          )
+
+          const studentMap = new Map<string, StudentType>()
+          for (const res of results) {
+            for (const student of res.data || []) {
+              studentMap.set(student.id, student)
+            }
+          }
+
+          setData(Array.from(studentMap.values()))
+        } else {
+          // Admin: lấy tất cả theo filter
+          const response = await studentService.getStudents(effectiveParams)
+          setData(response.data || [])
+        }
       } catch (error) {
         logger.error('StudentListTable', 'loadStudents', error)
         setData([])
@@ -171,13 +208,13 @@ const StudentListTable = () => {
       }
     }
     loadStudents()
-  }, [effectiveParams])
+  }, [effectiveParams, isInstructor, userId])
 
   const reloadData = useCallback(() => {
     studentsLoadedRef.current = false
     currentFilterRef.current = ''
     setFilterParams(prev => ({ ...prev }))
-  }, [])
+  }, []) // intentionally stable – resetting refs + triggering re-render is enough
 
   const handleDelete = useCallback(async (id: string) => {
     try {
@@ -419,8 +456,18 @@ const StudentListTable = () => {
     [handleDelete, handleEdit, handleView, handleEnroll, openSuspendDialog, handleResume]
   )
 
+  // Với instructor mode, statusFilter áp dụng client-side vì data đã load toàn bộ từ các lớp
+  const displayData = useMemo(() => {
+    if (!isInstructor) return data  // admin dùng server-side filtering từ effectiveParams
+    if (statusFilter === 'suspended') return data.filter(s => s.isSuspended)
+    if (statusFilter === 'active') return data.filter(s => !s.isSuspended)
+    return data
+  }, [data, isInstructor, statusFilter])
+
+  const suspendedCount = data.filter(s => s.isSuspended).length
+
   const table = useReactTable({
-    data,
+    data: displayData,
     columns,
     filterFns: { fuzzy: fuzzyFilter },
     state: { rowSelection, globalFilter },
@@ -438,13 +485,16 @@ const StudentListTable = () => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-  const suspendedCount = data.filter(s => s.isSuspended).length
-
   return (
     <>
       <Card>
-        <CardHeader title='Bộ lọc' />
-        <TableFilters onFilterChange={handleFilterChange} />
+        {/* Bộ lọc nâng cao chỉ hiển thị cho admin */}
+        {isAdmin && (
+          <>
+            <CardHeader title='Bộ lọc' />
+            <TableFilters onFilterChange={handleFilterChange} />
+          </>
+        )}
         <Divider />
 
         {/* Status filter bar */}
@@ -528,9 +578,11 @@ const StudentListTable = () => {
             >
               Xuất Excel
             </Button>
-            <Button variant='contained' onClick={() => setAddStudentOpen(true)} className='max-sm:is-full'>
-              Thêm học viên
-            </Button>
+            {isAdmin && (
+              <Button variant='contained' onClick={() => setAddStudentOpen(true)} className='max-sm:is-full'>
+                Thêm học viên
+              </Button>
+            )}
           </div>
         </div>
 
@@ -626,7 +678,9 @@ const StudentListTable = () => {
         </DialogActions>
       </Dialog>
 
-      <AddStudentDrawer open={addStudentOpen} handleClose={() => setAddStudentOpen(false)} setData={setData} />
+      {isAdmin && (
+        <AddStudentDrawer open={addStudentOpen} handleClose={() => setAddStudentOpen(false)} setData={setData} />
+      )}
       <EditStudentDrawer
         open={editStudentOpen}
         onClose={() => {

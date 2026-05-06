@@ -150,7 +150,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         )
       },
       columnHelper.accessor('fullName', {
-        header: 'User',
+        header: 'Người dùng',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
             {getAvatar({ avatarUrl: row.original.avatarUrl, fullName: row.original.fullName })}
@@ -164,11 +164,11 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         )
       }),
       columnHelper.accessor('email', {
-        header: 'Email',
+        header: 'Email / Username',
         cell: ({ row }) => <Typography>{row.original.email}</Typography>
       }),
       columnHelper.accessor('roles', {
-        header: 'Role',
+        header: 'Vai trò',
         cell: ({ row }) => {
           const rolesArr = row.original.roles || []
 
@@ -176,37 +176,34 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
             return <Typography variant='body2'>-</Typography>
           }
 
-          // Get first role for display
-          const firstRole = rolesArr[0].toLowerCase()
-          const roleObj = userRoleObj[firstRole] || userRoleObj.subscriber
-
           return (
-            <div className='flex items-center gap-2'>
-              <Icon
-                className={roleObj.icon}
-                sx={{ color: `var(--mui-palette-${roleObj.color}-main)`, fontSize: '1.375rem' }}
-              />
-              <Typography className='capitalize' color='text.primary'>
-                {rolesArr.map(r => RoleLabels[r] || r).join(', ')}
-              </Typography>
-            </div>
+            <Typography className='capitalize' color='text.primary'>
+              {rolesArr.map(r => RoleLabels[r] || r).join(', ')}
+            </Typography>
           )
         }
       }),
+      columnHelper.display({
+        id: 'beltLevel',
+        header: 'Cấp đai',
+        cell: ({ row }) => {
+          const belt = row.original.federationBeltRank
+          if (!belt) return <Typography variant='body2' color='text.disabled'>—</Typography>
 
-      // columnHelper.accessor('currentPlan', {
-      //   header: 'Plan',
-      //   cell: ({ row }) => (
-      //     <Typography className='capitalize' color='text.primary'>
-      //       {row.original.currentPlan}
-      //     </Typography>
-      //   )
-      // }),
-      //
-
+          return (
+            <Chip
+              label={belt}
+              size='small'
+              color='warning'
+              variant='tonal'
+              sx={{ fontWeight: 500 }}
+            />
+          )
+        }
+      }),
       columnHelper.display({
         id: 'status',
-        header: 'Status',
+        header: 'Trạng thái',
         cell: ({ row }) => {
           const status = row.original.isActive ? 'active' : 'inactive'
           const statusKey = status as keyof typeof userStatusObj
@@ -215,17 +212,16 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
             <div className='flex items-center gap-3'>
               <Chip
                 variant='tonal'
-                label={status}
+                label={status === 'active' ? 'Hoạt động' : 'Vô hiệu'}
                 size='small'
                 color={userStatusObj[statusKey]}
-                className='capitalize'
               />
             </div>
           )
         }
       }),
       columnHelper.accessor('action', {
-        header: 'Action',
+        header: 'Thao tác',
         cell: ({ row }) => (
           <div className='flex items-center'>
             <IconButton onClick={() => setData(data?.filter(product => product.id !== row.original.id))}>
@@ -307,8 +303,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   return (
     <>
       <Card>
-        <CardHeader title='Filters' />
-        {/* TableFilters removed - using different filtering approach */}
+        <CardHeader title='Danh sách người dùng' />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <Button
@@ -317,17 +312,17 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
             startIcon={<i className='ri-upload-2-line text-xl' />}
             className='max-sm:is-full'
           >
-            Export
+            Xuất Excel
           </Button>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
-              placeholder='Search User'
+              placeholder='Tìm kiếm người dùng...'
               className='max-sm:is-full'
             />
             <Button variant='contained' onClick={() => setAddUserOpen(!addUserOpen)} className='max-sm:is-full'>
-              Add New User
+              Thêm người dùng
             </Button>
           </div>
         </div>

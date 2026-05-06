@@ -31,6 +31,9 @@ import userService from '@/services/userService'
 import { useNotification } from '@/contexts/notificationContext'
 import { logger } from '@/utils/logger'
 
+// Components
+import MemberCodeField from '@/components/member/MemberCodeField'
+
 // Utils
 import CustomAvatar from '@core/components/mui/Avatar'
 import { getInitials } from '@/utils/getInitials'
@@ -45,6 +48,12 @@ const AssistantListTable = () => {
   const [addOpen, setAddOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UsersType | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // Edit member code
+  const [editOpen, setEditOpen] = useState(false)
+  const [editUser, setEditUser] = useState<UsersType | null>(null)
+  const [editMemberCode, setEditMemberCode] = useState('')
+  const [editSubmitting, setEditSubmitting] = useState(false)
 
   // Search + pagination
   const [search, setSearch] = useState('')
@@ -137,6 +146,33 @@ const AssistantListTable = () => {
     } catch (err) {
       logger.error('AssistantListTable', 'handleRemove', err)
       showNotificationRef.current('Đã có lỗi xảy ra.', 'error')
+    }
+  }
+
+  const handleOpenEdit = (user: UsersType) => {
+    setEditUser(user)
+    setEditMemberCode((user as any).memberCode || '')
+    setEditOpen(true)
+  }
+
+  const handleSaveMemberCode = async () => {
+    if (!editUser) return
+    setEditSubmitting(true)
+    try {
+      const res = await userService.updateUser(editUser.id, { memberCode: editMemberCode.trim() || null })
+      if (res.success) {
+        showNotificationRef.current('Đã cập nhật mã hội viên.', 'success')
+        setData(prev => prev.map(u => u.id === editUser.id ? { ...u, memberCode: editMemberCode.trim() || undefined } as any : u))
+        setEditOpen(false)
+        setEditUser(null)
+      } else {
+        showNotificationRef.current(res.message || 'Không thể cập nhật mã hội viên.', 'error')
+      }
+    } catch (err) {
+      logger.error('AssistantListTable', 'handleSaveMemberCode', err)
+      showNotificationRef.current('Đã có lỗi xảy ra.', 'error')
+    } finally {
+      setEditSubmitting(false)
     }
   }
 
@@ -249,6 +285,7 @@ const AssistantListTable = () => {
                   <th className='p-3 text-left font-semibold'>Họ tên</th>
                   <th className='p-3 text-left font-semibold'>Email</th>
                   <th className='p-3 text-left font-semibold'>SĐT</th>
+                  <th className='p-3 text-left font-semibold'>Mã HV</th>
                   <th className='p-3 text-left font-semibold'>Cấp đai</th>
                   <th className='p-3 text-center font-semibold'>Trạng thái</th>
                   <th className='p-3 text-center font-semibold'>Thao tác</th>
@@ -272,6 +309,11 @@ const AssistantListTable = () => {
                       <Typography variant='body2'>{user.phoneNumber || '-'}</Typography>
                     </td>
                     <td className='p-3'>
+                      <Typography variant='body2' fontFamily='monospace' fontSize='0.8rem'>
+                        {(user as any).memberCode || <span className='text-textDisabled'>—</span>}
+                      </Typography>
+                    </td>
+                    <td className='p-3'>
                       <Typography variant='body2'>{user.skillLevel || '-'}</Typography>
                     </td>
                     <td className='p-3 text-center'>
@@ -283,6 +325,11 @@ const AssistantListTable = () => {
                       />
                     </td>
                     <td className='p-3 text-center'>
+                      <Tooltip title='Cập nhật mã hội viên'>
+                        <IconButton color='primary' onClick={() => handleOpenEdit(user)}>
+                          <i className='ri-edit-line' />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title='Bỏ role Trợ giảng'>
                         <IconButton color='error' onClick={() => handleRemove(user)}>
                           <i className='ri-user-unfollow-line' />
@@ -362,6 +409,41 @@ const AssistantListTable = () => {
           <Button onClick={() => setAddOpen(false)} disabled={submitting}>Hủy</Button>
           <Button variant='contained' onClick={handleAdd} disabled={!selectedUser || submitting}>
             {submitting ? 'Đang xử lý...' : 'Gán role Trợ giảng'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Member Code Dialog */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth='sm' fullWidth>
+        <DialogTitle>
+          <Box className='flex items-center justify-between'>
+            <Typography variant='h6'>Cập nhật mã hội viên</Typography>
+            <IconButton size='small' onClick={() => setEditOpen(false)}>
+              <i className='ri-close-line text-xl' />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {editUser && (
+            <Box sx={{ mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+              <Typography variant='body2'>
+                <strong>{editUser.fullName}</strong> — {editUser.email}
+              </Typography>
+            </Box>
+          )}
+          <MemberCodeField
+            value={editMemberCode}
+            onChange={setEditMemberCode}
+            onMemberInfoConfirmed={() => {
+              // Trợ giảng không ghi đè thông tin cá nhân từ liên đoàn
+            }}
+            helperText='Dùng để tra cứu cấp đai liên đoàn tự động'
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditOpen(false)} disabled={editSubmitting}>Hủy</Button>
+          <Button variant='contained' onClick={handleSaveMemberCode} disabled={editSubmitting}>
+            {editSubmitting ? 'Đang lưu...' : 'Lưu mã hội viên'}
           </Button>
         </DialogActions>
       </Dialog>

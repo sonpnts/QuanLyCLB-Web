@@ -19,9 +19,10 @@ type Props = {
   classes: ClassType[]
   instructors: UsersType[]
   onFilterChange: (params: GetCashHandoversParams) => void
+  showInstructorFilter?: boolean
 }
 
-const TableFilters = memo(({ classes, instructors, onFilterChange }: Props) => {
+const TableFilters = memo(({ classes, instructors, onFilterChange, showInstructorFilter = true }: Props) => {
   const [classId, setClassId] = useState('')
   const [instructorId, setInstructorId] = useState('')
   const [handoverFrom, setHandoverFrom] = useState('')
@@ -54,23 +55,25 @@ const TableFilters = memo(({ classes, instructors, onFilterChange }: Props) => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} md={3}>
-          <FormControl fullWidth>
-            <InputLabel>Huấn luyện viên</InputLabel>
-            <Select
-              label='Huấn luyện viên'
-              value={instructorId}
-              onChange={(event: SelectChangeEvent) => setInstructorId(event.target.value)}
-            >
-              <MenuItem value=''>Tất cả</MenuItem>
-              {instructors.map(item => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.fullName}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
+        {showInstructorFilter && (
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth>
+              <InputLabel>Huấn luyện viên</InputLabel>
+              <Select
+                label='Huấn luyện viên'
+                value={instructorId}
+                onChange={(event: SelectChangeEvent) => setInstructorId(event.target.value)}
+              >
+                <MenuItem value=''>Tất cả</MenuItem>
+                {instructors.map(item => (
+                  <MenuItem key={item.id} value={item.id}>
+                    {item.fullName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        )}
         <Grid item xs={12} md={3}>
           <TextField
             fullWidth

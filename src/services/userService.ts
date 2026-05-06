@@ -8,8 +8,7 @@ import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 export interface GetUsersParams {
   Role?: string
   RoleId?: string
-  SkillLevel?: string
-  Certification?: string
+  BeltLevelName?: string
   CreatedDate?: string // DateTime format
   CreatedBy?: string
   UpdatedDate?: string // DateTime format
@@ -29,8 +28,6 @@ export interface CreateUserRequest {
   roles?: string[]
   password?: string
   phoneNumber?: string
-  skillLevel?: string
-  certification?: string
   isActive?: boolean
   memberCode?: string | null
 }
@@ -42,8 +39,6 @@ export interface UpdateUserRequest {
   username?: string
   roles?: string[]
   phoneNumber?: string
-  skillLevel?: string
-  certification?: string
   isActive?: boolean
   memberCode?: string | null
 }
@@ -80,9 +75,9 @@ class UserService {
       createdByUserId: (apiUser as any).createdByUserId,
       updatedByUserId: (apiUser as any).updatedByUserId,
       memberCode: apiUser.memberCode,
-      federationBeltRank: apiUser.beltLevelName ?? undefined,
-      federationBeltLevelId: apiUser.beltLevelId,
-      federationBeltLevelOrder: apiUser.beltLevelOrder
+      beltLevelName: apiUser.beltLevelName ?? undefined,
+      beltLevelId: apiUser.beltLevelId,
+      beltLevelOrder: apiUser.beltLevelOrder
     }
   }
 

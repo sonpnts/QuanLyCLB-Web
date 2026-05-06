@@ -31,6 +31,10 @@ import userService from '@/services/userService'
 import { useNotification } from '@/contexts/notificationContext'
 import { logger } from '@/utils/logger'
 
+// Components
+import MemberCodeField from '@/components/member/MemberCodeField'
+import type { MemberInfo } from '@/components/member/MemberCodeField'
+
 type Props = {
   open: boolean
   handleClose: () => void
@@ -292,11 +296,13 @@ const AddInstructorDrawer = (props: Props) => {
               name='memberCode'
               control={control}
               render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label='Mã hội viên liên đoàn'
-                  placeholder='VD: HV00123'
+                <MemberCodeField
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  onMemberInfoConfirmed={(_info: MemberInfo) => {
+                    // Mã HV đã được set qua onChange; thông tin cá nhân không ghi đè vì
+                    // AddInstructorDrawer chọn user có sẵn trong hệ thống
+                  }}
                   helperText='Dùng để tra cứu cấp đai liên đoàn tự động. Nếu người dùng đã có mã, hệ thống sẽ tự điền.'
                 />
               )}

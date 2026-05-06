@@ -7,7 +7,6 @@ import { useState } from 'react'
 
 import { useForm } from 'react-hook-form'
 
-
 // MUI Imports
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
@@ -34,6 +33,10 @@ import userService from '@/services/userService'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
+
+// Member code search
+import MemberCodeField from '@/views/apps/student/list/MemberCodeField'
+import type { MemberInfo } from '@/views/apps/student/list/MemberCodeField'
 
 type Props = {
   open: boolean
@@ -62,6 +65,7 @@ const AddUserDrawer = (props: Props) => {
 
   // States
   const [loading, setLoading] = useState(false)
+  const [memberCode, setMemberCode] = useState('')
 
   // Notification Hook
   const { showNotification } = useNotification()
@@ -92,7 +96,16 @@ const AddUserDrawer = (props: Props) => {
   // Handle close
   const handleCloseDrawer = () => {
     reset()
+    setMemberCode('')
     handleClose()
+  }
+
+  // Khi xác nhận thông tin từ liên đoàn → tự điền vào form nếu trường chưa có
+  const handleMemberInfoConfirmed = (info: MemberInfo) => {
+    if (!watch('fullName') && info.fullName) setValue('fullName', info.fullName)
+    if (!watch('phoneNumber') && info.phoneNumber) setValue('phoneNumber', info.phoneNumber)
+    if (!watch('email') && info.email) setValue('email', info.email)
+    setValue('memberCode', memberCode)
   }
 
   // Handle submit
@@ -120,7 +133,7 @@ const AddUserDrawer = (props: Props) => {
         skillLevel: data.skillLevel || undefined,
         certification: data.certification || undefined,
         isActive: data.isActive,
-        memberCode: data.memberCode?.trim() || null
+        memberCode: memberCode.trim() || null
       }
 
       const response = await userService.createUser(createData)
@@ -253,13 +266,13 @@ const AddUserDrawer = (props: Props) => {
               helperText={errors.certification?.message}
             />
           </Grid>
+          {/* Mã hội viên liên đoàn — có nút tìm kiếm giống học viên */}
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              label='Mã hội viên liên đoàn'
-              placeholder='VD: HV00123'
-              {...register('memberCode')}
-              helperText='Dùng để tra cứu cấp đai liên đoàn tự động'
+            <MemberCodeField
+              value={memberCode}
+              onChange={setMemberCode}
+              onMemberInfoConfirmed={handleMemberInfoConfirmed}
+              helperText='Nhập mã hoặc dùng kính lúp tìm theo tên'
             />
           </Grid>
         </Grid>

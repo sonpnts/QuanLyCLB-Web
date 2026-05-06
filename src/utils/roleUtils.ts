@@ -38,3 +38,22 @@ export const hasRole = (roles?: string[] | null, roleName?: string): boolean => 
   if (!roleName) return false
   return roles?.some(r => r.toLowerCase() === roleName.toLowerCase()) ?? false
 }
+
+/**
+ * Kiểm tra danh sách roles có chứa Coach không.
+ */
+export const hasCoachRole = (roles?: string[] | null): boolean =>
+  hasRole(roles, ROLE_COACH)
+
+/**
+ * Kiểm tra danh sách roles có chứa Assistant không.
+ */
+export const hasAssistantRole = (roles?: string[] | null): boolean =>
+  hasRole(roles, ROLE_ASSISTANT)
+
+/**
+ * Trả về true nếu user là HLV hoặc trợ giảng (Coach/Assistant).
+ * Dùng để phân biệt với admin và hiển thị dữ liệu theo phân công.
+ */
+export const isInstructorUser = (roles?: string[] | null): boolean =>
+  hasCoachRole(roles) || hasAssistantRole(roles)

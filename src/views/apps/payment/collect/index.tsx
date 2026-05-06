@@ -61,7 +61,7 @@ const PaymentCollectView = () => {
   const [branchFilter, setBranchFilter] = useState<string>('')
   const [unpaidOnlyFilter, setUnpaidOnlyFilter] = useState<boolean>(false)
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(5)
+  const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
     loadSummary()
@@ -117,18 +117,21 @@ const PaymentCollectView = () => {
     })
   }, [summary, searchQuery, branchFilter, unpaidOnlyFilter])
 
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(filteredClasses.length / pageSize))
+  // Pagination (pageSize=0 → hiển thị tất cả)
+  const effectivePageSize = pageSize === 0 ? filteredClasses.length || 1 : pageSize
+  const totalPages = Math.max(1, Math.ceil(filteredClasses.length / effectivePageSize))
   const currentPage = Math.min(page, totalPages)
   const pagedClasses = useMemo(
-    () => filteredClasses.slice((currentPage - 1) * pageSize, currentPage * pageSize),
-    [filteredClasses, currentPage, pageSize]
+    () => pageSize === 0
+      ? filteredClasses
+      : filteredClasses.slice((currentPage - 1) * effectivePageSize, currentPage * effectivePageSize),
+    [filteredClasses, currentPage, effectivePageSize, pageSize]
   )
 
-  // Reset page khi filter đổi
+  // Reset về trang 1 khi filter hoặc pageSize thay đổi
   useEffect(() => {
     setPage(1)
-  }, [searchQuery, branchFilter, unpaidOnlyFilter, pageSize])
+  }, [searchQuery, branchFilter, unpaidOnlyFilter, pageSize, month, year])
 
   const handleCollectSuccess = () => {
     setCollectTarget(null)
@@ -442,35 +445,40 @@ const PaymentCollectView = () => {
             })
           )}
 
-          {/* Pagination controls */}
-          {filteredClasses.length > 0 && totalPages > 1 && (
+          {/* Pagination controls — luôn hiển thị khi có lớp */}
+          {filteredClasses.length > 0 && (
             <Card className='mt-4'>
               <CardContent>
                 <Box className='flex flex-wrap items-center justify-between gap-3'>
                   <Box className='flex items-center gap-2'>
                     <Typography variant='body2' color='text.secondary'>
-                      Hiển thị mỗi trang:
+                      Hiển thị:
                     </Typography>
-                    <FormControl size='small' sx={{ minWidth: 80 }}>
+                    <FormControl size='small' sx={{ minWidth: 100 }}>
                       <Select value={pageSize} onChange={e => setPageSize(Number(e.target.value))}>
                         {[5, 10, 20, 50].map(n => (
                           <MenuItem key={n} value={n}>
-                            {n}
+                            {n} lớp
                           </MenuItem>
                         ))}
+                        <MenuItem value={0}>Tất cả</MenuItem>
                       </Select>
                     </FormControl>
                     <Typography variant='body2' color='text.secondary'>
-                      Trang {currentPage}/{totalPages} • Tổng {filteredClasses.length} lớp
+                      {pageSize === 0
+                        ? `Tất cả ${filteredClasses.length} lớp`
+                        : `Trang ${currentPage}/${totalPages} • ${filteredClasses.length} lớp`}
                     </Typography>
                   </Box>
-                  <Pagination
-                    count={totalPages}
-                    page={currentPage}
-                    onChange={(_, p) => setPage(p)}
-                    color='primary'
-                    shape='rounded'
-                  />
+                  {pageSize !== 0 && totalPages > 1 && (
+                    <Pagination
+                      count={totalPages}
+                      page={currentPage}
+                      onChange={(_, p) => setPage(p)}
+                      color='primary'
+                      shape='rounded'
+                    />
+                  )}
                 </Box>
               </CardContent>
             </Card>

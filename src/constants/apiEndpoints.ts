@@ -183,7 +183,9 @@ export const API_ENDPOINTS = {
     root: '/Users',
     byId: (id: string) => `/Users/${id}`,
     restore: (id: string) => `/Users/${id}/restore`,
-    updateRoles: (id: string) => `/Users/${id}/roles`
+    updateRoles: (id: string) => `/Users/${id}/roles`,
+    classes: (id: string) => `/Users/${id}/classes`,
+    schedules: (id: string) => `/Users/${id}/schedules`
   },
   federationMembers: {
     root: '/FederationMembers',

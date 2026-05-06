@@ -104,8 +104,6 @@ const AddClassDrawer = (props: Props) => {
         code: data.code,
         name: data.name,
         description: data.description,
-        // Backend yêu cầu maxStudents — set giá trị mặc định lớn để bỏ giới hạn
-        maxStudents: 9999,
         userIds: data.userIds
       })
 

@@ -10,7 +10,6 @@ import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 import TextField from '@mui/material/TextField'
-import MenuItem from '@mui/material/MenuItem'
 import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
 import Chip from '@mui/material/Chip'
@@ -20,6 +19,10 @@ import type { InstructorType, UpdateInstructorRequest } from '@/services/instruc
 import instructorService from '@/services/instructorService'
 import { useNotification } from '@/contexts/notificationContext'
 import { logger } from '@/utils/logger'
+
+// Components
+import MemberCodeField from '@/components/member/MemberCodeField'
+import type { MemberInfo } from '@/components/member/MemberCodeField'
 
 type Props = {
   open: boolean
@@ -43,6 +46,8 @@ const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Prop
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors }
   } = useForm<FormValues>({
     defaultValues: {
@@ -148,38 +153,38 @@ const EditInstructorDrawer = ({ open, instructor, handleClose, onUpdated }: Prop
             />
           </Grid>
 
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Cấp đai
-                </Typography>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant="caption" color="text.secondary">
+                Cấp đai
+              </Typography>
 
-                <Chip
-                  label={instructor?.federationBeltRank || 'Chưa có'}
-                  size="small"
-                  sx={{
-                    alignSelf: 'flex-start',
-                    fontWeight: instructor?.federationBeltRank ? 600 : 400,
-                  }}
-                />
-
-                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  Cấp đai được cập nhật tự động từ hệ thống liên đoàn
-                </Typography>
-              </Box>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Mã hội viên"
-                InputLabelProps={{ shrink: true }}
-                {...register('memberCode')}
-                placeholder="VD: V26-001234"
-                helperText="Dùng để tra cứu cấp đai"
+              <Chip
+                label={instructor?.beltLevelName || 'Chưa có'}
+                size="small"
+                sx={{
+                  alignSelf: 'flex-start',
+                  fontWeight: instructor?.beltLevelOrder ? 600 : 400,
+                }}
               />
-            </Grid>
+
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                Cấp đai được cập nhật tự động từ hệ thống liên đoàn
+              </Typography>
+            </Box>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <MemberCodeField
+              value={watch('memberCode') || ''}
+              onChange={val => setValue('memberCode', val, { shouldDirty: true })}
+              onMemberInfoConfirmed={(info: MemberInfo) => {
+                // Tự động điền họ tên và SĐT từ liên đoàn
+                if (info.fullName) setValue('fullName', info.fullName, { shouldDirty: true })
+                if (info.phoneNumber) setValue('phoneNumber', info.phoneNumber, { shouldDirty: true })
+              }}
+              helperText='Dùng để tra cứu cấp đai liên đoàn tự động'
+            />
           </Grid>
         </Grid>
 

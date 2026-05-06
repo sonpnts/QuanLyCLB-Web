@@ -20,9 +20,9 @@ export type UsersType = {
   avatarColor?: ThemeColor
   // Federation (read-only display)
   memberCode?: string | null
-  federationBeltRank?: string
-  federationBeltLevelId?: string | null
-  federationBeltLevelOrder?: number | null
+  beltLevelName?: string
+  beltLevelId?: string | null
+  beltLevelOrder?: number | null
 }
 
 // API response type from /api/Users — field names match JSON from backend UserDto
