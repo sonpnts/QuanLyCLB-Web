@@ -28,6 +28,23 @@ export interface CreateStudentRequest {
   currentBeltLevelId?: string
 }
 
+export interface ZaloUserInfo {
+  user_id: string
+  user_id_by_app?: string
+  display_name?: string
+  avatar?: string
+  avatars?: { '240'?: string; '120'?: string }
+  user_is_follower?: boolean
+}
+
+export interface ZaloVerifyResult {
+  success: boolean
+  isFollower: boolean
+  error?: number
+  message?: string
+  data?: ZaloUserInfo
+}
+
 export interface EnrollStudentRequest {
   studentId: string
   classId: string
@@ -245,6 +262,18 @@ class StudentService {
     } catch (error) {
       logger.error('StudentService', 'getStudentAttendance', error)
       return { success: true, data: [] }
+    }
+  }
+
+  async verifyZaloPhone(phoneNumber: string): Promise<ZaloVerifyResult> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.students.zaloVerifyPhone, {
+        params: { phoneNumber }
+      })
+      return response.data as ZaloVerifyResult
+    } catch (error: any) {
+      logger.error('StudentService', 'verifyZaloPhone', error)
+      return { success: false, isFollower: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }

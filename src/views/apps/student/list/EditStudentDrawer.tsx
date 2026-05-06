@@ -14,11 +14,16 @@ import Drawer from '@mui/material/Drawer'
 import FormControl from '@mui/material/FormControl'
 import Grid from '@mui/material/Grid2'
 import IconButton from '@mui/material/IconButton'
+import InputAdornment from '@mui/material/InputAdornment'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
+import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
+
+// Zalo
+import ZaloVerifyModal from './ZaloVerifyModal'
 
 // Form
 import { Controller, useForm } from 'react-hook-form'
@@ -61,6 +66,9 @@ const EditStudentDrawer = (props: Props) => {
   const [submitting, setSubmitting] = useState(false)
   // Mã HV state (quản lý độc lập ngoài form vì cần truyền cho MemberCodeField)
   const [memberCode, setMemberCode] = useState('')
+  // Zalo
+  const [zaloModalOpen, setZaloModalOpen] = useState(false)
+  const [pendingZaloUserId, setPendingZaloUserId] = useState<string | null>(null)
 
   const defaultValues = useMemo<FormValues>(
     () => ({
@@ -89,6 +97,7 @@ const EditStudentDrawer = (props: Props) => {
     if (student) {
       reset(defaultValues)
       setMemberCode(student?.code || '')
+      setPendingZaloUserId(null)
     }
   }, [student, defaultValues, reset])
 
@@ -134,6 +143,11 @@ const EditStudentDrawer = (props: Props) => {
         payload.identityNumber = values.identityNumber || undefined
         payload.dateOfBirth = values.dateOfBirth || undefined
         payload.gender = values.gender !== '' ? values.gender === 'true' : undefined
+      }
+
+      // Gửi Zalo User ID nếu vừa xác thực
+      if (pendingZaloUserId !== null) {
+        payload.userIdZalo = pendingZaloUserId
       }
 
       const res = await studentService.updateStudent(student.id, payload)
@@ -232,9 +246,57 @@ const EditStudentDrawer = (props: Props) => {
               name='phoneNumber'
               control={control}
               render={({ field }) => (
-                <TextField {...field} fullWidth label='Số điện thoại' disabled={isLocked} />
+                <TextField
+                  {...field}
+                  fullWidth
+                  label='Số điện thoại'
+                  disabled={isLocked}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <Tooltip
+                          title={
+                            pendingZaloUserId
+                              ? 'Đã xác thực Zalo (chưa lưu)'
+                              : student?.userIdZalo
+                                ? 'Đã liên kết Zalo — nhấn để xác thực lại'
+                                : 'Xác thực số điện thoại qua Zalo OA'
+                          }
+                          arrow
+                        >
+                          <IconButton
+                            size='small'
+                            onClick={() => setZaloModalOpen(true)}
+                            color={pendingZaloUserId ? 'warning' : student?.userIdZalo ? 'success' : 'default'}
+                          >
+                            <Box
+                              component='img'
+                              src='https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg'
+                              alt='Zalo'
+                              sx={{ width: 20, height: 20 }}
+                            />
+                          </IconButton>
+                        </Tooltip>
+                      </InputAdornment>
+                    )
+                  }}
+                />
               )}
             />
+            {/* Zalo status indicator */}
+            {(student?.userIdZalo || pendingZaloUserId) && (
+              <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <i
+                  className={pendingZaloUserId ? 'ri-time-line text-xs' : 'ri-check-circle-line text-xs'}
+                  style={{ color: pendingZaloUserId ? '#ed6c02' : '#2e7d32', fontSize: 12 }}
+                />
+                <Typography variant='caption' color={pendingZaloUserId ? 'warning.dark' : 'success.dark'}>
+                  {pendingZaloUserId
+                    ? 'Đã xác thực Zalo — lưu để cập nhật'
+                    : 'Đã liên kết Zalo OA'}
+                </Typography>
+              </Box>
+            )}
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
@@ -343,6 +405,17 @@ const EditStudentDrawer = (props: Props) => {
           </Button>
         </div>
       </form>
+
+      {/* Zalo Verify Modal */}
+      <ZaloVerifyModal
+        open={zaloModalOpen}
+        onClose={() => setZaloModalOpen(false)}
+        defaultPhone={student?.phoneNumber || ''}
+        onConfirm={userId => {
+          setPendingZaloUserId(userId)
+          showNotification('Xác thực Zalo thành công — nhấn "Lưu thay đổi" để cập nhật.', 'info')
+        }}
+      />
     </Drawer>
   )
 }

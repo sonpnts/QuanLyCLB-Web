@@ -177,7 +177,8 @@ export const API_ENDPOINTS = {
     tuitionStatus: (studentId: string) => `/Students/${studentId}/tuition-status`,
     examHistory: (studentId: string) => `/Students/${studentId}/exam-history`,
     payments: (studentId: string) => `/Students/${studentId}/payments`,
-    attendance: (studentId: string) => `/Students/${studentId}/attendance`
+    attendance: (studentId: string) => `/Students/${studentId}/attendance`,
+    zaloVerifyPhone: '/Students/zalo/verify-phone'
   },
   users: {
     root: '/Users',
