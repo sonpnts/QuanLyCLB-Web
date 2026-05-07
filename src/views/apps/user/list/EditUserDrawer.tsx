@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -224,11 +224,11 @@ const EditUserDrawer = (props: Props) => {
           <Grid size={{ xs: 12, sm: 6 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Typography variant='caption' color='text.secondary'>
-                Cấp đai liên đoàn
+                Cấp đai
               </Typography>
-              {user?.federationBeltRank ? (
+              {user?.beltLevelName ? (
                 <Chip
-                  label={user.federationBeltRank}
+                  label={user.beltLevelName}
                   size='small'
                   color='warning'
                   variant='tonal'
@@ -236,15 +236,10 @@ const EditUserDrawer = (props: Props) => {
                   sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
                 />
               ) : (
-                <Chip
-                  label='Chưa có'
-                  size='small'
-                  variant='outlined'
-                  sx={{ alignSelf: 'flex-start' }}
-                />
+                <Chip label='Chưa có' size='small' variant='outlined' sx={{ alignSelf: 'flex-start' }} />
               )}
               <Typography variant='caption' color='text.disabled'>
-                Chỉ đọc — tra cứu từ liên đoàn theo mã hội viên
+                Dữ liệu được đồng bộ với VTF
               </Typography>
             </Box>
           </Grid>

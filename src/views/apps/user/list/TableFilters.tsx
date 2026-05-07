@@ -31,8 +31,6 @@ const TableFilters = ({ onFilterChange, roles }: Props) => {
   const [debouncedKeyword, setDebouncedKeyword] = useState<string>('')
   const [role, setRole] = useState<string>('') // store roleId
   const [userType, setUserType] = useState<string>('')
-  const [skillLevel, setSkillLevel] = useState<string>('')
-  const [certification, setCertification] = useState<string>('')
   const [createdDate, setCreatedDate] = useState<string>('')
   const [createdBy, setCreatedBy] = useState<string>('')
   const keywordTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -77,14 +75,6 @@ const TableFilters = ({ onFilterChange, roles }: Props) => {
       params.UserType = userType
     }
 
-    if (skillLevel) {
-      params.SkillLevel = skillLevel
-    }
-
-    if (certification) {
-      params.Certification = certification
-    }
-
     if (createdDate) {
       params.CreatedDate = createdDate
     }
@@ -99,8 +89,6 @@ const TableFilters = ({ onFilterChange, roles }: Props) => {
     debouncedKeyword,
     role,
     userType,
-    skillLevel,
-    certification,
     createdDate,
     createdBy,
     onFilterChange,
@@ -117,8 +105,6 @@ const TableFilters = ({ onFilterChange, roles }: Props) => {
     setKeyword('')
     setRole('')
     setUserType('')
-    setSkillLevel('')
-    setCertification('')
     setCreatedDate('')
     setCreatedBy('')
   }

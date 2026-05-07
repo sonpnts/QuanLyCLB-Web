@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useEffect, useState, useMemo } from 'react'
@@ -187,7 +187,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         id: 'beltLevel',
         header: 'Cấp đai',
         cell: ({ row }) => {
-          const belt = row.original.federationBeltRank
+          const belt = row.original.beltLevelName
           if (!belt) return <Typography variant='body2' color='text.disabled'>—</Typography>
 
           return (

@@ -1,4 +1,4 @@
-
+﻿
 'use client'
 import { logger } from '@/utils/logger'
 
@@ -54,8 +54,6 @@ type FormValidateType = {
   role: string
   password?: string
   phoneNumber?: string
-  skillLevel?: string
-  certification?: string
   isActive: boolean
   memberCode?: string
 }
@@ -86,8 +84,6 @@ const AddUserDrawer = (props: Props) => {
       role: '',
       password: '',
       phoneNumber: '',
-      skillLevel: '',
-      certification: '',
       isActive: true,
       memberCode: ''
     }
@@ -130,8 +126,6 @@ const AddUserDrawer = (props: Props) => {
         roles: [roleName],
         password: data.password || undefined,
         phoneNumber: data.phoneNumber || undefined,
-        skillLevel: data.skillLevel || undefined,
-        certification: data.certification || undefined,
         isActive: data.isActive,
         memberCode: memberCode.trim() || null
       }
@@ -248,24 +242,24 @@ const AddUserDrawer = (props: Props) => {
               helperText={errors.phoneNumber?.message}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              label='Trình độ'
-              {...register('skillLevel')}
-              error={!!errors.skillLevel}
-              helperText={errors.skillLevel?.message}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              label='Chứng chỉ'
-              {...register('certification')}
-              error={!!errors.certification}
-              helperText={errors.certification?.message}
-            />
-          </Grid>
+          {/*<Grid size={{ xs: 12, sm: 6 }}>*/}
+          {/*  <TextField*/}
+          {/*    fullWidth*/}
+          {/*    label='Trình độ'*/}
+          {/*    {...register('skillLevel')}*/}
+          {/*    error={!!errors.skillLevel}*/}
+          {/*    helperText={errors.skillLevel?.message}*/}
+          {/*  />*/}
+          {/*</Grid>*/}
+          {/*<Grid size={{ xs: 12, sm: 6 }}>*/}
+          {/*  <TextField*/}
+          {/*    fullWidth*/}
+          {/*    label='Chứng chỉ'*/}
+          {/*    {...register('certification')}*/}
+          {/*    error={!!errors.certification}*/}
+          {/*    helperText={errors.certification?.message}*/}
+          {/*  />*/}
+          {/*</Grid>*/}
           {/* Mã hội viên liên đoàn — có nút tìm kiếm giống học viên */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <MemberCodeField
