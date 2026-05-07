@@ -19,8 +19,8 @@ export type StudentType = {
   email?: string
   gender?: boolean // true = Nam, false = Nữ
   notes?: string
-  currentBeltLevelId?: string
-  currentBeltLevelName?: string
+  beltLevelId?: string
+  beltLevelName?: string
   isActive?: boolean
   isSuspended?: boolean
   suspendedAt?: string

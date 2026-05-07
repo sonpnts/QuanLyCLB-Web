@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -352,19 +352,19 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
           <Box className='flex-1'>
             <div className='flex items-center gap-2 flex-wrap'>
               <Typography variant='h6'>{student.fullName}</Typography>
-              {student.isSuspended && (
-                <Chip label='Tạm nghỉ' size='small' color='warning' variant='tonal' />
-              )}
+              {student.isSuspended && <Chip label='Tạm nghỉ' size='small' color='warning' variant='tonal' />}
             </div>
             <Typography variant='body2' color='text.secondary'>
               {student.email || 'Chưa có email'}
             </Typography>
             <div className='flex gap-2 mt-1 flex-wrap items-center'>
-              {student.currentBeltLevelName && (
-                <Chip label={student.currentBeltLevelName} size='small' color='warning' variant='tonal' />
+              {student.beltLevelName && (
+                <Chip label={student.beltLevelName} size='small' color='warning' variant='tonal' />
               )}
               {student.isSuspended && student.suspendReason && (
-                <Typography variant='caption' color='text.secondary'>Lý do: {student.suspendReason}</Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  Lý do: {student.suspendReason}
+                </Typography>
               )}
             </div>
             <div className='flex gap-2 mt-2'>
@@ -436,10 +436,12 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
                     <Typography variant='body2' color='text.secondary'>
                       Cấp đai liên đoàn
                     </Typography>
-                    {student.currentBeltLevelName ? (
-                      <Chip label={student.currentBeltLevelName} size='small' color='warning' variant='tonal' />
+                    {student.beltLevelName ? (
+                      <Chip label={student.beltLevelName} size='small' color='warning' variant='tonal' />
                     ) : (
-                      <Typography variant='body1' color='text.disabled'>Chưa có / chưa đồng bộ</Typography>
+                      <Typography variant='body1' color='text.disabled'>
+                        Chưa có / chưa đồng bộ
+                      </Typography>
                     )}
                   </Grid>
                   <Grid size={{ xs: 6 }}>
@@ -736,11 +738,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
           <Box className='flex flex-col gap-4 pt-2'>
             <FormControl fullWidth>
               <InputLabel>Từ lớp</InputLabel>
-              <Select
-                label='Từ lớp'
-                value={transferFromClassId}
-                onChange={e => setTransferFromClassId(e.target.value)}
-              >
+              <Select label='Từ lớp' value={transferFromClassId} onChange={e => setTransferFromClassId(e.target.value)}>
                 {activeStudentClasses.length > 0
                   ? activeStudentClasses.map((c: any) => (
                       <MenuItem key={c.classId || c.id} value={c.classId || c.id}>
@@ -757,11 +755,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
 
             <FormControl fullWidth>
               <InputLabel>Đến lớp</InputLabel>
-              <Select
-                label='Đến lớp'
-                value={transferToClassId}
-                onChange={e => setTransferToClassId(e.target.value)}
-              >
+              <Select label='Đến lớp' value={transferToClassId} onChange={e => setTransferToClassId(e.target.value)}>
                 {availableClasses
                   .filter(c => !currentClassIds.includes(c.id))
                   .map(c => (

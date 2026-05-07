@@ -328,7 +328,11 @@ const StudentListTable = () => {
         header: 'Học viên',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
-            <CustomAvatar skin='light' size={34} color={row.original.isSuspended ? 'secondary' : (row.original.avatarColor || 'primary')}>
+            <CustomAvatar
+              skin='light'
+              size={34}
+              color={row.original.isSuspended ? 'secondary' : row.original.avatarColor || 'primary'}
+            >
               {getInitials(row.original.fullName)}
             </CustomAvatar>
             <div className='flex flex-col gap-0.5'>
@@ -384,10 +388,10 @@ const StudentListTable = () => {
           </Typography>
         )
       }),
-      columnHelper.accessor('currentBeltLevelName', {
+      columnHelper.accessor('beltLevelName', {
         header: 'Cấp đai',
         cell: ({ row }) => (
-          <Chip label={row.original.currentBeltLevelName || 'Chưa có'} size='small' color='warning' variant='tonal' />
+          <Chip label={row.original.beltLevelName || 'Chưa có'} size='small' color='warning' variant='tonal' />
         )
       }),
       {
@@ -395,9 +399,7 @@ const StudentListTable = () => {
         header: 'Lớp đang học',
         cell: ({ row }) => {
           // Chỉ hiển thị enrollment đang Active (đang theo học)
-          const activeClasses = (row.original.classes || []).filter(
-            c => !c.status || c.status === 'Active'
-          )
+          const activeClasses = (row.original.classes || []).filter(c => !c.status || c.status === 'Active')
           if (activeClasses.length === 0) {
             return (
               <Typography variant='body2' color='text.disabled'>

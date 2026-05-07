@@ -253,8 +253,8 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
                         secondary={
                           <Box className='flex items-center gap-2'>
                             <span>{student.phoneNumber || 'Chưa có SĐT'}</span>
-                            {student.currentBeltLevelName && (
-                              <Chip label={student.currentBeltLevelName} size='small' variant='outlined' />
+                            {student.beltLevelName && (
+                              <Chip label={student.beltLevelName} size='small' variant='outlined' />
                             )}
                           </Box>
                         }

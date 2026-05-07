@@ -100,7 +100,6 @@ const EditStudentDrawer = (props: Props) => {
 
   /**
    * Học viên đã có mã HV (đã lưu trong DB) → khoá toàn bộ thông tin cá nhân.
-   * Chỉ cho phép chỉnh sửa: currentBeltLevelId, notes.
    */
   const isLocked = Boolean(student?.code)
 
@@ -339,17 +338,17 @@ const EditStudentDrawer = (props: Props) => {
                 Cấp đai liên đoàn
               </Typography>
               <Chip
-                label={student?.currentBeltLevelName || 'Chưa có'}
+                label={student?.beltLevelName || 'Chưa có'}
                 size='small'
                 sx={{
                   alignSelf: 'flex-start',
-                  bgcolor: student?.currentBeltLevelName ? 'primary.light' : 'action.hover',
-                  fontWeight: student?.currentBeltLevelName ? 600 : 400,
-                  color: student?.currentBeltLevelName ? 'primary.main' : 'text.secondary'
+                  bgcolor: student?.beltLevelName ? 'primary.light' : 'action.hover',
+                  fontWeight: student?.beltLevelName ? 600 : 400,
+                  color: student?.beltLevelName ? 'primary.main' : 'text.secondary'
                 }}
               />
               <Typography variant='caption' color='text.disabled'>
-                Chỉ đọc — tra cứu từ liên đoàn theo mã HV
+                Dữ liệu đồng bộ với VTF
               </Typography>
             </Box>
           </Grid>
