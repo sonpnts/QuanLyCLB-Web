@@ -18,6 +18,7 @@ export interface CreateClassRequest {
   name: string
   description?: string
   userIds?: string[] // Array of instructor UUIDs
+  leadInstructorId?: string
 }
 
 // Request body for PUT /api/Classes/{id}
@@ -25,6 +26,7 @@ export interface UpdateClassRequest {
   name?: string
   description?: string
   userIds?: string[]
+  leadInstructorId?: string
 }
 
 // Request body for bulk create schedules
@@ -92,6 +94,7 @@ class ClassService {
       updatedDate: apiClass.updatedAt || undefined,
       updatedBy: apiClass.updatedByUserId || undefined,
       coachIds: apiClass.userIds || [], // Map userIds sang coachIds cho frontend
+      leadInstructorId: apiClass.coaches?.find(c => c.isLeadInstructor)?.userId || apiClass.userIds?.[0],
       coaches: apiClass.coaches || [],
       assistants: apiClass.assistants || []
     }

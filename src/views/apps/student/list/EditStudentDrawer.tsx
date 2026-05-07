@@ -54,7 +54,6 @@ type FormValues = {
   phoneNumber?: string
   email?: string
   address?: string
-  identityNumber?: string
   dateOfBirth?: string
   gender?: string
   notes?: string
@@ -68,7 +67,7 @@ const EditStudentDrawer = (props: Props) => {
   const [memberCode, setMemberCode] = useState('')
   // Zalo
   const [zaloModalOpen, setZaloModalOpen] = useState(false)
-  const [pendingZaloUserId, setPendingZaloUserId] = useState<string | null>(null)
+  const [savingZalo, setSavingZalo] = useState(false)
 
   const defaultValues = useMemo<FormValues>(
     () => ({
@@ -77,7 +76,6 @@ const EditStudentDrawer = (props: Props) => {
       phoneNumber: student?.phoneNumber || '',
       email: student?.email || '',
       address: student?.address || '',
-      identityNumber: student?.identityNumber || '',
       dateOfBirth: student?.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
       gender: student?.gender !== undefined ? String(student.gender) : '',
       notes: student?.notes || ''
@@ -97,7 +95,6 @@ const EditStudentDrawer = (props: Props) => {
     if (student) {
       reset(defaultValues)
       setMemberCode(student?.code || '')
-      setPendingZaloUserId(null)
     }
   }, [student, defaultValues, reset])
 
@@ -117,7 +114,6 @@ const EditStudentDrawer = (props: Props) => {
     if (info.phoneNumber) setValue('phoneNumber', info.phoneNumber)
     if (info.address) setValue('address', info.address)
     if (info.email) setValue('email', info.email)
-    if (info.identityNumber) setValue('identityNumber', info.identityNumber)
 
     showNotification('Đã áp dụng thông tin từ liên đoàn.', 'info')
   }
@@ -140,14 +136,8 @@ const EditStudentDrawer = (props: Props) => {
         payload.phoneNumber = values.phoneNumber || undefined
         payload.email = values.email || undefined
         payload.address = values.address || undefined
-        payload.identityNumber = values.identityNumber || undefined
         payload.dateOfBirth = values.dateOfBirth || undefined
         payload.gender = values.gender !== '' ? values.gender === 'true' : undefined
-      }
-
-      // Gửi Zalo User ID nếu vừa xác thực
-      if (pendingZaloUserId !== null) {
-        payload.userIdZalo = pendingZaloUserId
       }
 
       const res = await studentService.updateStudent(student.id, payload)
@@ -198,9 +188,8 @@ const EditStudentDrawer = (props: Props) => {
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-4 p-5'>
         {isLocked && (
           <Alert severity='info' icon={<i className='ri-lock-line' />}>
-            Học viên đã có mã HV — thông tin cá nhân (tên, giới tính, ngày sinh, …) bị khoá.
-            Chỉ có thể chỉnh sửa <strong>ghi chú</strong>.
-            Để mở khoá, xoá mã HV trước rồi lưu lại.
+            Học viên đã có mã HV — thông tin cá nhân (tên, giới tính, ngày sinh, …) bị khoá. Chỉ có thể chỉnh sửa{' '}
+            <strong>ghi chú</strong>. Để mở khoá, xoá mã HV trước rồi lưu lại.
           </Alert>
         )}
 
@@ -212,11 +201,9 @@ const EditStudentDrawer = (props: Props) => {
             setValue('code', code)
           }}
           onMemberInfoConfirmed={handleMemberInfoConfirmed}
-          locked={false}   // mã HV luôn có thể cập nhật (chỉ khoá các trường còn lại)
+          locked={false} // mã HV luôn có thể cập nhật (chỉ khoá các trường còn lại)
           helperText={
-            isLocked
-              ? 'Xoá mã và lưu để mở khoá toàn bộ thông tin'
-              : 'Nhấn Enter/Tab để tra cứu thông tin từ liên đoàn'
+            isLocked ? 'Xoá mã và lưu để mở khoá toàn bộ thông tin' : 'Nhấn Enter/Tab để tra cứu thông tin từ liên đoàn'
           }
         />
 
@@ -256,8 +243,8 @@ const EditStudentDrawer = (props: Props) => {
                       <InputAdornment position='end'>
                         <Tooltip
                           title={
-                            pendingZaloUserId
-                              ? 'Đã xác thực Zalo (chưa lưu)'
+                            savingZalo
+                              ? 'Đang lưu...'
                               : student?.userIdZalo
                                 ? 'Đã liên kết Zalo — nhấn để xác thực lại'
                                 : 'Xác thực số điện thoại qua Zalo OA'
@@ -267,7 +254,8 @@ const EditStudentDrawer = (props: Props) => {
                           <IconButton
                             size='small'
                             onClick={() => setZaloModalOpen(true)}
-                            color={pendingZaloUserId ? 'warning' : student?.userIdZalo ? 'success' : 'default'}
+                            disabled={savingZalo}
+                            color={student?.userIdZalo ? 'success' : 'default'}
                           >
                             <Box
                               component='img'
@@ -284,16 +272,11 @@ const EditStudentDrawer = (props: Props) => {
               )}
             />
             {/* Zalo status indicator */}
-            {(student?.userIdZalo || pendingZaloUserId) && (
+            {student?.userIdZalo && (
               <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <i
-                  className={pendingZaloUserId ? 'ri-time-line text-xs' : 'ri-check-circle-line text-xs'}
-                  style={{ color: pendingZaloUserId ? '#ed6c02' : '#2e7d32', fontSize: 12 }}
-                />
-                <Typography variant='caption' color={pendingZaloUserId ? 'warning.dark' : 'success.dark'}>
-                  {pendingZaloUserId
-                    ? 'Đã xác thực Zalo — lưu để cập nhật'
-                    : 'Đã liên kết Zalo OA'}
+                <i className='ri-check-circle-line text-xs' style={{ color: '#2e7d32', fontSize: 12 }} />
+                <Typography variant='caption' color='success.dark'>
+                  Đã liên kết Zalo OA
                 </Typography>
               </Box>
             )}
@@ -302,9 +285,7 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='email'
               control={control}
-              render={({ field }) => (
-                <TextField {...field} fullWidth label='Email' type='email' disabled={isLocked} />
-              )}
+              render={({ field }) => <TextField {...field} fullWidth label='Email' type='email' disabled={isLocked} />}
             />
           </Grid>
 
@@ -313,22 +294,11 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='address'
               control={control}
-              render={({ field }) => (
-                <TextField {...field} fullWidth label='Địa chỉ' disabled={isLocked} />
-              )}
+              render={({ field }) => <TextField {...field} fullWidth label='Địa chỉ' disabled={isLocked} />}
             />
           </Grid>
 
-          {/* CCCD + Ngày sinh */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name='identityNumber'
-              control={control}
-              render={({ field }) => (
-                <TextField {...field} fullWidth label='CMND/CCCD' disabled={isLocked} />
-              )}
-            />
-          </Grid>
+          {/* Ngày sinh */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='dateOfBirth'
@@ -389,9 +359,7 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='notes'
               control={control}
-              render={({ field }) => (
-                <TextField {...field} fullWidth label='Ghi chú' multiline rows={3} />
-              )}
+              render={({ field }) => <TextField {...field} fullWidth label='Ghi chú' multiline rows={3} />}
             />
           </Grid>
         </Grid>
@@ -411,9 +379,27 @@ const EditStudentDrawer = (props: Props) => {
         open={zaloModalOpen}
         onClose={() => setZaloModalOpen(false)}
         defaultPhone={student?.phoneNumber || ''}
-        onConfirm={userId => {
-          setPendingZaloUserId(userId)
-          showNotification('Xác thực Zalo thành công — nhấn "Lưu thay đổi" để cập nhật.', 'info')
+        onConfirm={async (userId, phone) => {
+          if (!student) return
+          setSavingZalo(true)
+          try {
+            const res = await studentService.updateStudentZalo(student.id, userId, phone)
+            if (res.success && res.data) {
+              showNotification('Liên kết Zalo thành công!', 'success')
+              // onSaved(res.data as StudentType)
+              reset({
+                ...defaultValues,
+                phoneNumber: res.data.phoneNumber
+              })
+            } else {
+              showNotification(res.message || 'Không thể lưu liên kết Zalo.', 'error')
+            }
+          } catch (err) {
+            logger.error('EditStudentDrawer', 'updateStudentZalo', err)
+            showNotification('Đã có lỗi khi lưu liên kết Zalo.', 'error')
+          } finally {
+            setSavingZalo(false)
+          }
         }}
       />
     </Drawer>

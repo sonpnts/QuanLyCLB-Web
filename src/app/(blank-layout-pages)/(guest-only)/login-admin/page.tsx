@@ -1,4 +1,4 @@
-﻿// Next Imports
+// Next Imports
 import type { Metadata } from 'next'
 
 // Component Imports

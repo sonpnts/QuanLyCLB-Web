@@ -42,7 +42,6 @@ const initialForm = {
   phoneNumber: '',
   email: '',
   address: '',
-  identityNumber: '',
   dateOfBirth: '',
   gender: '',
   notes: ''
@@ -76,7 +75,6 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
         phoneNumber: formData.phoneNumber || undefined,
         email: formData.email || undefined,
         address: formData.address || undefined,
-        identityNumber: formData.identityNumber || undefined,
         dateOfBirth: formData.dateOfBirth || undefined,
         gender: formData.gender !== '' ? formData.gender === 'true' : undefined,
         notes: formData.notes || undefined
@@ -106,8 +104,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
       dateOfBirth: info.dateOfBirth || prev.dateOfBirth,
       phoneNumber: info.phoneNumber || prev.phoneNumber,
       address: info.address || prev.address,
-      email: info.email || prev.email,
-      identityNumber: info.identityNumber || prev.identityNumber
+      email: info.email || prev.email
     }))
     showNotification('Đã áp dụng thông tin từ liên đoàn.', 'info')
   }
@@ -173,14 +170,6 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
                 fullWidth
                 value={formData.address}
                 onChange={e => setFormData({ ...formData, address: e.target.value })}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label='CMND/CCCD'
-                fullWidth
-                value={formData.identityNumber}
-                onChange={e => setFormData({ ...formData, identityNumber: e.target.value })}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>

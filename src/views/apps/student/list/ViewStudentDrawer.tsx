@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -431,12 +431,6 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
                     <Typography variant='body1'>
                       {student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : '-'}
                     </Typography>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      CMND/CCCD
-                    </Typography>
-                    <Typography variant='body1'>{student.identityNumber || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>

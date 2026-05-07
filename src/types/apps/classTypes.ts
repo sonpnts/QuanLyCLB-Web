@@ -33,6 +33,7 @@ export type ClassType = {
   updatedBy?: string
   avatarColor?: ThemeColor
   coachIds?: string[]
+  leadInstructorId?: string
   coaches?: ClassUserAssignment[]
   assistants?: ClassUserAssignment[]
 }

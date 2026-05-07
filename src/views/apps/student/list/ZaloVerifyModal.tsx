@@ -26,15 +26,15 @@ import { useTheme } from '@mui/material/styles'
 import studentService, { type ZaloUserInfo } from '@/services/studentService'
 import { logger } from '@/utils/logger'
 
-const ZALO_OA_LINK = 'https://oa.zalo.me/2961505845935635716'
-const ZALO_QR_IMG  = 'https://ik.imagekit.io/cmistandattaekwondo/zalooa.jpg'
+const ZALO_OA_LINK = process.env.ZALO_OA_LINK ||null
+const ZALO_QR_IMG = process.env.ZALO_QR_IMG||null
 
 type Props = {
   open: boolean
   onClose: () => void
   defaultPhone?: string
-  /** Gọi khi xác nhận liên kết — truyền user_id về drawer cha */
-  onConfirm: (userId: string) => void
+  /** Gọi khi xác nhận liên kết — truyền user_id và số điện thoại về drawer cha */
+  onConfirm: (userId: string, phone: string) => void
 }
 
 type VerifyState = 'idle' | 'loading' | 'not_follower' | 'confirmed' | 'error'
@@ -42,6 +42,7 @@ type VerifyState = 'idle' | 'loading' | 'not_follower' | 'confirmed' | 'error'
 const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props) => {
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
+
 
   const [phone, setPhone]           = useState(defaultPhone)
   const [state, setState]           = useState<VerifyState>('idle')
@@ -90,7 +91,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
 
   const handleConfirm = () => {
     if (zaloUser?.user_id) {
-      onConfirm(zaloUser.user_id)
+      onConfirm(zaloUser.user_id, phone.trim())
       handleClose()
     }
   }

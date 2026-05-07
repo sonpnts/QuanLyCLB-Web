@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // React Imports
 import { useState, useEffect, useRef, memo } from 'react'

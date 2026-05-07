@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef, memo } from 'react'
 import CardContent from '@mui/material/CardContent'

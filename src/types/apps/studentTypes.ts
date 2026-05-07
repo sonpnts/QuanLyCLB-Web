@@ -15,7 +15,6 @@ export type StudentType = {
   fullName: string
   phoneNumber?: string
   address?: string
-  identityNumber?: string
   dateOfBirth?: string
   email?: string
   gender?: boolean // true = Nam, false = Nữ

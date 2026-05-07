@@ -20,7 +20,6 @@ export interface CreateStudentRequest {
   code?: string
   phoneNumber?: string
   address?: string
-  identityNumber?: string
   dateOfBirth?: string
   email?: string
   gender?: boolean
@@ -262,6 +261,20 @@ class StudentService {
     } catch (error) {
       logger.error('StudentService', 'getStudentAttendance', error)
       return { success: true, data: [] }
+    }
+  }
+
+  async updateStudentZalo(studentId: string, userIdZalo: string, phoneNumber: string): Promise<ResponseResult<StudentType>> {
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.students.zaloUpdate(studentId), { userIdZalo, phoneNumber })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'updateStudentZalo', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 

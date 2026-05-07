@@ -220,6 +220,24 @@ class UserService {
     }
   }
 
+  async getTeachingStaff(): Promise<ResponseResult<UsersType[]>> {
+    try {
+      const [coachesRes, assistantsRes] = await Promise.all([
+        this.getUsers({ Role: 'Coach', IsActive: true, PageSize: 500 }),
+        this.getUsers({ Role: 'Assistant', IsActive: true, PageSize: 500 })
+      ])
+
+      const merged = [...(coachesRes.data || []), ...(assistantsRes.data || [])]
+      const byId = new Map<string, UsersType>()
+      merged.forEach(u => byId.set(String(u.id), u))
+
+      return { success: true, data: Array.from(byId.values()) }
+    } catch (error) {
+      logger.error('UserService', 'getTeachingStaff', error)
+      return { success: false, data: [] }
+    }
+  }
+
   /**
    * PUT /api/Users/{id}
    * Update a user

@@ -1,10 +1,8 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
-// React Imports
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
-// MUI Imports
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
 import FormControl from '@mui/material/FormControl'
@@ -20,16 +18,13 @@ import Grid from '@mui/material/Grid2'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 
-// Third-party Imports
 import { useForm, Controller } from 'react-hook-form'
 
-// Types Imports
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
 import classService from '@/services/classService'
 import userService from '@/services/userService'
 
-// Context Imports
 import { useNotification } from '@/contexts/notificationContext'
 
 type Props = {
@@ -43,77 +38,93 @@ type FormValidateType = {
   name: string
   description?: string
   userIds?: string[]
+  leadInstructorId?: string
 }
 
 const EditClassDrawer = (props: Props) => {
   const { open, handleClose, classData, onClassUpdated } = props
 
-  // States
   const [loading, setLoading] = useState(false)
-  const [coaches, setCoaches] = useState<UsersType[]>([])
-  const [loadingCoaches, setLoadingCoaches] = useState(false)
+  const [teachingStaff, setTeachingStaff] = useState<UsersType[]>([])
+  const [loadingStaff, setLoadingStaff] = useState(false)
 
-  // Notification Hook
   const { showNotification } = useNotification()
 
-  // Hooks
+  const defaultLeadInstructorId = useMemo(() => {
+    const lead = classData.coaches?.find(c => c.isLeadInstructor)
+    return lead?.userId || classData.coachIds?.[0] || ''
+  }, [classData])
+
   const {
     control,
     reset: resetForm,
     handleSubmit,
+    watch,
     formState: { errors }
   } = useForm<FormValidateType>({
     defaultValues: {
       name: classData.name || '',
       description: classData.description || '',
-      userIds: classData.coachIds || []
+      userIds: classData.coachIds || [],
+      leadInstructorId: defaultLeadInstructorId
     }
   })
 
-  // Reset form when classData changes
   useEffect(() => {
     if (open && classData) {
       resetForm({
         name: classData.name || '',
         description: classData.description || '',
-        userIds: classData.coachIds || []
+        userIds: classData.coachIds || [],
+        leadInstructorId: defaultLeadInstructorId
       })
     }
-  }, [open, classData, resetForm])
+  }, [open, classData, defaultLeadInstructorId, resetForm])
 
-  // Load coaches when drawer opens
   useEffect(() => {
-    const loadCoaches = async () => {
+    const loadStaff = async () => {
       if (open) {
         try {
-          setLoadingCoaches(true)
-          const response = await userService.getCoaches()
+          setLoadingStaff(true)
+          const response = await userService.getTeachingStaff()
 
           if (response.success && response.data) {
-            setCoaches(response.data)
+            setTeachingStaff(response.data)
           } else {
-            showNotification('Không thể tải danh sách huấn luyện viên.', 'warning')
+            showNotification('Không thể tải danh sách huấn luyện viên/trợ giảng.', 'warning')
           }
         } catch (error) {
-          logger.error('EditClassDrawer', 'Error loading coaches', error)
-          showNotification('Đã có lỗi khi tải huấn luyện viên.', 'error')
+          logger.error('EditClassDrawer', 'Error loading teaching staff', error)
+          showNotification('Đã có lỗi khi tải danh sách người phụ trách.', 'error')
         } finally {
-          setLoadingCoaches(false)
+          setLoadingStaff(false)
         }
       }
     }
 
-    loadCoaches()
+    loadStaff()
   }, [open, showNotification])
+
+  const selectedUserIds = watch('userIds') || []
 
   const onSubmit = async (data: FormValidateType) => {
     try {
       setLoading(true)
 
+      if (!data.userIds?.length) {
+        showNotification('Vui lòng chọn ít nhất 1 người phụ trách lớp.', 'warning')
+        return
+      }
+      if (!data.leadInstructorId || !data.userIds.includes(data.leadInstructorId)) {
+        showNotification('Vui lòng chọn đúng 1 huấn luyện viên chính.', 'warning')
+        return
+      }
+
       const response = await classService.updateClass(classData.id, {
         name: data.name,
         description: data.description,
-        userIds: data.userIds
+        userIds: data.userIds,
+        leadInstructorId: data.leadInstructorId
       })
 
       if (response.success && response.data) {
@@ -155,13 +166,7 @@ const EditClassDrawer = (props: Props) => {
         <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-5'>
           <Grid container spacing={4}>
             <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label='Mã lớp học'
-                value={classData.code}
-                disabled
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
+              <TextField fullWidth label='Mã lớp học' value={classData.code} disabled slotProps={{ inputLabel: { shrink: true } }} />
             </Grid>
             <Grid size={{ xs: 12 }}>
               <Controller
@@ -169,12 +174,7 @@ const EditClassDrawer = (props: Props) => {
                 control={control}
                 rules={{ required: true }}
                 render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label='Tên lớp *'
-                    {...(errors.name && { error: true, helperText: 'Trường này là bắt buộc.' })}
-                  />
+                  <TextField {...field} fullWidth label='Tên lớp *' {...(errors.name && { error: true, helperText: 'Trường này là bắt buộc.' })} />
                 )}
               />
             </Grid>
@@ -183,71 +183,92 @@ const EditClassDrawer = (props: Props) => {
                 name='description'
                 control={control}
                 render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    multiline
-                    rows={3}
-                    label='Mô tả'
-                    placeholder='Nhập mô tả lớp học...'
-                  />
+                  <TextField {...field} fullWidth multiline rows={3} label='Mô tả' placeholder='Nhập mô tả lớp học...' />
                 )}
               />
             </Grid>
+
             <Grid size={{ xs: 12 }}>
               <FormControl fullWidth>
-                <InputLabel id='instructor-select'>Huấn luyện viên</InputLabel>
+                <InputLabel id='instructor-select'>Người phụ trách lớp</InputLabel>
                 <Controller
                   name='userIds'
                   control={control}
                   render={({ field }) => {
                     const selectedIds = field.value || []
-                    const availableCoaches = coaches.filter(coach => !selectedIds.includes(String(coach.id)))
+                    const availableStaff = teachingStaff.filter(staff => !selectedIds.includes(String(staff.id)))
 
                     return (
                       <Select
                         {...field}
                         multiple
-                        label='Huấn luyện viên'
-                        disabled={loadingCoaches}
+                        label='Người phụ trách lớp'
+                        disabled={loadingStaff}
                         value={selectedIds}
                         renderValue={selected => (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                             {(selected as string[]).map(value => {
-                              const coach = coaches.find(c => String(c.id) === value)
-
-                              return coach ? (
+                              const staff = teachingStaff.find(c => String(c.id) === value)
+                              return staff ? (
                                 <Chip
                                   key={value}
-                                  label={coach.fullName}
+                                  label={staff.fullName}
                                   size='small'
                                   onDelete={() => {
                                     const newValue = selectedIds.filter((id: string) => id !== value)
-
                                     field.onChange(newValue)
                                   }}
-                                  onMouseDown={e => {
-                                    e.stopPropagation()
-                                  }}
+                                  onMouseDown={e => e.stopPropagation()}
                                 />
                               ) : null
                             })}
                           </Box>
                         )}
                       >
-                        {availableCoaches.map(coach => (
-                          <MenuItem key={String(coach.id)} value={String(coach.id)}>
-                            {coach.fullName} ({coach.email})
+                        {availableStaff.map(staff => (
+                          <MenuItem key={String(staff.id)} value={String(staff.id)}>
+                            {staff.fullName} ({staff.email})
                           </MenuItem>
                         ))}
                       </Select>
                     )
                   }}
                 />
-                {loadingCoaches && <FormHelperText>Đang tải danh sách...</FormHelperText>}
+                {loadingStaff && <FormHelperText>Đang tải danh sách...</FormHelperText>}
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <FormControl fullWidth error={Boolean(errors.leadInstructorId)}>
+                <InputLabel id='lead-instructor-select'>Huấn luyện viên chính *</InputLabel>
+                <Controller
+                  name='leadInstructorId'
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      label='Huấn luyện viên chính *'
+                      value={field.value || ''}
+                      disabled={selectedUserIds.length === 0}
+                    >
+                      {selectedUserIds.map(id => {
+                        const staff = teachingStaff.find(u => String(u.id) === id)
+                        if (!staff) return null
+                        return (
+                          <MenuItem key={id} value={id}>
+                            {staff.fullName} ({staff.email})
+                          </MenuItem>
+                        )
+                      })}
+                    </Select>
+                  )}
+                />
+                {errors.leadInstructorId && <FormHelperText>Vui lòng chọn huấn luyện viên chính.</FormHelperText>}
               </FormControl>
             </Grid>
           </Grid>
+
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
               {loading ? 'Đang xử lý...' : 'Cập nhật'}

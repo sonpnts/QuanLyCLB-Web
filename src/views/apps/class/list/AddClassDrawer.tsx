@@ -1,10 +1,8 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
-// React Imports
 import { useState, useEffect } from 'react'
 
-// MUI Imports
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
 import FormControl from '@mui/material/FormControl'
@@ -20,16 +18,13 @@ import Grid from '@mui/material/Grid2'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 
-// Third-party Imports
 import { useForm, Controller } from 'react-hook-form'
 
-// Types Imports
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
 import classService from '@/services/classService'
 import userService from '@/services/userService'
 
-// Context Imports
 import { useNotification } from '@/contexts/notificationContext'
 
 type Props = {
@@ -44,67 +39,73 @@ type FormValidateType = {
   name: string
   description?: string
   userIds?: string[]
+  leadInstructorId?: string
 }
 
 const AddClassDrawer = (props: Props) => {
-  // Props
   const { open, handleClose, classData, setData } = props
 
-  // States
   const [loading, setLoading] = useState(false)
-  const [coaches, setCoaches] = useState<UsersType[]>([])
-  const [loadingCoaches, setLoadingCoaches] = useState(false)
+  const [teachingStaff, setTeachingStaff] = useState<UsersType[]>([])
+  const [loadingStaff, setLoadingStaff] = useState(false)
 
-  // Notification Hook
   const { showNotification } = useNotification()
 
-  // Hooks
   const {
     control,
     reset: resetForm,
     handleSubmit,
+    watch,
     formState: { errors }
   } = useForm<FormValidateType>({
     defaultValues: {
       code: '',
       name: '',
       description: '',
-      userIds: []
+      userIds: [],
+      leadInstructorId: ''
     }
   })
 
-  // Load coaches when drawer opens
   useEffect(() => {
-    const loadCoaches = async () => {
+    const loadStaff = async () => {
       if (open) {
         try {
-          setLoadingCoaches(true)
-          const response = await userService.getCoaches()
-
-          if (response.success && response.data) {
-            setCoaches(response.data)
-          }
+          setLoadingStaff(true)
+          const response = await userService.getTeachingStaff()
+          if (response.success && response.data) setTeachingStaff(response.data)
         } catch {
-          // silently ignore — coaches list shows empty
         } finally {
-          setLoadingCoaches(false)
+          setLoadingStaff(false)
         }
       }
     }
 
-    loadCoaches()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadStaff()
   }, [open])
+
+  const selectedUserIds = watch('userIds') || []
 
   const onSubmit = async (data: FormValidateType) => {
     try {
       setLoading(true)
 
+      if (!data.userIds?.length) {
+        showNotification('Vui lòng chọn ít nhất 1 người phụ trách lớp.', 'warning')
+        return
+      }
+
+      if (!data.leadInstructorId || !data.userIds.includes(data.leadInstructorId)) {
+        showNotification('Vui lòng chọn đúng 1 huấn luyện viên chính.', 'warning')
+        return
+      }
+
       const response = await classService.createClass({
         code: data.code,
         name: data.name,
         description: data.description,
-        userIds: data.userIds
+        userIds: data.userIds,
+        leadInstructorId: data.leadInstructorId
       })
 
       if (response.success && response.data) {
@@ -195,39 +196,39 @@ const AddClassDrawer = (props: Props) => {
                 )}
               />
             </Grid>
+
             <Grid size={{ xs: 12 }}>
               <FormControl fullWidth>
                 <InputLabel id='instructor-select' error={Boolean(errors.userIds)}>
-                  Huấn luyện viên
+                  Người phụ trách lớp
                 </InputLabel>
                 <Controller
                   name='userIds'
                   control={control}
                   render={({ field }) => {
                     const selectedIds = field.value || []
-                    const availableCoaches = coaches.filter(coach => !selectedIds.includes(String(coach.id)))
+                    const availableStaff = teachingStaff.filter(staff => !selectedIds.includes(String(staff.id)))
 
                     return (
                       <Select
                         {...field}
                         multiple
-                        label='Huấn luyện viên'
+                        label='Người phụ trách lớp'
                         error={Boolean(errors.userIds)}
-                        disabled={loadingCoaches}
+                        disabled={loadingStaff}
                         value={selectedIds}
                         renderValue={selected => (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                             {(selected as string[]).map(value => {
-                              const coach = coaches.find(c => String(c.id) === value)
+                              const staff = teachingStaff.find(c => String(c.id) === value)
 
-                              return coach ? (
+                              return staff ? (
                                 <Chip
                                   key={value}
-                                  label={coach.fullName}
+                                  label={staff.fullName}
                                   size='small'
                                   onDelete={() => {
                                     const newValue = selectedIds.filter((id: string) => id !== value)
-
                                     field.onChange(newValue)
                                   }}
                                   onMouseDown={e => {
@@ -239,19 +240,50 @@ const AddClassDrawer = (props: Props) => {
                           </Box>
                         )}
                       >
-                        {availableCoaches.map(coach => (
-                          <MenuItem key={String(coach.id)} value={String(coach.id)}>
-                            {coach.fullName} ({coach.email})
+                        {availableStaff.map(staff => (
+                          <MenuItem key={String(staff.id)} value={String(staff.id)}>
+                            {staff.fullName} ({staff.email})
                           </MenuItem>
                         ))}
                       </Select>
                     )
                   }}
                 />
-                {loadingCoaches && <FormHelperText>Đang tải danh sách...</FormHelperText>}
+                {loadingStaff && <FormHelperText>Đang tải danh sách...</FormHelperText>}
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <FormControl fullWidth error={Boolean(errors.leadInstructorId)}>
+                <InputLabel id='lead-instructor-select'>Huấn luyện viên chính *</InputLabel>
+                <Controller
+                  name='leadInstructorId'
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      label='Huấn luyện viên chính *'
+                      value={field.value || ''}
+                      disabled={selectedUserIds.length === 0}
+                    >
+                      {selectedUserIds.map(id => {
+                        const staff = teachingStaff.find(u => String(u.id) === id)
+                        if (!staff) return null
+                        return (
+                          <MenuItem key={id} value={id}>
+                            {staff.fullName} ({staff.email})
+                          </MenuItem>
+                        )
+                      })}
+                    </Select>
+                  )}
+                />
+                {errors.leadInstructorId && <FormHelperText>Vui lòng chọn huấn luyện viên chính.</FormHelperText>}
               </FormControl>
             </Grid>
           </Grid>
+
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
               {loading ? 'Đang xử lý...' : 'Tạo lớp học'}

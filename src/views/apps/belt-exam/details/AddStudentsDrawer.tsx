@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { logger } from '@/utils/logger'
 
 import { useState, useEffect } from 'react'

@@ -36,7 +36,6 @@ export interface MemberInfo {
   phoneNumber?: string
   address?: string
   email?: string
-  identityNumber?: string
 }
 
 interface Props {
@@ -138,7 +137,6 @@ const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = fals
       // phoneNumber: lookupResult.phoneNumber || undefined,
       // address: lookupResult.address || undefined,
       // email: lookupResult.email || undefined,
-      // identityNumber: lookupResult.idCard || undefined
     })
   }
 
