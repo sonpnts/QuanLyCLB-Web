@@ -33,6 +33,7 @@ type Props = {
   open: boolean
   onClose: () => void
   defaultPhone?: string
+
   /** Gọi khi xác nhận liên kết — truyền user_id và số điện thoại về drawer cha */
   onConfirm: (userId: string, phone: string) => void
 }
@@ -83,7 +84,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
   }
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(ZALO_OA_LINK).then(() => {
+    navigator.clipboard.writeText(ZALO_OA_LINK??"").then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
@@ -119,11 +120,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
             Xác thực Zalo
           </Typography>
         </Box>
-        <IconButton
-          onClick={handleClose}
-          size='small'
-          sx={{ position: 'absolute', right: 12, top: 12 }}
-        >
+        <IconButton onClick={handleClose} size='small' sx={{ position: 'absolute', right: 12, top: 12 }}>
           <i className='ri-close-line text-xl' />
         </IconButton>
       </DialogTitle>
@@ -155,7 +152,9 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
             onClick={handleVerify}
             disabled={!phone.trim() || state === 'loading'}
             sx={{ minWidth: 120, whiteSpace: 'nowrap' }}
-            startIcon={state === 'loading' ? <CircularProgress size={16} color='inherit' /> : <i className='ri-search-2-line' />}
+            startIcon={
+              state === 'loading' ? <CircularProgress size={16} color='inherit' /> : <i className='ri-search-2-line' />
+            }
           >
             {state === 'loading' ? 'Đang kiểm tra...' : 'Kiểm tra'}
           </Button>
@@ -193,11 +192,12 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
                   variant='body2'
                   sx={{ flex: 1, wordBreak: 'break-all', color: 'primary.main' }}
                   component='a'
-                  href={ZALO_OA_LINK}
+                  href={ZALO_OA_LINK??''}
                   target='_blank'
                   rel='noopener noreferrer'
                 >
-                  {ZALO_OA_LINK}
+                  {ZALO_OA_LINK ?? ''}
+                  {' '}
                 </Typography>
                 <Tooltip title={copied ? 'Đã sao chép!' : 'Sao chép link'} arrow>
                   <IconButton size='small' onClick={handleCopyLink} color={copied ? 'success' : 'default'}>
@@ -219,7 +219,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
             >
               <Box
                 component='img'
-                src={ZALO_QR_IMG}
+                src={ZALO_QR_IMG??''}
                 alt='QR Code Zalo OA'
                 sx={{
                   width: { xs: '100%', sm: 160 },
@@ -301,7 +301,12 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
           </Button>
         )}
         {state === 'confirmed' && zaloUser?.user_id && (
-          <Button variant='contained' color='success' onClick={handleConfirm} startIcon={<i className='ri-save-line' />}>
+          <Button
+            variant='contained'
+            color='success'
+            onClick={handleConfirm}
+            startIcon={<i className='ri-save-line' />}
+          >
             Xác nhận liên kết
           </Button>
         )}
