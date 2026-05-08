@@ -47,6 +47,7 @@ import type { ClassType } from '@/types/apps/classTypes'
 import TableFilters from './TableFilters'
 import AddClassDrawer from './AddClassDrawer'
 import EditClassDrawer from './EditClassDrawer'
+import ClassPermissionDialog from './ClassPermissionDialog'
 import AddClassScheduleDrawer from './AddClassScheduleDrawer'
 import ClassScheduleView from './ClassScheduleView'
 import AddStudentsToClassDrawer from './AddStudentsToClassDrawer'
@@ -107,6 +108,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   const [editClassOpen, setEditClassOpen] = useState(false)
   const [addScheduleOpen, setAddScheduleOpen] = useState(false)
   const [viewScheduleOpen, setViewScheduleOpen] = useState(false)
+  const [permissionDialogOpen, setPermissionDialogOpen] = useState(false)
   const [addStudentsOpen, setAddStudentsOpen] = useState(false)
   const [selectedClass, setSelectedClass] = useState<ClassType | null>(null)
   const [rowSelection, setRowSelection] = useState({})
@@ -146,15 +148,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
       try {
         setLoading(true)
 
-        let response
-
-        if (isInstructor && userId) {
-          // HLV / trợ giảng: chỉ lấy lớp được phân công
-          response = await classService.getClassesByUserId(userId)
-        } else {
-          // Admin / chưa xác định: lấy tất cả theo filter
-          response = await classService.getClasses(filterParams)
-        }
+        let response = await classService.getClasses(filterParams)
 
         if (!cancelled) {
           setData(response.data || [])
@@ -185,6 +179,8 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
 
   // Load users for display (coaches/instructors) – only once
   useEffect(() => {
+    if (!isAdmin) return
+
     let cancelled = false
 
     const loadUsers = async () => {
@@ -204,7 +200,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isAdmin])
 
   // Hooks
   const columns = useMemo<ColumnDef<ClassTypeWithAction, any>[]>(
@@ -391,18 +387,16 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
               {/* Các thao tác chỉ hiện khi lớp đang hoạt động */}
               {!isInactive && (
                 <>
-                  {isAdmin && (
-                    <IconButton
-                      onClick={() => {
-                        setSelectedClass(row.original)
-                        setAddStudentsOpen(true)
-                      }}
-                      title='Thêm học viên'
-                      color='success'
-                    >
-                      <i className='ri-user-add-line' />
-                    </IconButton>
-                  )}
+                  <IconButton
+                    onClick={() => {
+                      setSelectedClass(row.original)
+                      setAddStudentsOpen(true)
+                    }}
+                    title='Thêm học viên'
+                    color='success'
+                  >
+                    <i className='ri-user-add-line' />
+                  </IconButton>
                   <IconButton
                     onClick={() => {
                       setSelectedClass(row.original)
@@ -443,6 +437,18 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   <i className='ri-eye-line text-textSecondary' />
                 </Link>
               </IconButton>
+
+              {isAdmin && !isInactive && (
+                <IconButton
+                  onClick={() => {
+                    setSelectedClass(row.original)
+                    setPermissionDialogOpen(true)
+                  }}
+                  title='Phân quyền'
+                >
+                  <i className='ri-shield-keyhole-line text-warning' />
+                </IconButton>
+              )}
 
               {isAdmin && !isInactive && (
                 <IconButton

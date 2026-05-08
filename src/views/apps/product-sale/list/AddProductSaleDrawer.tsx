@@ -12,8 +12,10 @@ import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
+import Autocomplete from '@mui/material/Autocomplete'
 
 import type { ProductSaleType } from '@/types/apps/productSaleTypes'
+import type { StudentType } from '@/types/apps/studentTypes'
 import type { ProductType } from '@/types/apps/productTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
@@ -23,6 +25,8 @@ import classService from '@/services/classService'
 import userService from '@/services/userService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
+import { hasAdminRole } from '@/utils/roleUtils'
+import studentService from '@/services/studentService'
 
 type Props = {
   open: boolean
@@ -36,6 +40,8 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
   const [products, setProducts] = useState<ProductType[]>([])
   const [classes, setClasses] = useState<ClassType[]>([])
   const [collectors, setCollectors] = useState<UsersType[]>([])
+  const [classStudents, setClassStudents] = useState<StudentType[]>([])
+  const isAdmin = hasAdminRole(auth?.roles)
 
   const [formData, setFormData] = useState({
     productId: '',
@@ -74,6 +80,16 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
 
     if (open) loadData()
   }, [open, auth?.user.id, showNotification])
+
+  useEffect(() => {
+    if (formData.classId) {
+      studentService.getStudents({ classId: formData.classId, pageSize: 1000 }).then(res => {
+        if (res.success && res.data) setClassStudents(res.data)
+      }).catch(() => setClassStudents([]))
+    } else {
+      setClassStudents([])
+    }
+  }, [formData.classId])
 
   const resetAndClose = () => {
     setFormData({
@@ -184,21 +200,23 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth>
-            <InputLabel>Người thu tiền</InputLabel>
-            <Select
-              label='Người thu tiền'
-              value={formData.soldByUserId}
-              onChange={event => setFormData(prev => ({ ...prev, soldByUserId: event.target.value }))}
-            >
-              <MenuItem value=''>Tự động theo user đăng nhập</MenuItem>
-              {collectors.map(user => (
-                <MenuItem key={user.id} value={user.id}>
-                  {user.fullName}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {isAdmin && (
+            <FormControl fullWidth>
+              <InputLabel>Người thu tiền</InputLabel>
+              <Select
+                label='Người thu tiền'
+                value={formData.soldByUserId}
+                onChange={event => setFormData(prev => ({ ...prev, soldByUserId: event.target.value }))}
+              >
+                <MenuItem value=''>Tự động theo user đăng nhập</MenuItem>
+                {collectors.map(user => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.fullName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
           <div className='grid grid-cols-2 gap-4'>
             <TextField
@@ -215,10 +233,13 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
             />
           </div>
 
-          <TextField
-            label='Người mua'
+          <Autocomplete
+            freeSolo
+            options={classStudents.map(s => s.fullName)}
             value={formData.buyerName}
-            onChange={event => setFormData(prev => ({ ...prev, buyerName: event.target.value }))}
+            onChange={(_, newValue) => setFormData(prev => ({ ...prev, buyerName: newValue || '' }))}
+            onInputChange={(_, newInputValue) => setFormData(prev => ({ ...prev, buyerName: newInputValue }))}
+            renderInput={params => <TextField {...params} label='Người mua' />}
           />
 
           <TextField

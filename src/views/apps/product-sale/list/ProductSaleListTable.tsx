@@ -99,7 +99,7 @@ const ProductSaleListTable = () => {
         const [productsRes, classesRes, coachesRes] = await Promise.all([
           productService.getProducts({}),
           classService.getClasses({ isActive: true, pageSize: 1000 }),
-          userService.getCoaches()
+          userService.getCoaches().catch(() => ({ success: true, data: [] }))
         ])
 
         if (productsRes.success && productsRes.data) setProducts(productsRes.data)

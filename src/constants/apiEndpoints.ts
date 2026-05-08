@@ -71,7 +71,9 @@ export const API_ENDPOINTS = {
     students: (classId: string) => `/Classes/${classId}/students`,
     attendance: (classId: string) => `/Classes/${classId}/attendance`,
     payments: (classId: string) => `/Classes/${classId}/payments`,
-    duplicate: (classId: string) => `/Classes/${classId}/duplicate`
+    duplicate: (classId: string) => `/Classes/${classId}/duplicate`,
+    permissions: (classId: string) => `/Classes/${classId}/permissions`,
+    permissionsByUser: (classId: string, userId: string) => `/Classes/${classId}/permissions/${userId}`
   },
   classTransfers: {
     root: '/class-transfers',

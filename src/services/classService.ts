@@ -373,6 +373,38 @@ class ClassService {
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
+
+  async getClassPermissions(classId: string): Promise<ResponseResult<any[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.permissions(classId))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data || [] }
+    } catch (error) {
+      logger.error('ClassService', 'getClassPermissions', error)
+      return { success: true, data: [] }
+    }
+  }
+
+  async updateClassPermissions(classId: string, userId: string, permissions: string[]): Promise<ResponseResult<any>> {
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.classes.permissionsByUser(classId, userId), permissions)
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('ClassService', 'updateClassPermissions', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
 }
 
 const classService = new ClassService()

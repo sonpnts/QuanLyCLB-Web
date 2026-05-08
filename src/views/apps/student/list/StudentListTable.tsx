@@ -48,6 +48,7 @@ import AddStudentDrawer from './AddStudentDrawer'
 import EditStudentDrawer from './EditStudentDrawer'
 import ViewStudentDrawer from './ViewStudentDrawer'
 import EnrollStudentDrawer from './EnrollStudentDrawer'
+import TransferStudentDialog from './TransferStudentDialog'
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Service Imports
@@ -115,6 +116,7 @@ const StudentListTable = () => {
   const [editStudentOpen, setEditStudentOpen] = useState(false)
   const [viewStudentOpen, setViewStudentOpen] = useState(false)
   const [enrollStudentOpen, setEnrollStudentOpen] = useState(false)
+  const [transferStudentOpen, setTransferStudentOpen] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<StudentType[]>([])
@@ -174,7 +176,7 @@ const StudentListTable = () => {
 
         if (isInstructor && userId) {
           // HLV / trợ giảng: lấy lớp được phân công, sau đó lấy học viên từng lớp
-          const classRes = await classService.getClassesByUserId(userId)
+          const classRes = await classService.getClasses({})
           const classIds = (classRes.data || []).filter(c => c.isActive !== false).map(c => c.id)
 
           if (classIds.length === 0) {
@@ -247,6 +249,11 @@ const StudentListTable = () => {
   const handleEnroll = useCallback((student: StudentType) => {
     setSelectedStudent(student)
     setEnrollStudentOpen(true)
+  }, [])
+
+  const handleTransfer = useCallback((student: StudentType) => {
+    setSelectedStudent(student)
+    setTransferStudentOpen(true)
   }, [])
 
   const handleStudentUpdated = useCallback((updated: StudentType) => {
@@ -426,13 +433,21 @@ const StudentListTable = () => {
       {
         id: 'actions',
         header: 'Thao tác',
-        cell: ({ row }) => (
+        cell: ({ row }) => {
+          const activeClasses = (row.original.classes || []).filter(c => !c.status || c.status === 'Active')
+          return (
           <div className='flex items-center'>
             {!row.original.isSuspended ? (
               <>
-                <IconButton onClick={() => handleEnroll(row.original)} title='Đăng ký lớp' color='success'>
-                  <i className='ri-user-add-line' />
-                </IconButton>
+                {activeClasses.length === 0 ? (
+                  <IconButton onClick={() => handleEnroll(row.original)} title='Đăng ký lớp' color='success'>
+                    <i className='ri-user-add-line' />
+                  </IconButton>
+                ) : (
+                  <IconButton onClick={() => handleTransfer(row.original)} title='Yêu cầu chuyển lớp' color='warning'>
+                    <i className='ri-arrow-left-right-line' />
+                  </IconButton>
+                )}
                 <IconButton onClick={() => openSuspendDialog(row.original)} title='Tạm nghỉ' color='warning'>
                   <i className='ri-pause-circle-line' />
                 </IconButton>
@@ -452,7 +467,8 @@ const StudentListTable = () => {
               <i className='ri-edit-box-line' />
             </IconButton>
           </div>
-        )
+          )
+        }
       }
     ],
     [handleDelete, handleEdit, handleView, handleEnroll, openSuspendDialog, handleResume]
@@ -710,6 +726,15 @@ const StudentListTable = () => {
         }}
         student={selectedStudent}
         onEnrolled={handleEnrolled}
+      />
+      <TransferStudentDialog
+        open={transferStudentOpen}
+        onClose={() => {
+          setTransferStudentOpen(false)
+          setSelectedStudent(null)
+        }}
+        student={selectedStudent}
+        onTransferred={handleEnrolled}
       />
     </>
   )
