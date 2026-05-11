@@ -37,6 +37,8 @@ import productService from '@/services/productService'
 import classService from '@/services/classService'
 import userService from '@/services/userService'
 import { useNotification } from '@/contexts/notificationContext'
+import { useAuth } from '@/contexts/authContext'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 import AddProductSaleDrawer from './AddProductSaleDrawer'
 import TableFilters from './TableFilters'
@@ -75,6 +77,8 @@ const columnHelper = createColumnHelper<ProductSaleType>()
 
 const ProductSaleListTable = () => {
   const { showNotification } = useNotification()
+  const { auth } = useAuth()
+  const isAdmin = hasAdminRole(auth?.roles)
 
   const [addDrawerOpen, setAddDrawerOpen] = useState(false)
   const [data, setData] = useState<ProductSaleType[]>([])
@@ -99,7 +103,7 @@ const ProductSaleListTable = () => {
         const [productsRes, classesRes, coachesRes] = await Promise.all([
           productService.getProducts({}),
           classService.getClasses({ isActive: true, pageSize: 1000 }),
-          userService.getCoaches().catch(() => ({ success: true, data: [] }))
+          isAdmin ? userService.getCoaches().catch(() => ({ success: true, data: [] })) : Promise.resolve({ success: true, data: [] })
         ])
 
         if (productsRes.success && productsRes.data) setProducts(productsRes.data)
@@ -111,7 +115,7 @@ const ProductSaleListTable = () => {
     }
 
     loadReferences()
-  }, [])
+  }, [isAdmin])
 
   const loadSales = useCallback(async () => {
     try {

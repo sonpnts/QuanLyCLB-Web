@@ -9,12 +9,11 @@ import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import Chip from '@mui/material/Chip'
+import Divider from '@mui/material/Divider'
 import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
-import DialogContentText from '@mui/material/DialogContentText'
 import DialogTitle from '@mui/material/DialogTitle'
-import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import TablePagination from '@mui/material/TablePagination'
 import TextField from '@mui/material/TextField'
@@ -99,10 +98,6 @@ const PaymentListTable = () => {
   const [loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetPaymentsParams>({})
 
-  // Xóa dialog state
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [deletingLoading, setDeletingLoading] = useState(false)
 
   const { showNotification } = useNotification()
 
@@ -132,7 +127,9 @@ const PaymentListTable = () => {
 
         const response = await paymentService.getPayments(filterParams)
 
-        setData(response.data || [])
+        const records = response.data || []
+
+        setData([...records].sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()))
       } catch {
         setData([])
       } finally {
@@ -153,32 +150,6 @@ const PaymentListTable = () => {
     setProofImageOpen(true)
   }
 
-  const handleDeleteClick = (id: string) => {
-    setDeletingId(id)
-    setDeleteDialogOpen(true)
-  }
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingId) return
-    setDeletingLoading(true)
-
-    try {
-      const res = await paymentService.deletePayment(deletingId)
-
-      if (res.success) {
-        setData(prev => prev.filter(item => item.id !== deletingId))
-        showNotification('Đã xoá bản ghi thanh toán.', 'success')
-      } else {
-        showNotification(res.message || 'Không thể xoá bản ghi.', 'error')
-      }
-    } catch {
-      showNotification('Có lỗi khi xoá bản ghi.', 'error')
-    } finally {
-      setDeletingLoading(false)
-      setDeleteDialogOpen(false)
-      setDeletingId(null)
-    }
-  }
 
   const columns = useMemo<ColumnDef<PaymentRecordType, any>[]>(
     () => [
@@ -326,16 +297,6 @@ const PaymentListTable = () => {
                   </IconButton>
                 </Tooltip>
               )}
-              <Tooltip title='Xoá bản ghi'>
-                <IconButton
-                  size='small'
-                  color='error'
-                  onClick={() => handleDeleteClick(row.original.id)}
-                  disabled={row.original.isActive === false}
-                >
-                  <i className='ri-delete-bin-7-line text-lg' />
-                </IconButton>
-              </Tooltip>
             </div>
           )
         }
@@ -521,21 +482,6 @@ const PaymentListTable = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Confirm xoá dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => !deletingLoading && setDeleteDialogOpen(false)}>
-        <DialogTitle>Xác nhận xoá</DialogTitle>
-        <DialogContent>
-          <DialogContentText>Bạn có chắc muốn xoá bản ghi thanh toán này không? Thao tác không thể hoàn tác.</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deletingLoading} color='inherit'>
-            Huỷ
-          </Button>
-          <Button onClick={handleDeleteConfirm} disabled={deletingLoading} color='error' variant='contained'>
-            {deletingLoading ? 'Đang xoá...' : 'Xoá'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   )
 }

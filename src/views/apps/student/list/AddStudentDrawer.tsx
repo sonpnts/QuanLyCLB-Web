@@ -40,7 +40,6 @@ const initialForm = {
   code: '',
   fullName: '',
   phoneNumber: '',
-  email: '',
   address: '',
   dateOfBirth: '',
   gender: '',
@@ -73,7 +72,6 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
         code: formData.code || undefined,
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber || undefined,
-        email: formData.email || undefined,
         address: formData.address || undefined,
         dateOfBirth: formData.dateOfBirth || undefined,
         gender: formData.gender !== '' ? formData.gender === 'true' : undefined,
@@ -103,8 +101,7 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
       gender: info.gender !== undefined ? String(info.gender) : prev.gender,
       dateOfBirth: info.dateOfBirth || prev.dateOfBirth,
       phoneNumber: info.phoneNumber || prev.phoneNumber,
-      address: info.address || prev.address,
-      email: info.email || prev.email
+      address: info.address || prev.address
     }))
     showNotification('Đã áp dụng thông tin từ liên đoàn.', 'info')
   }
@@ -153,15 +150,6 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
                 fullWidth
                 value={formData.phoneNumber}
                 onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label='Email'
-                type='email'
-                fullWidth
-                value={formData.email}
-                onChange={e => setFormData({ ...formData, email: e.target.value })}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

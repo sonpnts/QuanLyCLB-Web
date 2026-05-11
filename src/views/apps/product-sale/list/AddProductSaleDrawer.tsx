@@ -61,7 +61,7 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
         const [productsRes, classesRes, coachesRes] = await Promise.all([
           productService.getProducts({ isActive: true }),
           classService.getClasses({ isActive: true, pageSize: 1000 }),
-          userService.getCoaches()
+          isAdmin ? userService.getCoaches() : Promise.resolve({ success: true, data: [] })
         ])
 
         if (productsRes.success && productsRes.data) setProducts(productsRes.data)

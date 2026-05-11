@@ -326,6 +326,25 @@ class ScheduleService {
       return { success: true, data: [] }
     }
   }
+
+  async getMySchedules(params?: GetSchedulesParams): Promise<ResponseResult<ScheduleType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.users.mySchedules, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: [] }
+      }
+
+      const records: ApiScheduleResponse[] = apiResponse.data?.records || []
+      const schedules = records.map(this.mapApiScheduleToScheduleType)
+
+      return { success: true, data: schedules }
+    } catch (error) {
+      logger.error('ScheduleService', 'getMySchedules', error)
+      return { success: true, data: [] }
+    }
+  }
 }
 
 export default new ScheduleService()

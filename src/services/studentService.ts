@@ -21,10 +21,20 @@ export interface CreateStudentRequest {
   phoneNumber?: string
   address?: string
   dateOfBirth?: string
-  email?: string
   gender?: boolean
   notes?: string
   currentBeltLevelId?: string
+}
+
+export interface UpdateStudentRequest {
+  code?: string
+  fullName?: string
+  phoneNumber?: string
+  address?: string
+  dateOfBirth?: string
+  gender?: boolean
+  notes?: string
+  isActive?: boolean
 }
 
 export interface ZaloUserInfo {
@@ -49,6 +59,32 @@ export interface EnrollStudentRequest {
   classId: string
   enrollmentDate: string
   notes?: string
+}
+
+export interface StudentImportRowResult {
+  rowNumber: number
+  code: string
+  fullName: string
+  status: string
+  message: string
+}
+
+export interface StudentImportResult {
+  totalRows: number
+  createdStudents: number
+  enrolledStudents: number
+  skippedRows: number
+  rows: StudentImportRowResult[]
+}
+
+const unwrapList = (payload: any): any[] => {
+  if (Array.isArray(payload?.records)) return payload.records
+  if (Array.isArray(payload?.Records)) return payload.Records
+  if (Array.isArray(payload?.items)) return payload.items
+  if (Array.isArray(payload?.Items)) return payload.Items
+  if (Array.isArray(payload)) return payload
+
+  return []
 }
 
 class StudentService {
@@ -94,7 +130,7 @@ class StudentService {
     }
   }
 
-  async updateStudent(id: string, data: Partial<CreateStudentRequest>): Promise<ResponseResult<StudentType>> {
+  async updateStudent(id: string, data: UpdateStudentRequest): Promise<ResponseResult<StudentType>> {
     try {
       const response = await apiClient.put<any>(API_ENDPOINTS.students.byId(id), data)
       const apiResponse = response.data
@@ -236,14 +272,25 @@ class StudentService {
     }
   }
 
-  async getStudentPayments(studentId: string, params?: { fromDate?: string; toDate?: string }): Promise<ResponseResult<any[]>> {
+  async getStudentPayments(
+    studentId: string,
+    params?: { fromDate?: string; toDate?: string; pageNumber?: number; pageSize?: number }
+  ): Promise<ResponseResult<any[]>> {
     try {
-      const response = await apiClient.get<any>(API_ENDPOINTS.students.payments(studentId), { params })
+      const normalizedParams = params
+        ? {
+            ...params,
+            paymentDateFrom: params.fromDate,
+            paymentDateTo: params.toDate
+          }
+        : undefined
+
+      const response = await apiClient.get<any>(API_ENDPOINTS.students.payments(studentId), { params: normalizedParams })
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: true, data: [] }
 
-      return { success: true, data: apiResponse.data || [] }
+      return { success: true, data: unwrapList(apiResponse.data) }
     } catch (error) {
       logger.error('StudentService', 'getStudentPayments', error)
       return { success: true, data: [] }
@@ -287,6 +334,33 @@ class StudentService {
     } catch (error: any) {
       logger.error('StudentService', 'verifyZaloPhone', error)
       return { success: false, isFollower: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async downloadImportTemplate(): Promise<ResponseResult<Blob>> {
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.students.importTemplate, { responseType: 'blob' })
+      return { success: true, data: response.data as Blob }
+    } catch (error: any) {
+      logger.error('StudentService', 'downloadImportTemplate', error)
+      return { success: false, message: error?.response?.data?.message || 'Không thể tải file mẫu' }
+    }
+  }
+
+  async importStudents(classId: string, file: File): Promise<ResponseResult<StudentImportResult>> {
+    try {
+      const form = new FormData()
+      form.append('classId', classId)
+      form.append('file', file)
+      const response = await apiClient.post<any>(API_ENDPOINTS.students.import, form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'importStudents', error)
+      return { success: false, message: error?.response?.data?.message || 'Import thất bại' }
     }
   }
 }

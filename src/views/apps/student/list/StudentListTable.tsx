@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
@@ -49,6 +49,7 @@ import EditStudentDrawer from './EditStudentDrawer'
 import ViewStudentDrawer from './ViewStudentDrawer'
 import EnrollStudentDrawer from './EnrollStudentDrawer'
 import TransferStudentDialog from './TransferStudentDialog'
+import ImportStudentsDialog from './ImportStudentsDialog'
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Service Imports
@@ -117,6 +118,7 @@ const StudentListTable = () => {
   const [viewStudentOpen, setViewStudentOpen] = useState(false)
   const [enrollStudentOpen, setEnrollStudentOpen] = useState(false)
   const [transferStudentOpen, setTransferStudentOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<StudentType[]>([])
@@ -257,8 +259,18 @@ const StudentListTable = () => {
   }, [])
 
   const handleStudentUpdated = useCallback((updated: StudentType) => {
-    setData(prev => prev.map(s => (s.id === updated.id ? updated : s)))
-  }, [])
+    setData(prev =>
+      prev.map(s => {
+        if (s.id !== updated.id) return s
+        return {
+          ...s,
+          ...updated,
+          classes: (updated.classes && updated.classes.length > 0) ? updated.classes : s.classes
+        }
+      })
+    )
+    reloadData()
+  }, [reloadData])
 
   const handleEnrolled = useCallback(() => {
     reloadData()
@@ -367,7 +379,7 @@ const StudentListTable = () => {
                   </Tooltip>
                 )}
               </div>
-              <Typography variant='body2'>{row.original.email}</Typography>
+              <Typography variant='body2'>{row.original.phoneNumber || '-'}</Typography>
             </div>
           </div>
         )
@@ -561,7 +573,6 @@ const StudentListTable = () => {
                   columns: [
                     { header: 'Mã học viên', accessor: 'code' },
                     { header: 'Họ và tên', accessor: 'fullName' },
-                    { header: 'Email', accessor: 'email' },
                     { header: 'Số điện thoại', accessor: 'phoneNumber' },
                     {
                       header: 'Giới tính',
@@ -597,9 +608,14 @@ const StudentListTable = () => {
               Xuất Excel
             </Button>
             {isAdmin && (
-              <Button variant='contained' onClick={() => setAddStudentOpen(true)} className='max-sm:is-full'>
-                Thêm học viên
-              </Button>
+              <>
+                <Button variant='outlined' onClick={() => setImportOpen(true)} className='max-sm:is-full'>
+                  Import học viên
+                </Button>
+                <Button variant='contained' onClick={() => setAddStudentOpen(true)} className='max-sm:is-full'>
+                  Thêm học viên
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -736,6 +752,7 @@ const StudentListTable = () => {
         student={selectedStudent}
         onTransferred={handleEnrolled}
       />
+      <ImportStudentsDialog open={importOpen} onClose={() => setImportOpen(false)} onImported={reloadData} />
     </>
   )
 }

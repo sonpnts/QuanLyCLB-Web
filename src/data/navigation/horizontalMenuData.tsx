@@ -138,6 +138,11 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
         label: 'Đăng ký thi cấp',
         icon: 'ri-trophy-line',
         href: '/apps/belt-exam/register'
+      },
+      {
+        label: 'DS đăng ký thi',
+        icon: 'ri-list-check-3',
+        href: '/apps/belt-exam/registrations'
       }
     ]
   },

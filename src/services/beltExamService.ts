@@ -11,6 +11,14 @@ import type {
 } from '@/types/apps/beltExamTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
+
+const unwrapList = (payload: any): any[] => {
+  if (Array.isArray(payload?.records)) return payload.records
+  if (Array.isArray(payload?.items)) return payload.items
+  if (Array.isArray(payload)) return payload
+
+  return []
+}
 // Request body for POST /belt-exams/sessions
 export interface CreateExamSessionRequest {
   name: string
@@ -53,7 +61,7 @@ class BeltExamService {
 
       return {
         success: true,
-        data: apiResponse.data?.items || apiResponse.data?.records || apiResponse.data || []
+        data: unwrapList(apiResponse.data) as ExamSessionType[]
       }
     } catch (error) {
       logger.error('BeltExamService', 'getExamSessions', error)
@@ -167,7 +175,7 @@ class BeltExamService {
 
       return {
         success: true,
-        data: apiResponse.data?.items || apiResponse.data?.records || apiResponse.data || []
+        data: unwrapList(apiResponse.data) as ExamRegistrationType[]
       }
     } catch (error) {
       logger.error('BeltExamService', 'getExamRegistrations', error)

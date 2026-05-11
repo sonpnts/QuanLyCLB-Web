@@ -1,7 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+
+import Autocomplete from '@mui/material/Autocomplete'
 import Button from '@mui/material/Button'
+import Chip from '@mui/material/Chip'
+import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
 import FormControl from '@mui/material/FormControl'
 import IconButton from '@mui/material/IconButton'
@@ -10,70 +14,145 @@ import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import Divider from '@mui/material/Divider'
-import Grid from '@mui/material/Grid2'
 
-import type { LeaveRequestType } from '@/types/apps/leaveRequestTypes'
-import { leaveTypeLabels } from '@/types/apps/leaveRequestTypes'
-import leaveRequestService from '@/services/leaveRequestService'
+import classService from '@/services/classService'
+import studentAttendanceService from '@/services/studentAttendanceService'
+import type { StudentAbsenceType } from '@/services/studentAttendanceService'
+import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
+import { hasAdminRole } from '@/utils/roleUtils'
+
+type ClassOption = {
+  id: string
+  code?: string
+  name: string
+}
+
+type StudentOption = {
+  id: string
+  fullName: string
+  phoneNumber?: string
+}
 
 type Props = {
   open: boolean
   handleClose: () => void
-  setData: React.Dispatch<React.SetStateAction<LeaveRequestType[]>>
+  setData: React.Dispatch<React.SetStateAction<StudentAbsenceType[]>>
 }
 
 const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
-  const [formData, setFormData] = useState({
-    leaveType: 0,
-    startDate: '',
-    endDate: '',
-    reason: ''
-  })
-  const [loading, setLoading] = useState(false)
-
+  const { auth } = useAuth()
+  const isAdmin = hasAdminRole(auth?.roles)
   const { showNotification } = useNotification()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const [classes, setClasses] = useState<ClassOption[]>([])
+  const [students, setStudents] = useState<StudentOption[]>([])
+  const [classId, setClassId] = useState('')
+  const [student, setStudent] = useState<StudentOption | null>(null)
+  const [dateInput, setDateInput] = useState('')
+  const [selectedDates, setSelectedDates] = useState<string[]>([])
+  const [reason, setReason] = useState('')
+  const [loading, setLoading] = useState(false)
 
-    if (!formData.startDate || !formData.endDate || !formData.reason.trim()) {
-      showNotification('Vui lòng điền đầy đủ thông tin.', 'error')
-      return
+  const selectedClassName = useMemo(() => classes.find(item => item.id === classId)?.name || '', [classes, classId])
+
+  useEffect(() => {
+    const loadClasses = async () => {
+      if (!open) return
+
+      const response = isAdmin
+        ? await classService.getClasses({ isActive: true, pageSize: 1000 })
+        : await studentAttendanceService.getCoachClasses()
+
+      if (response.success && response.data) {
+        const mapped = response.data.map((item: any) => ({
+          id: item.id || item.classId,
+          code: item.code || item.classCode,
+          name: item.name || item.className
+        }))
+        setClasses(mapped)
+      }
     }
 
-    if (new Date(formData.startDate) > new Date(formData.endDate)) {
-      showNotification('Ngày bắt đầu phải trước ngày kết thúc.', 'error')
+    loadClasses()
+  }, [open, isAdmin])
+
+  useEffect(() => {
+    const loadStudents = async () => {
+      if (!classId) {
+        setStudents([])
+        return
+      }
+
+      const response = await classService.getClassStudents(classId)
+      if (response.success && response.data) {
+        setStudents(
+          response.data.map((item: any) => ({
+            id: item.studentId || item.id,
+            fullName: item.studentName || item.fullName || item.name,
+            phoneNumber: item.phoneNumber || item.studentPhone
+          }))
+        )
+      }
+    }
+
+    setStudent(null)
+    loadStudents()
+  }, [classId])
+
+  const handleAddDate = () => {
+    if (!dateInput) return
+    setSelectedDates(prev => Array.from(new Set([...prev, dateInput])).sort())
+    setDateInput('')
+  }
+
+  const handleReset = () => {
+    setClassId('')
+    setStudent(null)
+    setDateInput('')
+    setSelectedDates([])
+    setReason('')
+    setStudents([])
+    handleClose()
+  }
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!classId || !student?.id || selectedDates.length === 0 || !reason.trim()) {
+      showNotification('Vui lòng chọn lớp, học viên, buổi nghỉ và nhập lý do.', 'error')
       return
     }
 
     try {
       setLoading(true)
-      const response = await leaveRequestService.createLeaveRequest({
-        leaveType: formData.leaveType,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        reason: formData.reason
+      const response = await studentAttendanceService.createExcusedAbsences({
+        classId,
+        studentId: student.id,
+        attendanceDates: selectedDates,
+        reason: reason.trim()
       })
 
-      if (response.success && response.data) {
-        setData(prev => [...prev, response.data!])
-        showNotification('Tạo đơn xin nghỉ thành công!', 'success')
-        handleReset()
-      } else {
-        showNotification(response.message || 'Không thể tạo đơn.', 'error')
+      if (!response.success) {
+        showNotification(response.message || 'Không thể tạo nghỉ phép cho học viên.', 'error')
+        return
       }
-    } catch (error) {
-      showNotification('Đã có lỗi khi tạo đơn.', 'error')
+
+      if (response.data?.length) {
+        setData(prev => {
+          const existing = new Map(prev.map(item => [item.id, item]))
+          response.data!.forEach(item => existing.set(item.id, item))
+          return Array.from(existing.values()).sort((a, b) => b.attendanceDate.localeCompare(a.attendanceDate))
+        })
+      }
+
+      showNotification('Đã ghi nhận nghỉ phép cho học viên.', 'success')
+      handleReset()
+    } catch {
+      showNotification('Đã có lỗi khi tạo nghỉ phép.', 'error')
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleReset = () => {
-    setFormData({ leaveType: 0, startDate: '', endDate: '', reason: '' })
-    handleClose()
   }
 
   return (
@@ -83,10 +162,10 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
       variant='temporary'
       onClose={handleReset}
       ModalProps={{ keepMounted: true }}
-      sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
+      sx={{ '& .MuiDrawer-paper': { width: { xs: 340, sm: 480 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Tạo đơn xin nghỉ</Typography>
+        <Typography variant='h5'>Thêm nghỉ phép học viên</Typography>
         <IconButton size='small' onClick={handleReset}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -95,52 +174,71 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
       <div className='p-5'>
         <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
           <FormControl fullWidth>
-            <InputLabel>Loại nghỉ *</InputLabel>
-            <Select
-              label='Loại nghỉ *'
-              value={formData.leaveType}
-              onChange={e => setFormData({ ...formData, leaveType: Number(e.target.value) })}
-            >
-              {Object.entries(leaveTypeLabels).map(([key, label]) => (
-                <MenuItem key={key} value={Number(key)}>
-                  {label}
+            <InputLabel>Lớp *</InputLabel>
+            <Select label='Lớp *' value={classId} onChange={event => setClassId(String(event.target.value))}>
+              {classes.map(item => (
+                <MenuItem key={item.id} value={item.id}>
+                  {item.code ? `${item.code} - ${item.name}` : item.name}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                type='date'
-                label='Từ ngày *'
-                value={formData.startDate}
-                onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                type='date'
-                label='Đến ngày *'
-                value={formData.endDate}
-                onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-          </Grid>
+
+          <Autocomplete
+            options={students}
+            value={student}
+            disabled={!classId}
+            getOptionLabel={option => option.fullName || ''}
+            onChange={(_, value) => setStudent(value)}
+            renderInput={params => (
+              <TextField {...params} label='Tìm và chọn học viên *' placeholder={selectedClassName ? 'Nhập tên học viên...' : 'Chọn lớp trước'} />
+            )}
+          />
+
+          <div className='flex gap-2'>
+            <TextField
+              fullWidth
+              type='date'
+              label='Buổi nghỉ'
+              value={dateInput}
+              onChange={event => setDateInput(event.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+            <Button variant='outlined' onClick={handleAddDate} disabled={!dateInput}>
+              Thêm
+            </Button>
+          </div>
+
+          <div className='flex flex-wrap gap-2'>
+            {selectedDates.length === 0 ? (
+              <Typography variant='body2' color='text.secondary'>
+                Chưa chọn buổi nghỉ nào
+              </Typography>
+            ) : (
+              selectedDates.map(date => (
+                <Chip
+                  key={date}
+                  label={new Date(date).toLocaleDateString('vi-VN')}
+                  onDelete={() => setSelectedDates(prev => prev.filter(item => item !== date))}
+                  color='warning'
+                  variant='tonal'
+                />
+              ))
+            )}
+          </div>
+
           <TextField
             fullWidth
-            label='Lý do *'
+            label='Lý do nghỉ phép *'
             multiline
             rows={4}
-            value={formData.reason}
-            onChange={e => setFormData({ ...formData, reason: e.target.value })}
+            value={reason}
+            onChange={event => setReason(event.target.value)}
           />
+
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
-              {loading ? 'Đang xử lý...' : 'Tạo đơn'}
+              {loading ? 'Đang lưu...' : 'Lưu nghỉ phép'}
             </Button>
             <Button variant='outlined' color='error' onClick={handleReset}>
               Hủy

@@ -137,7 +137,7 @@ const MyScheduleCalendar = () => {
   const loadScheduleEvents = useCallback(async () => {
     try {
       setLoadingSchedules(true)
-      const response = await scheduleService.getSchedules({ IsActive: true, PageSize: 500 })
+      const response = await scheduleService.getMySchedules({ IsActive: true, PageSize: 500 })
 
       if (response.success && response.data) {
         const now = new Date()

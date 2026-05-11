@@ -355,7 +355,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
               {student.isSuspended && <Chip label='Tạm nghỉ' size='small' color='warning' variant='tonal' />}
             </div>
             <Typography variant='body2' color='text.secondary'>
-              {student.email || 'Chưa có email'}
+              {student.phoneNumber || 'Chưa có số điện thoại'}
             </Typography>
             <div className='flex gap-2 mt-1 flex-wrap items-center'>
               {student.beltLevelName && (
@@ -446,9 +446,9 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Email
+                      Số điện thoại
                     </Typography>
-                    <Typography variant='body1'>{student.email || '-'}</Typography>
+                    <Typography variant='body1'>{student.phoneNumber || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 12 }}>
                     <Typography variant='body2' color='text.secondary'>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 
@@ -32,6 +32,7 @@ import Typography from '@mui/material/Typography'
 import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import instructorService from '@/services/instructorService'
+import studentAttendanceService from '@/services/studentAttendanceService'
 import type {
   BeltExamRegistrationListType,
   BeltLevelType,
@@ -79,13 +80,26 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 
   const loadMyClasses = async () => {
     try {
-      const result = await instructorService.getInstructorClasses(coachId)
+      // Ưu tiên API lớp của chính HLV (không cần quyền quản lý huấn luyện viên)
+      const coachClasses = await studentAttendanceService.getCoachClasses()
 
+      if (coachClasses.success && coachClasses.data && coachClasses.data.length > 0) {
+        const records = coachClasses.data.map(c => ({
+          id: c.classId,
+          name: c.className
+        }))
+
+        setMyClasses(records)
+        if (records.length > 0) setSelectedClassId(records[0].id)
+        return
+      }
+
+      // Fallback cho tài khoản có quyền cao hơn (admin/staff)
+      const result = await instructorService.getInstructorClasses(coachId)
       if (result.success && result.data) {
         const records: { id: string; name: string }[] = Array.isArray(result.data)
           ? result.data
           : (result.data as any)?.records || []
-
         setMyClasses(records.map((c: any) => ({ id: c.id, name: c.name })))
         if (records.length > 0) setSelectedClassId(records[0].id)
       }
@@ -98,8 +112,8 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     const result = await beltExamService.getBeltLevels()
 
     if (result.success && result.data) {
-      // Chỉ lấy cấp kup (order 1-10), đẳng (order > 10) không dùng cho đăng ký thi kup
-      const levels = result.data.filter(b => b.order >= 1 && b.order <= 10)
+      // Chỉ lấy cấp kup (order 2-10), đẳng (order > 10) không dùng cho đăng ký thi kup
+      const levels = result.data.filter(b => b.order >= 2 && b.order <= 10)
 
       setBeltLevels(levels)
     }
@@ -283,7 +297,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                     <TableRow key={reg.id}>
                       <TableCell>{idx + 1}</TableCell>
                       <TableCell>{reg.studentName}</TableCell>
-                      <TableCell>{reg.currentBeltLevelName ?? '—'}</TableCell>
+                      <TableCell>{reg.currentBeltLevelName ?? 'â€”'}</TableCell>
                       <TableCell>
                         <strong>{reg.targetBeltLevelName}</strong>
                       </TableCell>
@@ -309,7 +323,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
         <Card>
           <CardHeader
             title='Chọn học viên đăng ký thi'
-            subheader='Chỉ hiển thị học viên đang Active, cấp 1–10 (không bao gồm đẳng)'
+            subheader='Chỉ hiển thị học viên đang Active, cấp 10 -> 2 (không bao gồm đẳng)'
             action={
               <Box className='flex gap-2'>
                 <Button
@@ -394,7 +408,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                           <Typography variant='body2'>
                             {student.dateOfBirth
                               ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN')
-                              : '—'}
+                              : 'â€”'}
                           </Typography>
                         </TableCell>
                         <TableCell>{student.currentBeltLevelName ?? 'Chưa có đai'}</TableCell>
@@ -467,3 +481,4 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 }
 
 export default BeltExamRegisterClassPanel
+

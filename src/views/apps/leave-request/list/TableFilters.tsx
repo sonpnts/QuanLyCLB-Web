@@ -1,9 +1,7 @@
 'use client'
 
-// React Imports
-import { useState, useEffect, useRef, memo } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 
-// MUI Imports
 import CardContent from '@mui/material/CardContent'
 import FormControl from '@mui/material/FormControl'
 import Grid from '@mui/material/Grid2'
@@ -13,22 +11,24 @@ import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import type { SelectChangeEvent } from '@mui/material/Select'
 
-// Service Imports
-import type { GetLeaveRequestsParams } from '@/services/leaveRequestService'
+import type { GetStudentAbsencesParams } from '@/services/studentAttendanceService'
 
-// Type Imports
-import { leaveTypeLabels, leaveStatusLabels } from '@/types/apps/leaveRequestTypes'
-
-interface TableFiltersProps {
-  onFilterChange: (params: GetLeaveRequestsParams) => void
+type ClassOption = {
+  id: string
+  code?: string
+  name: string
 }
 
-const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
-  const [leaveType, setLeaveType] = useState<string>('')
-  const [status, setStatus] = useState<string>('')
-  const [fromDate, setFromDate] = useState<string>('')
-  const [toDate, setToDate] = useState<string>('')
+interface TableFiltersProps {
+  classes: ClassOption[]
+  onFilterChange: (params: GetStudentAbsencesParams) => void
+}
 
+const TableFilters = memo(({ classes, onFilterChange }: TableFiltersProps) => {
+  const [classId, setClassId] = useState('')
+  const [absenceType, setAbsenceType] = useState('')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
   const isFirstRender = useRef(true)
 
   useEffect(() => {
@@ -37,29 +37,26 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
       return
     }
 
-    const params: GetLeaveRequestsParams = {}
-    if (leaveType !== '') params.leaveType = Number(leaveType)
-    if (status !== '') params.status = Number(status)
+    const params: GetStudentAbsencesParams = {}
+    if (classId) params.classId = classId
+    if (absenceType !== '') params.isExcused = absenceType === 'excused'
     if (fromDate) params.fromDate = fromDate
     if (toDate) params.toDate = toDate
+
     onFilterChange(params)
-  }, [leaveType, status, fromDate, toDate, onFilterChange])
+  }, [classId, absenceType, fromDate, toDate, onFilterChange])
 
   return (
     <CardContent>
       <Grid container spacing={5}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <FormControl fullWidth size='small'>
-            <InputLabel>Loại nghỉ</InputLabel>
-            <Select
-              value={leaveType}
-              onChange={(e: SelectChangeEvent) => setLeaveType(e.target.value)}
-              label='Loại nghỉ'
-            >
+            <InputLabel>Lớp</InputLabel>
+            <Select value={classId} onChange={(event: SelectChangeEvent) => setClassId(event.target.value)} label='Lớp'>
               <MenuItem value=''>Tất cả</MenuItem>
-              {Object.entries(leaveTypeLabels).map(([key, label]) => (
-                <MenuItem key={key} value={key}>
-                  {label}
+              {classes.map(item => (
+                <MenuItem key={item.id} value={item.id}>
+                  {item.code ? `${item.code} - ${item.name}` : item.name}
                 </MenuItem>
               ))}
             </Select>
@@ -67,14 +64,15 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <FormControl fullWidth size='small'>
-            <InputLabel>Trạng thái</InputLabel>
-            <Select value={status} onChange={(e: SelectChangeEvent) => setStatus(e.target.value)} label='Trạng thái'>
+            <InputLabel>Loại vắng</InputLabel>
+            <Select
+              value={absenceType}
+              onChange={(event: SelectChangeEvent) => setAbsenceType(event.target.value)}
+              label='Loại vắng'
+            >
               <MenuItem value=''>Tất cả</MenuItem>
-              {Object.entries(leaveStatusLabels).map(([key, label]) => (
-                <MenuItem key={key} value={key}>
-                  {label}
-                </MenuItem>
-              ))}
+              <MenuItem value='excused'>Có phép</MenuItem>
+              <MenuItem value='unexcused'>Không phép</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -85,7 +83,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
             type='date'
             label='Từ ngày'
             value={fromDate}
-            onChange={e => setFromDate(e.target.value)}
+            onChange={event => setFromDate(event.target.value)}
             InputLabelProps={{ shrink: true }}
           />
         </Grid>
@@ -96,7 +94,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
             type='date'
             label='Đến ngày'
             value={toDate}
-            onChange={e => setToDate(e.target.value)}
+            onChange={event => setToDate(event.target.value)}
             InputLabelProps={{ shrink: true }}
           />
         </Grid>
@@ -105,6 +103,6 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
   )
 })
 
-TableFilters.displayName = 'LeaveRequestTableFilters'
+TableFilters.displayName = 'StudentAbsenceTableFilters'
 
 export default TableFilters

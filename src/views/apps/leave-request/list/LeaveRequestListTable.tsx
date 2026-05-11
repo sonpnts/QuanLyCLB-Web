@@ -1,57 +1,48 @@
 'use client'
 
-// React Imports
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-// MUI Imports
+import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
+import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
-import Button from '@mui/material/Button'
-import TextField from '@mui/material/TextField'
-import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import TablePagination from '@mui/material/TablePagination'
-import Chip from '@mui/material/Chip'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogContent from '@mui/material/DialogContent'
-import DialogActions from '@mui/material/DialogActions'
-import Box from '@mui/material/Box'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
 import type { TextFieldProps } from '@mui/material/TextField'
 
-// Third-party Imports
 import classnames from 'classnames'
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
-  useReactTable,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel
+  getSortedRowModel,
+  useReactTable
 } from '@tanstack/react-table'
 import type { ColumnDef } from '@tanstack/react-table'
 
 import { fuzzyFilter } from '@/utils/tableHelpers'
-
-// Type Imports
-import type { LeaveRequestType } from '@/types/apps/leaveRequestTypes'
-import { leaveTypeLabels, leaveTypeColors, leaveStatusLabels, leaveStatusColors } from '@/types/apps/leaveRequestTypes'
-
-// Component Imports
-import TableFilters from './TableFilters'
-import AddLeaveRequestDrawer from './AddLeaveRequestDrawer'
-
-// Service Imports
-import leaveRequestService from '@/services/leaveRequestService'
-import type { GetLeaveRequestsParams } from '@/services/leaveRequestService'
-
-// Context Imports
+import classService from '@/services/classService'
+import studentAttendanceService from '@/services/studentAttendanceService'
+import type { GetStudentAbsencesParams, StudentAbsenceType } from '@/services/studentAttendanceService'
+import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
+import { hasAdminRole } from '@/utils/roleUtils'
 
-// Style Imports
+import AddLeaveRequestDrawer from './AddLeaveRequestDrawer'
+import TableFilters from './TableFilters'
+
 import tableStyles from '@core/styles/table.module.css'
+
+type ClassOption = {
+  id: string
+  code?: string
+  name: string
+}
 
 const DebouncedInput = ({
   value: initialValue,
@@ -71,208 +62,137 @@ const DebouncedInput = ({
 
   useEffect(() => {
     const timeout = setTimeout(() => onChange(value), debounce)
+
     return () => clearTimeout(timeout)
   }, [value, debounce, onChange])
 
-  return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
+  return <TextField {...props} value={value} onChange={event => setValue(event.target.value)} size='small' />
 }
 
-const columnHelper = createColumnHelper<LeaveRequestType>()
+const columnHelper = createColumnHelper<StudentAbsenceType>()
 
 const LeaveRequestListTable = () => {
-  // States
-  const [addRequestOpen, setAddRequestOpen] = useState(false)
-  const [data, setData] = useState<LeaveRequestType[]>([])
-  const [globalFilter, setGlobalFilter] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [filterParams, setFilterParams] = useState<GetLeaveRequestsParams>({})
-
-  // Dialog states
-  const [approveDialogOpen, setApproveDialogOpen] = useState(false)
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
-  const [selectedRequest, setSelectedRequest] = useState<LeaveRequestType | null>(null)
-  const [approvalNotes, setApprovalNotes] = useState('')
-  const [rejectionReason, setRejectionReason] = useState('')
-
+  const { auth } = useAuth()
+  const isAdmin = hasAdminRole(auth?.roles)
   const { showNotification } = useNotification()
-
-  // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
-  const dataLoadedRef = useRef(false)
-  const currentFilterRef = useRef<string>('')
 
-  const handleFilterChange = useCallback((params: GetLeaveRequestsParams) => {
+  const [addRequestOpen, setAddRequestOpen] = useState(false)
+  const [data, setData] = useState<StudentAbsenceType[]>([])
+  const [classes, setClasses] = useState<ClassOption[]>([])
+  const [globalFilter, setGlobalFilter] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [filterParams, setFilterParams] = useState<GetStudentAbsencesParams>({})
+
+  useEffect(() => {
+    const loadClasses = async () => {
+      const response = isAdmin
+        ? await classService.getClasses({ isActive: true, pageSize: 1000 })
+        : await studentAttendanceService.getCoachClasses()
+
+      if (response.success && response.data) {
+        setClasses(
+          response.data.map((item: any) => ({
+            id: item.id || item.classId,
+            code: item.code || item.classCode,
+            name: item.name || item.className
+          }))
+        )
+      }
+    }
+
+    loadClasses()
+  }, [isAdmin])
+
+  const handleFilterChange = useCallback((params: GetStudentAbsencesParams) => {
     setFilterParams(params)
   }, [])
 
-  // Load leave requests
-  useEffect(() => {
-    const filterKey = JSON.stringify(filterParams)
+  const loadAbsences = useCallback(async () => {
+    try {
+      setLoading(true)
+      const response = await studentAttendanceService.getAbsences({
+        pageSize: 500,
+        ...filterParams
+      })
 
-    if (dataLoadedRef.current && currentFilterRef.current === filterKey) {
-      return
+      setData(response.success && response.data ? response.data : [])
+    } catch {
+      setData([])
+    } finally {
+      setLoading(false)
     }
-
-    const loadRequests = async () => {
-      try {
-        setLoading(true)
-        currentFilterRef.current = filterKey
-        dataLoadedRef.current = true
-
-        const response = await leaveRequestService.getLeaveRequests(filterParams)
-        if (response.success && response.data) {
-          setData(response.data)
-        } else {
-          setData([])
-        }
-      } catch (error) {
-        setData([])
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadRequests()
   }, [filterParams])
 
-  const handleApprove = async () => {
-    if (!selectedRequest) return
-    try {
-      setLoading(true)
-      const response = await leaveRequestService.approveLeaveRequest(selectedRequest.id, {
-        notes: approvalNotes || undefined
-      })
-      if (response.success) {
-        setData(prev => prev.map(r => (r.id === selectedRequest.id ? { ...r, status: 1 as const } : r)))
-        showNotification('Phê duyệt đơn xin nghỉ thành công!', 'success')
-        setApproveDialogOpen(false)
-        setApprovalNotes('')
-        setSelectedRequest(null)
-      } else {
-        showNotification(response.message || 'Không thể phê duyệt.', 'error')
-      }
-    } catch (error) {
-      showNotification('Đã có lỗi khi phê duyệt.', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    loadAbsences()
+  }, [loadAbsences])
 
-  const handleReject = async () => {
-    if (!selectedRequest || !rejectionReason.trim()) {
-      showNotification('Vui lòng nhập lý do từ chối.', 'error')
+  const handleDelete = async (id: string) => {
+    const response = await studentAttendanceService.deleteAttendance(id)
+
+    if (!response.success) {
+      showNotificationRef.current(response.message || 'Không thể xóa dòng nghỉ học.', 'error')
       return
     }
-    try {
-      setLoading(true)
-      const response = await leaveRequestService.rejectLeaveRequest(selectedRequest.id, {
-        reason: rejectionReason
-      })
-      if (response.success) {
-        setData(prev => prev.map(r => (r.id === selectedRequest.id ? { ...r, status: 2 as const } : r)))
-        showNotification('Đã từ chối đơn xin nghỉ.', 'success')
-        setRejectDialogOpen(false)
-        setRejectionReason('')
-        setSelectedRequest(null)
-      } else {
-        showNotification(response.message || 'Không thể từ chối.', 'error')
-      }
-    } catch (error) {
-      showNotification('Đã có lỗi khi từ chối.', 'error')
-    } finally {
-      setLoading(false)
-    }
+
+    setData(prev => prev.filter(item => item.id !== id))
+    showNotificationRef.current('Đã xóa dòng nghỉ học.', 'success')
   }
 
-  const columns = useMemo<ColumnDef<LeaveRequestType, any>[]>(
+  const columns = useMemo<ColumnDef<StudentAbsenceType, any>[]>(
     () => [
-      columnHelper.accessor('userName', {
-        header: 'Người xin nghỉ',
+      columnHelper.accessor('studentName', {
+        header: 'Học viên',
         cell: ({ row }) => (
-          <Typography className='font-medium' color='text.primary'>
-            {row.original.userName}
-          </Typography>
+          <div>
+            <Typography className='font-medium'>{row.original.studentName}</Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {row.original.studentPhone || '-'}
+            </Typography>
+          </div>
         )
       }),
-      columnHelper.accessor('leaveType', {
-        header: 'Loại nghỉ',
+      columnHelper.accessor('className', {
+        header: 'Lớp',
+        cell: ({ row }) => <Typography>{row.original.className}</Typography>
+      }),
+      columnHelper.accessor('attendanceDate', {
+        header: 'Buổi nghỉ',
+        cell: ({ row }) => <Typography>{new Date(row.original.attendanceDate).toLocaleDateString('vi-VN')}</Typography>
+      }),
+      columnHelper.accessor('isExcused', {
+        header: 'Loại vắng',
         cell: ({ row }) => (
           <Chip
-            label={leaveTypeLabels[row.original.leaveType]}
+            label={row.original.isExcused ? 'Có phép' : 'Không phép'}
             size='small'
-            color={leaveTypeColors[row.original.leaveType]}
+            color={row.original.isExcused ? 'info' : 'error'}
             variant='tonal'
           />
         )
-      }),
-      columnHelper.accessor('startDate', {
-        header: 'Từ ngày',
-        cell: ({ row }) => <Typography>{new Date(row.original.startDate).toLocaleDateString('vi-VN')}</Typography>
-      }),
-      columnHelper.accessor('endDate', {
-        header: 'Đến ngày',
-        cell: ({ row }) => <Typography>{new Date(row.original.endDate).toLocaleDateString('vi-VN')}</Typography>
       }),
       columnHelper.accessor('reason', {
         header: 'Lý do',
         cell: ({ row }) => (
-          <Typography variant='body2' className='max-w-[200px] truncate'>
-            {row.original.reason}
+          <Typography variant='body2' className='max-w-[260px] truncate'>
+            {row.original.reason || '-'}
           </Typography>
         )
       }),
-      columnHelper.accessor('status', {
-        header: 'Trạng thái',
-        cell: ({ row }) => (
-          <Chip
-            label={leaveStatusLabels[row.original.status]}
-            size='small'
-            color={leaveStatusColors[row.original.status]}
-            variant='tonal'
-          />
-        )
-      }),
-      columnHelper.accessor('createdAt', {
-        header: 'Ngày tạo',
-        cell: ({ row }) => <Typography>{new Date(row.original.createdAt).toLocaleDateString('vi-VN')}</Typography>
+      columnHelper.accessor('markedByUserName', {
+        header: 'Người ghi nhận',
+        cell: ({ row }) => <Typography>{row.original.markedByUserName || '-'}</Typography>
       }),
       {
         id: 'actions',
         header: 'Thao tác',
-        cell: ({ row }) => {
-          const isPending = row.original.status === 0
-          return (
-            <Box className='flex items-center gap-1'>
-              {isPending && (
-                <>
-                  <IconButton
-                    color='success'
-                    title='Phê duyệt'
-                    onClick={() => {
-                      setSelectedRequest(row.original)
-                      setApproveDialogOpen(true)
-                    }}
-                  >
-                    <i className='ri-check-line' />
-                  </IconButton>
-                  <IconButton
-                    color='error'
-                    title='Từ chối'
-                    onClick={() => {
-                      setSelectedRequest(row.original)
-                      setRejectDialogOpen(true)
-                    }}
-                  >
-                    <i className='ri-close-line' />
-                  </IconButton>
-                </>
-              )}
-              <IconButton title='Xem chi tiết'>
-                <i className='ri-eye-line text-textSecondary' />
-              </IconButton>
-            </Box>
-          )
-        }
+        cell: ({ row }) => (
+          <IconButton color='error' title='Xóa dòng nghỉ' onClick={() => handleDelete(row.original.id)}>
+            <i className='ri-delete-bin-6-line' />
+          </IconButton>
+        )
       }
     ],
     []
@@ -295,18 +215,21 @@ const LeaveRequestListTable = () => {
   return (
     <>
       <Card>
-        <CardHeader title='Quản lý đơn xin nghỉ phép' />
-        <TableFilters onFilterChange={handleFilterChange} />
+        <CardHeader
+          title='Quản lý nghỉ học học viên'
+          subheader='Danh sách này lấy trực tiếp từ dữ liệu điểm danh: chỉ lưu các buổi vắng có phép hoặc không phép.'
+        />
+        <TableFilters classes={classes} onFilterChange={handleFilterChange} />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <DebouncedInput
             value={globalFilter ?? ''}
             onChange={value => setGlobalFilter(String(value))}
-            placeholder='Tìm kiếm...'
+            placeholder='Tìm học viên, lớp, lý do...'
             className='max-sm:is-full'
           />
           <Button variant='contained' onClick={() => setAddRequestOpen(true)}>
-            Tạo đơn xin nghỉ
+            Thêm nghỉ phép
           </Button>
         </div>
         <div className='overflow-x-auto'>
@@ -359,57 +282,9 @@ const LeaveRequestListTable = () => {
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
           onPageChange={(_, page) => table.setPageIndex(page)}
-          onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+          onRowsPerPageChange={event => table.setPageSize(Number(event.target.value))}
         />
       </Card>
-
-      {/* Approve Dialog */}
-      <Dialog open={approveDialogOpen} onClose={() => setApproveDialogOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Phê duyệt đơn xin nghỉ</DialogTitle>
-        <DialogContent>
-          <Typography className='mb-4'>
-            Bạn có chắc muốn phê duyệt đơn xin nghỉ của <strong>{selectedRequest?.userName}</strong>?
-          </Typography>
-          <TextField
-            label='Ghi chú (tùy chọn)'
-            fullWidth
-            multiline
-            rows={3}
-            value={approvalNotes}
-            onChange={e => setApprovalNotes(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setApproveDialogOpen(false)}>Hủy</Button>
-          <Button variant='contained' color='success' onClick={handleApprove} disabled={loading}>
-            Phê duyệt
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Reject Dialog */}
-      <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Từ chối đơn xin nghỉ</DialogTitle>
-        <DialogContent>
-          <Typography className='mb-4'>
-            Bạn có chắc muốn từ chối đơn xin nghỉ của <strong>{selectedRequest?.userName}</strong>?
-          </Typography>
-          <TextField
-            label='Lý do từ chối *'
-            fullWidth
-            multiline
-            rows={3}
-            value={rejectionReason}
-            onChange={e => setRejectionReason(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRejectDialogOpen(false)}>Hủy</Button>
-          <Button variant='contained' color='error' onClick={handleReject} disabled={loading}>
-            Từ chối
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <AddLeaveRequestDrawer open={addRequestOpen} handleClose={() => setAddRequestOpen(false)} setData={setData} />
     </>

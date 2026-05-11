@@ -29,7 +29,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
   const isFirstRender = useRef(true)
   const classesLoaded = useRef(false)
 
-  // Load classes chỉ 1 lần
+  // Load classes once for the class filter.
   useEffect(() => {
     if (classesLoaded.current) return
 
@@ -48,7 +48,6 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
     loadClasses()
   }, [])
 
-  // Handle filter changes
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false

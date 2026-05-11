@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -33,6 +33,7 @@ import type { StudentType } from '@/types/apps/studentTypes'
 
 // Services
 import studentService from '@/services/studentService'
+import federationMemberService from '@/services/federationMemberService'
 
 // Context
 import { useNotification } from '@/contexts/notificationContext'
@@ -52,7 +53,6 @@ type FormValues = {
   code: string
   fullName: string
   phoneNumber?: string
-  email?: string
   address?: string
   dateOfBirth?: string
   gender?: string
@@ -73,9 +73,7 @@ const EditStudentDrawer = (props: Props) => {
     () => ({
       code: student?.code || '',
       fullName: student?.fullName || '',
-      phoneNumber: student?.phoneNumber || '',
-      email: student?.email || '',
-      address: student?.address || '',
+      phoneNumber: student?.phoneNumber || '',      address: student?.address || '',
       dateOfBirth: student?.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
       gender: student?.gender !== undefined ? String(student.gender) : '',
       notes: student?.notes || ''
@@ -97,11 +95,24 @@ const EditStudentDrawer = (props: Props) => {
       setMemberCode(student?.code || '')
     }
   }, [student, defaultValues, reset])
+  useEffect(() => {
+    const verifyMemberCode = async () => {
+      if (!open || !student?.code) return
+      const check = await federationMemberService.getByCode(student.code)
+      if (!check.success) {
+        setMemberCode('')
+        setValue('code', '')
+        showNotification('Mã HV hiện tại không còn tồn tại trong dữ liệu Liên đoàn. Vui lòng chọn lại mã hợp lệ.', 'warning')
+      }
+    }
+    verifyMemberCode()
+  }, [open, student?.id, student?.code, setValue, showNotification])
+
 
   /**
    * Học viên đã có mã HV (đã lưu trong DB) → khoá toàn bộ thông tin cá nhân.
    */
-  const isLocked = Boolean(student?.code)
+  const isLocked = Boolean(memberCode)
 
   /** Áp dụng thông tin từ liên đoàn vào form (chỉ khi chưa khoá) */
   const handleMemberInfoConfirmed = (info: MemberInfo) => {
@@ -112,8 +123,6 @@ const EditStudentDrawer = (props: Props) => {
     if (info.dateOfBirth) setValue('dateOfBirth', info.dateOfBirth)
     if (info.phoneNumber) setValue('phoneNumber', info.phoneNumber)
     if (info.address) setValue('address', info.address)
-    if (info.email) setValue('email', info.email)
-
     showNotification('Đã áp dụng thông tin từ liên đoàn.', 'info')
   }
 
@@ -133,7 +142,6 @@ const EditStudentDrawer = (props: Props) => {
       if (!isLocked) {
         payload.fullName = values.fullName
         payload.phoneNumber = values.phoneNumber || undefined
-        payload.email = values.email || undefined
         payload.address = values.address || undefined
         payload.dateOfBirth = values.dateOfBirth || undefined
         payload.gender = values.gender !== '' ? values.gender === 'true' : undefined
@@ -212,7 +220,13 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='fullName'
               control={control}
-              rules={{ required: 'Họ tên là bắt buộc' }}
+              rules={{
+                validate: value => {
+                  if (isLocked) return true
+                  if (!value?.trim()) return 'Họ tên là bắt buộc'
+                  return true
+                }
+              }}
               render={({ field }) => (
                 <TextField
                   {...field}
@@ -226,7 +240,7 @@ const EditStudentDrawer = (props: Props) => {
             />
           </Grid>
 
-          {/* Phone + Email */}
+          {/* Phone */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='phoneNumber'
@@ -280,16 +294,9 @@ const EditStudentDrawer = (props: Props) => {
               </Box>
             )}
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name='email'
-              control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Email' type='email' disabled={isLocked} />}
-            />
-          </Grid>
 
           {/* Địa chỉ */}
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='address'
               control={control}

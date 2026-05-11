@@ -14,6 +14,7 @@ export interface GetPaymentsParams {
   pageSize?: number
   studentId?: string
   classId?: string
+  collectedByUserId?: string
   type?: number
   fromDate?: string
   toDate?: string
@@ -89,7 +90,9 @@ export interface ExamFeeOptionType {
 
 const unwrapList = (payload: any): any[] => {
   if (Array.isArray(payload?.records)) return payload.records
+  if (Array.isArray(payload?.Records)) return payload.Records
   if (Array.isArray(payload?.items)) return payload.items
+  if (Array.isArray(payload?.Items)) return payload.Items
   if (Array.isArray(payload)) return payload
 
   return []

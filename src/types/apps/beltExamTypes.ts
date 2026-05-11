@@ -53,6 +53,10 @@ export type ExamRegistrationType = {
   resultUpdatedAt?: string
   registeredByUserId: string
   registeredByUserName: string
+  paymentRecordId?: string
+  paidAt?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type BeltLevelType = {

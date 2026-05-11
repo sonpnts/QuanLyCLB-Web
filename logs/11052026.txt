@@ -1,0 +1,60 @@
+==11/05/2026 11:37:15==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_5f7d87._.js:581:30)
+    at async StudentListTable.useEffect.loadStudents (http://localhost:3000/_next/static/chunks/src_76e554._.js:7347:46)
+==END==
+
+==11/05/2026 11:37:23==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:4960:34
+    at async VerticalMenu.useEffect.fetchMenu (http://localhost:3000/_next/static/chunks/src_components_0deea8._.js:642:42)
+==END==
+
+==11/05/2026 11:37:23==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_76e554._.js:39:30)
+    at async StudentListTable.useEffect.loadStudents (http://localhost:3000/_next/static/chunks/src_76e554._.js:7347:46)
+==END==
+
+==11/05/2026 14:32:46==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:4964:34
+    at async VerticalMenu.useEffect.fetchMenu (http://localhost:3000/_next/static/chunks/src_components_0deea8._.js:642:42)
+==END==
+
+==11/05/2026 14:32:46==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_76e554._.js:39:30)
+    at async StudentListTable.useEffect.loadStudents (http://localhost:3000/_next/static/chunks/src_76e554._.js:7347:46)
+==END==
+

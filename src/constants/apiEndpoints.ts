@@ -169,6 +169,8 @@ export const API_ENDPOINTS = {
   },
   students: {
     root: '/Students',
+    import: '/Students/import',
+    importTemplate: '/Students/import-template',
     byId: (id: string) => `/Students/${id}`,
     restore: (id: string) => `/Students/${id}/restore`,
     suspend: (id: string) => `/Students/${id}/suspend`,
@@ -183,13 +185,23 @@ export const API_ENDPOINTS = {
     zaloVerifyPhone: '/Students/zalo/verify-phone',
     zaloUpdate: (id: string) => `/Students/${id}/zalo`
   },
+  studentAttendance: {
+    root: '/student-attendance',
+    byId: (id: string) => `/student-attendance/${id}`,
+    absences: '/student-attendance/absences',
+    coachClasses: '/student-attendance/coach/classes',
+    coachSuggestedDate: (classId: string) => `/student-attendance/coach/class/${classId}/suggested-date`,
+    coachSheet: (classId: string, date: string) => `/student-attendance/coach/class/${classId}/sheet/${date}`,
+    coachSaveSheet: '/student-attendance/coach/sheet'
+  },
   users: {
     root: '/Users',
     byId: (id: string) => `/Users/${id}`,
     restore: (id: string) => `/Users/${id}/restore`,
     updateRoles: (id: string) => `/Users/${id}/roles`,
     classes: (id: string) => `/Users/${id}/classes`,
-    schedules: (id: string) => `/Users/${id}/schedules`
+    schedules: (id: string) => `/Users/${id}/schedules`,
+    mySchedules: '/Users/me/schedules'
   },
   federationMembers: {
     root: '/FederationMembers',
