@@ -1,8 +1,9 @@
-export type HandoverStatus = 'Pending' | 'Confirmed'
+﻿export type HandoverStatus = 'Pending' | 'Confirmed' | 'Rejected'
 
 export const HandoverStatusLabel: Record<HandoverStatus, string> = {
-  Pending: 'Chưa xác nhận',
-  Confirmed: 'Đã xác nhận'
+  Pending: 'ChÆ°a xÃ¡c nháº­n',
+  Confirmed: 'Đã xác nhận',
+  Rejected: 'Bị từ chối'
 }
 
 export type CashHandoverDeductionType = {
@@ -43,3 +44,4 @@ export type LateTuitionStudentType = {
   lastPaymentDate?: string
   daysSinceLastPayment: number
 }
+

@@ -1,4 +1,4 @@
-// Next Imports
+﻿// Next Imports
 
 // MUI Imports
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript'
@@ -12,8 +12,6 @@ import type { ChildrenType } from '@core/types'
 // Util Imports
 import { getSystemMode } from '@core/utils/serverHelpers'
 
-
-
 // Style Imports
 import '@/app/globals.css'
 
@@ -21,9 +19,24 @@ import '@/app/globals.css'
 import '@assets/iconify-icons/generated-icons.css'
 
 export const metadata = {
-  title: 'CMIS - Tan Dat Taekwondo',
-  description:
-    'Club Management Information System - Hệ thống quản lý thông tin câu lạc bộ'
+  title: 'CMIS - Tấn Đạt Taekwondo',
+  description: 'Central Management Information System - Hệ thống thông tin quản lý tập trung',
+  icons: {
+    icon: [{ url: '/images/logos/logo.svg', type: 'image/svg+xml' }],
+    shortcut: ['/images/logos/logo.svg'],
+    apple: [{ url: '/images/logos/logo.svg', type: 'image/svg+xml' }]
+  },
+  openGraph: {
+    title: 'CMIS - Tấn Đạt Taekwondo',
+    description: 'Hệ thống thông tin quản lý tập trung',
+    images: ['/images/logos/logo.svg']
+  },
+  twitter: {
+    card: 'summary',
+    title: 'CMIS - Tấn Đạt Taekwondo',
+    description: 'Hệ thống thông tin quản lý tập trung',
+    images: ['/images/logos/logo.svg']
+  }
 }
 
 const RootLayout = async (props: ChildrenType) => {

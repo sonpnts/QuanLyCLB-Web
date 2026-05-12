@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
@@ -36,6 +36,8 @@ import type { ColumnDef } from '@tanstack/react-table'
 
 import { fuzzyFilter } from '@/utils/tableHelpers'
 import { exportToExcel, formatVnDate, formatVnCurrency } from '@/utils/exportToExcel'
+import { normalizePaymentMethod, isBankTransferMethod } from '@/utils/paymentMethod'
+import { normalizePaymentType } from '@/utils/paymentType'
 
 // Type Imports
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
@@ -101,7 +103,7 @@ const PaymentListTable = () => {
 
   const { showNotification } = useNotification()
 
-  // Refs để tránh duplicate calls
+  // Refs Ä‘á»ƒ trÃ¡nh duplicate calls
   const showNotificationRef = useRef(showNotification)
 
   showNotificationRef.current = showNotification
@@ -155,7 +157,7 @@ const PaymentListTable = () => {
     () => [
       {
         id: 'receiptNumber',
-        header: 'Số Biên lai',
+        header: 'Sá»‘ BiÃªn lai',
         cell: ({ row }) => (
           <Typography variant='body2' fontWeight={500} color='primary'>
             {row.original.receiptNumber || '-'}
@@ -163,7 +165,7 @@ const PaymentListTable = () => {
         )
       },
       columnHelper.accessor('studentName', {
-        header: 'Học viên',
+        header: 'Há»c viÃªn',
         cell: ({ row }) => (
           <Typography className='font-medium' color='text.primary'>
             {row.original.studentName || '-'}
@@ -171,17 +173,14 @@ const PaymentListTable = () => {
         )
       }),
       columnHelper.accessor('className', {
-        header: 'Lớp học',
+        header: 'Lá»›p há»c',
         cell: ({ row }) => <Typography>{row.original.className || '-'}</Typography>
       }),
       columnHelper.accessor('type', {
-        header: 'Loại thanh toán',
+        header: 'Loáº¡i thanh toÃ¡n',
         cell: ({ row }) => {
           const typeVal = row.original.type
-          // Support both numeric (0,1,2,3) and string ('Tuition','BankTransfer',...) values
-          const numericType = typeof typeVal === 'string'
-            ? ({ Tuition: 0, ExamFee: 1, Registration: 2, Other: 3 } as Record<string, number>)[typeVal] ?? 3
-            : typeVal
+          const numericType = normalizePaymentType(typeVal, 3)
           return (
             <Chip
               label={paymentTypeLabels[numericType] || String(typeVal)}
@@ -193,7 +192,7 @@ const PaymentListTable = () => {
         }
       }),
       columnHelper.accessor('originalAmount', {
-        header: 'Tiền gốc',
+        header: 'Tiá»n gá»‘c',
         cell: ({ row }) => (
           <Typography variant='body2' color='text.secondary'>
             {row.original.originalAmount != null ? formatCurrency(row.original.originalAmount) : '-'}
@@ -201,7 +200,7 @@ const PaymentListTable = () => {
         )
       }),
       columnHelper.accessor('discountAmount', {
-        header: 'Giảm trừ',
+        header: 'Giáº£m trá»«',
         cell: ({ row }) =>
           row.original.discountAmount && row.original.discountAmount > 0 ? (
             <Tooltip title={row.original.discountReason || ''}>
@@ -211,12 +210,12 @@ const PaymentListTable = () => {
             </Tooltip>
           ) : (
             <Typography variant='body2' color='text.disabled'>
-              —
+              â€”
             </Typography>
           )
       }),
       columnHelper.accessor('amount', {
-        header: 'Thực thu',
+        header: 'Thá»±c thu',
         cell: ({ row }) => (
           <Typography className='font-medium' color='success.main'>
             {formatCurrency(row.original.amount)}
@@ -224,7 +223,7 @@ const PaymentListTable = () => {
         )
       }),
       columnHelper.accessor('paymentDate', {
-        header: 'Ngày TT',
+        header: 'NgÃ y TT',
         cell: ({ row }) => (
           <Typography variant='body2'>
             {new Date(row.original.paymentDate).toLocaleDateString('vi-VN')}
@@ -232,12 +231,10 @@ const PaymentListTable = () => {
         )
       }),
       columnHelper.accessor('method', {
-        header: 'Phương thức',
+        header: 'PhÆ°Æ¡ng thá»©c',
         cell: ({ row }) => {
           const methodVal = row.original.method
-          const numericMethod = typeof methodVal === 'string'
-            ? ({ Cash: 0, BankTransfer: 1, Other: 2 } as Record<string, number>)[methodVal] ?? 0
-            : methodVal
+          const numericMethod = normalizePaymentMethod(methodVal, 0)
           return (
             <Chip
               label={paymentMethodLabels[numericMethod] || String(methodVal)}
@@ -250,7 +247,7 @@ const PaymentListTable = () => {
       }),
       {
         id: 'period',
-        header: 'Kỳ',
+        header: 'Ká»³',
         cell: ({ row }) => (
           <Typography variant='body2'>
             {row.original.forMonth && row.original.forYear
@@ -260,7 +257,7 @@ const PaymentListTable = () => {
         )
       },
       columnHelper.accessor('collectedByUserName', {
-        header: 'Người thu',
+        header: 'NgÆ°á»i thu',
         cell: ({ row }) => (
           <Typography variant='body2' color='text.secondary'>
             {row.original.collectedByUserName || '-'}
@@ -269,14 +266,13 @@ const PaymentListTable = () => {
       }),
       {
         id: 'actions',
-        header: 'Thao tác',
+        header: 'Thao tÃ¡c',
         cell: ({ row }) => {
-          const isBankTransfer = row.original.method === 1 ||
-            (row.original.method as any) === 'BankTransfer'
+          const isBankTransfer = isBankTransferMethod(row.original.method)
           return (
             <div className='flex items-center'>
               {row.original.receiptNumber && (
-                <Tooltip title='Xem biên lai'>
+                <Tooltip title='Xem biÃªn lai'>
                   <IconButton
                     size='small'
                     color='info'
@@ -287,7 +283,7 @@ const PaymentListTable = () => {
                 </Tooltip>
               )}
               {isBankTransfer && row.original.transferProofImageUrl && (
-                <Tooltip title='Xem ảnh chuyển khoản'>
+                <Tooltip title='Xem áº£nh chuyá»ƒn khoáº£n'>
                   <IconButton
                     size='small'
                     color='success'
@@ -322,18 +318,18 @@ const PaymentListTable = () => {
   return (
     <>
       <Card>
-        <CardHeader title='Quản lý thanh toán' />
+        <CardHeader title='Quáº£n lÃ½ thanh toÃ¡n' />
         <TableFilters onFilterChange={handleFilterChange} />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <Button color='secondary' variant='outlined' startIcon={<i className='ri-upload-2-line text-xl' />}>
-            Xuất báo cáo
+            Xuáº¥t bÃ¡o cÃ¡o
           </Button>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
-              placeholder='Tìm kiếm...'
+              placeholder='TÃ¬m kiáº¿m...'
               className='max-sm:is-full'
             />
             <Button
@@ -346,33 +342,33 @@ const PaymentListTable = () => {
                   filename: 'danh-sach-thanh-toan',
                   rows: data,
                   columns: [
-                    { header: 'Số biên lai', accessor: 'receiptNumber' as any },
-                    { header: 'Ngày thanh toán', accessor: 'paymentDate', formatter: formatVnDate },
-                    { header: 'Học viên', accessor: 'studentName' as any },
-                    { header: 'Lớp', accessor: 'className' as any },
+                    { header: 'Sá»‘ biÃªn lai', accessor: 'receiptNumber' as any },
+                    { header: 'NgÃ y thanh toÃ¡n', accessor: 'paymentDate', formatter: formatVnDate },
+                    { header: 'Há»c viÃªn', accessor: 'studentName' as any },
+                    { header: 'Lá»›p', accessor: 'className' as any },
                     {
-                      header: 'Loại',
+                      header: 'Loáº¡i',
                       accessor: 'type',
                       formatter: v => paymentTypeLabels[v as number] || ''
                     },
-                    { header: 'Số tiền', accessor: 'amount', formatter: formatVnCurrency },
-                    { header: 'Đã giảm', accessor: 'discountAmount' as any, formatter: formatVnCurrency },
-                    { header: 'Lý do giảm', accessor: 'discountReason' as any },
+                    { header: 'Sá»‘ tiá»n', accessor: 'amount', formatter: formatVnCurrency },
+                    { header: 'ÄÃ£ giáº£m', accessor: 'discountAmount' as any, formatter: formatVnCurrency },
+                    { header: 'LÃ½ do giáº£m', accessor: 'discountReason' as any },
                     {
-                      header: 'Phương thức',
+                      header: 'PhÆ°Æ¡ng thá»©c',
                       accessor: 'method',
                       formatter: v => paymentMethodLabels[v as number] || ''
                     },
-                    { header: 'Người thu', accessor: 'collectedByUserName' as any },
-                    { header: 'Ghi chú', accessor: 'description' as any }
+                    { header: 'NgÆ°á»i thu', accessor: 'collectedByUserName' as any },
+                    { header: 'Ghi chÃº', accessor: 'description' as any }
                   ]
                 })
               }}
             >
-              Xuất Excel
+              Xuáº¥t Excel
             </Button>
             <Button variant='contained' onClick={() => setAddPaymentOpen(true)}>
-              Thêm thanh toán
+              ThÃªm thanh toÃ¡n
             </Button>
           </div>
         </div>
@@ -403,7 +399,7 @@ const PaymentListTable = () => {
               {table.getFilteredRowModel().rows.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className='text-center'>
-                    {loading ? 'Đang tải...' : 'Không có dữ liệu'}
+                    {loading ? 'Äang táº£i...' : 'KhÃ´ng cÃ³ dá»¯ liá»‡u'}
                   </td>
                 </tr>
               ) : (
@@ -446,7 +442,7 @@ const PaymentListTable = () => {
         fullWidth
       >
         <DialogTitle>
-          Ảnh chụp màn hình chuyển khoản
+          áº¢nh chá»¥p mÃ n hÃ¬nh chuyá»ƒn khoáº£n
           <IconButton
             size='small'
             onClick={() => { setProofImageOpen(false); setProofImageUrl(null) }}
@@ -461,7 +457,7 @@ const PaymentListTable = () => {
               <Box
                 component='img'
                 src={proofImageUrl}
-                alt='Ảnh chuyển khoản'
+                alt='áº¢nh chuyá»ƒn khoáº£n'
                 sx={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: 1 }}
               />
             </Box>
@@ -476,9 +472,9 @@ const PaymentListTable = () => {
             startIcon={<i className='ri-external-link-line' />}
             disabled={!proofImageUrl}
           >
-            Mở ảnh gốc
+            Má»Ÿ áº£nh gá»‘c
           </Button>
-          <Button onClick={() => { setProofImageOpen(false); setProofImageUrl(null) }}>Đóng</Button>
+          <Button onClick={() => { setProofImageOpen(false); setProofImageUrl(null) }}>ÄÃ³ng</Button>
         </DialogActions>
       </Dialog>
 
@@ -487,3 +483,4 @@ const PaymentListTable = () => {
 }
 
 export default PaymentListTable
+

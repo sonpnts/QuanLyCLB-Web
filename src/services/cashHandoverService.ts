@@ -19,7 +19,7 @@ export interface CreateDeductionRequest {
 
 export interface CreateCashHandoverRequest {
   classId: string
-  instructorId: string
+  instructorId?: string
   amountHandedOver?: number
   notes?: string
   deductions?: CreateDeductionRequest[]
@@ -132,6 +132,22 @@ class CashHandoverService {
     } catch (error: any) {
       logger.error('CashHandoverService', 'confirmCashHandover', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async rejectCashHandover(id: string, reason: string): Promise<ResponseResult<CashHandoverType>> {
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.cashHandovers.reject(id), { reason })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: toCashHandover(apiResponse.data), message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('CashHandoverService', 'rejectCashHandover', error)
+      return { success: false, message: error?.response?.data?.message || 'Lá»—i káº¿t ná»‘i mÃ¡y chá»§' }
     }
   }
 

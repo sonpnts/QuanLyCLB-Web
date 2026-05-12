@@ -1,4 +1,4 @@
-import type { ThemeColor } from '@core/types'
+﻿import type { ThemeColor } from '@core/types'
 
 // 0=ProfilePhoto, 1=BeltCertificate, 2=Certificate, 3=BankTransferProof
 export type UserDocumentType = 0 | 1 | 2 | 3
@@ -51,7 +51,7 @@ export const documentTypeAccept: Record<UserDocumentType, string> = {
 export const documentStatusLabels: Record<UserDocumentStatus, string> = {
   0: 'Chờ duyệt',
   1: 'Đã duyệt',
-  2: 'Cần nộp lại'
+  2: 'Từ chối / cần nộp lại'
 }
 
 export const documentStatusColors: Record<UserDocumentStatus, ThemeColor> = {

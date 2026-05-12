@@ -1,8 +1,7 @@
-'use client'
+﻿'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-// MUI Imports
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -11,59 +10,39 @@ import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
-import { useTheme } from '@mui/material/styles'
-import dynamic from 'next/dynamic'
-import type { ApexOptions } from 'apexcharts'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import Button from '@mui/material/Button'
+import Link from 'next/link'
 
-// Services
 import dashboardService from '@/services/dashboardService'
 import type {
   DashboardStatisticsDto,
+  DashboardSystemNotificationsDto,
   RevenueStatisticsDto,
   StudentStatisticsDto,
-  AttendanceStatisticsDto,
-  DailyAttendanceStat
+  AttendanceStatisticsDto
 } from '@/services/dashboardService'
 
-// Components
 import CustomAvatar from '@core/components/mui/Avatar'
 
-const AppReactApexCharts = dynamic(() => import('@/libs/styles/AppReactApexCharts'))
+const formatMoney = (value: number) => new Intl.NumberFormat('vi-VN').format(value)
 
-// ─── Format helpers ───────────────────────────────────────────────────────────
-
-const formatCurrency = (value: number) => {
-  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
-  return value.toString()
-}
-
-const MONTH_LABELS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12']
-
-// Helper: backend trả về value có thể là number hoặc {checkIns, checkOuts, totalScheduledSessions}
-const extractCheckIns = (v: DailyAttendanceStat | number): number =>
-  typeof v === 'object' ? (v.checkIns ?? 0) : (v ?? 0)
-
-const extractTodayAttendance = (
-  v: number | { checkIns: number; checkOuts: number; totalScheduledSessions: number } | undefined
-): number => {
-  if (v === undefined || v === null) return 0
-  if (typeof v === 'object') return v.checkIns ?? 0
-  return v
-}
-
-// ─── Stat Card ────────────────────────────────────────────────────────────────
-
-interface StatCardProps {
+const StatCard = ({
+  title,
+  value,
+  icon,
+  color,
+  subtitle
+}: {
   title: string
   value: string | number
   icon: string
   color: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary'
   subtitle?: string
-}
-
-const StatCard = ({ title, value, icon, color, subtitle }: StatCardProps) => (
+}) => (
   <Card sx={{ height: '100%' }}>
     <CardContent className='flex items-center gap-4'>
       <CustomAvatar color={color} skin='light' size={56} variant='rounded'>
@@ -86,454 +65,211 @@ const StatCard = ({ title, value, icon, color, subtitle }: StatCardProps) => (
   </Card>
 )
 
-// ─── Revenue Chart ────────────────────────────────────────────────────────────
-
-interface RevenueChartProps {
-  data: RevenueStatisticsDto[]
-}
-
-const RevenueChart = ({ data }: RevenueChartProps) => {
-  const theme = useTheme()
-
-  const sorted = [...data].sort((a, b) => a.year * 100 + a.month - (b.year * 100 + b.month))
-  const labels = sorted.map(d => MONTH_LABELS[d.month - 1])
-  const tuition = sorted.map(d => Math.round(d.tuitionFees / 1_000_000))
-  const examFees = sorted.map(d => Math.round(d.examFees / 1_000_000))
-  const other = sorted.map(d => Math.round(d.otherFees / 1_000_000))
-
-  const series = [
-    { name: 'Học phí', data: tuition },
-    { name: 'Phí thi cấp', data: examFees },
-    { name: 'Khác', data: other }
-  ]
-
-  const options: ApexOptions = {
-    chart: {
-      type: 'bar',
-      stacked: true,
-      toolbar: { show: false },
-      parentHeightOffset: 0
-    },
-    plotOptions: {
-      bar: {
-        borderRadius: 4,
-        columnWidth: '55%',
-        borderRadiusApplication: 'around',
-        borderRadiusWhenStacked: 'all'
-      }
-    },
-    colors: [
-      'var(--mui-palette-primary-main)',
-      'var(--mui-palette-warning-main)',
-      'var(--mui-palette-info-main)'
-    ],
-    dataLabels: { enabled: false },
-    stroke: { width: 2, colors: ['transparent'] },
-    legend: {
-      position: 'top',
-      fontSize: '13px',
-      markers: { height: 10, width: 10, radius: 10, offsetX: theme.direction === 'rtl' ? 7 : -4 },
-      labels: { colors: 'var(--mui-palette-text-secondary)' },
-      itemMargin: { horizontal: 10 }
-    },
-    xaxis: {
-      categories: labels,
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-      labels: { style: { colors: 'var(--mui-palette-text-secondary)', fontSize: '13px' } }
-    },
-    yaxis: {
-      labels: {
-        formatter: val => `${val}M`,
-        style: { colors: 'var(--mui-palette-text-secondary)', fontSize: '12px' }
-      }
-    },
-    grid: {
-      borderColor: 'var(--mui-palette-divider)',
-      padding: { left: 0, right: 0 }
-    },
-    tooltip: {
-      y: { formatter: val => `${val}M ₫` }
-    }
-  }
-
-  return (
-    <Card>
-      <CardHeader title='Doanh thu theo tháng' subheader='Đơn vị: triệu đồng' />
-      <CardContent sx={{ pb: '0 !important' }}>
-        <AppReactApexCharts type='bar' height={270} width='100%' series={series} options={options} />
-      </CardContent>
-    </Card>
-  )
-}
-
-// ─── Belt Level Donut Chart ───────────────────────────────────────────────────
-
-interface BeltChartProps {
-  data: Record<string, number>
-  totalStudents: number
-}
-
-const BeltLevelChart = ({ data, totalStudents }: BeltChartProps) => {
-  const theme = useTheme()
-
-  const entries = Object.entries(data).filter(([, v]) => v > 0)
-  const labels = entries.map(([k]) => k || 'Chưa phân cấp')
-  const values = entries.map(([, v]) => v)
-
-  const options: ApexOptions = {
-    chart: {
-      type: 'donut',
-      parentHeightOffset: 0,
-      toolbar: { show: false }
-    },
-    labels,
-    colors: [
-      'var(--mui-palette-primary-main)',
-      'var(--mui-palette-success-main)',
-      'var(--mui-palette-warning-main)',
-      'var(--mui-palette-error-main)',
-      'var(--mui-palette-info-main)',
-      'var(--mui-palette-secondary-main)'
-    ],
-    stroke: { width: 0 },
-    dataLabels: { enabled: false },
-    legend: {
-      position: 'bottom',
-      fontSize: '13px',
-      labels: { colors: 'var(--mui-palette-text-secondary)' },
-      markers: { offsetX: theme.direction === 'rtl' ? 7 : -4 },
-      itemMargin: { horizontal: 6 }
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '65%',
-          labels: {
-            show: true,
-            total: {
-              show: true,
-              label: 'Học viên',
-              fontSize: '14px',
-              color: 'var(--mui-palette-text-secondary)',
-              formatter: () => `${totalStudents}`
-            }
-          }
-        }
-      }
-    },
-    tooltip: {
-      y: { formatter: val => `${val} học viên` }
-    },
-    responsive: [
-      {
-        breakpoint: 500,
-        options: { chart: { width: 280 } }
-      }
-    ]
-  }
-
-  if (entries.length === 0) {
-    return (
-      <Card sx={{ height: '100%' }}>
-        <CardHeader title='Phân bổ cấp đai' />
-        <CardContent className='flex items-center justify-center' sx={{ minHeight: 300 }}>
-          <Typography color='text.secondary'>Chưa có dữ liệu</Typography>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <Card sx={{ height: '100%' }}>
-      <CardHeader title='Phân bổ cấp đai' subheader={`${totalStudents} học viên đang học`} />
-      <CardContent sx={{ pb: '16px !important' }}>
-        <AppReactApexCharts type='donut' height={300} width='100%' series={values} options={options} />
-      </CardContent>
-    </Card>
-  )
-}
-
-// ─── Attendance Chart ─────────────────────────────────────────────────────────
-
-interface AttendanceChartProps {
-  data: AttendanceStatisticsDto
-}
-
-const AttendanceChart = ({ data }: AttendanceChartProps) => {
-  const theme = useTheme()
-
-  const dayEntries = Object.entries(data.attendanceByDay || {})
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-14)
-
-  const labels = dayEntries.map(([k]) => {
-    const d = new Date(k)
-    return `${d.getDate()}/${d.getMonth() + 1}`
-  })
-  const values = dayEntries.map(([, v]) => extractCheckIns(v as DailyAttendanceStat | number))
-
-  const series = [{ name: 'Điểm danh', data: values }]
-
-  const options: ApexOptions = {
-    chart: {
-      type: 'area',
-      toolbar: { show: false },
-      parentHeightOffset: 0,
-      sparkline: { enabled: false }
-    },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 0.8,
-        opacityFrom: 0.6,
-        opacityTo: 0.1
-      }
-    },
-    stroke: { width: 2, curve: 'smooth' },
-    colors: ['var(--mui-palette-success-main)'],
-    dataLabels: { enabled: false },
-    xaxis: {
-      categories: labels,
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-      labels: { style: { colors: 'var(--mui-palette-text-secondary)', fontSize: '12px' } }
-    },
-    yaxis: {
-      labels: {
-        style: { colors: 'var(--mui-palette-text-secondary)', fontSize: '12px' }
-      }
-    },
-    grid: {
-      borderColor: 'var(--mui-palette-divider)',
-      padding: { left: 0, right: 0 }
-    },
-    tooltip: { y: { formatter: val => `${val} lượt` } }
-  }
-
-  return (
-    <Card>
-      <CardHeader
-        title='Điểm danh 14 ngày gần nhất'
-        subheader={
-          <Typography variant='body2' color='text.secondary'>
-            Tỉ lệ chuyên cần:{' '}
-            <strong style={{ color: 'var(--mui-palette-success-main)' }}>
-              {typeof data.attendanceRate === 'number' ? (data.attendanceRate * 100).toFixed(1) : '0.0'}%
-            </strong>
-          </Typography>
-        }
-      />
-      <CardContent sx={{ pb: '0 !important' }}>
-        {values.length > 0 ? (
-          <AppReactApexCharts type='area' height={200} width='100%' series={series} options={options} />
-        ) : (
-          <Box className='flex items-center justify-center' sx={{ height: 200 }}>
-            <Typography color='text.secondary'>Chưa có dữ liệu điểm danh</Typography>
-          </Box>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-// ─── Quick Info Cards ─────────────────────────────────────────────────────────
-
-interface QuickInfoProps {
-  stats: DashboardStatisticsDto
-  studentStats: StudentStatisticsDto | null
-}
-
-const QuickInfo = ({ stats, studentStats }: QuickInfoProps) => {
-  const items = [
-    {
-      label: 'Chờ chuyển lớp',
-      value: stats.pendingTransfers,
-      icon: 'ri-arrow-left-right-line',
-      color: 'warning' as const
-    },
-    {
-      label: 'Kỳ thi sắp tới',
-      value: stats.upcomingExams,
-      icon: 'ri-medal-line',
-      color: 'info' as const
-    },
-    {
-      label: 'Học viên tạm nghỉ',
-      value: studentStats ? studentStats.totalStudents - studentStats.activeStudents : 0,
-      icon: 'ri-pause-circle-line',
-      color: 'secondary' as const
-    },
-    {
-      label: 'Học viên mới tháng này',
-      value: studentStats?.newStudentsThisMonth ?? 0,
-      icon: 'ri-user-add-line',
-      color: 'success' as const
-    }
-  ]
-
-  return (
-    <Card sx={{ height: '100%' }}>
-      <CardHeader title='Thông tin nhanh' />
-      <CardContent className='flex flex-col gap-4'>
-        {items.map(item => (
-          <Box key={item.label} className='flex items-center justify-between'>
-            <Box className='flex items-center gap-3'>
-              <CustomAvatar color={item.color} skin='light' size={40} variant='rounded'>
-                <i className={`${item.icon} text-lg`} />
-              </CustomAvatar>
-              <Typography color='text.primary'>{item.label}</Typography>
-            </Box>
-            <Chip
-              label={item.value}
-              color={item.value > 0 ? item.color : 'default'}
-              size='small'
-              variant='tonal'
-            />
-          </Box>
-        ))}
-      </CardContent>
-    </Card>
-  )
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
+const StatusSection = ({
+  title,
+  emptyText,
+  items
+}: {
+  title: string
+  emptyText: string
+  items: NonNullable<DashboardSystemNotificationsDto['pendingItems']>
+}) => (
+  <Box>
+    <Typography variant='subtitle2' className='mb-2'>
+      {title}
+    </Typography>
+    <div className='flex flex-col gap-2'>
+      {items.length === 0 && <Typography color='text.secondary'>{emptyText}</Typography>}
+      {items.map(item => (
+        <Box key={`${item.moduleKey}-${item.recordId}`} className='border rounded p-3'>
+          <div className='flex justify-between items-start gap-3'>
+            <div>
+              <Typography variant='body2' className='font-medium'>
+                {item.title}
+              </Typography>
+              <Typography variant='caption' color='text.secondary'>
+                {item.moduleLabel} - {item.statusLabel}
+              </Typography>
+              {item.description && (
+                <Typography variant='caption' color='text.secondary' display='block'>
+                  {item.description}
+                </Typography>
+              )}
+            </div>
+            <Button component={Link} href={item.detailUrl} size='small' variant='outlined'>
+              Chi tiết
+            </Button>
+          </div>
+        </Box>
+      ))}
+    </div>
+  </Box>
+)
 
 const DashboardHome = () => {
   const [stats, setStats] = useState<DashboardStatisticsDto | null>(null)
   const [revenue, setRevenue] = useState<RevenueStatisticsDto[]>([])
   const [studentStats, setStudentStats] = useState<StudentStatisticsDto | null>(null)
   const [attendanceStats, setAttendanceStats] = useState<AttendanceStatisticsDto | null>(null)
+  const [systemNotifications, setSystemNotifications] = useState<DashboardSystemNotificationsDto | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  })
+
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  const monthOptions = useMemo(
+    () =>
+      Array.from({ length: 12 }).map((_, idx) => {
+        const d = new Date()
+        d.setMonth(d.getMonth() - idx)
+        const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        return { value, label: `Tháng ${d.getMonth() + 1}/${d.getFullYear()}` }
+      }),
+    []
+  )
+
   useEffect(() => {
-    const fetchAll = async () => {
+    const rawRoles = localStorage.getItem('roles')
+    const roles = rawRoles ? JSON.parse(rawRoles) : []
+    setIsAdmin(Array.isArray(roles) && roles.some((r: string) => ['administrator', 'admin'].includes(String(r).toLowerCase())))
+  }, [])
+
+  useEffect(() => {
+    const load = async () => {
+      const [yearStr, monthStr] = selectedMonth.split('-')
+      const year = Number(yearStr)
+      const month = Number(monthStr)
+
       setLoading(true)
       try {
-        const [statsRes, revenueRes, studentRes, attendanceRes] = await Promise.all([
-          dashboardService.getStatistics(),
+        const [statsRes, revenueRes, studentRes, attendanceRes, notificationRes] = await Promise.all([
+          dashboardService.getStatistics({ year, month }),
           dashboardService.getRevenue({ months: 6 }),
           dashboardService.getStudentStats(),
-          dashboardService.getAttendanceStats()
+          dashboardService.getAttendanceStats(),
+          dashboardService.getSystemNotifications({ year, month, maxItemsPerStatus: 10 })
         ])
 
         if (statsRes.success && statsRes.data) setStats(statsRes.data)
         if (revenueRes.success && revenueRes.data) setRevenue(revenueRes.data)
         if (studentRes.success && studentRes.data) setStudentStats(studentRes.data)
         if (attendanceRes.success && attendanceRes.data) setAttendanceStats(attendanceRes.data)
+        if (notificationRes.success && notificationRes.data) setSystemNotifications(notificationRes.data)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchAll()
-  }, [])
+    load()
+  }, [selectedMonth])
 
   if (loading) {
     return (
-      <Box className='flex items-center justify-center' sx={{ minHeight: 400 }}>
+      <Box className='flex items-center justify-center' sx={{ minHeight: 420 }}>
         <CircularProgress size={48} />
       </Box>
     )
   }
 
-  const currentMonth = new Date().getMonth() + 1
-  const currentYear = new Date().getFullYear()
+  const [yearText, monthText] = selectedMonth.split('-')
+  const monthlyRevenue = stats?.monthlyRevenue ?? 0
 
   return (
     <Grid container spacing={6}>
-      {/* ── Stat Cards ── */}
-      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-        <StatCard
-          title='Tổng học viên'
-          value={stats?.totalStudents ?? 0}
-          icon='ri-graduation-cap-line'
-          color='primary'
-          subtitle={`${stats?.activeStudents ?? 0} đang học`}
-        />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-        <StatCard
-          title='Lớp học hoạt động'
-          value={stats?.activeClasses ?? 0}
-          icon='ri-community-line'
-          color='success'
-          subtitle={`Tổng ${stats?.totalClasses ?? 0} lớp`}
-        />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-        <StatCard
-          title={`Doanh thu tháng ${currentMonth}/${currentYear}`}
-          value={stats ? formatCurrency(stats.monthlyRevenue) + ' ₫' : '0 ₫'}
-          icon='ri-money-dollar-circle-line'
-          color='warning'
-        />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-        <StatCard
-          title='Huấn luyện viên'
-          value={stats?.totalInstructors ?? 0}
-          icon='ri-user-star-line'
-          color='info'
-        />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-        <StatCard
-          title='Chi nhánh'
-          value={stats?.totalBranches ?? 0}
-          icon='ri-map-pin-line'
-          color='secondary'
-        />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-        <StatCard
-          title='Điểm danh hôm nay'
-          value={extractTodayAttendance(stats?.todayAttendance)}
-          icon='ri-calendar-check-line'
-          color='error'
-          subtitle='lượt điểm danh'
-        />
+      <Grid size={{ xs: 12 }}>
+        <Card>
+          <CardContent className='flex items-center justify-between flex-wrap gap-3'>
+            <Typography variant='h6'>Dashboard tổng quan</Typography>
+            <FormControl size='small' sx={{ minWidth: 230 }}>
+              <InputLabel>Chọn tháng</InputLabel>
+              <Select label='Chọn tháng' value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}>
+                {monthOptions.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </CardContent>
+        </Card>
       </Grid>
 
-      {/* ── Revenue Chart ── */}
-      <Grid size={{ xs: 12, md: 8 }}>
-        {revenue.length > 0 ? (
-          <RevenueChart data={revenue} />
-        ) : (
-          <Card>
-            <CardHeader title='Doanh thu theo tháng' />
-            <CardContent className='flex items-center justify-center' sx={{ minHeight: 300 }}>
-              <Typography color='text.secondary'>Chưa có dữ liệu doanh thu</Typography>
-            </CardContent>
-          </Card>
-        )}
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <StatCard title='Tổng học viên' value={stats?.totalStudents ?? 0} icon='ri-graduation-cap-line' color='primary' subtitle={`${stats?.activeStudents ?? 0} đang học`} />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <StatCard title='Lớp hoạt động' value={stats?.activeClasses ?? 0} icon='ri-community-line' color='success' subtitle={`Tổng ${stats?.totalClasses ?? 0} lớp`} />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <StatCard title={`Doanh thu tháng ${monthText}/${yearText}`} value={`${formatMoney(monthlyRevenue)} ₫`} icon='ri-money-dollar-circle-line' color='warning' />
       </Grid>
 
-      {/* ── Quick Info ── */}
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <StatCard title='Huấn luyện viên' value={stats?.totalInstructors ?? 0} icon='ri-user-star-line' color='info' />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <StatCard title='Chi nhánh' value={stats?.totalBranches ?? 0} icon='ri-map-pin-line' color='secondary' />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <StatCard title='Yêu cầu chuyển lớp chờ duyệt' value={stats?.pendingTransfers ?? 0} icon='ri-arrow-left-right-line' color='warning' />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <StatCard title='Điểm danh hôm nay' value={typeof stats?.todayAttendance === 'object' ? (stats?.todayAttendance?.checkIns ?? 0) : (stats?.todayAttendance ?? 0)} icon='ri-calendar-check-line' color='error' />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardHeader title='Tổng hợp nhanh' />
+          <CardContent className='flex flex-col gap-2'>
+            <Typography>Học viên mới tháng này: <strong>{studentStats?.newStudentsThisMonth ?? 0}</strong></Typography>
+            <Typography>Tỷ lệ điểm danh: <strong>{((attendanceStats?.attendanceRate ?? 0) * 100).toFixed(1)}%</strong></Typography>
+            <Typography>Số phiên điểm danh: <strong>{attendanceStats?.totalSessions ?? 0}</strong></Typography>
+            <Typography>Doanh thu 6 tháng gần nhất: <strong>{formatMoney(revenue.reduce((sum, x) => sum + (x.totalRevenue || 0), 0))} ₫</strong></Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardHeader title='Thông báo hệ thống' subheader={isAdmin ? 'Tổng số yêu cầu chờ duyệt toàn hệ thống' : 'Tác vụ của bạn'} />
+          <CardContent className='flex flex-col gap-3'>
+            <div className='flex gap-2 flex-wrap'>
+              <Chip label={`Chờ duyệt: ${systemNotifications?.totalPending ?? 0}`} color='warning' variant='tonal' />
+              <Chip label={`Đã duyệt: ${systemNotifications?.totalApproved ?? 0}`} color='success' variant='tonal' />
+              <Chip label={`Từ chối: ${systemNotifications?.totalRejected ?? 0}`} color='error' variant='tonal' />
+              <Chip label={`Tổng: ${systemNotifications?.totalItems ?? 0}`} color='primary' variant='tonal' />
+            </div>
+          </CardContent>
+        </Card>
+      </Grid>
+
       <Grid size={{ xs: 12, md: 4 }}>
-        {stats && <QuickInfo stats={stats} studentStats={studentStats} />}
+        <Card sx={{ height: '100%' }}>
+          <CardHeader title='Chờ duyệt' />
+          <CardContent>
+            <StatusSection title='Danh sách' emptyText='Không có yêu cầu chờ duyệt' items={systemNotifications?.pendingItems ?? []} />
+          </CardContent>
+        </Card>
       </Grid>
-
-      {/* ── Belt Level Chart ── */}
-      <Grid size={{ xs: 12, md: 5 }}>
-        <BeltLevelChart
-          data={studentStats?.studentsByBeltLevel ?? {}}
-          totalStudents={studentStats?.activeStudents ?? 0}
-        />
+      <Grid size={{ xs: 12, md: 4 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardHeader title='Đã duyệt' />
+          <CardContent>
+            <StatusSection title='Danh sách' emptyText='Không có mục đã duyệt' items={(systemNotifications?.approvedItems ?? []).slice(0, 6)} />
+          </CardContent>
+        </Card>
       </Grid>
-
-      {/* ── Attendance Chart ── */}
-      <Grid size={{ xs: 12, md: 7 }}>
-        {attendanceStats ? (
-          <AttendanceChart data={attendanceStats} />
-        ) : (
-          <Card>
-            <CardHeader title='Điểm danh 14 ngày gần nhất' />
-            <CardContent className='flex items-center justify-center' sx={{ minHeight: 230 }}>
-              <Typography color='text.secondary'>Chưa có dữ liệu điểm danh</Typography>
-            </CardContent>
-          </Card>
-        )}
+      <Grid size={{ xs: 12, md: 4 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardHeader title='Từ chối' />
+          <CardContent>
+            <StatusSection title='Danh sách' emptyText='Không có mục bị từ chối' items={(systemNotifications?.rejectedItems ?? []).slice(0, 6)} />
+          </CardContent>
+        </Card>
       </Grid>
     </Grid>
   )

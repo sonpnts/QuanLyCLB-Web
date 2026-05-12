@@ -329,7 +329,7 @@ class ScheduleService {
 
   async getMySchedules(params?: GetSchedulesParams): Promise<ResponseResult<ScheduleType[]>> {
     try {
-      const response = await apiClient.get<any>(API_ENDPOINTS.users.mySchedules, { params })
+      const response = await apiClient.get<any>(API_ENDPOINTS.schedules.my, { params })
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {

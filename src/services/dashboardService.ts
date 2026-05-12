@@ -16,6 +16,28 @@ export interface DashboardStatisticsDto {
   todayAttendance: number | { checkIns: number; checkOuts: number; totalScheduledSessions: number }
 }
 
+export interface SystemNotificationItemDto {
+  moduleKey: string
+  moduleLabel: string
+  status: 'Pending' | 'Approved' | 'Rejected'
+  statusLabel: string
+  recordId: string
+  title: string
+  description?: string
+  createdAt: string
+  detailUrl: string
+}
+
+export interface DashboardSystemNotificationsDto {
+  totalPending: number
+  totalApproved: number
+  totalRejected: number
+  totalItems: number
+  pendingItems: SystemNotificationItemDto[]
+  approvedItems: SystemNotificationItemDto[]
+  rejectedItems: SystemNotificationItemDto[]
+}
+
 export interface RevenueStatisticsDto {
   year: number
   month: number
@@ -59,9 +81,9 @@ export interface AttendanceStatisticsDto {
 }
 
 class DashboardService {
-  async getStatistics(): Promise<ResponseResult<DashboardStatisticsDto>> {
+  async getStatistics(params?: { year?: number; month?: number }): Promise<ResponseResult<DashboardStatisticsDto>> {
     try {
-      const response = await apiClient.get<any>(API_ENDPOINTS.dashboard.statistics)
+      const response = await apiClient.get<any>(API_ENDPOINTS.dashboard.statistics, { params })
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
@@ -125,6 +147,23 @@ class DashboardService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('DashboardService', 'getAttendanceStats', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getSystemNotifications(params?: {
+    year?: number
+    month?: number
+    maxItemsPerStatus?: number
+  }): Promise<ResponseResult<DashboardSystemNotificationsDto>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.dashboard.systemNotifications, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('DashboardService', 'getSystemNotifications', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }

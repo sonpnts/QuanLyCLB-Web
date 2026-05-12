@@ -75,7 +75,7 @@ const PaymentCollectView = () => {
       if (result.success && result.data) {
         setSummary(result.data)
       } else {
-        showNotification(result.message || 'KhÃƒÂ´ng thÃ¡Â»Æ’ tÃ¡ÂºÂ£i dÃ¡Â»Â¯ liÃ¡Â»â€¡u', 'error')
+        showNotification(result.message || 'Không thể tải dữ liệu', 'error')
       }
     } finally {
       setLoading(false)
@@ -84,7 +84,7 @@ const PaymentCollectView = () => {
 
   const toggle = (key: string) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))
 
-  // Danh sÃƒÂ¡ch chi nhÃƒÂ¡nh duy nhÃ¡ÂºÂ¥t tÃ¡Â»Â« classes (cho dropdown filter)
+  // Danh sách chi nhánh duy nhất từ classes (cho dropdown filter)
   const branchOptions = useMemo(() => {
     if (!summary?.classes) return [] as { id: string; name: string }[]
     const map = new Map<string, string>()
@@ -94,21 +94,21 @@ const PaymentCollectView = () => {
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
   }, [summary])
 
-  // ÃƒÂp dÃ¡Â»Â¥ng filter
+  // Áp dụng filter
   const filteredClasses = useMemo(() => {
     if (!summary?.classes) return [] as ClassPaymentSummary[]
     const q = searchQuery.trim().toLowerCase()
 
     return summary.classes.filter(cls => {
-      // Search theo tÃƒÂªn lÃ¡Â»â€ºp HOÃ¡ÂºÂ¶C tÃƒÂªn chi nhÃƒÂ¡nh
+      // Search theo tên lớp HOẶC tên chi nhánh
       if (q) {
         const matchName = cls.className?.toLowerCase().includes(q)
         const matchBranch = cls.branchName?.toLowerCase().includes(q)
         if (!matchName && !matchBranch) return false
       }
-      // Filter theo chi nhÃƒÂ¡nh
+      // Filter theo chi nhánh
       if (branchFilter && cls.branchId !== branchFilter) return false
-      // ChÃ¡Â»â€° hiÃ¡Â»â€¡n lÃ¡Â»â€ºp cÃƒÂ²n cÃƒÂ´ng nÃ¡Â»Â£
+      // Chỉ hiển thị lớp còn công nợ
       if (unpaidOnlyFilter) {
         const totalUnpaid = cls.tuition.unpaidAmount + cls.examFees.reduce((acc, ef) => acc + ef.unpaidAmount, 0)
         if (totalUnpaid <= 0) return false
@@ -117,18 +117,19 @@ const PaymentCollectView = () => {
     })
   }, [summary, searchQuery, branchFilter, unpaidOnlyFilter])
 
-  // Pagination (pageSize=0 Ã¢â€ â€™ hiÃ¡Â»Æ’n thÃ¡Â»â€¹ tÃ¡ÂºÂ¥t cÃ¡ÂºÂ£)
+  // Pagination (pageSize=0 -> hiển thị tất cả)
   const effectivePageSize = pageSize === 0 ? filteredClasses.length || 1 : pageSize
   const totalPages = Math.max(1, Math.ceil(filteredClasses.length / effectivePageSize))
   const currentPage = Math.min(page, totalPages)
   const pagedClasses = useMemo(
-    () => pageSize === 0
-      ? filteredClasses
-      : filteredClasses.slice((currentPage - 1) * effectivePageSize, currentPage * effectivePageSize),
+    () =>
+      pageSize === 0
+        ? filteredClasses
+        : filteredClasses.slice((currentPage - 1) * effectivePageSize, currentPage * effectivePageSize),
     [filteredClasses, currentPage, effectivePageSize, pageSize]
   )
 
-  // Reset vÃ¡Â»Â trang 1 khi filter hoÃ¡ÂºÂ·c pageSize thay Ã„â€˜Ã¡Â»â€¢i
+  // Reset về trang 1 khi filter hoặc pageSize thay đổi
   useEffect(() => {
     setPage(1)
   }, [searchQuery, branchFilter, unpaidOnlyFilter, pageSize, month, year])
@@ -145,21 +146,21 @@ const PaymentCollectView = () => {
         Thu tiền - Tổng hợp công nợ
       </Typography>
 
-      {/* ChÃ¡Â»Ân thÃƒÂ¡ng/nÃ„Æ’m */}
+      {/* Chọn tháng/năm */}
       <Box className='flex gap-3 mb-4 flex-wrap items-center'>
         <FormControl size='small' sx={{ minWidth: 120 }}>
-          <InputLabel>ThÃƒÂ¡ng</InputLabel>
-          <Select value={month} label='ThÃƒÂ¡ng' onChange={e => setMonth(Number(e.target.value))}>
+          <InputLabel>Tháng</InputLabel>
+          <Select value={month} label='Tháng' onChange={e => setMonth(Number(e.target.value))}>
             {MONTHS.map(m => (
               <MenuItem key={m} value={m}>
-                ThÃƒÂ¡ng {m}
+                Tháng {m}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
         <FormControl size='small' sx={{ minWidth: 100 }}>
-          <InputLabel>NÃ„Æ’m</InputLabel>
-          <Select value={year} label='NÃ„Æ’m' onChange={e => setYear(Number(e.target.value))}>
+          <InputLabel>Năm</InputLabel>
+          <Select value={year} label='Năm' onChange={e => setYear(Number(e.target.value))}>
             {YEARS.map(y => (
               <MenuItem key={y} value={y}>
                 {y}
@@ -173,7 +174,7 @@ const PaymentCollectView = () => {
           startIcon={loading ? <CircularProgress size={16} /> : <i className='ri-refresh-line' />}
           disabled={loading}
         >
-          LÃƒÂ m mÃ¡Â»â€ºi
+          Làm mới
         </Button>
       </Box>
 
@@ -183,16 +184,16 @@ const PaymentCollectView = () => {
         </Box>
       ) : (
         <>
-          {/* TÃ¡Â»â€¢ng tiÃ¡Â»Ân cÃ¡ÂºÂ§n thu */}
+          {/* Tổng tiền cần thu */}
           {summary && (
             <Card className='mb-4' sx={{ bgcolor: 'primary.main' }}>
               <CardContent className='flex justify-between items-center'>
                 <Box>
                   <Typography variant='h4' color='white'>
-                    {summary.grandTotalUnpaid.toLocaleString('vi-VN')}Ã„â€˜
+                    {summary.grandTotalUnpaid.toLocaleString('vi-VN')}đ
                   </Typography>
                   <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.8)' }}>
-                    TÃ¡Â»â€¢ng tiÃ¡Â»Ân cÃƒÂ²n phÃ¡ÂºÂ£i thu Ã¢â‚¬â€ ThÃƒÂ¡ng {month}/{year}
+                    Tổng tiền còn phải thu - Tháng {month}/{year}
                   </Typography>
                 </Box>
                 <i className='ri-money-dollar-circle-line text-7xl' style={{ opacity: 0.15, color: 'white' }} />
@@ -207,7 +208,7 @@ const PaymentCollectView = () => {
                 <Box className='flex flex-wrap gap-3 items-center'>
                   <TextField
                     size='small'
-                    placeholder='TÃƒÂ¬m theo tÃƒÂªn lÃ¡Â»â€ºp hoÃ¡ÂºÂ·c chi nhÃƒÂ¡nh...'
+                    placeholder='Tìm theo tên lớp hoặc chi nhánh...'
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     sx={{ minWidth: 280, flex: 1 }}
@@ -228,9 +229,9 @@ const PaymentCollectView = () => {
                     }}
                   />
                   <FormControl size='small' sx={{ minWidth: 200 }}>
-                    <InputLabel>Chi nhÃƒÂ¡nh</InputLabel>
-                    <Select value={branchFilter} label='Chi nhÃƒÂ¡nh' onChange={e => setBranchFilter(e.target.value)}>
-                      <MenuItem value=''>Ã¢â‚¬â€ TÃ¡ÂºÂ¥t cÃ¡ÂºÂ£ chi nhÃƒÂ¡nh Ã¢â‚¬â€</MenuItem>
+                    <InputLabel>Chi nhánh</InputLabel>
+                    <Select value={branchFilter} label='Chi nhánh' onChange={e => setBranchFilter(e.target.value)}>
+                      <MenuItem value=''>- Tất cả chi nhánh -</MenuItem>
                       {branchOptions.map(b => (
                         <MenuItem key={b.id} value={b.id}>
                           {b.name}
@@ -245,11 +246,11 @@ const PaymentCollectView = () => {
                     onClick={() => setUnpaidOnlyFilter(v => !v)}
                     startIcon={<i className='ri-money-dollar-circle-line' />}
                   >
-                    {unpaidOnlyFilter ? 'ChÃ¡Â»â€° lÃ¡Â»â€ºp cÃƒÂ²n nÃ¡Â»Â£' : 'HiÃ¡Â»â€¡n tÃ¡ÂºÂ¥t cÃ¡ÂºÂ£'}
+                    {unpaidOnlyFilter ? 'Chỉ lớp còn nợ' : 'Hiện tất cả'}
                   </Button>
                   <Box className='flex items-center gap-2 ml-auto'>
                     <Typography variant='body2' color='text.secondary'>
-                      HiÃ¡Â»Æ’n thÃ¡Â»â€¹ {filteredClasses.length}/{summary.classes.length} lÃ¡Â»â€ºp
+                      Hiển thị {filteredClasses.length}/{summary.classes.length} lớp
                     </Typography>
                   </Box>
                 </Box>
@@ -258,17 +259,12 @@ const PaymentCollectView = () => {
           )}
 
           {!summary || summary.classes.length === 0 ? (
-            <Alert severity='success'>
-              KhÃƒÂ´ng cÃƒÂ³ cÃƒÂ´ng nÃ¡Â»Â£ nÃƒÂ o trong thÃƒÂ¡ng {month}/{year}!
-            </Alert>
+            <Alert severity='success'>Không có công nợ nào trong tháng {month}/{year}!</Alert>
           ) : filteredClasses.length === 0 ? (
-            <Alert severity='info'>
-              KhÃƒÂ´ng cÃƒÂ³ lÃ¡Â»â€ºp nÃƒÂ o khÃ¡Â»â€ºp bÃ¡Â»â„¢ lÃ¡Â»Âc. HÃƒÂ£y Ã„â€˜iÃ¡Â»Âu chÃ¡Â»â€°nh tÃƒÂ¬m kiÃ¡ÂºÂ¿m hoÃ¡ÂºÂ·c bÃ¡Â»Â lÃ¡Â»Âc.
-            </Alert>
+            <Alert severity='info'>Không có lớp nào khớp bộ lọc. Hãy điều chỉnh tìm kiếm hoặc bỏ lọc.</Alert>
           ) : (
             pagedClasses.map((cls: ClassPaymentSummary) => {
-              const totalUnpaid =
-                cls.tuition.unpaidAmount + cls.examFees.reduce((acc, ef) => acc + ef.unpaidAmount, 0)
+              const totalUnpaid = cls.tuition.unpaidAmount + cls.examFees.reduce((acc, ef) => acc + ef.unpaidAmount, 0)
 
               return (
                 <Card key={cls.classId} className='mb-4'>
@@ -287,19 +283,19 @@ const PaymentCollectView = () => {
                         )}
                       </Box>
                     }
-                    subheader={`TÃ¡Â»â€¢ng cÃƒÂ´ng nÃ¡Â»Â£: ${totalUnpaid.toLocaleString('vi-VN')}Ã„â€˜`}
+                    subheader={`Tổng công nợ: ${totalUnpaid.toLocaleString('vi-VN')}đ`}
                   />
                   <CardContent className='p-0'>
-                    {/* HÃ¡Â»Âc phÃƒÂ­ */}
+                    {/* Học phí */}
                     <Box className='px-4 py-3 border-b'>
                       <Box
                         className='flex justify-between items-center cursor-pointer select-none'
                         onClick={() => toggle(`tuition-${cls.classId}`)}
                       >
                         <Box className='flex items-center gap-2'>
-                          <Typography className='font-medium'>HÃ¡Â»Âc phÃƒÂ­ thÃƒÂ¡ng {month}/{year}</Typography>
+                          <Typography className='font-medium'>Học phí tháng {month}/{year}</Typography>
                           <Chip
-                            label={`${cls.tuition.unpaidCount} chÃ†Â°a Ã„â€˜ÃƒÂ³ng`}
+                            label={`${cls.tuition.unpaidCount} chưa đóng`}
                             color={cls.tuition.unpaidCount > 0 ? 'warning' : 'success'}
                             size='small'
                           />
@@ -310,11 +306,9 @@ const PaymentCollectView = () => {
                             className='font-medium'
                             color={cls.tuition.unpaidCount > 0 ? 'warning.main' : 'success.main'}
                           >
-                            {cls.tuition.unpaidAmount.toLocaleString('vi-VN')}Ã„â€˜
+                            {cls.tuition.unpaidAmount.toLocaleString('vi-VN')}đ
                           </Typography>
-                          <i
-                            className={`ri-arrow-${expanded[`tuition-${cls.classId}`] ? 'up' : 'down'}-s-line`}
-                          />
+                          <i className={`ri-arrow-${expanded[`tuition-${cls.classId}`] ? 'up' : 'down'}-s-line`} />
                         </Box>
                       </Box>
                       <Collapse in={!!expanded[`tuition-${cls.classId}`]}>
@@ -322,8 +316,8 @@ const PaymentCollectView = () => {
                           <Table size='small'>
                             <TableHead>
                               <TableRow>
-                                <TableCell>HÃ¡Â»Âc viÃƒÂªn</TableCell>
-                                <TableCell align='right'>SÃ¡Â»â€˜ tiÃ¡Â»Ân</TableCell>
+                                <TableCell>Học viên</TableCell>
+                                <TableCell align='right'>Số tiền</TableCell>
                                 <TableCell align='right'>Thu</TableCell>
                               </TableRow>
                             </TableHead>
@@ -331,9 +325,7 @@ const PaymentCollectView = () => {
                               {cls.tuition.unpaidStudents.map(s => (
                                 <TableRow key={s.studentId}>
                                   <TableCell>{s.studentName}</TableCell>
-                                  <TableCell align='right'>
-                                    {s.amount.toLocaleString('vi-VN')}Ã„â€˜
-                                  </TableCell>
+                                  <TableCell align='right'>{s.amount.toLocaleString('vi-VN')}đ</TableCell>
                                   <TableCell align='right'>
                                     <Button
                                       size='small'
@@ -347,7 +339,7 @@ const PaymentCollectView = () => {
                                           classId: cls.classId,
                                           forMonth: month,
                                           forYear: year,
-                                          description: `HÃ¡Â»Âc phÃƒÂ­ thÃƒÂ¡ng ${month}/${year}`
+                                          description: `Học phí tháng ${month}/${year}`
                                         })
                                       }
                                     >
@@ -362,7 +354,7 @@ const PaymentCollectView = () => {
                       </Collapse>
                     </Box>
 
-                    {/* LÃ¡Â»â€¡ phÃƒÂ­ thi */}
+                    {/* Lệ phí thi */}
                     {cls.examFees.map(ef => (
                       <Box key={ef.sessionId} className='px-4 py-3 border-b last:border-b-0'>
                         <Box
@@ -370,12 +362,12 @@ const PaymentCollectView = () => {
                           onClick={() => toggle(`exam-${cls.classId}-${ef.sessionId}`)}
                         >
                           <Box className='flex items-center gap-2 flex-wrap'>
-                            <Typography className='font-medium'>LÃ¡Â»â€¡ phÃƒÂ­ thi</Typography>
+                            <Typography className='font-medium'>Lệ phí thi</Typography>
                             <Typography variant='body2' color='text.secondary'>
                               {ef.sessionName}
                             </Typography>
                             <Chip
-                              label={`${ef.unpaidCount} chÃ†Â°a Ã„â€˜ÃƒÂ³ng`}
+                              label={`${ef.unpaidCount} chưa đóng`}
                               color={ef.unpaidCount > 0 ? 'warning' : 'success'}
                               size='small'
                             />
@@ -386,11 +378,9 @@ const PaymentCollectView = () => {
                               className='font-medium'
                               color={ef.unpaidCount > 0 ? 'warning.main' : 'success.main'}
                             >
-                              {ef.unpaidAmount.toLocaleString('vi-VN')}Ã„â€˜
+                              {ef.unpaidAmount.toLocaleString('vi-VN')}đ
                             </Typography>
-                            <i
-                              className={`ri-arrow-${expanded[`exam-${cls.classId}-${ef.sessionId}`] ? 'up' : 'down'}-s-line`}
-                            />
+                            <i className={`ri-arrow-${expanded[`exam-${cls.classId}-${ef.sessionId}`] ? 'up' : 'down'}-s-line`} />
                           </Box>
                         </Box>
                         <Collapse in={!!expanded[`exam-${cls.classId}-${ef.sessionId}`]}>
@@ -398,9 +388,9 @@ const PaymentCollectView = () => {
                             <Table size='small'>
                               <TableHead>
                                 <TableRow>
-                                  <TableCell>HÃ¡Â»Âc viÃƒÂªn</TableCell>
-                                  <TableCell>CÃ¡ÂºÂ¥p thi</TableCell>
-                                  <TableCell align='right'>LÃ¡Â»â€¡ phÃƒÂ­</TableCell>
+                                  <TableCell>Học viên</TableCell>
+                                  <TableCell>Cấp thi</TableCell>
+                                  <TableCell align='right'>Lệ phí</TableCell>
                                   <TableCell align='right'>Thu</TableCell>
                                 </TableRow>
                               </TableHead>
@@ -408,10 +398,8 @@ const PaymentCollectView = () => {
                                 {ef.unpaidStudents.map(s => (
                                   <TableRow key={s.studentId}>
                                     <TableCell>{s.studentName}</TableCell>
-                                    <TableCell>{s.targetBeltLevelName ?? 'Ã¢â‚¬â€'}</TableCell>
-                                    <TableCell align='right'>
-                                      {s.amount.toLocaleString('vi-VN')}Ã„â€˜
-                                    </TableCell>
+                                    <TableCell>{s.targetBeltLevelName ?? '-'}</TableCell>
+                                    <TableCell align='right'>{s.amount.toLocaleString('vi-VN')}đ</TableCell>
                                     <TableCell align='right'>
                                       <Button
                                         size='small'
@@ -425,7 +413,7 @@ const PaymentCollectView = () => {
                                             type: 'ExamFee',
                                             classId: cls.classId,
                                             examRegistrationId: s.examRegistrationId,
-                                            description: `LÃ¡Â»â€¡ phÃƒÂ­ thi ${s.targetBeltLevelName ?? ''} Ã¢â‚¬â€ ${ef.sessionName}`
+                                            description: `Lệ phí thi ${s.targetBeltLevelName ?? ''} - ${ef.sessionName}`
                                           })
                                         }
                                       >
@@ -446,29 +434,29 @@ const PaymentCollectView = () => {
             })
           )}
 
-          {/* Pagination controls Ã¢â‚¬â€ luÃƒÂ´n hiÃ¡Â»Æ’n thÃ¡Â»â€¹ khi cÃƒÂ³ lÃ¡Â»â€ºp */}
+          {/* Pagination controls */}
           {filteredClasses.length > 0 && (
             <Card className='mt-4'>
               <CardContent>
                 <Box className='flex flex-wrap items-center justify-between gap-3'>
                   <Box className='flex items-center gap-2'>
                     <Typography variant='body2' color='text.secondary'>
-                      HiÃ¡Â»Æ’n thÃ¡Â»â€¹:
+                      Hiển thị:
                     </Typography>
                     <FormControl size='small' sx={{ minWidth: 100 }}>
                       <Select value={pageSize} onChange={e => setPageSize(Number(e.target.value))}>
                         {[5, 10, 20, 50].map(n => (
                           <MenuItem key={n} value={n}>
-                            {n} lÃ¡Â»â€ºp
+                            {n} lớp
                           </MenuItem>
                         ))}
-                        <MenuItem value={0}>TÃ¡ÂºÂ¥t cÃ¡ÂºÂ£</MenuItem>
+                        <MenuItem value={0}>Tất cả</MenuItem>
                       </Select>
                     </FormControl>
                     <Typography variant='body2' color='text.secondary'>
                       {pageSize === 0
-                        ? `TÃ¡ÂºÂ¥t cÃ¡ÂºÂ£ ${filteredClasses.length} lÃ¡Â»â€ºp`
-                        : `Trang ${currentPage}/${totalPages} Ã¢â‚¬Â¢ ${filteredClasses.length} lÃ¡Â»â€ºp`}
+                        ? `Tất cả ${filteredClasses.length} lớp`
+                        : `Trang ${currentPage}/${totalPages} • ${filteredClasses.length} lớp`}
                     </Typography>
                   </Box>
                   {pageSize !== 0 && totalPages > 1 && (
@@ -509,5 +497,3 @@ const PaymentCollectView = () => {
 }
 
 export default PaymentCollectView
-
-

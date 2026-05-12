@@ -23,7 +23,7 @@ type FormData = {
   beltLevelName: string
 }
 
-const SYSTEM_LOGO = '/favicon.ico'
+const SYSTEM_LOGO = '/images/logos/logo.svg'
 
 const AccountDetails = () => {
   const { auth } = useAuth()

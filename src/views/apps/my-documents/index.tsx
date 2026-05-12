@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -32,9 +32,9 @@ import {
   documentTypeLabels
 } from '@/types/apps/userDocumentTypes'
 
-// ── Enum normaliser ───────────────────────────────────────────────────────────
-// Backend dùng JsonStringEnumConverter → documentType có thể là string ("ProfilePhoto")
-// hoặc number (0). Hàm này chuẩn hóa về số để so sánh.
+// â”€â”€ Enum normaliser â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Backend dÃ¹ng JsonStringEnumConverter â†’ documentType cÃ³ thá»ƒ lÃ  string ("ProfilePhoto")
+// hoáº·c number (0). HÃ m nÃ y chuáº©n hÃ³a vá» sá»‘ Ä‘á»ƒ so sÃ¡nh.
 
 const DOC_TYPE_NAME_MAP: Record<string, number> = {
   ProfilePhoto: 0,    profilePhoto: 0,
@@ -54,26 +54,26 @@ const resolveDocType = (t: unknown): UserDocumentType => {
   return 0
 }
 
-/** Label an toàn: ưu tiên documentTypeLabel từ DTO, fallback lookup theo type */
+/** Label an toÃ n: Æ°u tiÃªn documentTypeLabel tá»« DTO, fallback lookup theo type */
 const getLabel = (doc: UserDocumentDto) =>
   doc.documentTypeLabel || documentTypeLabels[resolveDocType(doc.documentType)]
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const SINGLETON_TYPES: UserDocumentType[] = [0, 1] // ProfilePhoto, BeltCertificate
 const CERT_TYPE: UserDocumentType = 2
 
 const subtitleMap: Record<UserDocumentType, string> = {
-  0: 'JPG / PNG / WebP · tối đa 10 MB',
-  1: 'PDF hoặc ảnh · tối đa 10 MB',
-  2: 'PDF hoặc ảnh · tối đa 10 MB',
+  0: 'JPG / PNG / WebP Â· tá»‘i Ä‘a 10 MB',
+  1: 'PDF hoáº·c áº£nh Â· tá»‘i Ä‘a 10 MB',
+  2: 'PDF hoáº·c áº£nh Â· tá»‘i Ä‘a 10 MB',
   3: ''
 }
 
 const newestFirst = (a: UserDocumentDto, b: UserDocumentDto) =>
   new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 
-// ── Main View ─────────────────────────────────────────────────────────────────
+// â”€â”€ Main View â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const MyDocumentsView = () => {
   const [docs, setDocs] = useState<UserDocumentDto[]>([])
@@ -95,31 +95,34 @@ const MyDocumentsView = () => {
 
   useEffect(() => { load() }, [load])
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  /** Tìm doc mới nhất của 1 type đơn (ProfilePhoto / BeltCertificate) */
+  /** TÃ¬m doc má»›i nháº¥t cá»§a 1 type Ä‘Æ¡n (ProfilePhoto / BeltCertificate) */
   const getSingleDoc = (type: UserDocumentType) =>
     docs
       .filter(d => resolveDocType(d.documentType) === type && d.isActive)
       .sort(newestFirst)[0] ?? null
 
-  /** Tất cả chứng chỉ */
+  /** Táº¥t cáº£ chá»©ng chá»‰ */
   const getCertDocs = () =>
     docs.filter(d => resolveDocType(d.documentType) === CERT_TYPE && d.isActive).sort(newestFirst)
 
-  /** Docs đang yêu cầu nộp lại */
+  /** Docs Ä‘ang yÃªu cáº§u ná»™p láº¡i */
   const needsResubmitDocs = docs.filter(d => d.isActive && d.status === 2)
+  const pendingDocsCount = docs.filter(d => d.isActive && d.status === 0).length
+  const approvedDocsCount = docs.filter(d => d.isActive && d.status === 1).length
+  const rejectedDocsCount = docs.filter(d => d.isActive && d.status === 2).length
 
   const triggerUpload = (type: UserDocumentType) => fileRefs.current[type]?.click()
   const allTypes: UserDocumentType[] = [...SINGLETON_TYPES, CERT_TYPE]
 
-  // ── Upload / Delete ────────────────────────────────────────────────────────
+  // â”€â”€ Upload / Delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const handleUpload = async (type: UserDocumentType, file: File) => {
     setUploading(type)
     const res = await userDocumentService.uploadMyDocument(type, file)
     if (res.success && res.data) {
-      showNotification('Tải lên thành công', 'success')
+      showNotification('Táº£i lÃªn thÃ nh cÃ´ng', 'success')
       const refreshRes = await userDocumentService.getMyDocuments()
       if (refreshRes.success) {
         setDocs(refreshRes.data ?? [])
@@ -127,7 +130,7 @@ const MyDocumentsView = () => {
         if (uploaded) setPreviewDoc(uploaded)
       }
     } else {
-      showNotification(res.message || 'Tải lên thất bại', 'error')
+      showNotification(res.message || 'Táº£i lÃªn tháº¥t báº¡i', 'error')
     }
     setUploading(null)
   }
@@ -137,16 +140,16 @@ const MyDocumentsView = () => {
     setDeleting(confirmDelete.id)
     const res = await userDocumentService.deleteMyDocument(confirmDelete.id)
     if (res.success) {
-      showNotification('Đã xóa tài liệu', 'success')
+      showNotification('ÄÃ£ xÃ³a tÃ i liá»‡u', 'success')
       setDocs(prev => prev.filter(d => d.id !== confirmDelete.id))
     } else {
-      showNotification(res.message || 'Không thể xóa', 'error')
+      showNotification(res.message || 'KhÃ´ng thá»ƒ xÃ³a', 'error')
     }
     setDeleting(null)
     setConfirmDelete(null)
   }
 
-  // ── Loading state ──────────────────────────────────────────────────────────
+  // â”€â”€ Loading state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   if (loading) {
     return (
@@ -174,7 +177,7 @@ const MyDocumentsView = () => {
         />
       ))}
 
-      {/* Banners yêu cầu nộp lại */}
+      {/* Banners yÃªu cáº§u ná»™p láº¡i */}
       {needsResubmitDocs.length > 0 && (
         <Box className='flex flex-col gap-2 mb-5'>
           {needsResubmitDocs.map(doc => (
@@ -184,18 +187,29 @@ const MyDocumentsView = () => {
               icon={<i className='ri-mail-send-line' />}
               action={
                 <Button size='small' color='error' variant='outlined' onClick={() => setPreviewDoc(doc)}>
-                  Xem & nộp lại
+                  Xem & ná»™p láº¡i
                 </Button>
               }
             >
               <AlertTitle>
-                Yêu cầu nộp lại: <strong>{getLabel(doc)}</strong>
+                YÃªu cáº§u ná»™p láº¡i: <strong>{getLabel(doc)}</strong>
               </AlertTitle>
-              {doc.resubmissionReason || 'Quản trị viên yêu cầu bạn nộp lại tài liệu này.'}
+              {doc.resubmissionReason || 'Quáº£n trá»‹ viÃªn yÃªu cáº§u báº¡n ná»™p láº¡i tÃ i liá»‡u nÃ y.'}
             </Alert>
           ))}
         </Box>
       )}
+
+      <Box className='mb-5'>
+        <Alert severity='info' icon={<i className='ri-information-line' />}>
+          <AlertTitle>Trạng thái tài liệu của bạn</AlertTitle>
+          <Box className='flex items-center gap-2 flex-wrap mt-2'>
+            <Chip size='small' color='warning' label={`Chờ duyệt: ${pendingDocsCount}`} />
+            <Chip size='small' color='success' label={`Đã duyệt: ${approvedDocsCount}`} />
+            <Chip size='small' color='error' label={`Từ chối / cần nộp lại: ${rejectedDocsCount}`} />
+          </Box>
+        </Alert>
+      </Box>
 
       {/* Cards */}
       <Grid container spacing={5}>
@@ -228,7 +242,7 @@ const MyDocumentsView = () => {
         </Grid>
       </Grid>
 
-      {/* ── Preview dialog ── */}
+      {/* â”€â”€ Preview dialog â”€â”€ */}
       <Dialog open={!!previewDoc} onClose={() => setPreviewDoc(null)} maxWidth='md' fullWidth>
         <DialogTitle sx={{ pr: 6 }}>
           <Box className='flex items-center gap-2 flex-wrap'>
@@ -243,7 +257,7 @@ const MyDocumentsView = () => {
             )}
           </Box>
           <Typography variant='caption' color='text.secondary' display='block' sx={{ mt: 0.25 }}>
-            {previewDoc?.fileName} · {previewDoc && new Date(previewDoc.createdAt).toLocaleDateString('vi-VN')}
+            {previewDoc?.fileName} Â· {previewDoc && new Date(previewDoc.createdAt).toLocaleDateString('vi-VN')}
           </Typography>
           <IconButton sx={{ position: 'absolute', right: 8, top: 8 }} onClick={() => setPreviewDoc(null)}>
             <i className='ri-close-line' />
@@ -252,8 +266,8 @@ const MyDocumentsView = () => {
 
         {previewDoc?.status === 2 && (
           <Alert severity='error' sx={{ mx: 2 }} icon={<i className='ri-error-warning-line' />}>
-            <AlertTitle>Cần nộp lại</AlertTitle>
-            {previewDoc.resubmissionReason || 'Quản trị viên yêu cầu bạn nộp lại tài liệu này.'}
+            <AlertTitle>Cáº§n ná»™p láº¡i</AlertTitle>
+            {previewDoc.resubmissionReason || 'Quáº£n trá»‹ viÃªn yÃªu cáº§u báº¡n ná»™p láº¡i tÃ i liá»‡u nÃ y.'}
           </Alert>
         )}
 
@@ -269,7 +283,7 @@ const MyDocumentsView = () => {
 
         <DialogActions>
           <Button href={previewDoc?.fileUrl ?? ''} download={previewDoc?.fileName} target='_blank' rel='noreferrer'>
-            <i className='ri-download-line mr-1' />Tải xuống
+            <i className='ri-download-line mr-1' />Táº£i xuá»‘ng
           </Button>
           {previewDoc?.status === 2 && (
             <Button variant='contained' color='error' onClick={() => {
@@ -277,27 +291,27 @@ const MyDocumentsView = () => {
               setPreviewDoc(null)
               setTimeout(() => triggerUpload(type), 100)
             }}>
-              <i className='ri-upload-2-line mr-1' />Nộp lại ngay
+              <i className='ri-upload-2-line mr-1' />Ná»™p láº¡i ngay
             </Button>
           )}
-          <Button onClick={() => setPreviewDoc(null)}>Đóng</Button>
+          <Button onClick={() => setPreviewDoc(null)}>ÄÃ³ng</Button>
         </DialogActions>
       </Dialog>
 
-      {/* ── Confirm delete ── */}
+      {/* â”€â”€ Confirm delete â”€â”€ */}
       <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} maxWidth='xs' fullWidth>
-        <DialogTitle>Xác nhận xóa</DialogTitle>
+        <DialogTitle>XÃ¡c nháº­n xÃ³a</DialogTitle>
         <DialogContent>
           <Typography>
-            Bạn có chắc muốn xóa <strong>{confirmDelete ? getLabel(confirmDelete) : ''}</strong>{' '}
-            &ldquo;{confirmDelete?.fileName}&rdquo;? Thao tác này không thể hoàn tác.
+            Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a <strong>{confirmDelete ? getLabel(confirmDelete) : ''}</strong>{' '}
+            &ldquo;{confirmDelete?.fileName}&rdquo;? Thao tÃ¡c nÃ y khÃ´ng thá»ƒ hoÃ n tÃ¡c.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDelete(null)} disabled={!!deleting}>Hủy</Button>
+          <Button onClick={() => setConfirmDelete(null)} disabled={!!deleting}>Há»§y</Button>
           <Button variant='contained' color='error' onClick={handleDelete} disabled={!!deleting}
             startIcon={deleting ? <CircularProgress size={14} color='inherit' /> : undefined}>
-            {deleting ? 'Đang xóa...' : 'Xóa'}
+            {deleting ? 'Äang xÃ³a...' : 'XÃ³a'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -305,7 +319,7 @@ const MyDocumentsView = () => {
   )
 }
 
-// ── Singleton Document Card ───────────────────────────────────────────────────
+// â”€â”€ Singleton Document Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type SingletonCardProps = {
   type: UserDocumentType
@@ -351,7 +365,7 @@ const SingletonDocumentCard = ({
 
       <CardContent sx={{ flex: 1, p: '0 !important', display: 'flex', flexDirection: 'column' }}>
         {doc ? (
-          // ── Đã có file: hiện bản xem trước ──────────────────────────────
+          // â”€â”€ ÄÃ£ cÃ³ file: hiá»‡n báº£n xem trÆ°á»›c â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           <>
             {/* Preview area */}
             <Box
@@ -370,7 +384,7 @@ const SingletonDocumentCard = ({
                 '&:hover .overlay-hint': { opacity: 1 }
               }}
             >
-              {/* Ảnh / PDF */}
+              {/* áº¢nh / PDF */}
               {isImage ? (
                 <Box
                   component='img'
@@ -404,7 +418,7 @@ const SingletonDocumentCard = ({
                 }}
               >
                 <i className='ri-zoom-in-line' style={{ fontSize: 36, color: 'white' }} />
-                <Typography variant='caption' sx={{ color: 'white' }}>Nhấn để xem đầy đủ</Typography>
+                <Typography variant='caption' sx={{ color: 'white' }}>Nháº¥n Ä‘á»ƒ xem Ä‘áº§y Ä‘á»§</Typography>
               </Box>
 
               {/* Uploading replacement overlay */}
@@ -418,7 +432,7 @@ const SingletonDocumentCard = ({
                   }}
                 >
                   <CircularProgress sx={{ color: 'white' }} />
-                  <Typography variant='caption' sx={{ color: 'white' }}>Đang tải lên...</Typography>
+                  <Typography variant='caption' sx={{ color: 'white' }}>Äang táº£i lÃªn...</Typography>
                 </Box>
               )}
             </Box>
@@ -443,12 +457,12 @@ const SingletonDocumentCard = ({
               <Typography variant='caption' color='text.secondary' noWrap sx={{ flex: 1 }}>
                 {new Date(doc.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
               </Typography>
-              <Tooltip title='Xem đầy đủ'>
+              <Tooltip title='Xem Ä‘áº§y Ä‘á»§'>
                 <IconButton size='small' onClick={() => onPreview(doc)}>
                   <i className='ri-eye-line' />
                 </IconButton>
               </Tooltip>
-              <Tooltip title='Tải xuống'>
+              <Tooltip title='Táº£i xuá»‘ng'>
                 <IconButton size='small' component='a' href={doc.fileUrl} download={doc.fileName} target='_blank'>
                   <i className='ri-download-line' />
                 </IconButton>
@@ -461,9 +475,9 @@ const SingletonDocumentCard = ({
                 onClick={onTriggerUpload}
                 disabled={isUploading}
               >
-                {needsResubmit ? 'Nộp lại' : 'Thay thế'}
+                {needsResubmit ? 'Ná»™p láº¡i' : 'Thay tháº¿'}
               </Button>
-              <Tooltip title='Xóa'>
+              <Tooltip title='XÃ³a'>
                 <IconButton size='small' color='error' onClick={() => onDelete(doc)} disabled={isDeleting || isUploading}>
                   {isDeleting
                     ? <CircularProgress size={14} color='inherit' />
@@ -474,7 +488,7 @@ const SingletonDocumentCard = ({
             </Box>
           </>
         ) : (
-          // ── Chưa có file: vùng tải lên ──────────────────────────────────
+          // â”€â”€ ChÆ°a cÃ³ file: vÃ¹ng táº£i lÃªn â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           <Box
             onClick={!isUploading ? onTriggerUpload : undefined}
             sx={{
@@ -499,7 +513,7 @@ const SingletonDocumentCard = ({
             {isUploading ? (
               <>
                 <CircularProgress size={40} />
-                <Typography variant='body2' color='text.secondary'>Đang tải lên...</Typography>
+                <Typography variant='body2' color='text.secondary'>Äang táº£i lÃªn...</Typography>
               </>
             ) : (
               <>
@@ -514,7 +528,7 @@ const SingletonDocumentCard = ({
                 </Box>
                 <Box className='text-center px-4'>
                   <Typography variant='body2' fontWeight={500} gutterBottom>
-                    Chưa có tài liệu
+                    ChÆ°a cÃ³ tÃ i liá»‡u
                   </Typography>
                   <Typography variant='caption' color='text.secondary'>
                     {subtitleMap[type]}
@@ -526,7 +540,7 @@ const SingletonDocumentCard = ({
                   startIcon={<i className='ri-upload-2-line' />}
                   onClick={e => { e.stopPropagation(); onTriggerUpload() }}
                 >
-                  Chọn file tải lên
+                  Chá»n file táº£i lÃªn
                 </Button>
               </>
             )}
@@ -537,7 +551,7 @@ const SingletonDocumentCard = ({
   )
 }
 
-// ── Certificates Card (multi) ─────────────────────────────────────────────────
+// â”€â”€ Certificates Card (multi) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type CertificatesCardProps = {
   docs: UserDocumentDto[]
@@ -554,9 +568,9 @@ const CertificatesCard = ({
   <Card variant='outlined'>
     <CardHeader
       avatar={<i className='ri-file-text-line text-xl' />}
-      title='Chứng chỉ'
+      title='Chá»©ng chá»‰'
       titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-      subheader='Có thể tải lên nhiều chứng chỉ — PDF hoặc ảnh, tối đa 10 MB mỗi file'
+      subheader='CÃ³ thá»ƒ táº£i lÃªn nhiá»u chá»©ng chá»‰ â€” PDF hoáº·c áº£nh, tá»‘i Ä‘a 10 MB má»—i file'
       subheaderTypographyProps={{ variant: 'caption' }}
       action={
         <Button
@@ -566,14 +580,14 @@ const CertificatesCard = ({
           onClick={onTriggerUpload}
           disabled={isUploading}
         >
-          {isUploading ? 'Đang tải...' : 'Thêm chứng chỉ'}
+          {isUploading ? 'Äang táº£i...' : 'ThÃªm chá»©ng chá»‰'}
         </Button>
       }
     />
     <Divider />
     <CardContent>
       {docs.length === 0 && !isUploading ? (
-        // ── Chưa có chứng chỉ nào ──
+        // â”€â”€ ChÆ°a cÃ³ chá»©ng chá»‰ nÃ o â”€â”€
         <Box
           onClick={onTriggerUpload}
           sx={{
@@ -592,12 +606,12 @@ const CertificatesCard = ({
             <i className='ri-upload-cloud-2-line' style={{ fontSize: 26 }} />
           </Box>
           <Box className='text-center'>
-            <Typography variant='body2' fontWeight={500} gutterBottom>Chưa có chứng chỉ nào</Typography>
-            <Typography variant='caption' color='text.secondary'>PDF hoặc ảnh · tối đa 10 MB mỗi file</Typography>
+            <Typography variant='body2' fontWeight={500} gutterBottom>ChÆ°a cÃ³ chá»©ng chá»‰ nÃ o</Typography>
+            <Typography variant='caption' color='text.secondary'>PDF hoáº·c áº£nh Â· tá»‘i Ä‘a 10 MB má»—i file</Typography>
           </Box>
           <Button variant='contained' size='small' startIcon={<i className='ri-upload-2-line' />}
             onClick={e => e.stopPropagation()}>
-            Chọn file tải lên
+            Chá»n file táº£i lÃªn
           </Button>
         </Box>
       ) : (
@@ -687,12 +701,12 @@ const CertificatesCard = ({
                         <i className='ri-eye-line' style={{ fontSize: 15 }} />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title='Tải xuống'>
+                    <Tooltip title='Táº£i xuá»‘ng'>
                       <IconButton size='small' component='a' href={doc.fileUrl} download={doc.fileName} target='_blank'>
                         <i className='ri-download-line' style={{ fontSize: 15 }} />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title='Xóa'>
+                    <Tooltip title='XÃ³a'>
                       <IconButton size='small' color='error' onClick={() => onDelete(doc)} disabled={isDeleting}>
                         {isDeleting
                           ? <CircularProgress size={13} color='inherit' />
@@ -706,7 +720,7 @@ const CertificatesCard = ({
             )
           })}
 
-          {/* Loading card khi đang upload chứng chỉ mới */}
+          {/* Loading card khi Ä‘ang upload chá»©ng chá»‰ má»›i */}
           {isUploading && (
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <Card variant='outlined' sx={{ height: '100%', minHeight: 160 }}>
@@ -716,7 +730,7 @@ const CertificatesCard = ({
                   alignItems: 'center', justifyContent: 'center', gap: 1.5
                 }}>
                   <CircularProgress size={32} />
-                  <Typography variant='caption' color='text.secondary'>Đang tải lên...</Typography>
+                  <Typography variant='caption' color='text.secondary'>Äang táº£i lÃªn...</Typography>
                 </Box>
               </Card>
             </Grid>

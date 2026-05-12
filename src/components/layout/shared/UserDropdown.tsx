@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useRef, useState } from 'react'
@@ -76,8 +76,7 @@ const UserDropdown = () => {
     }, 0)
   }
 
-  // Logo hệ thống dùng làm fallback khi user chưa có avatar
-  const SYSTEM_LOGO = '/favicon.ico'
+  const SYSTEM_LOGO = '/images/logos/logo.svg'
   const avatarSrc = auth?.user?.avatarUrl && auth.user.avatarUrl.trim() !== '' ? auth.user.avatarUrl : SYSTEM_LOGO
 
   return (
@@ -127,7 +126,7 @@ const UserDropdown = () => {
                   <Divider className='mlb-1' />
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/account-settings')}>
                     <i className='ri-settings-4-line' />
-                    <Typography color='text.primary'>Thông tin tài khoản</Typography>
+                    <Typography color='text.primary'>ThÃ´ng tin tÃ i khoáº£n</Typography>
                   </MenuItem>
                   {/*<MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/pricing')}>*/}
                   {/*  <i className='ri-money-dollar-circle-line' />*/}
@@ -161,3 +160,4 @@ const UserDropdown = () => {
 }
 
 export default UserDropdown
+

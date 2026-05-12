@@ -72,7 +72,7 @@ const AttendanceListTable = () => {
         setSheet(response.data)
       } else {
         setSheet(null)
-        showNotification(response.message || 'Cannot load attendance data', 'error')
+        showNotification(response.message || 'Không tải được dữ liệu điểm danh', 'error')
       }
 
       setLoading(false)
@@ -179,7 +179,7 @@ const AttendanceListTable = () => {
     const invalidExcused = absents.find(item => item.isExcused && !item.reason)
 
     if (invalidExcused) {
-      showNotification('Excused absence must have reason', 'warning')
+      showNotification('Nghỉ có phép bắt buộc nhập lý do', 'warning')
       return
     }
 
@@ -193,10 +193,10 @@ const AttendanceListTable = () => {
     })
 
     if (response.success) {
-      showNotification('Attendance saved', 'success')
+      showNotification('Đã lưu điểm danh', 'success')
       await loadSheet(sheet.classId, sheet.selectedDate, search)
     } else {
-      showNotification(response.message || 'Save attendance failed', 'error')
+      showNotification(response.message || 'Lưu điểm danh thất bại', 'error')
     }
 
     setSaving(false)
@@ -204,15 +204,15 @@ const AttendanceListTable = () => {
 
   return (
     <Card>
-      <CardHeader title='Student attendance by session' subheader='Present students are not stored. Only absences are stored.' />
+      <CardHeader title='Điểm danh học viên theo buổi học' subheader='Trường hợp đi học sẽ không lưu. Chỉ lưu các trường hợp vắng.' />
       <CardContent>
         <Grid container spacing={4}>
           <Grid size={{ xs: 12, md: 4 }}>
             <FormControl fullWidth>
-              <InputLabel>Assigned class</InputLabel>
+              <InputLabel>Lớp được phân công</InputLabel>
               <Select
                 value={selectedClassId}
-                label='Assigned class'
+                label='Lớp được phân công'
                 onChange={(e: SelectChangeEvent) => setSelectedClassId(e.target.value)}
               >
                 {coachClasses.map(cls => (
@@ -226,7 +226,7 @@ const AttendanceListTable = () => {
             <TextField
               fullWidth
               type='date'
-              label='Attendance date'
+              label='Ngày điểm danh'
               InputLabelProps={{ shrink: true }}
               value={selectedDate}
               onChange={e => setSelectedDate(e.target.value)}
@@ -235,14 +235,14 @@ const AttendanceListTable = () => {
 
           <Grid size={{ xs: 12, md: 2 }}>
             <Button variant='outlined' fullWidth onClick={handleReloadByDate} disabled={!selectedClassId || !selectedDate}>
-              Load list
+              Tải danh sách
             </Button>
           </Grid>
 
           <Grid size={{ xs: 12, md: 3 }}>
             <TextField
               fullWidth
-              label='Search student'
+              label='Tìm học viên'
               value={search}
               onChange={e => setSearch(e.target.value)}
               onKeyDown={async e => {
@@ -253,15 +253,15 @@ const AttendanceListTable = () => {
 
           <Grid size={{ xs: 12 }} className='flex flex-wrap gap-2'>
             <Button variant='contained' color='success' onClick={handleSelectAllPresent} disabled={!sheet || loading || saving}>
-              Mark all present
+              Chọn tất cả đi học
             </Button>
             <Button variant='contained' onClick={handleSave} disabled={!sheet || loading || saving}>
-              {saving ? 'Saving...' : 'Save attendance'}
+              {saving ? 'Đang lưu...' : 'Lưu điểm danh'}
             </Button>
             {sheet ? (
               <>
-                <Chip color='warning' label={`Absent: ${absentCount}`} />
-                <Chip color='info' label={`Excused: ${excusedCount}`} />
+                <Chip color='warning' label={`Vắng: ${absentCount}`} />
+                <Chip color='info' label={`Có phép: ${excusedCount}`} />
               </>
             ) : null}
           </Grid>
@@ -274,19 +274,19 @@ const AttendanceListTable = () => {
             </Box>
           ) : null}
 
-          {!loading && !sheet ? <Typography color='text.secondary'>Select class to start attendance.</Typography> : null}
+          {!loading && !sheet ? <Typography color='text.secondary'>Vui lòng chọn lớp để bắt đầu điểm danh.</Typography> : null}
 
           {!loading && sheet ? (
             <div className='overflow-x-auto'>
               <Table size='small'>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Student</TableCell>
-                    <TableCell>Phone</TableCell>
-                    <TableCell align='center'>Present</TableCell>
-                    <TableCell align='center'>Excused absence</TableCell>
-                    <TableCell align='center'>Unexcused absence</TableCell>
-                    <TableCell>Reason</TableCell>
+                    <TableCell>Học viên</TableCell>
+                    <TableCell>Số điện thoại</TableCell>
+                    <TableCell align='center'>Đi học</TableCell>
+                    <TableCell align='center'>Nghỉ có phép</TableCell>
+                    <TableCell align='center'>Nghỉ không phép</TableCell>
+                    <TableCell>Lý do</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -315,7 +315,7 @@ const AttendanceListTable = () => {
                           <TextField
                             fullWidth
                             size='small'
-                            placeholder='Reason (required for excused)'
+                            placeholder='Lý do (bắt buộc khi nghỉ có phép)'
                             value={student.reason || ''}
                             onChange={e => handleReasonChange(student.studentId, e.target.value)}
                             error={isExcused && !student.reason?.trim()}

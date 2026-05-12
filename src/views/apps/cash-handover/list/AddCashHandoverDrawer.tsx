@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -33,11 +33,14 @@ import userService from '@/services/userService'
 import financeService from '@/services/financeService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 type Props = {
   open: boolean
   handleClose: () => void
   setData: React.Dispatch<React.SetStateAction<CashHandoverType[]>>
+  presetInstructorId?: string
+  presetClassId?: string
 }
 
 type DeductionRow = {
@@ -49,9 +52,10 @@ type DeductionRow = {
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 
-const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
+const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId, presetClassId }: Props) => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
+  const isAdmin = hasAdminRole(auth?.roles)
 
   const [loading, setLoading] = useState(false)
   const [classes, setClasses] = useState<ClassType[]>([])
@@ -63,32 +67,51 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
 
   const [formData, setFormData] = useState({
     classId: '',
-    instructorId: auth?.user.id || '',
+    instructorId: presetInstructorId || auth?.user.id || '',
     notes: ''
   })
+
+  useEffect(() => {
+    if (!open) return
+    setFormData(prev => ({
+      ...prev,
+      instructorId: presetInstructorId || prev.instructorId || auth?.user.id || '',
+      classId: presetClassId || prev.classId
+    }))
+  }, [open, presetInstructorId, presetClassId, auth?.user.id])
 
   useEffect(() => {
     let mounted = true
     const loadReferences = async () => {
       try {
-        const [classRes, instructorRes] = await Promise.all([classService.getClasses({ isActive: true, pageSize: 1000 }), userService.getCoaches()])
+        if (isAdmin) {
+          const [classRes, instructorRes] = await Promise.all([
+            classService.getClasses({ isActive: true, pageSize: 1000 }),
+            userService.getCoaches()
+          ])
 
-        if (mounted && classRes.success && classRes.data) setClasses(classRes.data)
-        if (mounted && instructorRes.success && instructorRes.data) {
-          setInstructors(instructorRes.data)
-          setFormData(prev => ({
-            ...prev,
-            instructorId: prev.instructorId || auth?.user.id || instructorRes.data?.[0]?.id || ''
-          }))
+          if (mounted && classRes.success && classRes.data) setClasses(classRes.data)
+          if (mounted && instructorRes.success && instructorRes.data) {
+            setInstructors(instructorRes.data)
+            setFormData(prev => ({
+              ...prev,
+              instructorId: prev.instructorId || auth?.user.id || instructorRes.data?.[0]?.id || ''
+            }))
+          }
+        } else {
+          const classRes = await classService.getClassesByUserId(auth?.user.id || '')
+          if (mounted && classRes.success && classRes.data) setClasses(classRes.data)
+          if (mounted) setInstructors([])
+          setFormData(prev => ({ ...prev, instructorId: auth?.user.id || '' }))
         }
       } catch {
-        if (mounted) showNotification('Không thể tải dữ liệu ban đầu.', 'error')
+        if (mounted) showNotification('KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u ban Ä‘áº§u.', 'error')
       }
     }
 
     if (open) loadReferences()
     return () => { mounted = false }
-  }, [open, auth?.user.id, showNotification])
+  }, [open, auth?.user.id, showNotification, isAdmin])
 
   useEffect(() => {
     let mounted = true
@@ -186,7 +209,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
     event.preventDefault()
 
     if (!formData.classId || !formData.instructorId) {
-      showNotification('Vui lòng chọn lớp và HLV.', 'error')
+      showNotification('Vui lÃ²ng chá»n lá»›p vÃ  HLV.', 'error')
       return
     }
 
@@ -195,7 +218,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
       const amt = Number(d.amount)
 
       if (!d.description.trim() || amt <= 0) {
-        showNotification('Khoản trừ phải có mô tả và số tiền hợp lệ.', 'error')
+        showNotification('Khoáº£n trá»« pháº£i cÃ³ mÃ´ táº£ vÃ  sá»‘ tiá»n há»£p lá»‡.', 'error')
         return
       }
 
@@ -212,15 +235,15 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
       })
 
       if (!response.success || !response.data) {
-        showNotification(response.message || 'Không thể tạo phiếu bàn giao.', 'error')
+        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o phiáº¿u bÃ n giao.', 'error')
         return
       }
 
       setData(prev => [response.data!, ...prev])
-      showNotification('Tạo phiếu bàn giao tiền thành công.', 'success')
+      showNotification('Táº¡o phiáº¿u bÃ n giao tiá»n thÃ nh cÃ´ng.', 'success')
       resetAndClose()
     } catch {
-      showNotification('Đã có lỗi khi tạo phiếu bàn giao.', 'error')
+      showNotification('ÄÃ£ cÃ³ lá»—i khi táº¡o phiáº¿u bÃ n giao.', 'error')
     } finally {
       setLoading(false)
     }
@@ -241,7 +264,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 340, sm: 520 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Tạo phiếu bàn giao tiền</Typography>
+        <Typography variant='h5'>Táº¡o phiáº¿u bÃ n giao tiá»n</Typography>
         <IconButton size='small' onClick={resetAndClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -253,12 +276,14 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
 
           {/* Instructor & Class */}
           <FormControl fullWidth>
-            <InputLabel>Huấn luyện viên</InputLabel>
+            <InputLabel>Huáº¥n luyá»‡n viÃªn</InputLabel>
             <Select
-              label='Huấn luyện viên'
+              label='Huáº¥n luyá»‡n viÃªn'
               value={formData.instructorId}
-              onChange={e => setFormData(prev => ({ ...prev, instructorId: e.target.value, classId: '' }))}
+              disabled={!isAdmin}
+              onChange={e => setFormData(prev => ({ ...prev, instructorId: e.target.value, classId: "" }))}
             >
+              {!isAdmin && <MenuItem value={auth?.user.id || ''}>{auth?.user?.fullName || 'Tôi'}</MenuItem>}
               {instructors.map(item => (
                 <MenuItem key={item.id} value={item.id}>{item.fullName}</MenuItem>
               ))}
@@ -266,9 +291,9 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
           </FormControl>
 
           <FormControl fullWidth>
-            <InputLabel>Lớp</InputLabel>
+            <InputLabel>Lá»›p</InputLabel>
             <Select
-              label='Lớp'
+              label='Lá»›p'
               value={formData.classId}
               onChange={e => setFormData(prev => ({ ...prev, classId: e.target.value }))}
             >
@@ -282,23 +307,23 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
           {selectedCollection && (
             <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2, bgcolor: 'action.hover' }}>
               <Typography variant='subtitle2' className='mb-2 font-semibold'>
-                Tổng thu đến hiện tại
+                Tá»•ng thu Ä‘áº¿n hiá»‡n táº¡i
               </Typography>
               <div className='flex justify-between'>
-                <Typography variant='body2' color='text.secondary'>Học phí:</Typography>
+                <Typography variant='body2' color='text.secondary'>Há»c phÃ­:</Typography>
                 <Typography variant='body2' className='font-medium'>
                   {formatCurrency(selectedCollection.tuitionCollectedToDate)}
                 </Typography>
               </div>
               <div className='flex justify-between'>
-                <Typography variant='body2' color='text.secondary'>Bán sản phẩm:</Typography>
+                <Typography variant='body2' color='text.secondary'>BÃ¡n sáº£n pháº©m:</Typography>
                 <Typography variant='body2' className='font-medium'>
                   {formatCurrency(selectedCollection.productSalesCollectedToDate)}
                 </Typography>
               </div>
               <Divider sx={{ my: 1 }} />
               <div className='flex justify-between'>
-                <Typography variant='body2' color='text.secondary'>Tổng cộng:</Typography>
+                <Typography variant='body2' color='text.secondary'>Tá»•ng cá»™ng:</Typography>
                 <Typography variant='body2' className='font-semibold' color='primary.main'>
                   {formatCurrency(selectedCollection.totalCollectedToDate)}
                 </Typography>
@@ -311,7 +336,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
                 <Typography variant='subtitle2' className='font-semibold'>
-                  Học viên chậm học phí
+                  Há»c viÃªn cháº­m há»c phÃ­
                 </Typography>
                 {lateInClass.length > 0 && (
                   <Chip label={lateInClass.length} size='small' color='warning' />
@@ -323,14 +348,14 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
                   onClick={() => setShowLateStudents(v => !v)}
                   variant='text'
                 >
-                  {showLateStudents ? 'Ẩn' : 'Xem'}
+                  {showLateStudents ? 'áº¨n' : 'Xem'}
                 </Button>
               )}
             </div>
 
             {lateInClass.length === 0 && (
               <Typography variant='body2' color='success.main' sx={{ mt: 0.5 }}>
-                Không có học viên chậm đóng học phí
+                KhÃ´ng cÃ³ há»c viÃªn cháº­m Ä‘Ã³ng há»c phÃ­
               </Typography>
             )}
 
@@ -339,9 +364,9 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
                 <Table size='small'>
                   <TableHead>
                     <TableRow sx={{ bgcolor: 'warning.lighter' }}>
-                      <TableCell>Học viên</TableCell>
-                      <TableCell>Lớp</TableCell>
-                      <TableCell align='right'>Số ngày</TableCell>
+                      <TableCell>Há»c viÃªn</TableCell>
+                      <TableCell>Lá»›p</TableCell>
+                      <TableCell align='right'>Sá»‘ ngÃ y</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -351,7 +376,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
                         <TableCell>{s.className}</TableCell>
                         <TableCell align='right'>
                           <Chip
-                            label={`${s.daysSinceLastPayment} ngày`}
+                            label={`${s.daysSinceLastPayment} ngÃ y`}
                             size='small'
                             color={s.daysSinceLastPayment > 60 ? 'error' : 'warning'}
                           />
@@ -368,16 +393,16 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
           <Box>
             <div className='flex items-center justify-between mb-2'>
               <Typography variant='subtitle2' className='font-semibold'>
-                Khoản trừ
+                Khoáº£n trá»«
               </Typography>
               <Button size='small' startIcon={<i className='ri-add-line' />} onClick={addDeductionRow}>
-                Thêm
+                ThÃªm
               </Button>
             </div>
 
             {deductions.length === 0 && (
               <Typography variant='body2' color='text.secondary'>
-                Chưa có khoản trừ nào
+                ChÆ°a cÃ³ khoáº£n trá»« nÃ o
               </Typography>
             )}
 
@@ -385,14 +410,14 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
               <div key={d.tempId} className='flex gap-2 mb-2 items-center'>
                 <TextField
                   size='small'
-                  label='Mô tả'
+                  label='MÃ´ táº£'
                   value={d.description}
                   onChange={e => updateDeductionRow(d.tempId, 'description', e.target.value)}
                   sx={{ flex: 2 }}
                 />
                 <TextField
                   size='small'
-                  label='Số tiền'
+                  label='Sá»‘ tiá»n'
                   type='number'
                   value={d.amount}
                   onChange={e => updateDeductionRow(d.tempId, 'amount', e.target.value)}
@@ -407,7 +432,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
             {deductions.length > 0 && (
               <div className='flex justify-end mt-1'>
                 <Typography variant='body2' color='error.main' className='font-medium'>
-                  Tổng khoản trừ: {formatCurrency(totalDeductionAmount)}
+                  Tá»•ng khoáº£n trá»«: {formatCurrency(totalDeductionAmount)}
                 </Typography>
               </div>
             )}
@@ -417,13 +442,13 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
           {selectedCollection && (
             <Alert severity='info' sx={{ py: 0.5 }}>
               <Typography variant='body2'>
-                Số tiền bàn giao ={' '}
+                Sá»‘ tiá»n bÃ n giao ={' '}
                 <strong>{formatCurrency(selectedCollection.totalCollectedToDate)}</strong>
                 {selectedCollection.totalHandedOver > 0 && (
-                  <> − đã bàn giao <strong>{formatCurrency(selectedCollection.totalHandedOver)}</strong></>
+                  <> âˆ’ Ä‘Ã£ bÃ n giao <strong>{formatCurrency(selectedCollection.totalHandedOver)}</strong></>
                 )}
                 {totalDeductionAmount > 0 && (
-                  <> − khoản trừ <strong>{formatCurrency(totalDeductionAmount)}</strong></>
+                  <> âˆ’ khoáº£n trá»« <strong>{formatCurrency(totalDeductionAmount)}</strong></>
                 )}
                 {' = '}
                 <strong style={{ color: 'var(--mui-palette-success-main)' }}>
@@ -437,7 +462,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
 
           {/* Notes */}
           <TextField
-            label='Ghi chú'
+            label='Ghi chÃº'
             multiline
             rows={2}
             value={formData.notes}
@@ -446,10 +471,10 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData }: Props) => {
 
           <div className='flex items-center gap-4'>
             <Button type='submit' variant='contained' disabled={loading || !formData.classId}>
-              {loading ? 'Đang xử lý...' : 'Tạo phiếu'}
+              {loading ? 'Äang xá»­ lÃ½...' : 'Táº¡o phiáº¿u'}
             </Button>
             <Button variant='outlined' color='error' onClick={resetAndClose}>
-              Hủy
+              Há»§y
             </Button>
           </div>
 

@@ -1,4 +1,4 @@
-// MUI Imports
+﻿// MUI Imports
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
@@ -6,7 +6,6 @@ import Grid from '@mui/material/Grid2'
 import Divider from '@mui/material/Divider'
 import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
-import Chip from '@mui/material/Chip'
 
 // Component Imports
 import Logo from '@components/layout/shared/Logo'
@@ -14,6 +13,8 @@ import Logo from '@components/layout/shared/Logo'
 // Type Imports
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
 import { paymentTypeLabels, paymentMethodLabels } from '@/types/apps/paymentTypes'
+import { normalizePaymentMethod } from '@/utils/paymentMethod'
+import { normalizePaymentType } from '@/utils/paymentType'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -55,7 +56,7 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
       <Card className='previewCard'>
         <CardContent className='sm:!p-12'>
           <Typography textAlign='center' color='text.secondary' p={6}>
-            Không tìm thấy biên lai.
+            KhÃ´ng tÃ¬m tháº¥y biÃªn lai.
           </Typography>
         </CardContent>
       </Card>
@@ -81,25 +82,25 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                   </div>
                   <div>
                     <Typography color='text.primary' className='font-medium'>
-                      Câu lạc bộ
+                      CÃ¢u láº¡c bá»™
                     </Typography>
                     <Typography color='text.secondary' variant='body2'>
-                      Hệ thống quản lý câu lạc bộ
+                      Há»‡ thá»‘ng quáº£n lÃ½ cÃ¢u láº¡c bá»™
                     </Typography>
                   </div>
                 </div>
                 <div className='flex flex-col gap-2'>
                   <Typography variant='h5' color='primary'>
-                    BIÊN LAI THU TIỀN
+                    BIÃŠN LAI THU TIá»€N
                   </Typography>
                   <Typography color='text.secondary' variant='body2'>
-                    Số biên lai: <strong className='text-text-primary'>{receiptNumber}</strong>
+                    Sá»‘ biÃªn lai: <strong className='text-text-primary'>{receiptNumber}</strong>
                   </Typography>
                   <Typography color='text.secondary' variant='body2'>
-                    Ngày thu: <strong className='text-text-primary'>{formatDateTime(firstItem.paymentDate)}</strong>
+                    NgÃ y thu: <strong className='text-text-primary'>{formatDateTime(firstItem.paymentDate)}</strong>
                   </Typography>
                   <Typography color='text.secondary' variant='body2'>
-                    Người thu: <strong className='text-text-primary'>{firstItem.collectedByUserName || '—'}</strong>
+                    NgÆ°á»i thu: <strong className='text-text-primary'>{firstItem.collectedByUserName || 'â€”'}</strong>
                   </Typography>
                 </div>
               </div>
@@ -112,16 +113,16 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
               <Grid size={{ xs: 12, sm: 6 }}>
                 <div className='flex flex-col gap-3'>
                   <Typography className='font-medium' color='text.primary'>
-                    Thông tin học viên:
+                    ThÃ´ng tin há»c viÃªn:
                   </Typography>
                   <div className='flex flex-col gap-1'>
                     <Typography>
-                      <span className='text-textSecondary'>Họ tên: </span>
-                      <strong>{firstItem.studentName || '—'}</strong>
+                      <span className='text-textSecondary'>Há» tÃªn: </span>
+                      <strong>{firstItem.studentName || 'â€”'}</strong>
                     </Typography>
                     {firstItem.className && (
                       <Typography>
-                        <span className='text-textSecondary'>Lớp: </span>
+                        <span className='text-textSecondary'>Lá»›p: </span>
                         {firstItem.className}
                       </Typography>
                     )}
@@ -131,21 +132,16 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
               <Grid size={{ xs: 12, sm: 6 }}>
                 <div className='flex flex-col gap-3'>
                   <Typography className='font-medium' color='text.primary'>
-                    Thông tin thanh toán:
+                    ThÃ´ng tin thanh toÃ¡n:
                   </Typography>
                   <div className='flex flex-col gap-1'>
                     <Typography>
-                      <span className='text-textSecondary'>Phương thức: </span>
-                      <Chip
-                        label={paymentMethodLabels[firstItem.method] ?? '—'}
-                        size='small'
-                        color={firstItem.method === 1 ? 'info' : 'default'}
-                        variant='tonal'
-                      />
+                      <span className='text-textSecondary'>PhÆ°Æ¡ng thá»©c: </span>
+                      {paymentMethodLabels[normalizePaymentMethod(firstItem.method, 0)] ?? 'â€”'}
                     </Typography>
                     {firstItem.transactionRef && (
                       <Typography>
-                        <span className='text-textSecondary'>Mã GD: </span>
+                        <span className='text-textSecondary'>MÃ£ GD: </span>
                         {firstItem.transactionRef}
                       </Typography>
                     )}
@@ -161,22 +157,22 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
               <table className={tableStyles.table}>
                 <thead>
                   <tr className='border-be'>
-                    <th className='!bg-transparent'>Mô tả</th>
-                    <th className='!bg-transparent'>Loại thu</th>
-                    <th className='!bg-transparent text-right'>Số tiền gốc</th>
-                    <th className='!bg-transparent text-right'>Giảm giá</th>
-                    <th className='!bg-transparent text-right'>Thực thu</th>
+                    <th className='!bg-transparent'>MÃ´ táº£</th>
+                    <th className='!bg-transparent'>Loáº¡i thu</th>
+                    <th className='!bg-transparent text-right'>Sá»‘ tiá»n gá»‘c</th>
+                    <th className='!bg-transparent text-right'>Giáº£m giÃ¡</th>
+                    <th className='!bg-transparent text-right'>Thá»±c thu</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item, idx) => {
                     const desc =
                       item.description ||
-                      (item.type === 0 && item.forMonth && item.forYear
-                        ? `Học phí tháng ${item.forMonth}/${item.forYear}${item.className ? ` — ${item.className}` : ''}`
-                        : item.type === 1
-                          ? `Lệ phí thi cấp${item.className ? ` — ${item.className}` : ''}`
-                          : item.productName || paymentTypeLabels[item.type])
+                      (normalizePaymentType(item.type, 3) === 0 && item.forMonth && item.forYear
+                        ? `Há»c phÃ­ thÃ¡ng ${item.forMonth}/${item.forYear}${item.className ? ` â€” ${item.className}` : ''}`
+                        : normalizePaymentType(item.type, 3) === 1
+                          ? `Lá»‡ phÃ­ thi cáº¥p${item.className ? ` â€” ${item.className}` : ''}`
+                          : item.productName || paymentTypeLabels[normalizePaymentType(item.type, 3)])
 
                     return (
                       <tr key={item.id ?? idx}>
@@ -184,7 +180,7 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                           <Typography color='text.primary'>{desc}</Typography>
                         </td>
                         <td>
-                          <Chip label={paymentTypeLabels[item.type]} size='small' variant='tonal' color='info' />
+                          <Typography color='text.secondary'>{paymentTypeLabels[normalizePaymentType(item.type, 3)] ?? String(item.type)}</Typography>
                         </td>
                         <td className='text-right'>
                           <Typography color='text.secondary'>
@@ -193,7 +189,7 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                         </td>
                         <td className='text-right'>
                           <Typography color={item.discountAmount ? 'error' : 'text.secondary'}>
-                            {item.discountAmount ? `- ${formatCurrency(item.discountAmount)}` : '—'}
+                            {item.discountAmount ? `- ${formatCurrency(item.discountAmount)}` : 'â€”'}
                           </Typography>
                         </td>
                         <td className='text-right'>
@@ -216,11 +212,11 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                 {totalDiscount > 0 && (
                   <>
                     <div className='flex items-center justify-between'>
-                      <Typography color='text.secondary'>Tổng gốc:</Typography>
+                      <Typography color='text.secondary'>Tá»•ng gá»‘c:</Typography>
                       <Typography color='text.primary'>{formatCurrency(originalTotal)}</Typography>
                     </div>
                     <div className='flex items-center justify-between'>
-                      <Typography color='text.secondary'>Tổng giảm:</Typography>
+                      <Typography color='text.secondary'>Tá»•ng giáº£m:</Typography>
                       <Typography color='error'>- {formatCurrency(totalDiscount)}</Typography>
                     </div>
                     <Divider className='mlb-2' />
@@ -228,7 +224,7 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                 )}
                 <div className='flex items-center justify-between'>
                   <Typography className='font-medium' color='text.primary'>
-                    Tổng thực thu:
+                    Tá»•ng thá»±c thu:
                   </Typography>
                   <Typography variant='h6' color='primary'>
                     {formatCurrency(totalAmount)}
@@ -246,12 +242,12 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Typography className='font-medium' color='text.primary' mb={2}>
-                  Ảnh minh chứng chuyển khoản:
+                  áº¢nh minh chá»©ng chuyá»ƒn khoáº£n:
                 </Typography>
                 <Box
                   component='img'
                   src={firstItem.transferProofImageUrl}
-                  alt='Minh chứng chuyển khoản'
+                  alt='Minh chá»©ng chuyá»ƒn khoáº£n'
                   sx={{
                     maxWidth: 400,
                     maxHeight: 400,
@@ -271,7 +267,7 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Typography variant='body2' color='text.secondary' textAlign='center'>
-              Biên lai này là chứng từ hợp lệ cho khoản thu từ hệ thống quản lý câu lạc bộ.
+              BiÃªn lai nÃ y lÃ  chá»©ng tá»« há»£p lá»‡ cho khoáº£n thu tá»« há»‡ thá»‘ng quáº£n lÃ½ cÃ¢u láº¡c bá»™.
             </Typography>
           </Grid>
         </Grid>
@@ -281,3 +277,4 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
 }
 
 export default PreviewCard
+

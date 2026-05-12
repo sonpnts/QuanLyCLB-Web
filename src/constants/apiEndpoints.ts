@@ -61,6 +61,7 @@ export const API_ENDPOINTS = {
     root: '/cash-handovers',
     byId: (id: string) => `/cash-handovers/${id}`,
     confirm: (id: string) => `/cash-handovers/${id}/confirm`,
+    reject: (id: string) => `/cash-handovers/${id}/reject`,
     lateTuitionStudents: '/cash-handovers/late-tuition-students'
   },
   classes: {
@@ -73,7 +74,8 @@ export const API_ENDPOINTS = {
     payments: (classId: string) => `/Classes/${classId}/payments`,
     duplicate: (classId: string) => `/Classes/${classId}/duplicate`,
     permissions: (classId: string) => `/Classes/${classId}/permissions`,
-    permissionsByUser: (classId: string, userId: string) => `/Classes/${classId}/permissions/${userId}`
+    permissionsByUser: (classId: string, userId: string) => `/Classes/${classId}/permissions/${userId}`,
+    permissionsCatalog: '/Classes/permissions/catalog'
   },
   classTransfers: {
     root: '/class-transfers',
@@ -162,6 +164,7 @@ export const API_ENDPOINTS = {
   },
   schedules: {
     root: '/Schedules',
+    my: '/Schedules/me',
     byId: (id: string) => `/Schedules/${id}`,
     restore: (id: string) => `/Schedules/${id}/restore`,
     byDate: '/Schedules/by-date',
@@ -224,6 +227,7 @@ export const API_ENDPOINTS = {
     students: '/dashboard/students',
     classes: '/dashboard/classes',
     attendance: '/dashboard/attendance',
+    systemNotifications: '/dashboard/system-notifications'
   },
   userDocuments: {
     // User-facing

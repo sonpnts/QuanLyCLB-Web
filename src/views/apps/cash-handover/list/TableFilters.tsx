@@ -20,84 +20,91 @@ type Props = {
   instructors: UsersType[]
   onFilterChange: (params: GetCashHandoversParams) => void
   showInstructorFilter?: boolean
+  showClassFilter?: boolean
 }
 
-const TableFilters = memo(({ classes, instructors, onFilterChange, showInstructorFilter = true }: Props) => {
-  const [classId, setClassId] = useState('')
-  const [instructorId, setInstructorId] = useState('')
-  const [handoverFrom, setHandoverFrom] = useState('')
-  const [handoverTo, setHandoverTo] = useState('')
+const TableFilters = memo(
+  ({ classes, instructors, onFilterChange, showInstructorFilter = true, showClassFilter = true }: Props) => {
+    const [classId, setClassId] = useState('')
+    const [instructorId, setInstructorId] = useState('')
+    const [handoverFrom, setHandoverFrom] = useState('')
+    const [handoverTo, setHandoverTo] = useState('')
 
-  useEffect(() => {
-    const params: GetCashHandoversParams = {}
+    useEffect(() => {
+      const params: GetCashHandoversParams = {}
 
-    if (classId) params.classId = classId
-    if (instructorId) params.instructorId = instructorId
-    if (handoverFrom) params.handoverFrom = handoverFrom
-    if (handoverTo) params.handoverTo = handoverTo
+      if (showClassFilter && classId) params.classId = classId
+      if (showInstructorFilter && instructorId) params.instructorId = instructorId
+      if (handoverFrom) params.handoverFrom = handoverFrom
+      if (handoverTo) params.handoverTo = handoverTo
 
-    onFilterChange(params)
-  }, [classId, instructorId, handoverFrom, handoverTo, onFilterChange])
+      onFilterChange(params)
+    }, [classId, instructorId, handoverFrom, handoverTo, onFilterChange, showClassFilter, showInstructorFilter])
 
-  return (
-    <CardContent>
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={3}>
-          <FormControl fullWidth>
-            <InputLabel>Lớp</InputLabel>
-            <Select label='Lớp' value={classId} onChange={(event: SelectChangeEvent) => setClassId(event.target.value)}>
-              <MenuItem value=''>Tất cả</MenuItem>
-              {classes.map(item => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-        {showInstructorFilter && (
+    return (
+      <CardContent>
+        <Grid container spacing={4}>
+          {showClassFilter && (
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Lớp</InputLabel>
+                <Select label='Lớp' value={classId} onChange={(event: SelectChangeEvent) => setClassId(event.target.value)}>
+                  <MenuItem value=''>Tất cả</MenuItem>
+                  {classes.map(item => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
+
+          {showInstructorFilter && (
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Huấn luyện viên</InputLabel>
+                <Select
+                  label='Huấn luyện viên'
+                  value={instructorId}
+                  onChange={(event: SelectChangeEvent) => setInstructorId(event.target.value)}
+                >
+                  <MenuItem value=''>Tất cả</MenuItem>
+                  {instructors.map(item => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.fullName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
+
           <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Huấn luyện viên</InputLabel>
-              <Select
-                label='Huấn luyện viên'
-                value={instructorId}
-                onChange={(event: SelectChangeEvent) => setInstructorId(event.target.value)}
-              >
-                <MenuItem value=''>Tất cả</MenuItem>
-                {instructors.map(item => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.fullName}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <TextField
+              fullWidth
+              type='date'
+              label='Từ ngày bàn giao'
+              InputLabelProps={{ shrink: true }}
+              value={handoverFrom}
+              onChange={event => setHandoverFrom(event.target.value)}
+            />
           </Grid>
-        )}
-        <Grid item xs={12} md={3}>
-          <TextField
-            fullWidth
-            type='date'
-            label='Từ ngày bàn giao'
-            InputLabelProps={{ shrink: true }}
-            value={handoverFrom}
-            onChange={event => setHandoverFrom(event.target.value)}
-          />
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              type='date'
+              label='Đến ngày bàn giao'
+              InputLabelProps={{ shrink: true }}
+              value={handoverTo}
+              onChange={event => setHandoverTo(event.target.value)}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={3}>
-          <TextField
-            fullWidth
-            type='date'
-            label='Đến ngày bàn giao'
-            InputLabelProps={{ shrink: true }}
-            value={handoverTo}
-            onChange={event => setHandoverTo(event.target.value)}
-          />
-        </Grid>
-      </Grid>
-    </CardContent>
-  )
-})
+      </CardContent>
+    )
+  }
+)
 
 TableFilters.displayName = 'CashHandoverTableFilters'
 
