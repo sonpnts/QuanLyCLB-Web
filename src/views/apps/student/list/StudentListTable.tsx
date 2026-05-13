@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
@@ -63,6 +63,7 @@ import { useAuth } from '@/contexts/authContext'
 
 // Role utils
 import { hasAdminRole, isInstructorUser } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 
 // Utils
 import { logger } from '@/utils/logger'
@@ -137,7 +138,7 @@ const StudentListTable = () => {
 
   // Auth & role detection
   const { auth } = useAuth()
-  const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth])
+  const isAdmin = useMemo(() => hasPermission(auth?.permissions, 'Student.ManageAll') || hasAdminRole(auth?.roles), [auth])
   const isInstructor = useMemo(() => isInstructorUser(auth?.roles), [auth])
   const userId = auth?.user?.id
 
@@ -218,7 +219,7 @@ const StudentListTable = () => {
     studentsLoadedRef.current = false
     currentFilterRef.current = ''
     setFilterParams(prev => ({ ...prev }))
-  }, []) // intentionally stable – resetting refs + triggering re-render is enough
+  }, []) // intentionally stable - resetting refs + triggering re-render is enough
 
   const handleDelete = useCallback(async (id: string) => {
     try {
@@ -758,3 +759,4 @@ const StudentListTable = () => {
 }
 
 export default StudentListTable
+

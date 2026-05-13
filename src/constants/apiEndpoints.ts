@@ -114,8 +114,12 @@ export const API_ENDPOINTS = {
   menu: {
     byRole: '/menu/by-role',
     seed: '/menu/seed',
-    rbac: '/menu/rbac',
-    patchRoles: (id: string) => `/menu/${id}/roles`
+    rbacCanonical: '/menu/rbac-canonical',
+    patchPermissionRoles: (permissionId: string) => `/menu/permissions/${permissionId}/roles`,
+    permissionFunctions: '/menu/permission-functions',
+    patchPermissionFunctions: (permissionId: string) => `/menu/permissions/${permissionId}/functions`,
+    functions: '/menu/functions',
+    functionById: (functionId: string) => `/menu/functions/${functionId}`
   },
   payments: {
     root: '/payments',

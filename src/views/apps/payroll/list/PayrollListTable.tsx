@@ -26,7 +26,9 @@ import payrollService from '@/services/payrollService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 import { exportToExcel, formatVnCurrency, formatVnDate } from '@/utils/exportToExcel'
+import { fuzzyFilter } from '@/utils/tableHelpers'
 
 const columnHelper = createColumnHelper<any>()
 
@@ -34,7 +36,10 @@ const PayrollListTable = () => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
 
-  const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth?.roles])
+  const isAdmin = useMemo(
+    () => hasPermission(auth?.permissions, 'Payroll.Manage') || hasAdminRole(auth?.roles),
+    [auth?.permissions, auth?.roles]
+  )
   const currentUserId = auth?.user?.id
 
   const [data, setData] = useState<any[]>([])
@@ -141,6 +146,7 @@ const PayrollListTable = () => {
   const table = useReactTable({
     data: filteredData,
     columns,
+    filterFns: { fuzzy: fuzzyFilter },
     getCoreRowModel: getCoreRowModel()
   })
 

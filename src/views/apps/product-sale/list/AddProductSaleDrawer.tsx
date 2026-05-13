@@ -26,6 +26,7 @@ import userService from '@/services/userService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 import studentService from '@/services/studentService'
 
 type Props = {
@@ -41,7 +42,7 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
   const [classes, setClasses] = useState<ClassType[]>([])
   const [collectors, setCollectors] = useState<UsersType[]>([])
   const [classStudents, setClassStudents] = useState<StudentType[]>([])
-  const isAdmin = hasAdminRole(auth?.roles)
+  const isAdmin = hasPermission(auth?.permissions, 'ProductSale.ManageAll') || hasAdminRole(auth?.roles)
 
   const [formData, setFormData] = useState({
     productId: '',
@@ -269,3 +270,4 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
 }
 
 export default AddProductSaleDrawer
+

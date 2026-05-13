@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
@@ -103,7 +103,7 @@ const PaymentListTable = () => {
 
   const { showNotification } = useNotification()
 
-  // Refs Ä‘á»ƒ trÃ¡nh duplicate calls
+  // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
 
   showNotificationRef.current = showNotification
@@ -157,7 +157,7 @@ const PaymentListTable = () => {
     () => [
       {
         id: 'receiptNumber',
-        header: 'Sá»‘ BiÃªn lai',
+        header: 'Số Biên lai',
         cell: ({ row }) => (
           <Typography variant='body2' fontWeight={500} color='primary'>
             {row.original.receiptNumber || '-'}
@@ -165,7 +165,7 @@ const PaymentListTable = () => {
         )
       },
       columnHelper.accessor('studentName', {
-        header: 'Há»c viÃªn',
+        header: 'Học viên',
         cell: ({ row }) => (
           <Typography className='font-medium' color='text.primary'>
             {row.original.studentName || '-'}
@@ -173,11 +173,11 @@ const PaymentListTable = () => {
         )
       }),
       columnHelper.accessor('className', {
-        header: 'Lá»›p há»c',
+        header: 'Lớp học',
         cell: ({ row }) => <Typography>{row.original.className || '-'}</Typography>
       }),
       columnHelper.accessor('type', {
-        header: 'Loáº¡i thanh toÃ¡n',
+        header: 'Loại thanh toán',
         cell: ({ row }) => {
           const typeVal = row.original.type
           const numericType = normalizePaymentType(typeVal, 3)
@@ -192,7 +192,7 @@ const PaymentListTable = () => {
         }
       }),
       columnHelper.accessor('originalAmount', {
-        header: 'Tiá»n gá»‘c',
+        header: 'Tiền gốc',
         cell: ({ row }) => (
           <Typography variant='body2' color='text.secondary'>
             {row.original.originalAmount != null ? formatCurrency(row.original.originalAmount) : '-'}
@@ -200,7 +200,7 @@ const PaymentListTable = () => {
         )
       }),
       columnHelper.accessor('discountAmount', {
-        header: 'Giáº£m trá»«',
+        header: 'Giảm trừ',
         cell: ({ row }) =>
           row.original.discountAmount && row.original.discountAmount > 0 ? (
             <Tooltip title={row.original.discountReason || ''}>
@@ -210,12 +210,12 @@ const PaymentListTable = () => {
             </Tooltip>
           ) : (
             <Typography variant='body2' color='text.disabled'>
-              â€”
+              —
             </Typography>
           )
       }),
       columnHelper.accessor('amount', {
-        header: 'Thá»±c thu',
+        header: 'Thực thu',
         cell: ({ row }) => (
           <Typography className='font-medium' color='success.main'>
             {formatCurrency(row.original.amount)}
@@ -223,7 +223,7 @@ const PaymentListTable = () => {
         )
       }),
       columnHelper.accessor('paymentDate', {
-        header: 'NgÃ y TT',
+        header: 'Ngày TT',
         cell: ({ row }) => (
           <Typography variant='body2'>
             {new Date(row.original.paymentDate).toLocaleDateString('vi-VN')}
@@ -231,7 +231,7 @@ const PaymentListTable = () => {
         )
       }),
       columnHelper.accessor('method', {
-        header: 'PhÆ°Æ¡ng thá»©c',
+        header: 'Phương thức',
         cell: ({ row }) => {
           const methodVal = row.original.method
           const numericMethod = normalizePaymentMethod(methodVal, 0)
@@ -247,7 +247,7 @@ const PaymentListTable = () => {
       }),
       {
         id: 'period',
-        header: 'Ká»³',
+        header: 'Kỳ',
         cell: ({ row }) => (
           <Typography variant='body2'>
             {row.original.forMonth && row.original.forYear
@@ -257,7 +257,7 @@ const PaymentListTable = () => {
         )
       },
       columnHelper.accessor('collectedByUserName', {
-        header: 'NgÆ°á»i thu',
+        header: 'Người thu',
         cell: ({ row }) => (
           <Typography variant='body2' color='text.secondary'>
             {row.original.collectedByUserName || '-'}
@@ -266,13 +266,13 @@ const PaymentListTable = () => {
       }),
       {
         id: 'actions',
-        header: 'Thao tÃ¡c',
+        header: 'Thao tác',
         cell: ({ row }) => {
           const isBankTransfer = isBankTransferMethod(row.original.method)
           return (
             <div className='flex items-center'>
               {row.original.receiptNumber && (
-                <Tooltip title='Xem biÃªn lai'>
+                <Tooltip title='Xem biên lai'>
                   <IconButton
                     size='small'
                     color='info'
@@ -283,7 +283,7 @@ const PaymentListTable = () => {
                 </Tooltip>
               )}
               {isBankTransfer && row.original.transferProofImageUrl && (
-                <Tooltip title='Xem áº£nh chuyá»ƒn khoáº£n'>
+                <Tooltip title='Xem ảnh chuyển khoản'>
                   <IconButton
                     size='small'
                     color='success'
@@ -318,18 +318,18 @@ const PaymentListTable = () => {
   return (
     <>
       <Card>
-        <CardHeader title='Quáº£n lÃ½ thanh toÃ¡n' />
+        <CardHeader title='Quản lý thanh toán' />
         <TableFilters onFilterChange={handleFilterChange} />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <Button color='secondary' variant='outlined' startIcon={<i className='ri-upload-2-line text-xl' />}>
-            Xuáº¥t bÃ¡o cÃ¡o
+            Xuất báo cáo
           </Button>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
-              placeholder='TÃ¬m kiáº¿m...'
+              placeholder='Tìm kiếm...'
               className='max-sm:is-full'
             />
             <Button
@@ -342,33 +342,33 @@ const PaymentListTable = () => {
                   filename: 'danh-sach-thanh-toan',
                   rows: data,
                   columns: [
-                    { header: 'Sá»‘ biÃªn lai', accessor: 'receiptNumber' as any },
-                    { header: 'NgÃ y thanh toÃ¡n', accessor: 'paymentDate', formatter: formatVnDate },
-                    { header: 'Há»c viÃªn', accessor: 'studentName' as any },
-                    { header: 'Lá»›p', accessor: 'className' as any },
+                    { header: 'Số biên lai', accessor: 'receiptNumber' as any },
+                    { header: 'Ngày thanh toán', accessor: 'paymentDate', formatter: formatVnDate },
+                    { header: 'Học viên', accessor: 'studentName' as any },
+                    { header: 'Lớp', accessor: 'className' as any },
                     {
-                      header: 'Loáº¡i',
+                      header: 'Loại',
                       accessor: 'type',
                       formatter: v => paymentTypeLabels[v as number] || ''
                     },
-                    { header: 'Sá»‘ tiá»n', accessor: 'amount', formatter: formatVnCurrency },
-                    { header: 'ÄÃ£ giáº£m', accessor: 'discountAmount' as any, formatter: formatVnCurrency },
-                    { header: 'LÃ½ do giáº£m', accessor: 'discountReason' as any },
+                    { header: 'Số tiền', accessor: 'amount', formatter: formatVnCurrency },
+                    { header: 'Đã giảm', accessor: 'discountAmount' as any, formatter: formatVnCurrency },
+                    { header: 'Lý do giảm', accessor: 'discountReason' as any },
                     {
-                      header: 'PhÆ°Æ¡ng thá»©c',
+                      header: 'Phương thức',
                       accessor: 'method',
                       formatter: v => paymentMethodLabels[v as number] || ''
                     },
-                    { header: 'NgÆ°á»i thu', accessor: 'collectedByUserName' as any },
-                    { header: 'Ghi chÃº', accessor: 'description' as any }
+                    { header: 'Người thu', accessor: 'collectedByUserName' as any },
+                    { header: 'Ghi chú', accessor: 'description' as any }
                   ]
                 })
               }}
             >
-              Xuáº¥t Excel
+              Xuất Excel
             </Button>
             <Button variant='contained' onClick={() => setAddPaymentOpen(true)}>
-              ThÃªm thanh toÃ¡n
+              Thêm thanh toán
             </Button>
           </div>
         </div>
@@ -399,7 +399,7 @@ const PaymentListTable = () => {
               {table.getFilteredRowModel().rows.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className='text-center'>
-                    {loading ? 'Äang táº£i...' : 'KhÃ´ng cÃ³ dá»¯ liá»‡u'}
+                    {loading ? 'Đang tải...' : 'Không có dữ liệu'}
                   </td>
                 </tr>
               ) : (
@@ -442,7 +442,7 @@ const PaymentListTable = () => {
         fullWidth
       >
         <DialogTitle>
-          áº¢nh chá»¥p mÃ n hÃ¬nh chuyá»ƒn khoáº£n
+          Ảnh chụp màn hình chuyển khoản
           <IconButton
             size='small'
             onClick={() => { setProofImageOpen(false); setProofImageUrl(null) }}
@@ -457,7 +457,7 @@ const PaymentListTable = () => {
               <Box
                 component='img'
                 src={proofImageUrl}
-                alt='áº¢nh chuyá»ƒn khoáº£n'
+                alt='Ảnh chuyển khoản'
                 sx={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: 1 }}
               />
             </Box>
@@ -472,9 +472,9 @@ const PaymentListTable = () => {
             startIcon={<i className='ri-external-link-line' />}
             disabled={!proofImageUrl}
           >
-            Má»Ÿ áº£nh gá»‘c
+            Mở ảnh gốc
           </Button>
-          <Button onClick={() => { setProofImageOpen(false); setProofImageUrl(null) }}>ÄÃ³ng</Button>
+          <Button onClick={() => { setProofImageOpen(false); setProofImageUrl(null) }}>Đóng</Button>
         </DialogActions>
       </Dialog>
 

@@ -32,6 +32,7 @@ import type { GetStudentAbsencesParams, StudentAbsenceType } from '@/services/st
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 
 import AddLeaveRequestDrawer from './AddLeaveRequestDrawer'
 import TableFilters from './TableFilters'
@@ -73,7 +74,7 @@ const columnHelper = createColumnHelper<StudentAbsenceType>()
 
 const LeaveRequestListTable = () => {
   const { auth } = useAuth()
-  const isAdmin = hasAdminRole(auth?.roles)
+  const isAdmin = hasPermission(auth?.permissions, 'LeaveRequest.ManageAll') || hasAdminRole(auth?.roles)
   const { showNotification } = useNotification()
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
@@ -292,3 +293,4 @@ const LeaveRequestListTable = () => {
 }
 
 export default LeaveRequestListTable
+

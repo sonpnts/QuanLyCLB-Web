@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -63,7 +63,7 @@ const EditStudentDrawer = (props: Props) => {
   const { open, onClose, student, onSaved } = props
   const { showNotification } = useNotification()
   const [submitting, setSubmitting] = useState(false)
-  // Mã HV state (quản lý độc lập ngoài form vì cần truyền cho MemberCodeField)
+  // Mã HV state (quản lý độc lập ngoài form và cần truyền cho MemberCodeField)
   const [memberCode, setMemberCode] = useState('')
   // Zalo
   const [zaloModalOpen, setZaloModalOpen] = useState(false)
@@ -73,7 +73,8 @@ const EditStudentDrawer = (props: Props) => {
     () => ({
       code: student?.code || '',
       fullName: student?.fullName || '',
-      phoneNumber: student?.phoneNumber || '',      address: student?.address || '',
+      phoneNumber: student?.phoneNumber || '',
+      address: student?.address || '',
       dateOfBirth: student?.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
       gender: student?.gender !== undefined ? String(student.gender) : '',
       notes: student?.notes || ''
@@ -110,11 +111,11 @@ const EditStudentDrawer = (props: Props) => {
 
 
   /**
-   * Học viên đã có mã HV (đã lưu trong DB) → khoá toàn bộ thông tin cá nhân.
+   * Học viên đã có mã HV (đã lưu trong DB) sẽ khóa toàn bộ thông tin cá nhân.
    */
   const isLocked = Boolean(memberCode)
 
-  /** Áp dụng thông tin từ liên đoàn vào form (chỉ khi chưa khoá) */
+  /** Áp dụng thông tin từ liên đoàn vào form (chỉ khi chưa khóa) */
   const handleMemberInfoConfirmed = (info: MemberInfo) => {
     if (isLocked) return
 
@@ -133,12 +134,12 @@ const EditStudentDrawer = (props: Props) => {
       setSubmitting(true)
 
       const payload: any = {
-        // Mã HV luôn được phép cập nhật (dù đã khoá, vẫn có thể đổi mã)
+        // Mã HV luôn được phép cập nhật (dù đã khóa, vẫn có thể đổi mã)
         code: memberCode.trim() || undefined,
         notes: values.notes || undefined
       }
 
-      // Chỉ gửi thông tin cá nhân nếu chưa khoá
+      // Chỉ gửi thông tin cá nhân nếu chưa khóa
       if (!isLocked) {
         payload.fullName = values.fullName
         payload.phoneNumber = values.phoneNumber || undefined
@@ -178,7 +179,7 @@ const EditStudentDrawer = (props: Props) => {
           <Typography variant='h5'>Chỉnh sửa học viên</Typography>
           {isLocked && (
             <Chip
-              label='Đã khoá'
+              label='Đã khóa'
               size='small'
               color='warning'
               variant='tonal'
@@ -195,8 +196,8 @@ const EditStudentDrawer = (props: Props) => {
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-4 p-5'>
         {isLocked && (
           <Alert severity='info' icon={<i className='ri-lock-line' />}>
-            Học viên đã có mã HV — thông tin cá nhân (tên, giới tính, ngày sinh, …) bị khoá. Chỉ có thể chỉnh sửa{' '}
-            <strong>ghi chú</strong>. Để mở khoá, xoá mã HV trước rồi lưu lại.
+            Học viên đã có mã HV nên thông tin cá nhân (tên, giới tính, ngày sinh, ...) bị khóa. Chỉ có thể chỉnh sửa{' '}
+            <strong>ghi chú</strong>. Để mở khóa, xóa mã HV trước rồi lưu lại.
           </Alert>
         )}
 
@@ -208,9 +209,9 @@ const EditStudentDrawer = (props: Props) => {
             setValue('code', code)
           }}
           onMemberInfoConfirmed={handleMemberInfoConfirmed}
-          locked={false} // mã HV luôn có thể cập nhật (chỉ khoá các trường còn lại)
+          locked={false} // mã HV luôn có thể cập nhật (chỉ khóa các trường còn lại)
           helperText={
-            isLocked ? 'Xoá mã và lưu để mở khoá toàn bộ thông tin' : 'Nhấn Enter/Tab để tra cứu thông tin từ liên đoàn'
+            isLocked ? 'Xóa mã và lưu để mở khóa toàn bộ thông tin' : 'Nhấn Enter/Tab để tra cứu thông tin từ liên đoàn'
           }
         />
 
@@ -259,7 +260,7 @@ const EditStudentDrawer = (props: Props) => {
                             savingZalo
                               ? 'Đang lưu...'
                               : student?.userIdZalo
-                                ? 'Đã liên kết Zalo — nhấn để xác thực lại'
+                                ? 'Đã liên kết Zalo - nhấn để xác thực lại'
                                 : 'Xác thực số điện thoại qua Zalo OA'
                           }
                           arrow

@@ -126,7 +126,7 @@ const UserDropdown = () => {
                   <Divider className='mlb-1' />
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/account-settings')}>
                     <i className='ri-settings-4-line' />
-                    <Typography color='text.primary'>ThÃ´ng tin tÃ i khoáº£n</Typography>
+                    <Typography color='text.primary'>Thông tin tài khoản</Typography>
                   </MenuItem>
                   {/*<MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/pricing')}>*/}
                   {/*  <i className='ri-money-dollar-circle-line' />*/}

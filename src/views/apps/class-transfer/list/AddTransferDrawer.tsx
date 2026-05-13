@@ -32,6 +32,7 @@ import studentService from '@/services/studentService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 
 type Props = {
   open: boolean
@@ -51,7 +52,7 @@ const studentLabel = (s: StudentType) => {
 
 const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
   const { auth } = useAuth()
-  const isAdmin = hasAdminRole(auth?.roles)
+  const isAdmin = hasPermission(auth?.permissions, 'ClassTransfer.ManageAll') || hasAdminRole(auth?.roles)
   const currentUserId = auth?.user.id
 
   // ── Form state ────────────────────────────────────────────────────────────
@@ -334,3 +335,4 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
 }
 
 export default AddTransferDrawer
+

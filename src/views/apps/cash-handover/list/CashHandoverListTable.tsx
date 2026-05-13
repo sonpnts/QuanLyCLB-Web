@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -44,6 +44,7 @@ import financeService from '@/services/financeService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 
 import AddCashHandoverDrawer from './AddCashHandoverDrawer'
 import CashHandoverDetailDialog from './CashHandoverDetailDialog'
@@ -86,7 +87,7 @@ const CashHandoverListTable = () => {
   const { auth } = useAuth()
 
   const isAdmin = useMemo(
-    () => hasAdminRole(auth?.roles),
+    () => hasPermission(auth?.permissions, 'CashHandover.ManageAll') || hasAdminRole(auth?.roles),
     [auth]
   )
 
@@ -517,4 +518,5 @@ const CashHandoverListTable = () => {
 }
 
 export default CashHandoverListTable
+
 

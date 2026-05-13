@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -34,6 +34,7 @@ import financeService from '@/services/financeService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 
 type Props = {
   open: boolean
@@ -55,7 +56,7 @@ const formatCurrency = (amount: number) =>
 const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId, presetClassId }: Props) => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
-  const isAdmin = hasAdminRole(auth?.roles)
+  const isAdmin = hasPermission(auth?.permissions, 'CashHandover.ManageAll') || hasAdminRole(auth?.roles)
 
   const [loading, setLoading] = useState(false)
   const [classes, setClasses] = useState<ClassType[]>([])
@@ -105,7 +106,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
           setFormData(prev => ({ ...prev, instructorId: auth?.user.id || '' }))
         }
       } catch {
-        if (mounted) showNotification('KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u ban Ä‘áº§u.', 'error')
+        if (mounted) showNotification('Không thể tải dữ liệu ban đầu.', 'error')
       }
     }
 
@@ -209,7 +210,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
     event.preventDefault()
 
     if (!formData.classId || !formData.instructorId) {
-      showNotification('Vui lÃ²ng chá»n lá»›p vÃ  HLV.', 'error')
+      showNotification('Vui lòng chọn lớp và HLV.', 'error')
       return
     }
 
@@ -218,7 +219,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
       const amt = Number(d.amount)
 
       if (!d.description.trim() || amt <= 0) {
-        showNotification('Khoáº£n trá»« pháº£i cÃ³ mÃ´ táº£ vÃ  sá»‘ tiá»n há»£p lá»‡.', 'error')
+        showNotification('Khoản trừ phải có mô tả và số tiền hợp lệ.', 'error')
         return
       }
 
@@ -235,15 +236,15 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
       })
 
       if (!response.success || !response.data) {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o phiáº¿u bÃ n giao.', 'error')
+        showNotification(response.message || 'Không thể tạo phiếu bàn giao.', 'error')
         return
       }
 
       setData(prev => [response.data!, ...prev])
-      showNotification('Táº¡o phiáº¿u bÃ n giao tiá»n thÃ nh cÃ´ng.', 'success')
+      showNotification('Tạo phiếu bàn giao tiền thành công.', 'success')
       resetAndClose()
     } catch {
-      showNotification('ÄÃ£ cÃ³ lá»—i khi táº¡o phiáº¿u bÃ n giao.', 'error')
+      showNotification('Đã có lỗi khi tạo phiếu bàn giao.', 'error')
     } finally {
       setLoading(false)
     }
@@ -264,7 +265,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
       sx={{ '& .MuiDrawer-paper': { width: { xs: 340, sm: 520 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Táº¡o phiáº¿u bÃ n giao tiá»n</Typography>
+        <Typography variant='h5'>Tạo phiếu bàn giao tiền</Typography>
         <IconButton size='small' onClick={resetAndClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -276,9 +277,9 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
 
           {/* Instructor & Class */}
           <FormControl fullWidth>
-            <InputLabel>Huáº¥n luyá»‡n viÃªn</InputLabel>
+            <InputLabel>Huấn luyện viên</InputLabel>
             <Select
-              label='Huáº¥n luyá»‡n viÃªn'
+              label='Huấn luyện viên'
               value={formData.instructorId}
               disabled={!isAdmin}
               onChange={e => setFormData(prev => ({ ...prev, instructorId: e.target.value, classId: "" }))}
@@ -291,9 +292,9 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
           </FormControl>
 
           <FormControl fullWidth>
-            <InputLabel>Lá»›p</InputLabel>
+            <InputLabel>Lớp</InputLabel>
             <Select
-              label='Lá»›p'
+              label='Lớp'
               value={formData.classId}
               onChange={e => setFormData(prev => ({ ...prev, classId: e.target.value }))}
             >
@@ -307,23 +308,23 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
           {selectedCollection && (
             <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2, bgcolor: 'action.hover' }}>
               <Typography variant='subtitle2' className='mb-2 font-semibold'>
-                Tá»•ng thu Ä‘áº¿n hiá»‡n táº¡i
+                Tổng thu đến hiện tại
               </Typography>
               <div className='flex justify-between'>
-                <Typography variant='body2' color='text.secondary'>Há»c phÃ­:</Typography>
+                <Typography variant='body2' color='text.secondary'>Học phí:</Typography>
                 <Typography variant='body2' className='font-medium'>
                   {formatCurrency(selectedCollection.tuitionCollectedToDate)}
                 </Typography>
               </div>
               <div className='flex justify-between'>
-                <Typography variant='body2' color='text.secondary'>BÃ¡n sáº£n pháº©m:</Typography>
+                <Typography variant='body2' color='text.secondary'>Bán sản phẩm:</Typography>
                 <Typography variant='body2' className='font-medium'>
                   {formatCurrency(selectedCollection.productSalesCollectedToDate)}
                 </Typography>
               </div>
               <Divider sx={{ my: 1 }} />
               <div className='flex justify-between'>
-                <Typography variant='body2' color='text.secondary'>Tá»•ng cá»™ng:</Typography>
+                <Typography variant='body2' color='text.secondary'>Tổng cộng:</Typography>
                 <Typography variant='body2' className='font-semibold' color='primary.main'>
                   {formatCurrency(selectedCollection.totalCollectedToDate)}
                 </Typography>
@@ -336,7 +337,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
                 <Typography variant='subtitle2' className='font-semibold'>
-                  Há»c viÃªn cháº­m há»c phÃ­
+                  Học viên chậm học phí
                 </Typography>
                 {lateInClass.length > 0 && (
                   <Chip label={lateInClass.length} size='small' color='warning' />
@@ -348,14 +349,14 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
                   onClick={() => setShowLateStudents(v => !v)}
                   variant='text'
                 >
-                  {showLateStudents ? 'áº¨n' : 'Xem'}
+                  {showLateStudents ? 'Ẩn' : 'Xem'}
                 </Button>
               )}
             </div>
 
             {lateInClass.length === 0 && (
               <Typography variant='body2' color='success.main' sx={{ mt: 0.5 }}>
-                KhÃ´ng cÃ³ há»c viÃªn cháº­m Ä‘Ã³ng há»c phÃ­
+                Không có học viên chậm đóng học phí
               </Typography>
             )}
 
@@ -364,9 +365,9 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
                 <Table size='small'>
                   <TableHead>
                     <TableRow sx={{ bgcolor: 'warning.lighter' }}>
-                      <TableCell>Há»c viÃªn</TableCell>
-                      <TableCell>Lá»›p</TableCell>
-                      <TableCell align='right'>Sá»‘ ngÃ y</TableCell>
+                      <TableCell>Học viên</TableCell>
+                      <TableCell>Lớp</TableCell>
+                      <TableCell align='right'>Số ngày</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -376,7 +377,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
                         <TableCell>{s.className}</TableCell>
                         <TableCell align='right'>
                           <Chip
-                            label={`${s.daysSinceLastPayment} ngÃ y`}
+                            label={`${s.daysSinceLastPayment} ngày`}
                             size='small'
                             color={s.daysSinceLastPayment > 60 ? 'error' : 'warning'}
                           />
@@ -393,16 +394,16 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
           <Box>
             <div className='flex items-center justify-between mb-2'>
               <Typography variant='subtitle2' className='font-semibold'>
-                Khoáº£n trá»«
+                Khoản trừ
               </Typography>
               <Button size='small' startIcon={<i className='ri-add-line' />} onClick={addDeductionRow}>
-                ThÃªm
+                Thêm
               </Button>
             </div>
 
             {deductions.length === 0 && (
               <Typography variant='body2' color='text.secondary'>
-                ChÆ°a cÃ³ khoáº£n trá»« nÃ o
+                Chưa có khoản trừ nào
               </Typography>
             )}
 
@@ -410,14 +411,14 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
               <div key={d.tempId} className='flex gap-2 mb-2 items-center'>
                 <TextField
                   size='small'
-                  label='MÃ´ táº£'
+                  label='Mô tả'
                   value={d.description}
                   onChange={e => updateDeductionRow(d.tempId, 'description', e.target.value)}
                   sx={{ flex: 2 }}
                 />
                 <TextField
                   size='small'
-                  label='Sá»‘ tiá»n'
+                  label='Số tiền'
                   type='number'
                   value={d.amount}
                   onChange={e => updateDeductionRow(d.tempId, 'amount', e.target.value)}
@@ -432,7 +433,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
             {deductions.length > 0 && (
               <div className='flex justify-end mt-1'>
                 <Typography variant='body2' color='error.main' className='font-medium'>
-                  Tá»•ng khoáº£n trá»«: {formatCurrency(totalDeductionAmount)}
+                  Tổng khoản trừ: {formatCurrency(totalDeductionAmount)}
                 </Typography>
               </div>
             )}
@@ -442,13 +443,13 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
           {selectedCollection && (
             <Alert severity='info' sx={{ py: 0.5 }}>
               <Typography variant='body2'>
-                Sá»‘ tiá»n bÃ n giao ={' '}
+                Số tiền bàn giao ={' '}
                 <strong>{formatCurrency(selectedCollection.totalCollectedToDate)}</strong>
                 {selectedCollection.totalHandedOver > 0 && (
-                  <> âˆ’ Ä‘Ã£ bÃ n giao <strong>{formatCurrency(selectedCollection.totalHandedOver)}</strong></>
+                  <> − đã bàn giao <strong>{formatCurrency(selectedCollection.totalHandedOver)}</strong></>
                 )}
                 {totalDeductionAmount > 0 && (
-                  <> âˆ’ khoáº£n trá»« <strong>{formatCurrency(totalDeductionAmount)}</strong></>
+                  <> − khoản trừ <strong>{formatCurrency(totalDeductionAmount)}</strong></>
                 )}
                 {' = '}
                 <strong style={{ color: 'var(--mui-palette-success-main)' }}>
@@ -462,7 +463,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
 
           {/* Notes */}
           <TextField
-            label='Ghi chÃº'
+            label='Ghi chú'
             multiline
             rows={2}
             value={formData.notes}
@@ -471,10 +472,10 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
 
           <div className='flex items-center gap-4'>
             <Button type='submit' variant='contained' disabled={loading || !formData.classId}>
-              {loading ? 'Äang xá»­ lÃ½...' : 'Táº¡o phiáº¿u'}
+              {loading ? 'Đang xử lý...' : 'Tạo phiếu'}
             </Button>
             <Button variant='outlined' color='error' onClick={resetAndClose}>
-              Há»§y
+              Hủy
             </Button>
           </div>
 

@@ -39,6 +39,7 @@ import userService from '@/services/userService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 
 import AddProductSaleDrawer from './AddProductSaleDrawer'
 import TableFilters from './TableFilters'
@@ -78,7 +79,7 @@ const columnHelper = createColumnHelper<ProductSaleType>()
 const ProductSaleListTable = () => {
   const { showNotification } = useNotification()
   const { auth } = useAuth()
-  const isAdmin = hasAdminRole(auth?.roles)
+  const isAdmin = hasPermission(auth?.permissions, 'ProductSale.ManageAll') || hasAdminRole(auth?.roles)
 
   const [addDrawerOpen, setAddDrawerOpen] = useState(false)
   const [data, setData] = useState<ProductSaleType[]>([])
@@ -328,3 +329,4 @@ const ProductSaleListTable = () => {
 }
 
 export default ProductSaleListTable
+

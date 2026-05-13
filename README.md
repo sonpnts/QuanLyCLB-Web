@@ -64,3 +64,16 @@ pnpm dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000) and choose a locale route such as `/en`. Update or add pages under `src/app` and `src/views`, then refresh to see your customisations.
+
+## Unicode & Encoding Rule (Must Follow)
+
+- All source files must be saved as `UTF-8` (without BOM for frontend TS/TSX/JS/JSON/CSS/MD).
+- Do not paste text from editors/tools that produce mojibake (`Ã`, `á»`, `â€`, `Ä‘` in wrong context).
+- Before commit, scan `src/views`:
+
+```bash
+rg -n "Ã|á»|â€|Ä‘" src/views
+```
+
+- If scan returns results, fix text immediately before merge.
+- Prefer Vietnamese literals directly in UTF-8; avoid copy/paste through ANSI/Windows-1252 tools.

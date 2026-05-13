@@ -32,6 +32,7 @@ import productService from '@/services/productService'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 
 type Props = {
   open: boolean
@@ -65,7 +66,10 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
 
-  const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth?.roles])
+  const isAdmin = useMemo(
+    () => hasPermission(auth?.permissions, 'Payment.Collect.ManageAll') || hasAdminRole(auth?.roles),
+    [auth?.permissions, auth?.roles]
+  )
 
   const [classes, setClasses] = useState<ClassType[]>([])
   const [students, setStudents] = useState<StudentType[]>([])

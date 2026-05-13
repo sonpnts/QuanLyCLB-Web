@@ -26,9 +26,12 @@ import TableRow from '@mui/material/TableRow'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
+import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import paymentService from '@/services/paymentService'
 import type { ClassPaymentSummary, CoachPaymentSummaryType } from '@/types/apps/paymentSummaryTypes'
+import { hasPermission } from '@/utils/permissionUtils'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 import CollectPaymentDialog from './CollectPaymentDialog'
 
@@ -47,7 +50,13 @@ interface CollectTarget {
   description?: string
 }
 
+const toSafeNumber = (value: unknown): number => {
+  const num = Number(value)
+  return Number.isFinite(num) ? num : 0
+}
+
 const PaymentCollectView = () => {
+  const { auth } = useAuth()
   const { showNotification } = useNotification()
   const [month, setMonth] = useState(new Date().getMonth() + 1)
   const [year, setYear] = useState(new Date().getFullYear())
@@ -62,15 +71,18 @@ const PaymentCollectView = () => {
   const [unpaidOnlyFilter, setUnpaidOnlyFilter] = useState<boolean>(false)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const isAdmin = hasPermission(auth?.permissions, 'Payment.Collect.ManageAll') || hasAdminRole(auth?.roles)
 
   useEffect(() => {
     loadSummary()
-  }, [month, year])
+  }, [month, year, isAdmin])
 
   const loadSummary = async () => {
     try {
       setLoading(true)
-      const result = await paymentService.getSummaryForCoach(month, year)
+      const result = isAdmin
+        ? await paymentService.getSummaryForAdmin(month, year)
+        : await paymentService.getSummaryForCoach(month, year)
 
       if (result.success && result.data) {
         setSummary(result.data)
@@ -110,7 +122,9 @@ const PaymentCollectView = () => {
       if (branchFilter && cls.branchId !== branchFilter) return false
       // Chỉ hiển thị lớp còn công nợ
       if (unpaidOnlyFilter) {
-        const totalUnpaid = cls.tuition.unpaidAmount + cls.examFees.reduce((acc, ef) => acc + ef.unpaidAmount, 0)
+        const totalUnpaid =
+          toSafeNumber(cls.tuition?.unpaidAmount) +
+          (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0)
         if (totalUnpaid <= 0) return false
       }
       return true
@@ -190,7 +204,7 @@ const PaymentCollectView = () => {
               <CardContent className='flex justify-between items-center'>
                 <Box>
                   <Typography variant='h4' color='white'>
-                    {summary.grandTotalUnpaid.toLocaleString('vi-VN')}đ
+                    {toSafeNumber(summary.grandTotalUnpaid).toLocaleString('vi-VN')}đ
                   </Typography>
                   <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.8)' }}>
                     Tổng tiền còn phải thu - Tháng {month}/{year}
@@ -202,7 +216,7 @@ const PaymentCollectView = () => {
           )}
 
           {/* Filter + Search bar */}
-          {summary && summary.classes.length > 0 && (
+          {summary && (summary.classes ?? []).length > 0 && (
             <Card className='mb-4'>
               <CardContent>
                 <Box className='flex flex-wrap gap-3 items-center'>
@@ -250,7 +264,7 @@ const PaymentCollectView = () => {
                   </Button>
                   <Box className='flex items-center gap-2 ml-auto'>
                     <Typography variant='body2' color='text.secondary'>
-                      Hiển thị {filteredClasses.length}/{summary.classes.length} lớp
+                      Hiển thị {filteredClasses.length}/{(summary.classes ?? []).length} lớp
                     </Typography>
                   </Box>
                 </Box>
@@ -258,13 +272,15 @@ const PaymentCollectView = () => {
             </Card>
           )}
 
-          {!summary || summary.classes.length === 0 ? (
+          {!summary || (summary.classes ?? []).length === 0 ? (
             <Alert severity='success'>Không có công nợ nào trong tháng {month}/{year}!</Alert>
           ) : filteredClasses.length === 0 ? (
             <Alert severity='info'>Không có lớp nào khớp bộ lọc. Hãy điều chỉnh tìm kiếm hoặc bỏ lọc.</Alert>
           ) : (
             pagedClasses.map((cls: ClassPaymentSummary) => {
-              const totalUnpaid = cls.tuition.unpaidAmount + cls.examFees.reduce((acc, ef) => acc + ef.unpaidAmount, 0)
+              const totalUnpaid =
+                toSafeNumber(cls.tuition?.unpaidAmount) +
+                (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0)
 
               return (
                 <Card key={cls.classId} className='mb-4'>
@@ -295,8 +311,8 @@ const PaymentCollectView = () => {
                         <Box className='flex items-center gap-2'>
                           <Typography className='font-medium'>Học phí tháng {month}/{year}</Typography>
                           <Chip
-                            label={`${cls.tuition.unpaidCount} chưa đóng`}
-                            color={cls.tuition.unpaidCount > 0 ? 'warning' : 'success'}
+                            label={`${toSafeNumber(cls.tuition?.unpaidCount)} chưa đóng`}
+                            color={toSafeNumber(cls.tuition?.unpaidCount) > 0 ? 'warning' : 'success'}
                             size='small'
                           />
                         </Box>
@@ -304,9 +320,9 @@ const PaymentCollectView = () => {
                           <Typography
                             variant='body2'
                             className='font-medium'
-                            color={cls.tuition.unpaidCount > 0 ? 'warning.main' : 'success.main'}
+                            color={toSafeNumber(cls.tuition?.unpaidCount) > 0 ? 'warning.main' : 'success.main'}
                           >
-                            {cls.tuition.unpaidAmount.toLocaleString('vi-VN')}đ
+                            {toSafeNumber(cls.tuition?.unpaidAmount).toLocaleString('vi-VN')}đ
                           </Typography>
                           <i className={`ri-arrow-${expanded[`tuition-${cls.classId}`] ? 'up' : 'down'}-s-line`} />
                         </Box>
@@ -322,10 +338,10 @@ const PaymentCollectView = () => {
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {cls.tuition.unpaidStudents.map(s => (
+                              {(cls.tuition?.unpaidStudents ?? []).map(s => (
                                 <TableRow key={s.studentId}>
                                   <TableCell>{s.studentName}</TableCell>
-                                  <TableCell align='right'>{s.amount.toLocaleString('vi-VN')}đ</TableCell>
+                                  <TableCell align='right'>{toSafeNumber(s.amount).toLocaleString('vi-VN')}đ</TableCell>
                                   <TableCell align='right'>
                                     <Button
                                       size='small'
@@ -355,7 +371,7 @@ const PaymentCollectView = () => {
                     </Box>
 
                     {/* Lệ phí thi */}
-                    {cls.examFees.map(ef => (
+                    {(cls.examFees ?? []).map(ef => (
                       <Box key={ef.sessionId} className='px-4 py-3 border-b last:border-b-0'>
                         <Box
                           className='flex justify-between items-center cursor-pointer select-none'
@@ -378,7 +394,7 @@ const PaymentCollectView = () => {
                               className='font-medium'
                               color={ef.unpaidCount > 0 ? 'warning.main' : 'success.main'}
                             >
-                              {ef.unpaidAmount.toLocaleString('vi-VN')}đ
+                              {toSafeNumber(ef.unpaidAmount).toLocaleString('vi-VN')}đ
                             </Typography>
                             <i className={`ri-arrow-${expanded[`exam-${cls.classId}-${ef.sessionId}`] ? 'up' : 'down'}-s-line`} />
                           </Box>
@@ -395,11 +411,11 @@ const PaymentCollectView = () => {
                                 </TableRow>
                               </TableHead>
                               <TableBody>
-                                {ef.unpaidStudents.map(s => (
+                                {(ef.unpaidStudents ?? []).map(s => (
                                   <TableRow key={s.studentId}>
                                     <TableCell>{s.studentName}</TableCell>
                                     <TableCell>{s.targetBeltLevelName ?? '-'}</TableCell>
-                                    <TableCell align='right'>{s.amount.toLocaleString('vi-VN')}đ</TableCell>
+                                    <TableCell align='right'>{toSafeNumber(s.amount).toLocaleString('vi-VN')}đ</TableCell>
                                     <TableCell align='right'>
                                       <Button
                                         size='small'

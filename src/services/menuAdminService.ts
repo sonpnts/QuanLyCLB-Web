@@ -3,43 +3,76 @@ import { logger } from '@/utils/logger'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
-export type AdminMenuItemDto = {
-  id: string
-  label: string
-  icon?: string | null
-  href?: string | null
-  parentId?: string | null
-  isSection: boolean
-  order: number
+export type CanonicalRbacPermissionDto = {
+  permissionId: string
+  permissionCode: string
+  permissionName: string
+  description?: string | null
   isActive: boolean
-  requiredRoles?: string[] | null
+  roleNames: string[]
+  functionCodes: string[]
+  functionNames: string[]
+  apiPatterns: string[]
+  menuHrefs: string[]
+}
+
+export type CanonicalFunctionDto = {
+  functionId: string
+  functionCode: string
+  functionName: string
+  module?: string | null
+  requiredPermissionModule?: string | null
+  route?: string | null
+  icon?: string | null
+  displayOrder?: number
+  showOnMenu?: boolean
+  apiPattern: string
+  httpMethod?: string | null
+  menuHref?: string | null
+  isActive: boolean
+}
+
+export type PermissionFunctionMatrixItemDto = {
+  permissionId: string
+  permissionCode: string
+  permissionName: string
+  functionCodes: string[]
+}
+
+export type UpsertFunctionRequest = {
+  name: string
+  code: string
+  module?: string | null
+  requiredPermissionModule?: string | null
+  apiPattern: string
+  httpMethod?: string | null
+  route?: string | null
+  icon?: string | null
+  displayOrder: number
+  isActive: boolean
+  showOnMenu: boolean
 }
 
 class MenuAdminService {
-  async getRbacMatrix(): Promise<ResponseResult<AdminMenuItemDto[]>> {
+  async getCanonicalRbacMatrix(): Promise<ResponseResult<CanonicalRbacPermissionDto[]>> {
     try {
-      const response = await apiClient.get<any>(API_ENDPOINTS.menu.rbac)
+      const response = await apiClient.get<any>(API_ENDPOINTS.menu.rbacCanonical)
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
         return { success: false, message: apiResponse.message, data: [] }
       }
 
-      return { success: true, data: apiResponse.data || [] }
+      return { success: true, data: apiResponse.data?.permissions || [] }
     } catch (error: any) {
-      logger.error('MenuAdminService', 'getRbacMatrix', error)
+      logger.error('MenuAdminService', 'getCanonicalRbacMatrix', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ', data: [] }
     }
   }
 
-  async updateItemRoles(id: string, requiredRoles: string[] | null): Promise<ResponseResult<void>> {
+  async updatePermissionRoles(permissionId: string, roleNames: string[]): Promise<ResponseResult<void>> {
     try {
-      // null  = công khai (gửi null)
-      // []    = không ai được xem (gửi [] — KHÔNG convert sang null)
-      // [...] = specific roles (gửi nguyên)
-      const response = await apiClient.patch<any>(API_ENDPOINTS.menu.patchRoles(id), {
-        requiredRoles: requiredRoles  // giữ nguyên, backend phân biệt null vs []
-      })
+      const response = await apiClient.patch<any>(API_ENDPOINTS.menu.patchPermissionRoles(permissionId), { roleNames })
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -48,7 +81,87 @@ class MenuAdminService {
 
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
-      logger.error('MenuAdminService', 'updateItemRoles', error)
+      logger.error('MenuAdminService', 'updatePermissionRoles', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getPermissionFunctionMatrix(): Promise<ResponseResult<{ functions: CanonicalFunctionDto[]; permissions: PermissionFunctionMatrixItemDto[] }>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.menu.permissionFunctions)
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message, data: { functions: [], permissions: [] } }
+      }
+
+      return { success: true, data: apiResponse.data || { functions: [], permissions: [] } }
+    } catch (error: any) {
+      logger.error('MenuAdminService', 'getPermissionFunctionMatrix', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ', data: { functions: [], permissions: [] } }
+    }
+  }
+
+  async updatePermissionFunctions(permissionId: string, functionCodes: string[]): Promise<ResponseResult<void>> {
+    try {
+      const response = await apiClient.patch<any>(API_ENDPOINTS.menu.patchPermissionFunctions(permissionId), { functionCodes })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('MenuAdminService', 'updatePermissionFunctions', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getFunctions(): Promise<ResponseResult<CanonicalFunctionDto[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.menu.functions)
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message, data: [] }
+      return { success: true, data: apiResponse.data || [] }
+    } catch (error: any) {
+      logger.error('MenuAdminService', 'getFunctions', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ', data: [] }
+    }
+  }
+
+  async createFunction(payload: UpsertFunctionRequest): Promise<ResponseResult<void>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.menu.functions, payload)
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('MenuAdminService', 'createFunction', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async updateFunction(functionId: string, payload: UpsertFunctionRequest): Promise<ResponseResult<void>> {
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.menu.functionById(functionId), payload)
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('MenuAdminService', 'updateFunction', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async deleteFunction(functionId: string): Promise<ResponseResult<void>> {
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.menu.functionById(functionId))
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('MenuAdminService', 'deleteFunction', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }

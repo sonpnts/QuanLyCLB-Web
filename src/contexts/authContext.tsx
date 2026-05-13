@@ -25,6 +25,7 @@ type ApiAuthResponse = {
   refreshToken?: string
   expiresAtUtc?: string | null
   roles?: string[]
+  permissions?: string[]
   instructor?: AuthUser
 }
 
@@ -104,7 +105,8 @@ export const AuthProvider = ({ children }: ChildrenType) => {
         refreshToken: payload.refreshToken,
         expiresAtUtc: payload.expiresAtUtc,
         user,
-        roles: Array.isArray(payload.roles) ? payload.roles : []
+        roles: Array.isArray(payload.roles) ? payload.roles : [],
+        permissions: Array.isArray(payload.permissions) ? payload.permissions : []
       }
 
       authStorage.set(authSnapshot)

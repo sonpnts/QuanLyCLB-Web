@@ -17,9 +17,8 @@ type Props = {
  * (returned by GET /api/menu/by-role). If the route is not accessible, the
  * user is redirected to the 401 page.
  *
- * This guard is driven by the RBAC matrix stored in the backend — changing
- * MenuItem.RequiredRoles via the Permissions admin page automatically takes
- * effect here without any frontend code changes.
+ * This guard is driven by canonical RBAC (Role -> Permission -> Function -> Menu)
+ * configured in backend.
  *
  * Fallback behaviour:
  * - While the menu is loading → render nothing (avoid flash of 401)

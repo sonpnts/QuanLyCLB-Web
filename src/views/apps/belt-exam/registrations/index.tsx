@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -34,6 +34,7 @@ import type { ClassType } from '@/types/apps/classTypes'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 
 const text = {
   title: '\u0051u\u1ea3n l\u00fd \u0111\u0103ng k\u00fd thi c\u1ea5p',
@@ -89,7 +90,7 @@ const formatDateTime = (value?: string | null) => {
 const BeltExamRegistrationsView = () => {
   const { showNotification } = useNotification()
   const { auth } = useAuth()
-  const isAdmin = hasAdminRole(auth?.roles)
+  const isAdmin = hasPermission(auth?.permissions, 'BeltExam.ManageAll') || hasAdminRole(auth?.roles)
   const [registrations, setRegistrations] = useState<ExamRegistrationType[]>([])
   const [sessions, setSessions] = useState<ExamSessionType[]>([])
   const [classes, setClasses] = useState<ClassType[]>([])
@@ -266,3 +267,4 @@ const BeltExamRegistrationsView = () => {
 }
 
 export default BeltExamRegistrationsView
+

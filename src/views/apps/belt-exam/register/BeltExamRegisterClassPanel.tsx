@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 
@@ -232,7 +232,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
           <Typography variant='body2' color='text.secondary'>
             Ngày thi: {new Date(session.examDate).toLocaleDateString('vi-VN')}
             {session.registrationDeadline && (
-              <> · Hạn ĐK: {new Date(session.registrationDeadline).toLocaleDateString('vi-VN')}</>
+              <> • Hạn ĐK: {new Date(session.registrationDeadline).toLocaleDateString('vi-VN')}</>
             )}
           </Typography>
         </Box>
@@ -297,7 +297,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                     <TableRow key={reg.id}>
                       <TableCell>{idx + 1}</TableCell>
                       <TableCell>{reg.studentName}</TableCell>
-                      <TableCell>{reg.currentBeltLevelName ?? 'â€”'}</TableCell>
+                      <TableCell>{reg.currentBeltLevelName ?? '—'}</TableCell>
                       <TableCell>
                         <strong>{reg.targetBeltLevelName}</strong>
                       </TableCell>
@@ -408,7 +408,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                           <Typography variant='body2'>
                             {student.dateOfBirth
                               ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN')
-                              : 'â€”'}
+                              : '—'}
                           </Typography>
                         </TableCell>
                         <TableCell>{student.currentBeltLevelName ?? 'Chưa có đai'}</TableCell>

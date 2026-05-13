@@ -21,6 +21,7 @@ import type { StudentAbsenceType } from '@/services/studentAttendanceService'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { hasPermission } from '@/utils/permissionUtils'
 
 type ClassOption = {
   id: string
@@ -42,7 +43,7 @@ type Props = {
 
 const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
   const { auth } = useAuth()
-  const isAdmin = hasAdminRole(auth?.roles)
+  const isAdmin = hasPermission(auth?.permissions, 'LeaveRequest.ManageAll') || hasAdminRole(auth?.roles)
   const { showNotification } = useNotification()
 
   const [classes, setClasses] = useState<ClassOption[]>([])
@@ -251,3 +252,4 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
 }
 
 export default AddLeaveRequestDrawer
+

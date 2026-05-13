@@ -15,6 +15,7 @@ export type AuthSnapshot = {
   expiresAtUtc?: string | null
   user: AuthUser
   roles: string[]
+  permissions: string[]
 }
 
 type AuthTokens = Partial<Pick<AuthSnapshot, 'accessToken' | 'refreshToken' | 'expiresAtUtc'>>
@@ -42,7 +43,15 @@ export const authStorage = {
     }
 
     try {
-      return JSON.parse(raw) as AuthSnapshot
+      const parsed = JSON.parse(raw) as Partial<AuthSnapshot>
+      return {
+        accessToken: parsed.accessToken || '',
+        refreshToken: parsed.refreshToken || '',
+        expiresAtUtc: parsed.expiresAtUtc,
+        user: parsed.user as AuthUser,
+        roles: Array.isArray(parsed.roles) ? parsed.roles : [],
+        permissions: Array.isArray(parsed.permissions) ? parsed.permissions : []
+      }
     } catch (error) {
       window.localStorage.removeItem(STORAGE_KEY)
 
