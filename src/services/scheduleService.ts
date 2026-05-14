@@ -19,7 +19,6 @@ export interface CreateClassScheduleRequest {
   dayOfWeek: number
   startTime: string
   endTime: string
-  branchId: string
 }
 
 export interface BulkCreateScheduleRequest {
@@ -27,14 +26,12 @@ export interface BulkCreateScheduleRequest {
   daysOfWeek?: number[]
   startTime: string
   endTime: string
-  branchId: string
 }
 
 export interface UpdateClassScheduleRequest {
   dayOfWeek?: number
   startTime?: string
   endTime?: string
-  branchId?: string
 }
 
 export interface ApiScheduleResponse {

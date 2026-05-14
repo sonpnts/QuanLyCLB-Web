@@ -17,6 +17,7 @@ export interface CreateClassRequest {
   code: string
   name: string
   description?: string
+  branchId: string
   userIds?: string[] // Array of instructor UUIDs
   leadInstructorId?: string
 }
@@ -25,13 +26,13 @@ export interface CreateClassRequest {
 export interface UpdateClassRequest {
   name?: string
   description?: string
+  branchId: string
   userIds?: string[]
   leadInstructorId?: string
 }
 
 // Request body for bulk create schedules
 export interface BulkCreateScheduleRequest {
-  branchId: string
   daysOfWeek: number[]
   startTime: string
   endTime: string
@@ -68,6 +69,13 @@ export interface ApiClassResponse {
   code: string
   name: string
   description?: string
+  branchId?: string
+  branch?: {
+    id: string
+    name?: string
+    tuitionFee?: number
+  } | null
+  tuitionFee?: number
   userIds?: string[] // API trả về userIds thay vì coachIds
   coaches?: ApiClassUserAssignment[]
   assistants?: ApiClassUserAssignment[]
@@ -92,6 +100,9 @@ class ClassService {
       code: apiClass.code,
       name: apiClass.name,
       description: apiClass.description,
+      branchId: apiClass.branchId,
+      branchName: apiClass.branch?.name,
+      tuitionFee: apiClass.tuitionFee ?? apiClass.branch?.tuitionFee,
       currentStudents: apiClass.currentStudents ?? 0,
       instructorId: apiClass.userIds?.[0],
       isActive: apiClass.isActive !== undefined ? apiClass.isActive : true,
@@ -179,7 +190,7 @@ class ClassService {
 
       return {
         success: true,
-        data: apiResponse.data,
+        data: this.mapApiClassToClassType(apiResponse.data),
         message: apiResponse.message
       }
     } catch (error: any) {
@@ -373,7 +384,7 @@ class ClassService {
         return { success: false, message: apiResponse.message }
       }
 
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
+      return { success: true, data: this.mapApiClassToClassType(apiResponse.data), message: apiResponse.message }
     } catch (error: any) {
       logger.error('ClassService', 'duplicateClass', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }

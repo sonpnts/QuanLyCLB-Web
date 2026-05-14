@@ -23,6 +23,9 @@ export type ClassType = {
   code: string
   name: string
   description?: string
+  branchId?: string
+  branchName?: string
+  tuitionFee?: number
   currentStudents?: number
   instructorId?: string
   instructorName?: string

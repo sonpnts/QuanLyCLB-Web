@@ -22,8 +22,10 @@ import { useForm, Controller } from 'react-hook-form'
 
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
+import type { BranchType } from '@/services/branchService'
 import classService from '@/services/classService'
 import userService from '@/services/userService'
+import branchService from '@/services/branchService'
 
 import { useNotification } from '@/contexts/notificationContext'
 
@@ -37,6 +39,7 @@ type Props = {
 type FormValidateType = {
   name: string
   description?: string
+  branchId: string
   userIds?: string[]
   leadInstructorId?: string
 }
@@ -47,6 +50,7 @@ const EditClassDrawer = (props: Props) => {
   const [loading, setLoading] = useState(false)
   const [teachingStaff, setTeachingStaff] = useState<UsersType[]>([])
   const [loadingStaff, setLoadingStaff] = useState(false)
+  const [branches, setBranches] = useState<BranchType[]>([])
 
   const { showNotification } = useNotification()
 
@@ -65,6 +69,7 @@ const EditClassDrawer = (props: Props) => {
     defaultValues: {
       name: classData.name || '',
       description: classData.description || '',
+      branchId: classData.branchId || '',
       userIds: classData.coachIds || [],
       leadInstructorId: defaultLeadInstructorId
     }
@@ -75,6 +80,7 @@ const EditClassDrawer = (props: Props) => {
       resetForm({
         name: classData.name || '',
         description: classData.description || '',
+        branchId: classData.branchId || '',
         userIds: classData.coachIds || [],
         leadInstructorId: defaultLeadInstructorId
       })
@@ -82,17 +88,21 @@ const EditClassDrawer = (props: Props) => {
   }, [open, classData, defaultLeadInstructorId, resetForm])
 
   useEffect(() => {
-    const loadStaff = async () => {
+    const loadData = async () => {
       if (open) {
         try {
           setLoadingStaff(true)
-          const response = await userService.getTeachingStaff()
+          const [staffResponse, branchResponse] = await Promise.all([
+            userService.getTeachingStaff(),
+            branchService.getBranches({ IsActive: true })
+          ])
 
-          if (response.success && response.data) {
-            setTeachingStaff(response.data)
+          if (staffResponse.success && staffResponse.data) {
+            setTeachingStaff(staffResponse.data)
           } else {
             showNotification('Không thể tải danh sách huấn luyện viên/trợ giảng.', 'warning')
           }
+          if (branchResponse.success && branchResponse.data) setBranches(branchResponse.data)
         } catch (error) {
           logger.error('EditClassDrawer', 'Error loading teaching staff', error)
           showNotification('Đã có lỗi khi tải danh sách người phụ trách.', 'error')
@@ -102,7 +112,7 @@ const EditClassDrawer = (props: Props) => {
       }
     }
 
-    loadStaff()
+    loadData()
   }, [open, showNotification])
 
   const selectedUserIds = watch('userIds') || []
@@ -119,10 +129,15 @@ const EditClassDrawer = (props: Props) => {
         showNotification('Vui lòng chọn đúng 1 huấn luyện viên chính.', 'warning')
         return
       }
+      if (!data.branchId) {
+        showNotification('Vui lòng chọn chi nhánh cho lớp học.', 'warning')
+        return
+      }
 
       const response = await classService.updateClass(classData.id, {
         name: data.name,
         description: data.description,
+        branchId: data.branchId,
         userIds: data.userIds,
         leadInstructorId: data.leadInstructorId
       })
@@ -168,6 +183,27 @@ const EditClassDrawer = (props: Props) => {
             <Grid size={{ xs: 12 }}>
               <TextField fullWidth label='Mã lớp học' value={classData.code} disabled slotProps={{ inputLabel: { shrink: true } }} />
             </Grid>
+            <Grid size={{ xs: 12 }}>
+              <FormControl fullWidth error={Boolean(errors.branchId)}>
+                <InputLabel id='branch-select'>Chi nhánh *</InputLabel>
+                <Controller
+                  name='branchId'
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select {...field} label='Chi nhánh *' value={field.value || ''}>
+                      {branches.map(branch => (
+                        <MenuItem key={branch.id} value={branch.id}>
+                          {branch.name} - {new Intl.NumberFormat('vi-VN').format(branch.tuitionFee || 0)}đ
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+                {errors.branchId && <FormHelperText>Vui lòng chọn chi nhánh.</FormHelperText>}
+              </FormControl>
+            </Grid>
+
             <Grid size={{ xs: 12 }}>
               <Controller
                 name='name'

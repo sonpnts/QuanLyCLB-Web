@@ -45,7 +45,6 @@ type FormValidateType = {
   dayOfWeek: number
   startTime: string
   endTime: string
-  branchId: string
 }
 
 const AddScheduleDrawer = (props: Props) => {
@@ -70,8 +69,7 @@ const AddScheduleDrawer = (props: Props) => {
       classId: '',
       dayOfWeek: 1,
       startTime: '08:00',
-      endTime: '09:00',
-      branchId: ''
+      endTime: '09:00'
     }
   })
 
@@ -90,8 +88,7 @@ const AddScheduleDrawer = (props: Props) => {
         classId: data.classId,
         dayOfWeek: data.dayOfWeek,
         startTime: data.startTime,
-        endTime: data.endTime,
-        branchId: data.branchId
+        endTime: data.endTime
       }
 
       const response = await scheduleService.createSchedule(createData)
@@ -180,16 +177,6 @@ const AddScheduleDrawer = (props: Props) => {
               error={!!errors.endTime}
               helperText={errors.endTime?.message}
               InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              label='ID Chi nhánh'
-              {...register('branchId', { required: 'ID Chi nhánh là bắt buộc' })}
-              error={!!errors.branchId}
-              helperText={errors.branchId?.message}
-              placeholder='Nhập ID chi nhánh...'
             />
           </Grid>
         </Grid>

@@ -1,7 +1,7 @@
 import { logger } from '@/utils/logger'
 
 // React Imports
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 import { useForm, Controller } from 'react-hook-form'
 
@@ -14,10 +14,6 @@ import Divider from '@mui/material/Divider'
 import TextField from '@mui/material/TextField'
 import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
-import Select from '@mui/material/Select'
-import MenuItem from '@mui/material/MenuItem'
 import FormGroup from '@mui/material/FormGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Checkbox from '@mui/material/Checkbox'
@@ -25,12 +21,10 @@ import Chip from '@mui/material/Chip'
 
 // Type Imports
 import type { ClassType } from '@/types/apps/classTypes'
-import type { BranchType } from '@/services/branchService'
 import type { BulkCreateScheduleRequest } from '@/services/scheduleService'
 
 // Service Imports
 import scheduleService from '@/services/scheduleService'
-import branchService from '@/services/branchService'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
@@ -50,7 +44,6 @@ type FormValidateType = {
   daysOfWeek: number[]
   startTime: string
   endTime: string
-  branchId: string
 }
 
 const AddClassScheduleDrawer = (props: Props) => {
@@ -58,7 +51,6 @@ const AddClassScheduleDrawer = (props: Props) => {
 
   // States
   const [loading, setLoading] = useState(false)
-  const [branches, setBranches] = useState<BranchType[]>([])
 
   // Notification Hook
   const { showNotification } = useNotification()
@@ -74,29 +66,11 @@ const AddClassScheduleDrawer = (props: Props) => {
     defaultValues: {
       daysOfWeek: [],
       startTime: '',
-      endTime: '',
-      branchId: ''
+      endTime: ''
     }
   })
 
   const selectedDays = watch('daysOfWeek')
-
-  // Load branches
-  useEffect(() => {
-    const loadBranches = async () => {
-      try {
-        const response = await branchService.getBranches({})
-
-        if (response.success && response.data) {
-          setBranches(response.data)
-        }
-      } catch (error) {
-        logger.error('AddClassScheduleDrawer', 'Error loading branches', error)
-      }
-    }
-
-    loadBranches()
-  }, [])
 
   // Helper to convert 'HH:mm' to 'HH:mm:00'
   function formatTimeForBackend(time: string) {
@@ -132,8 +106,7 @@ const AddClassScheduleDrawer = (props: Props) => {
         classId: classData.id,
         daysOfWeek: data.daysOfWeek,
         startTime: formatTimeForBackend(data.startTime),
-        endTime: formatTimeForBackend(data.endTime),
-        branchId: data.branchId
+        endTime: formatTimeForBackend(data.endTime)
       }
 
       const response = await scheduleService.createClassSchedules(classData.id, createData)
@@ -260,30 +233,6 @@ const AddClassScheduleDrawer = (props: Props) => {
             />
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
-            <Controller
-              name='branchId'
-              control={control}
-              rules={{ required: 'Chi nhánh là bắt buộc' }}
-              render={({ field }) => (
-                <FormControl fullWidth error={!!errors.branchId}>
-                  <InputLabel>Chi nhánh</InputLabel>
-                  <Select {...field} label='Chi nhánh'>
-                    {branches.map(branch => (
-                      <MenuItem key={branch.id} value={branch.id}>
-                        {branch.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.branchId && (
-                    <Typography variant='caption' color='error' className='mt-1 ml-3'>
-                      {errors.branchId.message}
-                    </Typography>
-                  )}
-                </FormControl>
-              )}
-            />
-          </Grid>
         </Grid>
 
         <Box className='flex gap-2 justify-end'>
