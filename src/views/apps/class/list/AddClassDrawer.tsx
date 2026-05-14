@@ -1,5 +1,4 @@
 ﻿'use client'
-import { logger } from '@/utils/logger'
 
 import { useState, useEffect } from 'react'
 
@@ -19,6 +18,8 @@ import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 
 import { useForm, Controller } from 'react-hook-form'
+
+import { logger } from '@/utils/logger'
 
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
@@ -77,10 +78,12 @@ const AddClassDrawer = (props: Props) => {
       if (open) {
         try {
           setLoadingStaff(true)
+
           const [staffResponse, branchResponse] = await Promise.all([
             userService.getTeachingStaff(),
             branchService.getBranches({ IsActive: true })
           ])
+
           if (staffResponse.success && staffResponse.data) setTeachingStaff(staffResponse.data)
           if (branchResponse.success && branchResponse.data) setBranches(branchResponse.data)
         } catch {
@@ -101,17 +104,20 @@ const AddClassDrawer = (props: Props) => {
 
       if (!data.userIds?.length) {
         showNotification('Vui lòng chọn ít nhất 1 người phụ trách lớp.', 'warning')
-        return
+        
+return
       }
 
       if (!data.leadInstructorId || !data.userIds.includes(data.leadInstructorId)) {
         showNotification('Vui lòng chọn đúng 1 huấn luyện viên chính.', 'warning')
-        return
+        
+return
       }
 
       if (!data.branchId) {
         showNotification('Vui lòng chọn chi nhánh cho lớp học.', 'warning')
-        return
+        
+return
       }
 
       const response = await classService.createClass({
@@ -265,6 +271,7 @@ const AddClassDrawer = (props: Props) => {
                                   size='small'
                                   onDelete={() => {
                                     const newValue = selectedIds.filter((id: string) => id !== value)
+
                                     field.onChange(newValue)
                                   }}
                                   onMouseDown={e => {
@@ -305,8 +312,10 @@ const AddClassDrawer = (props: Props) => {
                     >
                       {selectedUserIds.map(id => {
                         const staff = teachingStaff.find(u => String(u.id) === id)
+
                         if (!staff) return null
-                        return (
+                        
+return (
                           <MenuItem key={id} value={id}>
                             {staff.fullName} ({staff.email})
                           </MenuItem>

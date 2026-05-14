@@ -135,7 +135,7 @@ export default function EditScheduleDialog({ open, onClose, schedule, onUpdated 
                     fullWidth
                     label='Giờ bắt đầu'
                     type='time'
-                    InputLabelProps={{ shrink: true }}
+                    slotProps={{ inputLabel: { shrink: true } }}
                     error={!!errors.startTime}
                     helperText={errors.startTime?.message}
                   />
@@ -153,7 +153,7 @@ export default function EditScheduleDialog({ open, onClose, schedule, onUpdated 
                     fullWidth
                     label='Giờ kết thúc'
                     type='time'
-                    InputLabelProps={{ shrink: true }}
+                    slotProps={{ inputLabel: { shrink: true } }}
                     error={!!errors.endTime}
                     helperText={errors.endTime?.message}
                   />

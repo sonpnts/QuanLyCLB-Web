@@ -129,7 +129,8 @@ class ClassService {
       return { success: true, data: records.map(this.mapApiClassToClassType) }
     } catch (error) {
       logger.error('ClassService', 'getClasses', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -148,7 +149,8 @@ class ClassService {
       return { success: true, data: (Array.isArray(records) ? records : []).map(c => this.mapApiClassToClassType(c)) }
     } catch (error) {
       logger.error('ClassService', 'getClassesByUserId', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -172,7 +174,8 @@ class ClassService {
       }
     } catch (error: any) {
       logger.error('ClassService', 'getClassById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -195,7 +198,8 @@ class ClassService {
       }
     } catch (error: any) {
       logger.error('ClassService', 'createClass', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -220,7 +224,8 @@ class ClassService {
       }
     } catch (error: any) {
       logger.error('ClassService', 'updateClass', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -242,7 +247,8 @@ class ClassService {
       }
     } catch (error: any) {
       logger.error('ClassService', 'deleteClass', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -267,7 +273,8 @@ class ClassService {
       }
     } catch (error: any) {
       logger.error('ClassService', 'restoreClass', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -289,11 +296,13 @@ class ClassService {
       const STR_TO_NUM: Record<string, number> = {
         Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6
       }
+
       const data = list.map((s: any) => ({
         ...s,
         dayOfWeek: typeof s.dayOfWeek === 'number'
           ? s.dayOfWeek
           : (STR_TO_NUM[s.dayOfWeek] ?? Number(s.dayOfWeek) ?? 0),
+
         // Map branchName từ branch.name nếu chưa có (dùng cho display ở tab Lịch học)
         branchName: s.branchName || s.branch?.name || undefined
       }))
@@ -301,7 +310,8 @@ class ClassService {
       return { success: true, data }
     } catch (error) {
       logger.error('ClassService', 'getClassSchedules', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -317,7 +327,8 @@ class ClassService {
       return { success: true, data: apiResponse.data || [], message: apiResponse.message }
     } catch (error: any) {
       logger.error('ClassService', 'createClassSchedules', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -333,7 +344,8 @@ class ClassService {
       return { success: true, data: apiResponse.data?.records || apiResponse.data?.items || apiResponse.data || [] }
     } catch (error) {
       logger.error('ClassService', 'getClassStudents', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -352,7 +364,8 @@ class ClassService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('ClassService', 'getClassAttendance', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -368,7 +381,8 @@ class ClassService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('ClassService', 'getClassPayments', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -387,7 +401,8 @@ class ClassService {
       return { success: true, data: this.mapApiClassToClassType(apiResponse.data), message: apiResponse.message }
     } catch (error: any) {
       logger.error('ClassService', 'duplicateClass', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -403,7 +418,8 @@ class ClassService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('ClassService', 'getClassPermissions', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -419,7 +435,8 @@ class ClassService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('ClassService', 'updateClassPermissions', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -435,7 +452,8 @@ class ClassService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error: any) {
       logger.error('ClassService', 'getClassPermissionCatalog', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }

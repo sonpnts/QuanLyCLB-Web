@@ -1,5 +1,4 @@
 ﻿'use client'
-import { logger } from '@/utils/logger'
 
 import { useState, useEffect, useMemo } from 'react'
 
@@ -19,6 +18,8 @@ import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 
 import { useForm, Controller } from 'react-hook-form'
+
+import { logger } from '@/utils/logger'
 
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
@@ -56,7 +57,9 @@ const EditClassDrawer = (props: Props) => {
 
   const defaultLeadInstructorId = useMemo(() => {
     const lead = classData.coaches?.find(c => c.isLeadInstructor)
-    return lead?.userId || classData.coachIds?.[0] || ''
+
+    
+return lead?.userId || classData.coachIds?.[0] || ''
   }, [classData])
 
   const {
@@ -92,6 +95,7 @@ const EditClassDrawer = (props: Props) => {
       if (open) {
         try {
           setLoadingStaff(true)
+
           const [staffResponse, branchResponse] = await Promise.all([
             userService.getTeachingStaff(),
             branchService.getBranches({ IsActive: true })
@@ -102,6 +106,7 @@ const EditClassDrawer = (props: Props) => {
           } else {
             showNotification('Không thể tải danh sách huấn luyện viên/trợ giảng.', 'warning')
           }
+
           if (branchResponse.success && branchResponse.data) setBranches(branchResponse.data)
         } catch (error) {
           logger.error('EditClassDrawer', 'Error loading teaching staff', error)
@@ -123,15 +128,20 @@ const EditClassDrawer = (props: Props) => {
 
       if (!data.userIds?.length) {
         showNotification('Vui lòng chọn ít nhất 1 người phụ trách lớp.', 'warning')
-        return
+        
+return
       }
+
       if (!data.leadInstructorId || !data.userIds.includes(data.leadInstructorId)) {
         showNotification('Vui lòng chọn đúng 1 huấn luyện viên chính.', 'warning')
-        return
+        
+return
       }
+
       if (!data.branchId) {
         showNotification('Vui lòng chọn chi nhánh cho lớp học.', 'warning')
-        return
+        
+return
       }
 
       const response = await classService.updateClass(classData.id, {
@@ -245,13 +255,16 @@ const EditClassDrawer = (props: Props) => {
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                             {(selected as string[]).map(value => {
                               const staff = teachingStaff.find(c => String(c.id) === value)
-                              return staff ? (
+
+                              
+return staff ? (
                                 <Chip
                                   key={value}
                                   label={staff.fullName}
                                   size='small'
                                   onDelete={() => {
                                     const newValue = selectedIds.filter((id: string) => id !== value)
+
                                     field.onChange(newValue)
                                   }}
                                   onMouseDown={e => e.stopPropagation()}
@@ -290,8 +303,10 @@ const EditClassDrawer = (props: Props) => {
                     >
                       {selectedUserIds.map(id => {
                         const staff = teachingStaff.find(u => String(u.id) === id)
+
                         if (!staff) return null
-                        return (
+                        
+return (
                           <MenuItem key={id} value={id}>
                             {staff.fullName} ({staff.email})
                           </MenuItem>

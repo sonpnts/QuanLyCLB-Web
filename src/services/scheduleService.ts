@@ -88,7 +88,8 @@ const DAY_OF_WEEK_STRING_MAP: Record<string, number> = {
 
 function parseDayOfWeek(value: number | string): number {
   if (typeof value === 'number') return value
-  return DAY_OF_WEEK_STRING_MAP[value] ?? 0
+  
+return DAY_OF_WEEK_STRING_MAP[value] ?? 0
 }
 
 class ScheduleService {
@@ -128,7 +129,8 @@ class ScheduleService {
       }
     } catch (error) {
       logger.error('ScheduleService', 'getSchedules', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -152,7 +154,8 @@ class ScheduleService {
       }
     } catch (error: any) {
       logger.error('ScheduleService', 'getScheduleById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -177,7 +180,8 @@ class ScheduleService {
       }
     } catch (error: any) {
       logger.error('ScheduleService', 'createSchedule', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -202,7 +206,8 @@ class ScheduleService {
       }
     } catch (error: any) {
       logger.error('ScheduleService', 'updateSchedule', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -224,7 +229,8 @@ class ScheduleService {
       }
     } catch (error: any) {
       logger.error('ScheduleService', 'deleteSchedule', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -249,7 +255,8 @@ class ScheduleService {
       }
     } catch (error: any) {
       logger.error('ScheduleService', 'restoreSchedule', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -282,7 +289,8 @@ class ScheduleService {
       }
     } catch (error: any) {
       logger.error('ScheduleService', 'createClassSchedules', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -301,7 +309,8 @@ class ScheduleService {
       return { success: true, data: schedules }
     } catch (error) {
       logger.error('ScheduleService', 'getSchedulesByDate', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -320,7 +329,8 @@ class ScheduleService {
       return { success: true, data: schedules }
     } catch (error) {
       logger.error('ScheduleService', 'getSchedulesByInstructor', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -339,9 +349,12 @@ class ScheduleService {
       return { success: true, data: schedules }
     } catch (error) {
       logger.error('ScheduleService', 'getMySchedules', error)
+
       return { success: true, data: [] }
     }
   }
 }
 
-export default new ScheduleService()
+const scheduleService = new ScheduleService()
+
+export default scheduleService

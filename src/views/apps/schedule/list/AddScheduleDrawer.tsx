@@ -165,7 +165,7 @@ const AddScheduleDrawer = (props: Props) => {
               {...register('startTime', { required: 'Giờ bắt đầu là bắt buộc' })}
               error={!!errors.startTime}
               helperText={errors.startTime?.message}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -176,7 +176,7 @@ const AddScheduleDrawer = (props: Props) => {
               {...register('endTime', { required: 'Giờ kết thúc là bắt buộc' })}
               error={!!errors.endTime}
               helperText={errors.endTime?.message}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
           </Grid>
         </Grid>

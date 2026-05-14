@@ -1,4 +1,3 @@
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useState } from 'react'
@@ -18,6 +17,8 @@ import FormGroup from '@mui/material/FormGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Checkbox from '@mui/material/Checkbox'
 import Chip from '@mui/material/Chip'
+
+import { logger } from '@/utils/logger'
 
 // Type Imports
 import type { ClassType } from '@/types/apps/classTypes'
@@ -208,7 +209,7 @@ const AddClassScheduleDrawer = (props: Props) => {
                   type='time'
                   error={!!errors.startTime}
                   helperText={errors.startTime?.message}
-                  InputLabelProps={{ shrink: true }}
+                  slotProps={{ inputLabel: { shrink: true } }}
                 />
               )}
             />
@@ -227,7 +228,7 @@ const AddClassScheduleDrawer = (props: Props) => {
                   type='time'
                   error={!!errors.endTime}
                   helperText={errors.endTime?.message}
-                  InputLabelProps={{ shrink: true }}
+                  slotProps={{ inputLabel: { shrink: true } }}
                 />
               )}
             />
