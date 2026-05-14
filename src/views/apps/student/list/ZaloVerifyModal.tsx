@@ -192,12 +192,11 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
                   variant='body2'
                   sx={{ flex: 1, wordBreak: 'break-all', color: 'primary.main' }}
                   component='a'
-                  href={ZALO_OA_LINK ?? 'https://oa.zalo.me/2961505845935635716'}
+                  href={ZALO_OA_LINK || 'https://oa.zalo.me/2961505845935635716'}
                   target='_blank'
                   rel='noopener noreferrer'
                 >
-                  {ZALO_OA_LINK ?? ''}
-                  {ZALO_OA_LINK}
+                  {ZALO_OA_LINK }
                 </Typography>
                 <Tooltip title={copied ? 'Đã sao chép!' : 'Sao chép link'} arrow>
                   <IconButton size='small' onClick={handleCopyLink} color={copied ? 'success' : 'default'}>
