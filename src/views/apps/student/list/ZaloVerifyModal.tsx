@@ -84,7 +84,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
   }
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(ZALO_OA_LINK??"").then(() => {
+    navigator.clipboard.writeText(ZALO_OA_LINK ?? 'https://oa.zalo.me/2961505845935635716').then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
@@ -192,12 +192,11 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
                   variant='body2'
                   sx={{ flex: 1, wordBreak: 'break-all', color: 'primary.main' }}
                   component='a'
-                  href={ZALO_OA_LINK??''}
+                  href={ZALO_OA_LINK ?? ''}
                   target='_blank'
                   rel='noopener noreferrer'
                 >
-                  {ZALO_OA_LINK ?? ''}
-                  {' '}
+                  {ZALO_OA_LINK ?? ''}{' '}
                 </Typography>
                 <Tooltip title={copied ? 'Đã sao chép!' : 'Sao chép link'} arrow>
                   <IconButton size='small' onClick={handleCopyLink} color={copied ? 'success' : 'default'}>
@@ -219,7 +218,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
             >
               <Box
                 component='img'
-                src={ZALO_QR_IMG??''}
+                src={ZALO_QR_IMG ?? 'https://ik.imagekit.io/cmistandattaekwondo/zalooa.jpg'}
                 alt='QR Code Zalo OA'
                 sx={{
                   width: { xs: '100%', sm: 160 },
