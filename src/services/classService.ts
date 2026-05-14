@@ -73,6 +73,8 @@ export interface ApiClassResponse {
   branch?: {
     id: string
     name?: string
+    address?: string
+    googleMapsEmbedUrl?: string | null
     tuitionFee?: number
   } | null
   tuitionFee?: number
@@ -101,6 +103,7 @@ class ClassService {
       name: apiClass.name,
       description: apiClass.description,
       branchId: apiClass.branchId,
+      branch: apiClass.branch,
       branchName: apiClass.branch?.name,
       tuitionFee: apiClass.tuitionFee ?? apiClass.branch?.tuitionFee,
       currentStudents: apiClass.currentStudents ?? 0,

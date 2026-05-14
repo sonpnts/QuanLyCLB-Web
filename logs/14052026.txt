@@ -1,0 +1,72 @@
+==14/05/2026 11:50:52==
+- Level: ERROR
+- ClassName: ScheduleService
+- Method: getMySchedules
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ScheduleService.getMySchedules (http://localhost:3000/_next/static/chunks/src_2e00d7._.js:274:30)
+    at async MyScheduleCalendar.useCallback[loadScheduleEvents] (http://localhost:3000/_next/static/chunks/src_2e00d7._.js:2198:34)
+==END==
+
+==14/05/2026 11:50:52==
+- Level: ERROR
+- ClassName: ScheduleService
+- Method: getMySchedules
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ScheduleService.getMySchedules (http://localhost:3000/_next/static/chunks/src_2e00d7._.js:274:30)
+    at async MyScheduleCalendar.useCallback[loadScheduleEvents] (http://localhost:3000/_next/static/chunks/src_2e00d7._.js:2198:34)
+==END==
+
+==14/05/2026 11:50:52==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:4983:34
+    at async VerticalMenu.useEffect.fetchMenu (http://localhost:3000/_next/static/chunks/src_components_0deea8._.js:642:42)
+==END==
+
+==14/05/2026 11:51:36==
+- Level: ERROR
+- ClassName: ScheduleService
+- Method: getMySchedules
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ScheduleService.getMySchedules (http://localhost:3000/_next/static/chunks/src_2e00d7._.js:274:30)
+    at async MyScheduleCalendar.useCallback[loadScheduleEvents] (http://localhost:3000/_next/static/chunks/src_2e00d7._.js:2198:34)
+==END==
+
+==14/05/2026 11:51:36==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:4983:34
+    at async VerticalMenu.useEffect.fetchMenu (http://localhost:3000/_next/static/chunks/src_components_0deea8._.js:642:42)
+==END==
+
+==14/05/2026 11:51:36==
+- Level: ERROR
+- ClassName: ScheduleService
+- Method: getMySchedules
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ScheduleService.getMySchedules (http://localhost:3000/_next/static/chunks/src_2e00d7._.js:274:30)
+    at async MyScheduleCalendar.useCallback[loadScheduleEvents] (http://localhost:3000/_next/static/chunks/src_2e00d7._.js:2198:34)
+==END==
+

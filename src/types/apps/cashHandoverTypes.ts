@@ -1,7 +1,7 @@
 ﻿export type HandoverStatus = 'Pending' | 'Confirmed' | 'Rejected'
 
 export const HandoverStatusLabel: Record<HandoverStatus, string> = {
-  Pending: 'ChÆ°a xÃ¡c nháº­n',
+  Pending: 'Chờ xác nhận',
   Confirmed: 'Đã xác nhận',
   Rejected: 'Bị từ chối'
 }

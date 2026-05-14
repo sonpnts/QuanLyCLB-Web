@@ -45,12 +45,16 @@ const DOC_TYPE_NAME_MAP: Record<string, number> = {
 
 const resolveDocType = (t: unknown): UserDocumentType => {
   if (typeof t === 'number' && t >= 0 && t <= 3) return t as UserDocumentType
+
   if (typeof t === 'string') {
     const mapped = DOC_TYPE_NAME_MAP[t]
+
     if (mapped !== undefined) return mapped as UserDocumentType
     const n = parseInt(t, 10)
+
     if (!isNaN(n) && n >= 0 && n <= 3) return n as UserDocumentType
   }
+
   return 0
 }
 
@@ -89,6 +93,7 @@ const MyDocumentsView = () => {
   const load = useCallback(async () => {
     setLoading(true)
     const res = await userDocumentService.getMyDocuments()
+
     if (res.success) setDocs(res.data ?? [])
     setLoading(false)
   }, [])
@@ -107,11 +112,20 @@ const MyDocumentsView = () => {
   const getCertDocs = () =>
     docs.filter(d => resolveDocType(d.documentType) === CERT_TYPE && d.isActive).sort(newestFirst)
 
+  const hasNewerSubmission = (doc: UserDocumentDto) =>
+    docs.some(
+      next =>
+        next.isActive &&
+        next.id !== doc.id &&
+        resolveDocType(next.documentType) === resolveDocType(doc.documentType) &&
+        new Date(next.createdAt).getTime() > new Date(doc.createdAt).getTime()
+    )
+
   /** Docs đang yêu cầu nộp lại */
-  const needsResubmitDocs = docs.filter(d => d.isActive && d.status === 2)
+  const needsResubmitDocs = docs.filter(d => d.isActive && d.status === 2 && !hasNewerSubmission(d))
   const pendingDocsCount = docs.filter(d => d.isActive && d.status === 0).length
   const approvedDocsCount = docs.filter(d => d.isActive && d.status === 1).length
-  const rejectedDocsCount = docs.filter(d => d.isActive && d.status === 2).length
+  const rejectedDocsCount = needsResubmitDocs.length
 
   const triggerUpload = (type: UserDocumentType) => fileRefs.current[type]?.click()
   const allTypes: UserDocumentType[] = [...SINGLETON_TYPES, CERT_TYPE]
@@ -121,17 +135,21 @@ const MyDocumentsView = () => {
   const handleUpload = async (type: UserDocumentType, file: File) => {
     setUploading(type)
     const res = await userDocumentService.uploadMyDocument(type, file)
+
     if (res.success && res.data) {
       showNotification('Tải lên thành công', 'success')
       const refreshRes = await userDocumentService.getMyDocuments()
+
       if (refreshRes.success) {
         setDocs(refreshRes.data ?? [])
         const uploaded = (refreshRes.data ?? []).find(d => d.id === res.data!.id)
+
         if (uploaded) setPreviewDoc(uploaded)
       }
     } else {
       showNotification(res.message || 'Tải lên thất bại', 'error')
     }
+
     setUploading(null)
   }
 
@@ -139,12 +157,14 @@ const MyDocumentsView = () => {
     if (!confirmDelete) return
     setDeleting(confirmDelete.id)
     const res = await userDocumentService.deleteMyDocument(confirmDelete.id)
+
     if (res.success) {
       showNotification('Đã xóa tài liệu', 'success')
       setDocs(prev => prev.filter(d => d.id !== confirmDelete.id))
     } else {
       showNotification(res.message || 'Không thể xóa', 'error')
     }
+
     setDeleting(null)
     setConfirmDelete(null)
   }
@@ -171,6 +191,7 @@ const MyDocumentsView = () => {
           ref={el => { fileRefs.current[type] = el }}
           onChange={e => {
             const file = e.target.files?.[0]
+
             if (file) handleUpload(type, file)
             e.target.value = ''
           }}
@@ -215,6 +236,7 @@ const MyDocumentsView = () => {
       <Grid container spacing={5}>
         {SINGLETON_TYPES.map(type => {
           const doc = getSingleDoc(type)
+
           return (
             <Grid key={type} size={{ xs: 12, sm: 6 }}>
               <SingletonDocumentCard
@@ -288,6 +310,7 @@ const MyDocumentsView = () => {
           {previewDoc?.status === 2 && (
             <Button variant='contained' color='error' onClick={() => {
               const type = resolveDocType(previewDoc.documentType)
+
               setPreviewDoc(null)
               setTimeout(() => triggerUpload(type), 100)
             }}>
@@ -365,6 +388,7 @@ const SingletonDocumentCard = ({
 
       <CardContent sx={{ flex: 1, p: '0 !important', display: 'flex', flexDirection: 'column' }}>
         {doc ? (
+
           // ── Đã có file: hiện bản xem trước ──────────────────────────────
           <>
             {/* Preview area */}
@@ -488,6 +512,7 @@ const SingletonDocumentCard = ({
             </Box>
           </>
         ) : (
+
           // ── Chưa có file: vùng tải lên ──────────────────────────────────
           <Box
             onClick={!isUploading ? onTriggerUpload : undefined}
@@ -587,6 +612,7 @@ const CertificatesCard = ({
     <Divider />
     <CardContent>
       {docs.length === 0 && !isUploading ? (
+
         // ── Chưa có chứng chỉ nào ──
         <Box
           onClick={onTriggerUpload}

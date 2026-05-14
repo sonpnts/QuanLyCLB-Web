@@ -1,8 +1,5 @@
 'use client'
 
-// React Imports
-import { useState, useEffect } from 'react'
-
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -19,48 +16,46 @@ import classnames from 'classnames'
 // Component Imports
 import CustomAvatar from '@/@core/components/mui/Avatar'
 
-// Type & Service Imports
-import type { MonthlyReportType } from '@/types/apps/paymentTypes'
-import paymentService from '@/services/paymentService'
-
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount)
 
-const InvoiceCard = () => {
-  const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
-  const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
-  const [report, setReport] = useState<MonthlyReportType | null>(null)
-  const [loading, setLoading] = useState(true)
+type InvoiceSummary = {
+  paymentCount: number
+  totalRevenue: number
+  totalTuition: number
+  totalExamFees: number
+}
 
-  useEffect(() => {
-    const now = new Date()
+type Props = {
+  loading: boolean
+  summary: InvoiceSummary
+  dateFrom?: string
+  dateTo?: string
+}
 
-    paymentService
-      .getMonthlyReport(now.getFullYear(), now.getMonth() + 1)
-      .then(res => {
-        if (res.success && res.data) setReport(res.data)
-      })
-      .finally(() => setLoading(false))
-  }, [])
+const InvoiceCard = ({ loading, summary, dateFrom, dateTo }: Props) => {
+  const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'), { noSsr: true })
+  const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'), { noSsr: true })
+  const rangeLabel = dateFrom || dateTo ? `${dateFrom || '...'} - ${dateTo || '...'}` : 'Mới nhất'
 
   const stats = [
     {
-      title: loading ? '…' : String(report?.paymentCount ?? 0),
-      subtitle: 'Giao dịch tháng này',
+      title: loading ? '...' : String(summary.paymentCount),
+      subtitle: dateFrom || dateTo ? 'Giao dịch trong khoảng' : 'Giao dịch mới nhất',
       icon: 'ri-file-list-3-line'
     },
     {
-      title: loading ? '…' : formatCurrency(report?.totalRevenue ?? 0),
+      title: loading ? '...' : formatCurrency(summary.totalRevenue),
       subtitle: 'Tổng doanh thu',
       icon: 'ri-wallet-line'
     },
     {
-      title: loading ? '…' : formatCurrency(report?.totalTuition ?? 0),
+      title: loading ? '...' : formatCurrency(summary.totalTuition),
       subtitle: 'Học phí',
       icon: 'ri-money-dollar-circle-line'
     },
     {
-      title: loading ? '…' : formatCurrency(report?.totalExamFees ?? 0),
+      title: loading ? '...' : formatCurrency(summary.totalExamFees),
       subtitle: 'Lệ phí thi',
       icon: 'ri-shield-star-line'
     }
@@ -69,6 +64,9 @@ const InvoiceCard = () => {
   return (
     <Card>
       <CardContent>
+        <Typography variant='body2' color='text.secondary' className='mbe-4'>
+          {rangeLabel}
+        </Typography>
         {loading ? (
           <div className='flex justify-center p-4'>
             <CircularProgress size={24} />

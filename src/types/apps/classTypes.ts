@@ -18,12 +18,21 @@ export type ClassCoach = ClassUserAssignment
 /** @deprecated dùng ClassUserAssignment */
 export type ClassAssistant = ClassUserAssignment & { assistantId?: string }
 
+export type ClassBranch = {
+  id: string
+  name?: string
+  address?: string
+  googleMapsEmbedUrl?: string | null
+  tuitionFee?: number
+}
+
 export type ClassType = {
   id: string
   code: string
   name: string
   description?: string
   branchId?: string
+  branch?: ClassBranch | null
   branchName?: string
   tuitionFee?: number
   currentStudents?: number

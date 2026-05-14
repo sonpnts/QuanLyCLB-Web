@@ -25,6 +25,7 @@ export interface SystemNotificationItemDto {
   title: string
   description?: string
   createdAt: string
+  rejectedAt?: string | null
   detailUrl: string
 }
 
@@ -91,6 +92,7 @@ class DashboardService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('DashboardService', 'getStatistics', error)
+
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -105,6 +107,7 @@ class DashboardService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error: any) {
       logger.error('DashboardService', 'getRevenue', error)
+
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -119,6 +122,7 @@ class DashboardService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('DashboardService', 'getStudentStats', error)
+
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -133,6 +137,7 @@ class DashboardService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('DashboardService', 'getClassStats', error)
+
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -147,6 +152,7 @@ class DashboardService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('DashboardService', 'getAttendanceStats', error)
+
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -161,13 +167,16 @@ class DashboardService {
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('DashboardService', 'getSystemNotifications', error)
+
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }
 
 const dashboardService = new DashboardService()
+
 export default dashboardService

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
+import Link from 'next/link'
+
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -15,7 +17,6 @@ import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
-import Link from 'next/link'
 
 import dashboardService from '@/services/dashboardService'
 import type {
@@ -32,6 +33,12 @@ import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
 
 const formatMoney = (value: number) => new Intl.NumberFormat('vi-VN').format(value)
+
+const formatSmallDate = (value?: string | null) => {
+  if (!value) return ''
+
+  return new Date(value).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
 
 const StatCard = ({
   title,
@@ -98,6 +105,11 @@ const StatusSection = ({
                   {item.description}
                 </Typography>
               )}
+              {item.status === 'Rejected' && item.rejectedAt && (
+                <Typography variant='caption' color='error.main' display='block' sx={{ mt: 0.5, fontSize: '0.72rem' }}>
+                  Từ chối ngày {formatSmallDate(item.rejectedAt)}
+                </Typography>
+              )}
             </div>
             <Button component={Link} href={item.detailUrl} size='small' variant='outlined'>
               Chi tiết
@@ -119,14 +131,17 @@ const DashboardHome = () => {
 
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const d = new Date()
+
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
   })
 
   const { auth } = useAuth()
+
   const canViewAdminDashboard = useMemo(
     () => hasPermission(auth?.permissions, 'Dashboard.Admin.View') || hasAdminRole(auth?.roles),
     [auth?.permissions, auth?.roles]
   )
+
   const canViewNotifications = useMemo(
     () =>
       hasPermission(auth?.permissions, 'Dashboard.Notification.View') ||
@@ -139,8 +154,10 @@ const DashboardHome = () => {
     () =>
       Array.from({ length: 12 }).map((_, idx) => {
         const d = new Date()
+
         d.setMonth(d.getMonth() - idx)
         const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+
         return { value, label: `Tháng ${d.getMonth() + 1}/${d.getFullYear()}` }
       }),
     []
@@ -153,6 +170,7 @@ const DashboardHome = () => {
       const month = Number(monthStr)
 
       setLoading(true)
+
       try {
         if (canViewAdminDashboard) {
           const [statsRes, revenueRes, studentRes, attendanceRes, notificationRes] = await Promise.all([
@@ -179,6 +197,7 @@ const DashboardHome = () => {
 
           if (canViewNotifications) {
             const notificationRes = await dashboardService.getSystemNotifications({ year, month, maxItemsPerStatus: 10 })
+
             if (notificationRes.success && notificationRes.data) setSystemNotifications(notificationRes.data)
           } else {
             setSystemNotifications(null)

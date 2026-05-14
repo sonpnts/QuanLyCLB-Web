@@ -34,6 +34,7 @@ export const API_ENDPOINTS = {
     registrationApprove: (id: string) => `/belt-exams/registrations/${id}/approve`,
     registrationReject: (id: string) => `/belt-exams/registrations/${id}/reject`,
     registrationResult: (id: string) => `/belt-exams/registrations/${id}/result`,
+
     // --- Luồng HLV đăng ký thi cấp (mới) ---
     openSessions: '/belt-exams/open',
     eligibleStudents: (sessionId: string, classId: string) =>
@@ -139,6 +140,7 @@ export const API_ENDPOINTS = {
     studentDiscountConfigs: '/payments/student-discount-configs',
     studentDiscountConfigById: (id: string) => `/payments/student-discount-configs/${id}`,
     uploadTransferProof: '/payments/upload-transfer-proof',
+
     // --- Công nợ & tổng hợp thu chi (mới) ---
     outstanding: (studentId: string) => `/payments/outstanding/${studentId}`,
     summaryMy: '/payments/summary/my',
@@ -196,6 +198,7 @@ export const API_ENDPOINTS = {
     root: '/student-attendance',
     byId: (id: string) => `/student-attendance/${id}`,
     absences: '/student-attendance/absences',
+    sessionLogs: '/student-attendance/session-logs',
     coachClasses: '/student-attendance/coach/classes',
     coachSuggestedDate: (classId: string) => `/student-attendance/coach/class/${classId}/suggested-date`,
     coachSheet: (classId: string, date: string) => `/student-attendance/coach/class/${classId}/sheet/${date}`,
@@ -237,9 +240,11 @@ export const API_ENDPOINTS = {
     // User-facing
     my: '/user-documents/my',
     myDelete: (id: string) => `/user-documents/my/${id}`,
+
     // Student-facing
     student: (studentId: string) => `/user-documents/students/${studentId}`,
     studentDelete: (studentId: string, docId: string) => `/user-documents/students/${studentId}/${docId}`,
+
     // Admin
     root: '/user-documents',
     byId: (id: string) => `/user-documents/${id}`,

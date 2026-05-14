@@ -1,12 +1,13 @@
 'use client'
 
 // React Imports
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
 
 // MUI Imports
+import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
@@ -22,19 +23,16 @@ import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 
-// Type & Service Imports
+// Type Imports
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
 import { paymentTypeLabels, paymentMethodLabels } from '@/types/apps/paymentTypes'
-import paymentService from '@/services/paymentService'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
 // Utils
-import Button from '@mui/material/Button'
 import { exportToExcel, formatVnDate, formatVnCurrency } from '@/utils/exportToExcel'
 
-// One row in the table = one receipt (may group multiple payment records)
 type ReceiptRow = {
   receiptNumber: string
   studentName: string
@@ -43,6 +41,15 @@ type ReceiptRow = {
   types: number[]
   totalAmount: number
   items: PaymentRecordType[]
+}
+
+type Props = {
+  payments: PaymentRecordType[]
+  loading: boolean
+  dateFrom: string
+  dateTo: string
+  onDateFromChange: (value: string) => void
+  onDateToChange: (value: string) => void
 }
 
 const formatCurrency = (amount: number) =>
@@ -58,71 +65,59 @@ const typeColorMap: Record<number, 'primary' | 'info' | 'success' | 'secondary'>
   3: 'secondary'
 }
 
-const InvoiceListTable = () => {
-  const [loading, setLoading] = useState(true)
-  const [receipts, setReceipts] = useState<ReceiptRow[]>([])
+const InvoiceListTable = ({ payments, loading, dateFrom, dateTo, onDateFromChange, onDateToChange }: Props) => {
   const [search, setSearch] = useState('')
   const [methodFilter, setMethodFilter] = useState<string>('')
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true)
+  const receipts = useMemo(() => {
+    const grouped = new Map<string, PaymentRecordType[]>()
 
-      try {
-        const res = await paymentService.getPayments({ pageSize: 1000 })
+    payments.forEach(payment => {
+      const key = payment.receiptNumber || payment.id
 
-        if (res.success && res.data) {
-          // Group by receiptNumber; payments without one get their own row keyed by id
-          const grouped = new Map<string, PaymentRecordType[]>()
+      if (!grouped.has(key)) grouped.set(key, [])
+      grouped.get(key)!.push(payment)
+    })
 
-          res.data.forEach(payment => {
-            const key = payment.receiptNumber || payment.id
+    const rows: ReceiptRow[] = Array.from(grouped.entries()).map(([receiptNumber, items]) => {
+      const first = items[0]
 
-            if (!grouped.has(key)) grouped.set(key, [])
-            grouped.get(key)!.push(payment)
-          })
-
-          const rows: ReceiptRow[] = Array.from(grouped.entries()).map(([receiptNumber, items]) => {
-            const first = items[0]
-
-            return {
-              receiptNumber,
-              studentName: first.studentName || '—',
-              paymentDate: first.paymentDate,
-              method: first.method,
-              types: [...new Set(items.map(i => i.type))],
-              totalAmount: items.reduce((sum, i) => sum + i.amount, 0),
-              items
-            }
-          })
-
-          // Sort newest first
-          rows.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())
-          setReceipts(rows)
-        }
-      } finally {
-        setLoading(false)
+      return {
+        receiptNumber,
+        studentName: first.studentName || '-',
+        paymentDate: first.paymentDate,
+        method: first.method,
+        types: [...new Set(items.map(item => item.type))],
+        totalAmount: items.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+        items
       }
-    }
+    })
 
-    load()
-  }, [])
+    return rows.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())
+  }, [payments])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
 
-    return receipts.filter(r => {
+    return receipts.filter(receipt => {
       const matchSearch =
-        !q || r.receiptNumber.toLowerCase().includes(q) || r.studentName.toLowerCase().includes(q)
-      const matchMethod = methodFilter === '' || String(r.method) === methodFilter
+        !q || receipt.receiptNumber.toLowerCase().includes(q) || receipt.studentName.toLowerCase().includes(q)
+
+      const matchMethod = methodFilter === '' || String(receipt.method) === methodFilter
 
       return matchSearch && matchMethod
     })
   }, [receipts, search, methodFilter])
 
   const paged = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+  const handleResetDate = () => {
+    onDateFromChange('')
+    onDateToChange('')
+    setPage(0)
+  }
 
   return (
     <Card>
@@ -131,18 +126,47 @@ const InvoiceListTable = () => {
         <div className='flex gap-3 flex-wrap items-center'>
           <TextField
             size='small'
-            placeholder='Tìm theo học viên, số biên lai...'
-            value={search}
-            onChange={e => {
-              setSearch(e.target.value)
+            label='Từ ngày'
+            type='date'
+            value={dateFrom}
+            onChange={event => {
+              onDateFromChange(event.target.value)
               setPage(0)
             }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position='start'>
-                  <i className='ri-search-line text-textSecondary' />
-                </InputAdornment>
-              )
+            slotProps={{ inputLabel: { shrink: true } }}
+            className='min-is-[150px]'
+          />
+          <TextField
+            size='small'
+            label='Đến ngày'
+            type='date'
+            value={dateTo}
+            onChange={event => {
+              onDateToChange(event.target.value)
+              setPage(0)
+            }}
+            slotProps={{ inputLabel: { shrink: true } }}
+            className='min-is-[150px]'
+          />
+          <Button variant='outlined' color='secondary' onClick={handleResetDate} disabled={!dateFrom && !dateTo}>
+            Xóa lọc ngày
+          </Button>
+          <TextField
+            size='small'
+            placeholder='Tìm theo học viên, số biên lai...'
+            value={search}
+            onChange={event => {
+              setSearch(event.target.value)
+              setPage(0)
+            }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <i className='ri-search-line text-textSecondary' />
+                  </InputAdornment>
+                )
+              }
             }}
             className='min-is-[220px]'
           />
@@ -151,8 +175,8 @@ const InvoiceListTable = () => {
             <Select
               value={methodFilter}
               label='Phương thức'
-              onChange={e => {
-                setMethodFilter(e.target.value)
+              onChange={event => {
+                setMethodFilter(event.target.value)
                 setPage(0)
               }}
             >
@@ -178,16 +202,18 @@ const InvoiceListTable = () => {
                   {
                     header: 'Loại',
                     accessor: 'types',
-                    formatter: v =>
-                      Array.isArray(v) ? v.map((t: number) => paymentTypeLabels[t] || '').filter(Boolean).join(', ') : ''
+                    formatter: value =>
+                      Array.isArray(value)
+                        ? value.map((type: number) => paymentTypeLabels[type] || '').filter(Boolean).join(', ')
+                        : ''
                   },
                   {
                     header: 'Phương thức',
                     accessor: 'method',
-                    formatter: v => paymentMethodLabels[v as number] || ''
+                    formatter: value => paymentMethodLabels[value as number] || ''
                   },
                   { header: 'Tổng tiền (VNĐ)', accessor: 'totalAmount', formatter: formatVnCurrency },
-                  { header: 'Số khoản', accessor: r => (r as ReceiptRow).items.length }
+                  { header: 'Số khoản', accessor: row => (row as ReceiptRow).items.length }
                 ]
               })
             }}
@@ -244,17 +270,17 @@ const InvoiceListTable = () => {
                       <Typography>{formatDate(row.paymentDate)}</Typography>
                     </td>
                     <td>
-                      <Typography>{paymentMethodLabels[row.method] ?? '—'}</Typography>
+                      <Typography>{paymentMethodLabels[row.method] ?? '-'}</Typography>
                     </td>
                     <td>
                       <div className='flex gap-1 flex-wrap'>
-                        {row.types.map(t => (
+                        {row.types.map(type => (
                           <Chip
-                            key={t}
-                            label={paymentTypeLabels[t]}
+                            key={type}
+                            label={paymentTypeLabels[type]}
                             size='small'
                             variant='tonal'
-                            color={typeColorMap[t] ?? 'default'}
+                            color={typeColorMap[type] ?? 'secondary'}
                           />
                         ))}
                       </div>
@@ -289,13 +315,13 @@ const InvoiceListTable = () => {
         count={filtered.length}
         rowsPerPage={rowsPerPage}
         page={page}
-        onPageChange={(_, p) => setPage(p)}
-        onRowsPerPageChange={e => {
-          setRowsPerPage(Number(e.target.value))
+        onPageChange={(_, nextPage) => setPage(nextPage)}
+        onRowsPerPageChange={event => {
+          setRowsPerPage(Number(event.target.value))
           setPage(0)
         }}
         labelRowsPerPage='Số dòng mỗi trang:'
-        labelDisplayedRows={({ from, to, count }) => `${from}–${to} / ${count}`}
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
       />
     </Card>
   )

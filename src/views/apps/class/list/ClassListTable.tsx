@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback } from 'react'
@@ -36,6 +35,8 @@ import {
   getSortedRowModel
 } from '@tanstack/react-table'
 import type { ColumnDef } from '@tanstack/react-table'
+
+import { logger } from '@/utils/logger'
 
 import { fuzzyFilter } from '@/utils/tableHelpers'
 import { exportToExcel, formatBool } from '@/utils/exportToExcel'
@@ -140,7 +141,8 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
     if (tableData && tableData.length > 0) {
       setData(tableData)
       setFilteredData(tableData)
-      return
+      
+return
     }
 
     let cancelled = false
@@ -149,7 +151,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
       try {
         setLoading(true)
 
-        let response = await classService.getClasses(filterParams)
+        const response = await classService.getClasses(filterParams)
 
         if (!cancelled) {
           setData(response.data || [])
@@ -157,6 +159,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
         }
       } catch (err) {
         logger.error('ClassListTable', 'Error loading classes', err)
+
         if (!cancelled) {
           setData([])
           setFilteredData([])
@@ -171,7 +174,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
     return () => {
       cancelled = true
     }
-  }, [filterParams, isInstructor, userId]) // tableData intentionally excluded – it's always [] from the server page
+  }, [filterParams, isInstructor, tableData, userId])
 
   // Update filteredData when data changes
   useEffect(() => {
@@ -232,7 +235,9 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
         header: 'Tên',
         cell: ({ row }) => {
           const isInactive = row.original.isActive === false
-          return (
+
+          
+return (
             <div className='flex items-center gap-2'>
               <div className='flex flex-col'>
                 <Box className='flex items-center gap-1'>
@@ -244,7 +249,13 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                     {row.original.name}
                   </Typography>
                   {isInactive && (
-                    <Chip label='Đã xóa' size='small' color='error' variant='tonal' sx={{ height: 18, fontSize: '0.65rem' }} />
+                    <Chip
+                      label='Đã xóa'
+                      size='small'
+                      color='error'
+                      variant='tonal'
+                      sx={{ height: 18, fontSize: '0.65rem' }}
+                    />
                   )}
                 </Box>
                 <Typography variant='body2' color='text.secondary'>
@@ -274,7 +285,9 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
             coaches.length === 0
               ? (row.original.coachIds ?? []).map(id => {
                   const u = users.find(x => x.id === id)
-                  return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
+
+                  
+return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
                 })
               : coaches
 
@@ -292,9 +305,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   {fallbackCoaches.map((coach, index) => (
                     <Chip
                       key={`coach-${coach.userId}-${index}`}
-                      label={
-                        coach.isLeadInstructor ? `${coach.fullName} (Chính)` : coach.fullName
-                      }
+                      label={coach.isLeadInstructor ? `${coach.fullName} (Chính)` : coach.fullName}
                       size='small'
                       color={coach.isLeadInstructor ? 'primary' : 'default'}
                       variant='tonal'
@@ -324,11 +335,42 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
           )
         }
       }),
+      columnHelper.accessor('branchName', {
+        header: 'Chi nhánh',
+        cell: ({ row }) => {
+          const branch = row.original.branch
+          const branchName = row.original.branchName || branch?.name || '-'
+          const mapUrl = branch?.googleMapsEmbedUrl
+
+          return (
+            <Box className='flex flex-col gap-1'>
+              <Box className='flex items-center gap-1'>
+                <Typography color='text.primary'>{branchName}</Typography>
+                {mapUrl && (
+                  <IconButton
+                    component='a'
+                    href={mapUrl}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    size='small'
+                    title='Mở bản đồ'
+                  >
+                    <i className='ri-map-pin-line text-base' />
+                  </IconButton>
+                )}
+              </Box>
+              {branch?.address && (
+                <Typography variant='caption' color='text.secondary'>
+                  {branch.address}
+                </Typography>
+              )}
+            </Box>
+          )
+        }
+      }),
       columnHelper.accessor('currentStudents', {
         header: 'Học viên',
-        cell: ({ row }) => (
-          <Typography color='text.primary'>{row.original.currentStudents || 0}</Typography>
-        )
+        cell: ({ row }) => <Typography color='text.primary'>{row.original.currentStudents || 0}</Typography>
       }),
       columnHelper.accessor('action', {
         header: 'Thao tác',
@@ -343,9 +385,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
 
               if (response.success && response.data) {
                 // Cập nhật lại class trong state với dữ liệu đã khôi phục
-                setData(prevData =>
-                  prevData.map(clazz => (clazz.id === row.original.id ? response.data! : clazz))
-                )
+                setData(prevData => prevData.map(clazz => (clazz.id === row.original.id ? response.data! : clazz)))
                 showNotification('Khôi phục lớp học thành công!', 'success')
               } else {
                 showNotification(response.message || 'Không thể khôi phục lớp học.', 'error')
@@ -367,9 +407,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                 // Cập nhật isActive = false trong state thay vì xóa khỏi danh sách
                 // (để người dùng có thể thấy và khôi phục)
                 setData(prevData =>
-                  prevData.map(clazz =>
-                    clazz.id === row.original.id ? { ...clazz, isActive: false } : clazz
-                  )
+                  prevData.map(clazz => (clazz.id === row.original.id ? { ...clazz, isActive: false } : clazz))
                 )
                 showNotification('Xóa lớp học thành công! Học viên thuộc lớp đã bị tạm nghỉ.', 'success')
               } else {
@@ -421,8 +459,8 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                 </>
               )}
 
-              {isAdmin && (
-                isInactive ? (
+              {isAdmin &&
+                (isInactive ? (
                   <IconButton onClick={handleRestore} title='Khôi phục lớp học' color='success'>
                     <i className='ri-restart-line' style={{ color: '#2e7d32' }} />
                   </IconButton>
@@ -430,8 +468,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   <IconButton onClick={handleDelete} title='Xóa lớp học' color='error'>
                     <i className='ri-delete-bin-7-line' />
                   </IconButton>
-                )
-              )}
+                ))}
 
               <IconButton>
                 <Link href={`/apps/class/view/${row.original.id}`} className='flex' title='Xem chi tiết'>
@@ -528,6 +565,10 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   { header: 'Mô tả', accessor: 'description' as any },
                   {
                     header: 'HLV chính',
+                    accessor: 'branchName' as any
+                  },
+                  {
+                    header: 'HLV chính',
                     accessor: r =>
                       Array.isArray((r as any).coaches)
                         ? (r as any).coaches.find((c: any) => c.isLeadInstructor)?.fullName ||
@@ -621,7 +662,9 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
                   .getRowModel()
                   .rows.map(row => {
                     const isInactive = row.original.isActive === false
-                    return (
+
+                    
+return (
                       <tr
                         key={row.id}
                         className={classnames({ selected: row.getIsSelected() })}
@@ -704,6 +747,14 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
               setFilterParams(prev => ({ ...prev }))
             }}
           />
+          <ClassPermissionDialog
+            open={permissionDialogOpen}
+            onClose={() => {
+              setPermissionDialogOpen(false)
+              setSelectedClass(null)
+            }}
+            classData={selectedClass}
+          />
         </>
       )}
     </>
@@ -711,4 +762,3 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
 }
 
 export default ClassListTable
-
