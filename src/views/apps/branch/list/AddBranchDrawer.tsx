@@ -155,13 +155,13 @@ const AddBranchDrawer = (props: Props) => {
             <TextField
               fullWidth
               label='Vĩ độ'
-              type='number'
+              slotProps={{ inputLabel: { shrink: true } }}
               {...register('latitude', {
                 required: 'Vĩ độ là bắt buộc',
                 validate: {
-                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
-                  min: (v) => parseNum(v) >= -90 || 'Vĩ độ phải từ -90 đến 90',
-                  max: (v) => parseNum(v) <= 90 || 'Vĩ độ phải từ -90 đến 90',
+                  isNumber: v => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
+                  min: v => parseNum(v) >= -90 || 'Vĩ độ phải từ -90 đến 90',
+                  max: v => parseNum(v) <= 90 || 'Vĩ độ phải từ -90 đến 90'
                 }
               })}
               error={!!errors.latitude}
@@ -172,13 +172,13 @@ const AddBranchDrawer = (props: Props) => {
             <TextField
               fullWidth
               label='Kinh độ'
-              type='number'
+              slotProps={{ inputLabel: { shrink: true } }}
               {...register('longitude', {
                 required: 'Kinh độ là bắt buộc',
                 validate: {
-                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
-                  min: (v) => parseNum(v) >= -180 || 'Kinh độ phải từ -180 đến 180',
-                  max: (v) => parseNum(v) <= 180 || 'Kinh độ phải từ -180 đến 180',
+                  isNumber: v => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
+                  min: v => parseNum(v) >= -180 || 'Kinh độ phải từ -180 đến 180',
+                  max: v => parseNum(v) <= 180 || 'Kinh độ phải từ -180 đến 180'
                 }
               })}
               error={!!errors.longitude}
@@ -193,8 +193,8 @@ const AddBranchDrawer = (props: Props) => {
               {...register('allowedRadiusMeters', {
                 required: 'Bán kính là bắt buộc',
                 validate: {
-                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
-                  min: (v) => parseNum(v) > 0 || 'Bán kính phải lớn hơn 0',
+                  isNumber: v => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
+                  min: v => parseNum(v) > 0 || 'Bán kính phải lớn hơn 0'
                 }
               })}
               error={!!errors.allowedRadiusMeters}
@@ -209,8 +209,8 @@ const AddBranchDrawer = (props: Props) => {
               {...register('tuitionFee', {
                 required: 'Học phí là bắt buộc',
                 validate: {
-                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
-                  min: (v) => parseNum(v) >= 0 || 'Học phí không được âm',
+                  isNumber: v => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
+                  min: v => parseNum(v) >= 0 || 'Học phí không được âm'
                 }
               })}
               error={!!errors.tuitionFee}

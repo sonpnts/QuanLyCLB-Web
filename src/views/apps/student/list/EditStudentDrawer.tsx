@@ -136,6 +136,7 @@ const EditStudentDrawer = (props: Props) => {
       const payload: any = {
         // Mã HV luôn được phép cập nhật (dù đã khóa, vẫn có thể đổi mã)
         code: memberCode.trim() || undefined,
+        address: values.address || undefined,
         notes: values.notes || undefined
       }
 
@@ -143,7 +144,6 @@ const EditStudentDrawer = (props: Props) => {
       if (!isLocked) {
         payload.fullName = values.fullName
         payload.phoneNumber = values.phoneNumber || undefined
-        payload.address = values.address || undefined
         payload.dateOfBirth = values.dateOfBirth || undefined
         payload.gender = values.gender !== '' ? values.gender === 'true' : undefined
       }
@@ -196,8 +196,8 @@ const EditStudentDrawer = (props: Props) => {
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-4 p-5'>
         {isLocked && (
           <Alert severity='info' icon={<i className='ri-lock-line' />}>
-            Học viên đã có mã HV nên thông tin cá nhân (tên, giới tính, ngày sinh, ...) bị khóa. Chỉ có thể chỉnh sửa{' '}
-            <strong>ghi chú</strong>. Để mở khóa, xóa mã HV trước rồi lưu lại.
+            Học viên đã có mã HV nên thông tin định danh (tên, giới tính, ngày sinh, ...) bị khóa. Vẫn có thể chỉnh sửa{' '}
+            <strong>địa chỉ</strong> và <strong>ghi chú</strong>. Để mở khóa toàn bộ, xóa mã HV trước rồi lưu lại.
           </Alert>
         )}
 
@@ -301,7 +301,7 @@ const EditStudentDrawer = (props: Props) => {
             <Controller
               name='address'
               control={control}
-              render={({ field }) => <TextField {...field} fullWidth label='Địa chỉ' disabled={isLocked} />}
+              render={({ field }) => <TextField {...field} fullWidth label='Địa chỉ' />}
             />
           </Grid>
 

@@ -112,7 +112,8 @@ const EditBranchDrawer = (props: Props) => {
         longitude: parseNum(data.longitude),
         allowedRadiusMeters: parseNum(data.allowedRadiusMeters),
         tuitionFee: parseNum(data.tuitionFee),
-        googleMapsEmbedUrl: data.googleMapsEmbedUrl || undefined
+        googleMapsEmbedUrl: data.googleMapsEmbedUrl || undefined,
+        isActive: selectedBranch.isActive
       }
 
       const response = await branchService.updateBranch(selectedBranch.id, updateData)
