@@ -73,10 +73,10 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
   const fetchStudents = async (classId: string) => {
     setLoadingStudents(true)
     try {
-      const res = await classService.getClassStudents(classId)
+      const res = await classService.getClassStudents(classId, { pageNumber: 1, pageSize: 5000 })
       if (res.success && res.data) {
         // Chỉ lấy học viên Active (giả sử có trường isActive)
-        const activeStudents = res.data.filter((s: any) => s.isActive !== false)
+        const activeStudents = (res.data.records || []).filter((s: any) => s.isActive !== false)
         setStudents(activeStudents)
         // Mặc định chọn tất cả
         setSelectedStudents(activeStudents.map((s: any) => s.id))

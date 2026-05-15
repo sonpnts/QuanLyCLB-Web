@@ -88,7 +88,7 @@ const formatCurrency = (amount: number) =>
 
 const columnHelper = createColumnHelper<PaymentRecordType>()
 
-const PaymentListTable = () => {
+const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
   const [addPaymentOpen, setAddPaymentOpen] = useState(false)
   const [receiptModalOpen, setReceiptModalOpen] = useState(false)
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
@@ -109,6 +109,15 @@ const PaymentListTable = () => {
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
   const currentFilterRef = useRef<string>('')
+
+  // External "create payment" trigger (used by merged Payment+Invoice page).
+  const lastCreateSignalRef = useRef<number | undefined>(createSignal)
+  useEffect(() => {
+    if (createSignal == null) return
+    if (lastCreateSignalRef.current === createSignal) return
+    lastCreateSignalRef.current = createSignal
+    setAddPaymentOpen(true)
+  }, [createSignal])
 
   const handleFilterChange = useCallback((params: GetPaymentsParams) => {
     setFilterParams(params)

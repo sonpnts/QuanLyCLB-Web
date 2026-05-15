@@ -29,6 +29,16 @@ export interface CreateExamSessionRequest {
   examFee?: number
 }
 
+export interface UpdateExamSessionRequest {
+  name: string
+  description?: string
+  examDate: string
+  location?: string
+  isActive: boolean
+  registrationDeadline?: string
+  examFee?: number
+}
+
 // Request body for POST /belt-exams/registrations
 export interface CreateExamRegistrationRequest {
   examSessionId: string
@@ -97,6 +107,22 @@ class BeltExamService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'createExamSession', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async updateExamSession(id: string, data: UpdateExamSessionRequest): Promise<ResponseResult<ExamSessionType>> {
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.beltExams.sessionById(id), data)
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('BeltExamService', 'updateExamSession', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }

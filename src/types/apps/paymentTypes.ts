@@ -54,25 +54,6 @@ export type MonthlyReportType = {
   totalRegistrationFees: number
   paymentCount: number
 }
-
-
-export type StudentDiscountConfigType = {
-  id: string
-  studentId: string
-  studentName: string
-  branchId?: string
-  branchName?: string
-  classId?: string
-  className?: string
-  maxDiscountAmount: number
-  description?: string
-  effectiveFrom?: string
-  effectiveTo?: string
-  isActive: boolean
-  createdAt: string
-  updatedAt?: string
-}
-
 export const PaymentTypeColors: { [key: number]: ThemeColor } = {
   0: 'primary', // Tuition
   1: 'info', // ExamFee

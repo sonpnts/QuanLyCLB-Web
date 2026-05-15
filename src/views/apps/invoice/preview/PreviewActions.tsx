@@ -29,7 +29,7 @@ const PreviewActions = ({ onPrint }: Props) => {
           color='secondary'
           variant='outlined'
           component={Link}
-          href='/apps/invoice/list'
+          href='/apps/payment/list?tab=receipts'
           startIcon={<i className='ri-arrow-left-line' />}
         >
           Quay lại danh sách

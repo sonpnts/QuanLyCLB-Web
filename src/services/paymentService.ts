@@ -4,7 +4,6 @@ import type {
   PaymentRecordType,
   PaymentSummaryType,
   MonthlyReportType,
-  StudentDiscountConfigType
 } from '@/types/apps/paymentTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
@@ -31,7 +30,6 @@ export interface CreatePaymentRequest {
   amount?: number
   discountAmount?: number
   discountReason?: string
-  studentDiscountConfigId?: string
   paymentDate: string
   method: number
   transactionRef?: string
@@ -53,7 +51,6 @@ export interface BulkPaymentItemRequest {
   examRegistrationId?: string
   discountAmount?: number
   discountReason?: string
-  studentDiscountConfigId?: string
 }
 
 export interface CreateBulkPaymentRequest {
@@ -86,6 +83,7 @@ export interface ExamFeeOptionType {
   targetBeltLevelName: string
   feeAmount: number
   isFeePaid: boolean
+  isSuggested?: boolean
 }
 
 const unwrapList = (payload: any): any[] => {
@@ -386,83 +384,7 @@ class PaymentService {
     } catch (error: any) {
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
-  }
-
-
-  // ── Student discount configs ────────────────────────────────────────────
-
-  async getStudentDiscountConfigs(params?: {
-    studentId?: string
-    branchId?: string
-    classId?: string
-    pageNumber?: number
-    pageSize?: number
-    isActive?: boolean
-  }): Promise<ResponseResult<StudentDiscountConfigType[]>> {
-    try {
-      const response = await apiClient.get<any>(API_ENDPOINTS.payments.studentDiscountConfigs, { params })
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: true, data: [] }
-      }
-
-      return { success: true, data: unwrapList(apiResponse.data) }
-    } catch {
-      return { success: true, data: [] }
-    }
-  }
-
-  async createStudentDiscountConfig(data: {
-    studentId: string
-    branchId?: string
-    classId?: string
-    maxDiscountAmount: number
-    description?: string
-    effectiveFrom?: string
-    effectiveTo?: string
-  }): Promise<ResponseResult<StudentDiscountConfigType>> {
-    try {
-      const response = await apiClient.post<any>(API_ENDPOINTS.payments.studentDiscountConfigs, data)
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
-    } catch (error: any) {
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
-    }
-  }
-
-  async updateStudentDiscountConfig(
-    id: string,
-    data: {
-      branchId?: string
-      classId?: string
-      maxDiscountAmount: number
-      description?: string
-      effectiveFrom?: string
-      effectiveTo?: string
-      isActive: boolean
-    }
-  ): Promise<ResponseResult<StudentDiscountConfigType>> {
-    try {
-      const response = await apiClient.put<any>(API_ENDPOINTS.payments.studentDiscountConfigById(id), data)
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
-    } catch (error: any) {
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
-    }
-  }
-
-  // ─── Công nợ & tổng hợp thu chi (mới) ────────────────────────────────────
+  }  // ─── Công nợ & tổng hợp thu chi (mới) ────────────────────────────────────
 
   async getOutstandingByStudent(studentId: string, month?: number, year?: number): Promise<ResponseResult<any>> {
     try {

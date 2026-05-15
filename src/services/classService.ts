@@ -1,8 +1,19 @@
 import { apiClient } from '@/utils/apiClient'
 import { logger } from '@/utils/logger'
 import type { ClassType } from '@/types/apps/classTypes'
+import type { StudentType } from '@/types/apps/studentTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
+
+const unwrapList = (payload: any): any[] => {
+  if (Array.isArray(payload?.records)) return payload.records
+  if (Array.isArray(payload?.Records)) return payload.Records
+  if (Array.isArray(payload?.items)) return payload.items
+  if (Array.isArray(payload?.Items)) return payload.Items
+  if (Array.isArray(payload)) return payload
+
+  return []
+}
 
 // Query parameters for GET /api/Classes - Theo API Documentation
 export interface GetClassesParams {
@@ -95,6 +106,18 @@ export interface ClassPermissionCatalogItem {
   leadCoachOnly: boolean
 }
 
+export interface ClassLookupType {
+  id: string
+  code: string
+  name: string
+  isActive: boolean
+}
+
+export interface PagedResult<T> {
+  totalRecords: number
+  records: T[]
+}
+
 class ClassService {
   private mapApiClassToClassType(apiClass: ApiClassResponse): ClassType {
     return {
@@ -134,6 +157,30 @@ class ClassService {
       logger.error('ClassService', 'getClasses', error)
       
 return { success: true, data: [] }
+    }
+  }
+
+  async getClassLookup(params?: { keyword?: string; isActive?: boolean; pageSize?: number; pageNumber?: number }): Promise<ResponseResult<ClassLookupType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.lookup, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
+
+      const items = unwrapList(apiResponse.data)
+
+      return {
+        success: true,
+        data: items.map(x => ({
+          id: x.id,
+          code: x.code,
+          name: x.name,
+          isActive: Boolean(x.isActive)
+        }))
+      }
+    } catch (error) {
+      logger.error('ClassService', 'getClassLookup', error)
+      return { success: true, data: [] }
     }
   }
 
@@ -335,20 +382,26 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
     }
   }
 
-  async getClassStudents(classId: string): Promise<ResponseResult<any[]>> {
+  async getClassStudents(
+    classId: string,
+    params?: { pageNumber?: number; pageSize?: number; keyword?: string; isActive?: boolean }
+  ): Promise<ResponseResult<PagedResult<StudentType>>> {
     try {
-      const response = await apiClient.get<any>(API_ENDPOINTS.classes.students(classId))
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.students(classId), { params })
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
-        return { success: true, data: [] }
+        return { success: true, data: { totalRecords: 0, records: [] } }
       }
 
-      return { success: true, data: apiResponse.data?.records || apiResponse.data?.items || apiResponse.data || [] }
+      const records = apiResponse.data?.records || apiResponse.data?.items || []
+      const totalRecords = apiResponse.data?.totalRecords ?? records.length ?? 0
+
+      return { success: true, data: { totalRecords, records } }
     } catch (error) {
       logger.error('ClassService', 'getClassStudents', error)
       
-return { success: true, data: [] }
+return { success: true, data: { totalRecords: 0, records: [] } }
     }
   }
 

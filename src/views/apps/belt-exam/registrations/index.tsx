@@ -158,10 +158,17 @@ const BeltExamRegistrationsView = () => {
     setPage(0)
   }, [examSessionId, classId, status, feePaid, keyword])
 
-  const sortedRegistrations = useMemo(
-    () => [...registrations].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()),
-    [registrations]
-  )
+  const sortedRegistrations = useMemo(() => {
+    return [...registrations].sort((a, b) => {
+      const ao = a.currentBeltLevelOrder ?? -1
+      const bo = b.currentBeltLevelOrder ?? -1
+      if (bo !== ao) return bo - ao // desc by current belt order
+
+      const at = new Date(a.createdAt || 0).getTime()
+      const bt = new Date(b.createdAt || 0).getTime()
+      return bt - at
+    })
+  }, [registrations])
 
   const pagedRows = useMemo(
     () => sortedRegistrations.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),

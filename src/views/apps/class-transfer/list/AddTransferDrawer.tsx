@@ -71,6 +71,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
 
   // ── All active classes ────────────────────────────────────────────────────
   const [classes, setClasses] = useState<any[]>([])
+  const [myClasses, setMyClasses] = useState<any[]>([])
 
   const { showNotification } = useNotification()
 
@@ -79,14 +80,23 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
     if (!open) return
     const load = async () => {
       try {
-        const res = await classService.getClasses({ isActive: true, pageSize: 1000 })
+        // Coach needs to be able to select destination among all active classes.
+        const res = await classService.getClassLookup({ isActive: true, pageSize: 5000 })
         if (res.success && res.data) setClasses(res.data)
+
+        // For non-admin, still load "my classes" to validate FromClass permission.
+        if (!isAdmin && currentUserId) {
+          const mine = await classService.getClassesByUserId(currentUserId, { isActive: true, pageSize: 2000 })
+          if (mine.success && mine.data) setMyClasses(mine.data)
+        } else {
+          setMyClasses([])
+        }
       } catch (err) {
         logger.error('AddTransferDrawer', 'Error loading classes', err)
       }
     }
     load()
-  }, [open])
+  }, [open, isAdmin, currentUserId])
 
   // ── Load initial students when drawer opens ───────────────────────────────
   useEffect(() => {
@@ -132,15 +142,16 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
   // ── Class options filtered by role ────────────────────────────────────────
   const fromClassOptions = useMemo(() => {
     if (isAdmin) return classes
-    if (!currentUserId) return []
-    return classes.filter(
-      c => c.instructorId === currentUserId || (Array.isArray(c.coachIds) && c.coachIds.includes(currentUserId))
-    )
-  }, [classes, isAdmin, currentUserId])
+    return myClasses
+  }, [classes, myClasses, isAdmin])
 
   // To-class: exclude the from-class, only from active classes
   const toClassOptions = useMemo(
-    () => classes.filter(c => c.id !== fromClassId),
+    () =>
+      classes
+        .filter(c => c.id !== fromClassId)
+        .slice()
+        .sort((a, b) => String(a.code || '').localeCompare(String(b.code || ''), 'vi')),
     [classes, fromClassId]
   )
 
@@ -304,7 +315,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
             >
               {toClassOptions.map(cls => (
                 <MenuItem key={cls.id} value={cls.id}>
-                  {cls.name}
+                  {cls.code || cls.name}
                 </MenuItem>
               ))}
             </Select>

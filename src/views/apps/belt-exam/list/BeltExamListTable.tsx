@@ -33,6 +33,7 @@ import type { ExamSessionType } from '@/types/apps/beltExamTypes'
 import { examSessionStatusColors } from '@/types/apps/beltExamTypes'
 
 import AddExamSessionDrawer from './AddExamSessionDrawer'
+import EditExamSessionDrawer from './EditExamSessionDrawer'
 import beltExamService from '@/services/beltExamService'
 import { useNotification } from '@/contexts/notificationContext'
 import tableStyles from '@core/styles/table.module.css'
@@ -54,6 +55,8 @@ const columnHelper = createColumnHelper<ExamSessionType>()
 
 const BeltExamListTable = () => {
   const [addExamOpen, setAddExamOpen] = useState(false)
+  const [editExamOpen, setEditExamOpen] = useState(false)
+  const [editingExam, setEditingExam] = useState<ExamSessionType | null>(null)
   const [data, setData] = useState<ExamSessionType[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedExam, setSelectedExam] = useState<ExamSessionType | null>(null)
@@ -132,6 +135,11 @@ const BeltExamListTable = () => {
     setActionDialogOpen(true)
   }
 
+  const openEditDrawer = (exam: ExamSessionType) => {
+    setEditingExam(exam)
+    setEditExamOpen(true)
+  }
+
   const columns = useMemo<ColumnDef<ExamSessionType, any>[]>(
     () => [
       columnHelper.accessor('name', {
@@ -179,6 +187,9 @@ const BeltExamListTable = () => {
           const isNewFlow = ['Open', 'Closed', 'Locked'].includes(exam.status as string)
           return (
             <Box className='flex items-center gap-1'>
+              <IconButton color='primary' title='Chỉnh sửa' onClick={() => openEditDrawer(exam)}>
+                <i className='ri-pencil-line' />
+              </IconButton>
               {exam.status === 'Draft' && (
                 <>
                   <IconButton
@@ -360,6 +371,15 @@ const BeltExamListTable = () => {
       </Dialog>
 
       <AddExamSessionDrawer open={addExamOpen} handleClose={() => setAddExamOpen(false)} setData={setData} />
+      <EditExamSessionDrawer
+        open={editExamOpen}
+        session={editingExam}
+        onClose={() => {
+          setEditExamOpen(false)
+          setEditingExam(null)
+        }}
+        setData={setData}
+      />
     </>
   )
 }

@@ -39,6 +39,7 @@ export type ExamRegistrationType = {
   studentName: string
   currentBeltLevelId?: string
   currentBeltLevelName?: string
+  currentBeltLevelOrder?: number
   targetBeltLevelId: string
   targetBeltLevelName: string
   classId: string
@@ -101,11 +102,13 @@ export type EligibleStudentForExamType = {
   studentName: string
   studentCode?: string
   dateOfBirth?: string
+  gender?: boolean
   phoneNumber?: string
   currentBeltLevelId?: string
   currentBeltLevelName?: string
   currentBeltOrder?: number
   suggestedTargetBeltLevelId?: string
+  suggestedTargetBeltLevelOrder?: string
   suggestedTargetBeltLevelName?: string
   alreadyRegistered: boolean
   existingRegistrationListId?: string

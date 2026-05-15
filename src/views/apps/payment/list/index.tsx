@@ -1,10 +1,10 @@
 'use client'
 
 // Component Imports
-import PaymentListTable from './PaymentListTable'
+import PaymentInvoiceMerged from './PaymentInvoiceMerged'
 
 const PaymentList = () => {
-  return <PaymentListTable />
+  return <PaymentInvoiceMerged />
 }
 
 export default PaymentList

@@ -41,6 +41,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 
 // Type Imports
 import type { StudentType } from '@/types/apps/studentTypes'
+import type { ClassType } from '@/types/apps/classTypes'
 
 // Component Imports
 import TableFilters from './TableFilters'
@@ -123,6 +124,7 @@ const StudentListTable = () => {
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<StudentType[]>([])
+  const [assignedClasses, setAssignedClasses] = useState<ClassType[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetStudentsParams>({})
@@ -167,7 +169,7 @@ const StudentListTable = () => {
 
   // Load students - phụ thuộc vào effectiveParams và role
   useEffect(() => {
-    const filterKey = JSON.stringify(effectiveParams) + `|${userId}|${isInstructor}`
+    const filterKey = JSON.stringify(effectiveParams) + `|${userId}|${isInstructor}|${isAdmin}`
 
     if (studentsLoadedRef.current && currentFilterRef.current === filterKey) return
 
@@ -177,19 +179,25 @@ const StudentListTable = () => {
         currentFilterRef.current = filterKey
         studentsLoadedRef.current = true
 
-        if (isInstructor && userId) {
+        if (!isAdmin && isInstructor && userId) {
           // HLV / trợ giảng: lấy lớp được phân công, sau đó lấy học viên từng lớp
-          const classRes = await classService.getClasses({})
-          const classIds = (classRes.data || []).filter(c => c.isActive !== false).map(c => c.id)
+          const classRes = await classService.getClassesByUserId(userId, { isActive: true, pageSize: 1000 })
+          const activeClasses = (classRes.data || []).filter(c => c.isActive !== false)
+          const classIds = activeClasses.map(c => c.id)
 
-          if (classIds.length === 0) {
+          setAssignedClasses(activeClasses)
+
+          // Allow filtering by a specific class for instructor view.
+          const targetClassIds = effectiveParams.classId ? [effectiveParams.classId] : classIds
+
+          if (targetClassIds.length === 0) {
             setData([])
             return
           }
 
           // Fetch students per class in parallel, then deduplicate by student.id
           const results = await Promise.all(
-            classIds.map(classId => studentService.getStudents({ classId, pageSize: 1000 }))
+            targetClassIds.map(classId => studentService.getStudents({ classId, pageSize: 1000 }))
           )
 
           const studentMap = new Map<string, StudentType>()
@@ -201,6 +209,7 @@ const StudentListTable = () => {
 
           setData(Array.from(studentMap.values()))
         } else {
+          setAssignedClasses([])
           // Admin: lấy tất cả theo filter
           const response = await studentService.getStudents(effectiveParams)
           setData(response.data || [])
@@ -213,7 +222,7 @@ const StudentListTable = () => {
       }
     }
     loadStudents()
-  }, [effectiveParams, isInstructor, userId])
+  }, [effectiveParams, isAdmin, isInstructor, userId])
 
   const reloadData = useCallback(() => {
     studentsLoadedRef.current = false
@@ -341,6 +350,7 @@ const StudentListTable = () => {
             checked={row.getIsSelected()}
             disabled={!row.getCanSelect()}
             onChange={row.getToggleSelectedHandler()}
+            onClick={event => event.stopPropagation()}
           />
         )
       },
@@ -449,7 +459,7 @@ const StudentListTable = () => {
         cell: ({ row }) => {
           const activeClasses = (row.original.classes || []).filter(c => !c.status || c.status === 'Active')
           return (
-          <div className='flex items-center'>
+          <div className='flex items-center' onClick={event => event.stopPropagation()}>
             {!row.original.isSuspended ? (
               <>
                 {activeClasses.length === 0 ? (
@@ -464,9 +474,9 @@ const StudentListTable = () => {
                 <IconButton onClick={() => openSuspendDialog(row.original)} title='Tạm nghỉ' color='warning'>
                   <i className='ri-pause-circle-line' />
                 </IconButton>
-                <IconButton onClick={() => handleDelete(row.original.id)} title='Xóa học viên' color='error'>
-                  <i className='ri-delete-bin-7-line' />
-                </IconButton>
+                {/*<IconButton onClick={() => handleDelete(row.original.id)} title='Xóa học viên' color='error'>*/}
+                {/*  <i className='ri-delete-bin-7-line' />*/}
+                {/*</IconButton>*/}
               </>
             ) : (
               <IconButton onClick={() => handleResume(row.original)} title='Khôi phục' color='success'>
@@ -484,7 +494,7 @@ const StudentListTable = () => {
         }
       }
     ],
-    [handleDelete, handleEdit, handleView, handleEnroll, openSuspendDialog, handleResume]
+    [handleDelete, handleEdit, handleView, handleEnroll, handleTransfer, openSuspendDialog, handleResume]
   )
 
   // Với instructor mode, statusFilter áp dụng client-side vì data đã load toàn bộ từ các lớp
@@ -613,10 +623,12 @@ const StudentListTable = () => {
                 <Button variant='outlined' onClick={() => setImportOpen(true)} className='max-sm:is-full'>
                   Import học viên
                 </Button>
-                <Button variant='contained' onClick={() => setAddStudentOpen(true)} className='max-sm:is-full'>
-                  Thêm học viên
-                </Button>
               </>
+            )}
+            {(isAdmin || (isInstructor && assignedClasses.length > 0)) && (
+              <Button variant='contained' onClick={() => setAddStudentOpen(true)} className='max-sm:is-full'>
+                Thêm học viên
+              </Button>
             )}
           </div>
         </div>
@@ -660,7 +672,11 @@ const StudentListTable = () => {
                   <tr
                     key={row.id}
                     className={classnames({ selected: row.getIsSelected() })}
-                    style={row.original.isSuspended ? { opacity: 0.75, background: 'rgba(255,152,0,0.04)' } : undefined}
+                    onClick={() => handleView(row.original)}
+                    style={{
+                      cursor: 'pointer',
+                      ...(row.original.isSuspended ? { opacity: 0.75, background: 'rgba(255,152,0,0.04)' } : {})
+                    }}
                   >
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
@@ -713,8 +729,15 @@ const StudentListTable = () => {
         </DialogActions>
       </Dialog>
 
-      {isAdmin && (
-        <AddStudentDrawer open={addStudentOpen} handleClose={() => setAddStudentOpen(false)} setData={setData} />
+      {(isAdmin || isInstructor) && (
+        <AddStudentDrawer
+          open={addStudentOpen}
+          handleClose={() => setAddStudentOpen(false)}
+          setData={setData}
+          classOptions={!isAdmin && isInstructor ? assignedClasses : []}
+          requireClassEnrollment={!isAdmin && isInstructor}
+          onStudentCreated={reloadData}
+        />
       )}
       <EditStudentDrawer
         open={editStudentOpen}
@@ -759,4 +782,3 @@ const StudentListTable = () => {
 }
 
 export default StudentListTable
-

@@ -48,6 +48,9 @@ import type { GetClassTransfersParams } from '@/services/classTransferService'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
+import { useAuth } from '@/contexts/authContext'
+import { hasPermission } from '@/utils/permissionUtils'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -94,6 +97,8 @@ const ClassTransferListTable = () => {
   const [rejectionReason, setRejectionReason] = useState('')
 
   const { showNotification } = useNotification()
+  const { auth } = useAuth()
+  const isAdmin = hasPermission(auth?.permissions, 'ClassTransfer.ManageAll') || hasAdminRole(auth?.roles)
 
   // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
@@ -248,7 +253,7 @@ const ClassTransferListTable = () => {
           const isPending = row.original.status === 'Pending'
           return (
             <div className='flex items-center gap-1'>
-              {isPending && (
+              {isPending && isAdmin && (
                 <>
                   <IconButton
                     color='success'
@@ -270,10 +275,12 @@ const ClassTransferListTable = () => {
                   >
                     <i className='ri-close-line' />
                   </IconButton>
-                  <IconButton color='secondary' title='Hủy yêu cầu' onClick={() => handleCancel(row.original.id)}>
-                    <i className='ri-forbid-line' />
-                  </IconButton>
                 </>
+              )}
+              {isPending && (
+                <IconButton color='secondary' title='Hủy yêu cầu' onClick={() => handleCancel(row.original.id)}>
+                  <i className='ri-forbid-line' />
+                </IconButton>
               )}
               <IconButton title='Xem chi tiết'>
                 <i className='ri-eye-line text-textSecondary' />
@@ -283,7 +290,7 @@ const ClassTransferListTable = () => {
         }
       }
     ],
-    []
+    [isAdmin]
   )
 
   const table = useReactTable({
@@ -371,53 +378,57 @@ const ClassTransferListTable = () => {
         />
       </Card>
 
-      {/* Approve Dialog */}
-      <Dialog open={approveDialogOpen} onClose={() => setApproveDialogOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Phê duyệt chuyển lớp</DialogTitle>
-        <DialogContent>
-          <Typography className='mb-4'>
-            Bạn có chắc muốn phê duyệt yêu cầu chuyển lớp của học viên <strong>{selectedTransfer?.studentName}</strong>?
-          </Typography>
-          <TextField
-            label='Ghi chú (tùy chọn)'
-            fullWidth
-            multiline
-            rows={3}
-            value={approvalNotes}
-            onChange={e => setApprovalNotes(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setApproveDialogOpen(false)}>Hủy</Button>
-          <Button variant='contained' color='success' onClick={handleApprove} disabled={loading}>
-            Phê duyệt
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {isAdmin && (
+        <>
+          {/* Approve Dialog */}
+          <Dialog open={approveDialogOpen} onClose={() => setApproveDialogOpen(false)} maxWidth='sm' fullWidth>
+            <DialogTitle>Phê duyệt chuyển lớp</DialogTitle>
+            <DialogContent>
+              <Typography className='mb-4'>
+                Bạn có chắc muốn phê duyệt yêu cầu chuyển lớp của học viên <strong>{selectedTransfer?.studentName}</strong>?
+              </Typography>
+              <TextField
+                label='Ghi chú (tùy chọn)'
+                fullWidth
+                multiline
+                rows={3}
+                value={approvalNotes}
+                onChange={e => setApprovalNotes(e.target.value)}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setApproveDialogOpen(false)}>Hủy</Button>
+              <Button variant='contained' color='success' onClick={handleApprove} disabled={loading}>
+                Phê duyệt
+              </Button>
+            </DialogActions>
+          </Dialog>
 
-      {/* Reject Dialog */}
-      <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Từ chối chuyển lớp</DialogTitle>
-        <DialogContent>
-          <Typography className='mb-4'>
-            Bạn có chắc muốn từ chối yêu cầu chuyển lớp của học viên <strong>{selectedTransfer?.studentName}</strong>?
-          </Typography>
-          <TextField
-            label='Lý do từ chối *'
-            fullWidth
-            multiline
-            rows={3}
-            value={rejectionReason}
-            onChange={e => setRejectionReason(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRejectDialogOpen(false)}>Hủy</Button>
-          <Button variant='contained' color='error' onClick={handleReject} disabled={loading}>
-            Từ chối
-          </Button>
-        </DialogActions>
-      </Dialog>
+          {/* Reject Dialog */}
+          <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth='sm' fullWidth>
+            <DialogTitle>Từ chối chuyển lớp</DialogTitle>
+            <DialogContent>
+              <Typography className='mb-4'>
+                Bạn có chắc muốn từ chối yêu cầu chuyển lớp của học viên <strong>{selectedTransfer?.studentName}</strong>?
+              </Typography>
+              <TextField
+                label='Lý do từ chối *'
+                fullWidth
+                multiline
+                rows={3}
+                value={rejectionReason}
+                onChange={e => setRejectionReason(e.target.value)}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setRejectDialogOpen(false)}>Hủy</Button>
+              <Button variant='contained' color='error' onClick={handleReject} disabled={loading}>
+                Từ chối
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </>
+      )}
 
       <AddTransferDrawer open={addTransferOpen} handleClose={() => setAddTransferOpen(false)} setData={setData} />
     </>

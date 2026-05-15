@@ -1,8 +1,7 @@
-// Component Imports
-import InvoiceList from '@views/apps/invoice/list'
+import { redirect } from 'next/navigation'
 
 const InvoiceApp = () => {
-  return <InvoiceList />
+  redirect('/apps/payment/list?tab=receipts')
 }
 
 export default InvoiceApp

@@ -116,7 +116,7 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
       {
         label: 'Hóa đơn',
         icon: 'ri-file-paper-2-line',
-        href: '/apps/invoice/list'
+        href: '/apps/payment/list?tab=receipts'
       }
     ]
   },

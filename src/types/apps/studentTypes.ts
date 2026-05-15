@@ -59,12 +59,13 @@ export type TuitionStatusType = {
 export type ExamHistoryType = {
   id: string
   examSessionId: string
-  examSessionName: string
+  examName: string
   examDate: string
   beltLevelId: string
   beltLevelName: string
-  result: number // 0 = Pending, 1 = Pass, 2 = Fail
-  score?: number
+
+  // result: number // 0 = Pending, 1 = Pass, 2 = Fail
+  // score?: number
   notes?: string
 }
 

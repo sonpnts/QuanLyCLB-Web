@@ -689,25 +689,25 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
                           <TableCell>Ngày thi</TableCell>
                           <TableCell>Kỳ thi</TableCell>
                           <TableCell>Cấp đai</TableCell>
-                          <TableCell>Kết quả</TableCell>
-                          <TableCell align='right'>Điểm</TableCell>
+                          {/*<TableCell>Kết quả</TableCell>*/}
+                          {/*<TableCell align='right'>Điểm</TableCell>*/}
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {examHistory.map(exam => (
                           <TableRow key={exam.id}>
                             <TableCell>{new Date(exam.examDate).toLocaleDateString('vi-VN')}</TableCell>
-                            <TableCell>{exam.examSessionName}</TableCell>
+                            <TableCell>{exam.examName}</TableCell>
                             <TableCell>{exam.beltLevelName}</TableCell>
-                            <TableCell>
-                              <Chip
-                                label={exam.result === 1 ? 'Đạt' : exam.result === 2 ? 'Không đạt' : 'Chờ kết quả'}
-                                size='small'
-                                color={exam.result === 1 ? 'success' : exam.result === 2 ? 'error' : 'warning'}
-                                variant='tonal'
-                              />
-                            </TableCell>
-                            <TableCell align='right'>{exam.score ?? '-'}</TableCell>
+                            {/*<TableCell>*/}
+                            {/*  <Chip*/}
+                            {/*    label={exam.result === 1 ? 'Đạt' : exam.result === 2 ? 'Không đạt' : 'Chờ kết quả'}*/}
+                            {/*    size='small'*/}
+                            {/*    color={exam.result === 1 ? 'success' : exam.result === 2 ? 'error' : 'warning'}*/}
+                            {/*    variant='tonal'*/}
+                            {/*  />*/}
+                            {/*</TableCell>*/}
+                            {/*<TableCell align='right'>{exam.score ?? '-'}</TableCell>*/}
                           </TableRow>
                         ))}
                       </TableBody>

@@ -27,7 +27,7 @@ export interface CreateStudentRequest {
 }
 
 export interface UpdateStudentRequest {
-  code?: string
+  code?: string | null
   fullName?: string
   phoneNumber?: string
   address?: string

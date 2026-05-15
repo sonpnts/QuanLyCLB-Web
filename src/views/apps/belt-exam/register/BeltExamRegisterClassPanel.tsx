@@ -125,8 +125,15 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
       const result = await beltExamService.getEligibleStudents(session.id, classId)
 
       if (result.success && result.data) {
+        const sorted = [...result.data].sort((a, b) => {
+          const ao = a.currentBeltOrder ?? -1
+          const bo = b.currentBeltOrder ?? -1
+          if (bo !== ao) return bo - ao // desc
+          return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
+        })
+
         setStudents(
-          result.data.map(s => ({
+          sorted.map(s => ({
             ...s,
             selected: false,
             selectedTargetBeltId: s.suggestedTargetBeltLevelId ?? ''
@@ -266,15 +273,11 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                   color={registrationListStatusColors[myList.status]}
                   size='small'
                 />
-                {myList.isAutoSubmitted && (
-                  <Chip label='Tự động nộp' color='warning' size='small' variant='outlined' />
-                )}
+                {myList.isAutoSubmitted && <Chip label='Tự động nộp' color='warning' size='small' variant='outlined' />}
               </Box>
             }
             subheader={
-              myList.submittedAt
-                ? `Nộp lúc: ${new Date(myList.submittedAt).toLocaleString('vi-VN')}`
-                : undefined
+              myList.submittedAt ? `Nộp lúc: ${new Date(myList.submittedAt).toLocaleString('vi-VN')}` : undefined
             }
           />
           <CardContent>
@@ -369,8 +372,11 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                       </TableCell>
                       <TableCell>Họ tên</TableCell>
                       <TableCell>Ngày sinh</TableCell>
-                      <TableCell>Cấp hiện tại</TableCell>
-                      <TableCell>Cấp thi</TableCell>
+                      <TableCell>Giới tính</TableCell>
+                      <TableCell>Cấp hiện tại (chữ)</TableCell>
+                      <TableCell>Cấp hiện tại (số)</TableCell>
+                      <TableCell>Cấp thi(chữ)</TableCell>
+                      <TableCell>Cấp thi(số)</TableCell>
                       <TableCell>Trạng thái</TableCell>
                     </TableRow>
                   </TableHead>
@@ -406,44 +412,17 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                         </TableCell>
                         <TableCell>
                           <Typography variant='body2'>
-                            {student.dateOfBirth
-                              ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN')
-                              : '—'}
+                            {student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : '—'}
                           </Typography>
                         </TableCell>
-                        <TableCell>{student.currentBeltLevelName ?? 'Chưa có đai'}</TableCell>
                         <TableCell>
-                          <FormControl
-                            size='small'
-                            disabled={student.alreadyRegistered || !student.selected}
-                            sx={{ minWidth: 130 }}
-                          >
-                            <Select
-                              value={student.selectedTargetBeltId}
-                              displayEmpty
-                              onChange={e => {
-                                setStudents(prev =>
-                                  prev.map(s =>
-                                    s.studentId === student.studentId
-                                      ? { ...s, selectedTargetBeltId: e.target.value }
-                                      : s
-                                  )
-                                )
-                              }}
-                            >
-                              <MenuItem value='' disabled>
-                                <em>Chọn cấp thi</em>
-                              </MenuItem>
-                              {beltLevels
-                                .filter(b => !student.currentBeltOrder || b.order > student.currentBeltOrder)
-                                .map(b => (
-                                  <MenuItem key={b.id} value={b.id}>
-                                    {b.name}
-                                  </MenuItem>
-                                ))}
-                            </Select>
-                          </FormControl>
+                          {student.gender === true ? 'Nam' : student.gender === false ? 'Nữ' : '-'}
                         </TableCell>
+                        <TableCell>{student.currentBeltLevelName}</TableCell>
+                        <TableCell>{student.currentBeltOrder}</TableCell>
+                        <TableCell>{student.suggestedTargetBeltLevelName || '—'}</TableCell>
+                        <TableCell>{student.suggestedTargetBeltLevelOrder}</TableCell>
+
                         <TableCell>
                           {student.alreadyRegistered ? (
                             <Chip label='Đã ĐK' color='info' size='small' variant='tonal' />
@@ -481,4 +460,3 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 }
 
 export default BeltExamRegisterClassPanel
-

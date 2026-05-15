@@ -135,7 +135,7 @@ const EditStudentDrawer = (props: Props) => {
 
       const payload: any = {
         // Mã HV luôn được phép cập nhật (dù đã khóa, vẫn có thể đổi mã)
-        code: memberCode.trim() || undefined,
+        code: memberCode.trim(),
         address: values.address || undefined,
         notes: values.notes || undefined
       }

@@ -85,10 +85,10 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
         return
       }
 
-      const response = await classService.getClassStudents(classId)
+      const response = await classService.getClassStudents(classId, { pageNumber: 1, pageSize: 5000 })
       if (response.success && response.data) {
         setStudents(
-          response.data.map((item: any) => ({
+          (response.data.records || []).map((item: any) => ({
             id: item.studentId || item.id,
             fullName: item.studentName || item.fullName || item.name,
             phoneNumber: item.phoneNumber || item.studentPhone

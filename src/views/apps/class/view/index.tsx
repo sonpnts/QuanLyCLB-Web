@@ -20,24 +20,31 @@ import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
+import TablePagination from '@mui/material/TablePagination'
 import Tab from '@mui/material/Tab'
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
+import IconButton from '@mui/material/IconButton'
 
 import type {BranchType} from '@/types/apps/branchTypes'
 
 // Types
 import type { ClassType } from '@/types/apps/classTypes'
+import type { StudentType } from '@/types/apps/studentTypes'
 
 // Services
 import classService from '@/services/classService'
+import studentService from '@/services/studentService'
 
 // Utils
 import { getDayName } from '@/utils/constants'
 
 // Components
 import AddStudentsToClassDrawer from '../list/AddStudentsToClassDrawer'
+import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
+import ViewStudentDrawer from '@/views/apps/student/list/ViewStudentDrawer'
+import TransferStudentDialog from '@/views/apps/student/list/TransferStudentDialog'
 
 // Context
 import { useNotification } from '@/contexts/notificationContext'
@@ -47,15 +54,6 @@ import { logger } from '@/utils/logger'
 
 type Props = {
   classId: string
-}
-
-type StudentType = {
-  id: string
-  fullName: string
-  phoneNumber?: string
-  email?: string
-  enrollmentDate?: string
-  status?: string
 }
 
 type ScheduleType = {
@@ -73,12 +71,19 @@ const ClassViewPage = ({ classId }: Props) => {
 
   const [classData, setClassData] = useState<ClassType | null>(null)
   const [students, setStudents] = useState<StudentType[]>([])
+  const [studentsTotalRecords, setStudentsTotalRecords] = useState<number>(0)
   const [schedules, setSchedules] = useState<ScheduleType[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingStudents, setLoadingStudents] = useState(false)
   const [loadingSchedules, setLoadingSchedules] = useState(false)
+  const [studentsPage, setStudentsPage] = useState(0)
+  const [studentsPageSize, setStudentsPageSize] = useState(10)
   const [activeTab, setActiveTab] = useState('1')
   const [addStudentsOpen, setAddStudentsOpen] = useState(false)
+  const [editStudentOpen, setEditStudentOpen] = useState(false)
+  const [viewStudentOpen, setViewStudentOpen] = useState(false)
+  const [transferStudentOpen, setTransferStudentOpen] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
 
   // Refs
   const showNotificationRef = useRef(showNotification)
@@ -119,10 +124,14 @@ const ClassViewPage = ({ classId }: Props) => {
     try {
       setLoadingStudents(true)
       studentsLoadedRef.current = true
-      const response = await classService.getClassStudents(classId)
+      const response = await classService.getClassStudents(classId, {
+        pageNumber: studentsPage + 1,
+        pageSize: studentsPageSize
+      })
 
-      if (response.success && Array.isArray(response.data)) {
-        setStudents(response.data)
+      if (response.success && response.data) {
+        setStudents(response.data.records || [])
+        setStudentsTotalRecords(response.data.totalRecords || 0)
       }
     } catch (error) {
       logger.error('index', 'Error loading students', error)
@@ -134,8 +143,63 @@ const ClassViewPage = ({ classId }: Props) => {
   // Reload students sau khi thêm
   const handleStudentsAdded = () => {
     studentsLoadedRef.current = false
+    setStudentsPage(0)
 
     loadStudents()
+  }
+
+  const handleViewStudent = (student: StudentType) => {
+    setSelectedStudent(student)
+    setViewStudentOpen(true)
+  }
+
+  const handleEditStudent = (student: StudentType) => {
+    setSelectedStudent(student)
+    setEditStudentOpen(true)
+  }
+
+  const handleTransferStudent = (student: StudentType) => {
+    setSelectedStudent(student)
+    setTransferStudentOpen(true)
+  }
+
+  const handleStudentUpdated = (updated: StudentType) => {
+    setStudents(prev => prev.map(student => (student.id === updated.id ? { ...student, ...updated } : student)))
+    studentsLoadedRef.current = false
+    loadStudents()
+  }
+
+  const handleSuspendStudent = async (student: StudentType) => {
+    const response = await studentService.suspendStudent(student.id)
+
+    if (response.success) {
+      showNotificationRef.current('Đã chuyển học viên sang trạng thái tạm nghỉ.', 'success')
+      handleStudentUpdated({ ...student, isSuspended: true })
+    } else {
+      showNotificationRef.current(response.message || 'Không thể tạm nghỉ học viên.', 'error')
+    }
+  }
+
+  const handleResumeStudent = async (student: StudentType) => {
+    const response = await studentService.resumeStudent(student.id)
+
+    if (response.success) {
+      showNotificationRef.current('Đã khôi phục học viên.', 'success')
+      handleStudentUpdated({ ...student, isSuspended: false })
+    } else {
+      showNotificationRef.current(response.message || 'Không thể khôi phục học viên.', 'error')
+    }
+  }
+
+  const handleDeleteStudent = async (student: StudentType) => {
+    const response = await studentService.deleteStudent(student.id)
+
+    if (response.success) {
+      showNotificationRef.current('Xóa học viên thành công.', 'success')
+      setStudents(prev => prev.filter(item => item.id !== student.id))
+    } else {
+      showNotificationRef.current(response.message || 'Không thể xóa học viên.', 'error')
+    }
   }
 
   // Load schedules when tab changes
@@ -268,7 +332,7 @@ const ClassViewPage = ({ classId }: Props) => {
               {/* Tab 2: Học viên */}
               <TabPanel value='2' sx={{ p: 5 }}>
                 <Box className='flex justify-between items-center mb-4'>
-                  <Typography variant='subtitle1'>Danh sách học viên ({students.length})</Typography>
+                  <Typography variant='subtitle1'>Danh sách học viên ({studentsTotalRecords})</Typography>
                   <Button
                     variant='contained'
                     startIcon={<i className='ri-user-add-line' />}
@@ -289,42 +353,77 @@ const ClassViewPage = ({ classId }: Props) => {
                       <TableHead>
                         <TableRow>
                           <TableCell>Họ tên</TableCell>
-                          <TableCell>Số điện thoại</TableCell>
-                          <TableCell>Email</TableCell>
-                          <TableCell>Ngày đăng ký</TableCell>
+                          <TableCell>Ngày sinh</TableCell>
+                          <TableCell>Giới tính</TableCell>
+                          <TableCell>Cấp đai hiện tại</TableCell>
                           <TableCell>Trạng thái</TableCell>
+                          <TableCell>Thao tác</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {students.map(student => (
-                          <TableRow key={student.id}>
+                          <TableRow
+                            key={student.id}
+                            hover
+                            onClick={() => handleViewStudent(student)}
+                            sx={{ cursor: 'pointer' }}
+                          >
                             <TableCell>{student.fullName}</TableCell>
-                            <TableCell>{student.phoneNumber || '-'}</TableCell>
-                            <TableCell>{student.email || '-'}</TableCell>
                             <TableCell>
-                              {student.enrollmentDate
-                                ? new Date(student.enrollmentDate).toLocaleDateString('vi-VN')
-                                : '-'}
+                              {student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : '-'}
+                            </TableCell>
+                            <TableCell>
+                              {student.gender === true ? 'Nam' : student.gender === false ? 'Nữ' : '-'}
+                            </TableCell>
+                            <TableCell>
+                              <Chip label={student.beltLevelName || 'Chưa có'} size='small' color='warning' variant='tonal' />
                             </TableCell>
                             <TableCell>
                               <Chip
                                 label={
-                                  student.status === 'Active'
+                                  (student as any).status === 'Active' && !student.isSuspended
                                     ? 'Đang học'
-                                    : student.status === 'Inactive'
+                                    : (student as any).status === 'Inactive' || student.isSuspended
                                       ? 'Tạm nghỉ'
                                       : 'Hoàn thành'
                                 }
                                 size='small'
                                 color={
-                                  student.status === 'Active'
+                                  (student as any).status === 'Active' && !student.isSuspended
                                     ? 'success'
-                                    : student.status === 'Inactive'
+                                    : (student as any).status === 'Inactive' || student.isSuspended
                                       ? 'warning'
                                       : 'info'
                                 }
                                 variant='tonal'
                               />
+                            </TableCell>
+                            <TableCell onClick={event => event.stopPropagation()}>
+                              <Box className='flex items-center'>
+                                {student.isSuspended ? (
+                                  <IconButton onClick={() => handleResumeStudent(student)} title='Khôi phục' color='success'>
+                                    <i className='ri-play-circle-line' />
+                                  </IconButton>
+                                ) : (
+                                  <>
+                                    <IconButton onClick={() => handleTransferStudent(student)} title='Yêu cầu chuyển lớp' color='warning'>
+                                      <i className='ri-arrow-left-right-line' />
+                                    </IconButton>
+                                    <IconButton onClick={() => handleSuspendStudent(student)} title='Tạm nghỉ' color='warning'>
+                                      <i className='ri-pause-circle-line' />
+                                    </IconButton>
+                                    {/*<IconButton onClick={() => handleDeleteStudent(student)} title='Xóa học viên' color='error'>*/}
+                                    {/*  <i className='ri-delete-bin-7-line' />*/}
+                                    {/*</IconButton>*/}
+                                  </>
+                                )}
+                                <IconButton title='Xem chi tiết' onClick={() => handleViewStudent(student)}>
+                                  <i className='ri-eye-line text-textSecondary' />
+                                </IconButton>
+                                <IconButton title='Chỉnh sửa' onClick={() => handleEditStudent(student)} color='primary'>
+                                  <i className='ri-edit-box-line' />
+                                </IconButton>
+                              </Box>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -332,6 +431,26 @@ const ClassViewPage = ({ classId }: Props) => {
                     </Table>
                   </TableContainer>
                 )}
+
+                <TablePagination
+                  className='border-bs'
+                  component='div'
+                  count={studentsTotalRecords}
+                  page={studentsPage}
+                  rowsPerPage={studentsPageSize}
+                  rowsPerPageOptions={[10, 25, 50]}
+                  onPageChange={(_, page) => {
+                    setStudentsPage(page)
+                    studentsLoadedRef.current = false
+                    loadStudents()
+                  }}
+                  onRowsPerPageChange={e => {
+                    setStudentsPageSize(Number(e.target.value))
+                    setStudentsPage(0)
+                    studentsLoadedRef.current = false
+                    loadStudents()
+                  }}
+                />
               </TabPanel>
 
               {/* Tab 3: Lịch học */}
@@ -385,6 +504,34 @@ const ClassViewPage = ({ classId }: Props) => {
         onClose={() => setAddStudentsOpen(false)}
         classData={classData}
         onStudentsAdded={handleStudentsAdded}
+      />
+      <EditStudentDrawer
+        open={editStudentOpen}
+        onClose={() => {
+          setEditStudentOpen(false)
+          setSelectedStudent(null)
+        }}
+        student={selectedStudent}
+        onSaved={handleStudentUpdated}
+      />
+      <ViewStudentDrawer
+        open={viewStudentOpen}
+        onClose={() => {
+          setViewStudentOpen(false)
+          setSelectedStudent(null)
+        }}
+        student={selectedStudent}
+        onSuspend={handleSuspendStudent}
+        onResume={handleResumeStudent}
+      />
+      <TransferStudentDialog
+        open={transferStudentOpen}
+        onClose={() => {
+          setTransferStudentOpen(false)
+          setSelectedStudent(null)
+        }}
+        student={selectedStudent}
+        onTransferred={handleStudentsAdded}
       />
     </>
   )

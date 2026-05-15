@@ -97,9 +97,9 @@ const CollectPayment = () => {
     let mounted = true
     const fetchStudents = async () => {
       if (mounted) setLoadingStudents(true)
-      const res = await classService.getClassStudents(selectedClassId)
+      const res = await classService.getClassStudents(selectedClassId, { pageNumber: 1, pageSize: 5000 })
       if (mounted && res.success && res.data) {
-        setStudents(res.data.map(x => x.student!))
+        setStudents(res.data.records || [])
       }
       if (mounted) setLoadingStudents(false)
     }

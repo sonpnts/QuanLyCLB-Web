@@ -2,7 +2,7 @@
 import { logger } from '@/utils/logger'
 
 // React Imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // MUI Imports
 import Button from '@mui/material/Button'
@@ -19,6 +19,7 @@ import Typography from '@mui/material/Typography'
 
 // Type Imports
 import type { StudentType } from '@/types/apps/studentTypes'
+import type { ClassType } from '@/types/apps/classTypes'
 
 // Service Imports
 import studentService from '@/services/studentService'
@@ -34,6 +35,9 @@ type Props = {
   open: boolean
   handleClose: () => void
   setData: React.Dispatch<React.SetStateAction<StudentType[]>>
+  classOptions?: ClassType[]
+  requireClassEnrollment?: boolean
+  onStudentCreated?: () => void
 }
 
 const initialForm = {
@@ -46,14 +50,29 @@ const initialForm = {
   notes: ''
 }
 
-const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
+const AddStudentDrawer = ({
+  open,
+  handleClose,
+  setData,
+  classOptions = [],
+  requireClassEnrollment = false,
+  onStudentCreated
+}: Props) => {
   const [formData, setFormData] = useState(initialForm)
+  const [selectedClassId, setSelectedClassId] = useState('')
   const [loading, setLoading] = useState(false)
 
   const { showNotification } = useNotification()
 
+  useEffect(() => {
+    if (open && requireClassEnrollment && classOptions.length === 1) {
+      setSelectedClassId(classOptions[0].id)
+    }
+  }, [classOptions, open, requireClassEnrollment])
+
   const handleReset = () => {
     setFormData(initialForm)
+    setSelectedClassId('')
     handleClose()
   }
 
@@ -62,6 +81,13 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
 
     if (!formData.fullName.trim()) {
       showNotification('Vui lòng nhập họ tên học viên.', 'error')
+
+      return
+    }
+
+    if (requireClassEnrollment && !selectedClassId) {
+      showNotification('Vui lòng chọn lớp cho học viên.', 'error')
+
       return
     }
 
@@ -79,8 +105,41 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
       })
 
       if (response.success && response.data) {
-        setData(prev => [...prev, response.data!])
+        let createdStudent = response.data as StudentType
+
+        if (selectedClassId) {
+          const enrollResponse = await studentService.enrollStudent({
+            studentId: createdStudent.id,
+            classId: selectedClassId,
+            enrollmentDate: new Date().toISOString().split('T')[0]
+          })
+
+          if (!enrollResponse.success) {
+            showNotification(enrollResponse.message || 'Đã tạo học viên nhưng chưa thêm được vào lớp.', 'warning')
+          } else {
+            const selectedClass = classOptions.find(cls => cls.id === selectedClassId)
+
+            createdStudent = {
+              ...createdStudent,
+              classes: selectedClass
+                ? [
+                    ...(createdStudent.classes || []),
+                    {
+                      classId: selectedClass.id,
+                      className: selectedClass.name,
+                      enrollmentId: enrollResponse.data?.id || '',
+                      enrollmentDate: enrollResponse.data?.enrollmentDate,
+                      status: enrollResponse.data?.status || 'Active'
+                    }
+                  ]
+                : createdStudent.classes
+            }
+          }
+        }
+
+        setData(prev => [...prev, createdStudent])
         showNotification('Thêm học viên thành công!', 'success')
+        onStudentCreated?.()
         handleReset()
       } else {
         showNotification(response.message || 'Không thể thêm học viên.', 'error')
@@ -134,6 +193,24 @@ const AddStudentDrawer = ({ open, handleClose, setData }: Props) => {
             onMemberInfoConfirmed={handleMemberInfoConfirmed}
             locked={false}
           />
+
+          {classOptions.length > 0 && (
+            <FormControl fullWidth required={requireClassEnrollment}>
+              <InputLabel>Lớp</InputLabel>
+              <Select
+                label='Lớp'
+                value={selectedClassId}
+                onChange={e => setSelectedClassId(e.target.value)}
+              >
+                {!requireClassEnrollment && <MenuItem value=''>Chưa ghi danh lớp</MenuItem>}
+                {classOptions.map(cls => (
+                  <MenuItem key={cls.id} value={cls.id}>
+                    {cls.name} ({cls.code})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>

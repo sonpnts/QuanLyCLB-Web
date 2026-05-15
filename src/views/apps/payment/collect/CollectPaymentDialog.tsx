@@ -1,26 +1,32 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import Checkbox from '@mui/material/Checkbox'
 import CircularProgress from '@mui/material/CircularProgress'
 import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import Divider from '@mui/material/Divider'
+import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import IconButton from '@mui/material/IconButton'
+import InputAdornment from '@mui/material/InputAdornment'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
 import Radio from '@mui/material/Radio'
 import RadioGroup from '@mui/material/RadioGroup'
+import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
-import paymentService from '@/services/paymentService'
+import paymentService, { type ExamFeeOptionType } from '@/services/paymentService'
 
 // Enum mapping cho backend
 const PAYMENT_TYPE_MAP: Record<string, number> = {
@@ -76,18 +82,72 @@ const CollectPaymentDialog = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Reduce (manual discount on this receipt)
+  const [discountAmount, setDiscountAmount] = useState<number>(0)
+  const [discountReason, setDiscountReason] = useState<string>('')
+
+  // Optional exam fee (suggested when student is in draft exam registration list within deadline)
+  const [loadingExamOptions, setLoadingExamOptions] = useState(false)
+  const [examFeeOptions, setExamFeeOptions] = useState<ExamFeeOptionType[]>([])
+  const [includeExamFee, setIncludeExamFee] = useState(false)
+  const [selectedExamRegistrationId, setSelectedExamRegistrationId] = useState<string>('')
+
   const resetForm = () => {
     setNote('')
     setTransactionRef('')
     setMethod('Cash')
     setTransferProofUrl(null)
     setPreviewUrl(null)
+    setDiscountAmount(0)
+    setDiscountReason('')
+    setExamFeeOptions([])
+    setIncludeExamFee(false)
+    setSelectedExamRegistrationId('')
   }
 
   const handleClose = () => {
     resetForm()
     onClose()
   }
+
+  useEffect(() => {
+    let ignore = false
+
+    const loadExamFeeOptions = async () => {
+      if (!open) return
+      if (paymentType !== 'Tuition') return
+      if (!classId) return
+
+      try {
+        setLoadingExamOptions(true)
+        const res = await paymentService.getExamFeeOptions(classId, studentId)
+        if (ignore) return
+
+        const options = res.success && res.data ? res.data : []
+        setExamFeeOptions(options)
+
+        const suggested = options.find(o => o.isSuggested) || null
+        const shouldInclude = Boolean(suggested)
+
+        setIncludeExamFee(shouldInclude)
+        setSelectedExamRegistrationId(shouldInclude ? suggested!.registrationId : options[0]?.registrationId || '')
+      } catch {
+        if (!ignore) {
+          setExamFeeOptions([])
+          setIncludeExamFee(false)
+          setSelectedExamRegistrationId('')
+        }
+      } finally {
+        if (!ignore) setLoadingExamOptions(false)
+      }
+    }
+
+    loadExamFeeOptions()
+
+    return () => {
+      ignore = true
+    }
+  }, [open, paymentType, classId, studentId])
 
   const handleMethodChange = (newMethod: 'Cash' | 'BankTransfer') => {
     setMethod(newMethod)
@@ -132,28 +192,69 @@ const CollectPaymentDialog = ({
   }
 
   const handleSubmit = async () => {
+    if (discountAmount > 0 && !discountReason.trim()) {
+      showNotification('Vui lòng nhập lý do giảm trừ', 'error')
+      return
+    }
+
     if (method === 'BankTransfer' && !transferProofUrl) {
       showNotification('Vui lòng upload ảnh chụp màn hình chuyển khoản', 'error')
       return
     }
 
-    try {
-      setSaving(true)
-      const result = await paymentService.createPayment({
-        studentId,
-        type: PAYMENT_TYPE_MAP[paymentType] ?? 3,
-        amount,
-        paymentDate: new Date().toISOString(),
-        method: PAYMENT_METHOD_MAP[method] ?? 0,
-        description: description || note || undefined,
-        transactionRef: transactionRef || undefined,
-        transferProofImageUrl: transferProofUrl || undefined,
-        classId: classId || undefined,
-        forMonth: forMonth || undefined,
-        forYear: forYear || undefined,
-        examRegistrationId: examRegistrationId || undefined,
-        collectedByUserId: auth?.user?.id
-      })
+	    try {
+	      setSaving(true)
+
+	      const basePayload = {
+	        studentId,
+	        paymentDate: new Date().toISOString(),
+	        method: PAYMENT_METHOD_MAP[method] ?? 0,
+	        transactionRef: transactionRef || undefined,
+	        transferProofImageUrl: transferProofUrl || undefined,
+	        collectedByUserId: auth?.user?.id
+	      }
+
+	      const shouldBulk =
+	        paymentType === 'Tuition' && includeExamFee && !!selectedExamRegistrationId && (examFeeOptions ?? []).length > 0
+
+	      const result = shouldBulk
+	        ? await paymentService.createBulkPayment({
+	            ...basePayload,
+	            items: [
+	              {
+	                type: PAYMENT_TYPE_MAP['Tuition'],
+	                classId: classId || undefined,
+	                forMonth: forMonth || undefined,
+	                forYear: forYear || undefined,
+	                description: description || note || undefined,
+	                discountAmount: discountAmount > 0 ? discountAmount : undefined,
+	                discountReason: discountAmount > 0 ? discountReason.trim() : undefined
+	              },
+	              {
+	                type: PAYMENT_TYPE_MAP['ExamFee'],
+	                classId: classId || undefined,
+	                examRegistrationId: selectedExamRegistrationId,
+	                description: 'Lệ phí thi'
+	              }
+	            ]
+	          })
+	        : await paymentService.createPayment({
+	            studentId,
+	            type: PAYMENT_TYPE_MAP[paymentType] ?? 3,
+	            amount,
+	            discountAmount: discountAmount > 0 ? discountAmount : undefined,
+	            discountReason: discountAmount > 0 ? discountReason.trim() : undefined,
+	            paymentDate: new Date().toISOString(),
+	            method: PAYMENT_METHOD_MAP[method] ?? 0,
+	            description: description || note || undefined,
+	            transactionRef: transactionRef || undefined,
+	            transferProofImageUrl: transferProofUrl || undefined,
+	            classId: classId || undefined,
+	            forMonth: forMonth || undefined,
+	            forYear: forYear || undefined,
+	            examRegistrationId: examRegistrationId || undefined,
+	            collectedByUserId: auth?.user?.id
+	          })
 
       if (result.success) {
         resetForm()
@@ -182,7 +283,77 @@ const CollectPaymentDialog = ({
           </Typography>
         </Box>
 
-        <Divider />
+	        <Divider />
+
+	        {/* Thu lệ phí thi (nếu có) */}
+	        {paymentType === 'Tuition' && (examFeeOptions ?? []).length > 0 && (
+	          <Box>
+	            <Box className='flex items-center justify-between gap-2 flex-wrap'>
+	              <FormControlLabel
+	                control={
+	                  <Checkbox
+	                    checked={includeExamFee}
+	                    onChange={e => setIncludeExamFee(e.target.checked)}
+	                    disabled={loadingExamOptions}
+	                  />
+	                }
+	                label='Thu lệ phí thi'
+	              />
+	              {loadingExamOptions && (
+	                <Box className='flex items-center gap-2'>
+	                  <CircularProgress size={16} />
+	                  <Typography variant='caption' color='text.secondary'>
+	                    Đang tải...
+	                  </Typography>
+	                </Box>
+	              )}
+	            </Box>
+
+	            {includeExamFee && (
+	              <FormControl size='small' fullWidth sx={{ mt: 1 }}>
+	                <InputLabel>Kỳ thi</InputLabel>
+	                <Select
+	                  label='Kỳ thi'
+	                  value={selectedExamRegistrationId}
+	                  onChange={e => setSelectedExamRegistrationId(String(e.target.value))}
+	                >
+	                  {examFeeOptions.map(o => (
+	                    <MenuItem key={o.registrationId} value={o.registrationId}>
+	                      {o.examSessionName} - {o.targetBeltLevelName} ({Number(o.feeAmount).toLocaleString('vi-VN')}đ)
+	                    </MenuItem>
+	                  ))}
+	                </Select>
+	              </FormControl>
+	            )}
+	          </Box>
+	        )}
+
+	        {/* Giảm trừ */}
+	        <Box>
+	          <Typography variant='body2' className='mb-1 font-medium'>
+	            Giảm trừ
+	          </Typography>
+	          <TextField
+	            label='Số tiền giảm'
+	            size='small'
+	            fullWidth
+	            type='number'
+	            inputProps={{ min: 0 }}
+	            value={discountAmount}
+	            onChange={e => setDiscountAmount(Number(e.target.value))}
+	            InputProps={{ endAdornment: <InputAdornment position='end'>VND</InputAdornment> }}
+	          />
+	          <TextField
+	            label='Lý do giảm trừ'
+	            size='small'
+	            fullWidth
+	            value={discountReason}
+	            onChange={e => setDiscountReason(e.target.value)}
+	            required={discountAmount > 0}
+	            sx={{ mt: 2 }}
+	            helperText={discountAmount > 0 ? 'Bắt buộc khi có giảm trừ' : undefined}
+	          />
+	        </Box>
 
         {/* Phương thức */}
         <Box>

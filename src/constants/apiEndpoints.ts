@@ -67,6 +67,7 @@ export const API_ENDPOINTS = {
   },
   classes: {
     root: '/Classes',
+    lookup: '/Classes/lookup',
     byId: (id: string) => `/Classes/${id}`,
     restore: (id: string) => `/Classes/${id}/restore`,
     schedules: (classId: string) => `/Classes/${classId}/schedules`,
@@ -137,8 +138,6 @@ export const API_ENDPOINTS = {
     tuitionQuote: '/payments/tuition-quote',
     examFeeOptions: '/payments/exam-fee-options',
 
-    studentDiscountConfigs: '/payments/student-discount-configs',
-    studentDiscountConfigById: (id: string) => `/payments/student-discount-configs/${id}`,
     uploadTransferProof: '/payments/upload-transfer-proof',
 
     // --- Công nợ & tổng hợp thu chi (mới) ---

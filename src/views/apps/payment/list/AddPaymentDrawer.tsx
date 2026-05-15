@@ -219,10 +219,10 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
       setLoadingStudents(true)
 
       try {
-        const response = await classService.getClassStudents(formData.classId)
+        const response = await classService.getClassStudents(formData.classId, { pageNumber: 1, pageSize: 5000 })
 
         if (response.success && response.data) {
-          setStudents(response.data)
+          setStudents(response.data.records || [])
         } else {
           setStudents([])
           showNotification(response.message || 'Không thể tải danh sách học viên của lớp.', 'error')
