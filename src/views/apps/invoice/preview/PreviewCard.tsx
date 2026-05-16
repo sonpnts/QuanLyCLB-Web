@@ -99,7 +99,6 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                   <Typography color='text.secondary' variant='body2'>
                     Ngày thu: <strong className='text-text-primary'>{formatDateTime(firstItem.paymentDate)}</strong>
                   </Typography>
-
                 </div>
               </div>
             </div>
@@ -178,7 +177,9 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                           <Typography color='text.primary'>{desc}</Typography>
                         </td>
                         <td>
-                          <Typography color='text.secondary'>{paymentTypeLabels[normalizePaymentType(item.type, 3)] ?? String(item.type)}</Typography>
+                          <Typography color='text.secondary'>
+                            {paymentTypeLabels[normalizePaymentType(item.type, 3)] ?? String(item.type)}
+                          </Typography>
                         </td>
                         <td className='text-right'>
                           <Typography color='text.secondary'>
@@ -263,23 +264,58 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
           <Grid size={{ xs: 12 }}>
             <Divider className='border-dashed' />
           </Grid>
+
           <Grid size={{ xs: 12 }}>
-            <Box display='flex' justifyContent='space-between' gap={6} sx={{ mt: 2 }}>
-              <Box flex={1}>
-                <Typography variant='body2' color='text.secondary' className='font-medium'>
-                  Người nộp
+            <Box display='flex' justifyContent='space-between' gap={6} sx={{ mt: 4 }}>
+              <Box flex={1} textAlign='center'>
+                <Typography
+                  sx={{
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1
+                  }}
+                  color='text.primary'
+                >
+                  NGƯỜI NỘP TIỀN
                 </Typography>
-                <Box sx={{ height: 72 }} />
+
+                <Box sx={{ height: 90 }} />
+
                 <Divider />
+
+                {/* Optional tên người nộp */}
+                {/* <Typography sx={{ mt: 1, fontWeight: 600 }}>
+        {firstItem.studentName || '—'}
+      </Typography> */}
               </Box>
-              <Box flex={1}>
-                <Typography variant='body2' color='text.secondary' className='font-medium'>
-                  Người thu
+
+              <Box flex={1} textAlign='center'>
+                <Typography
+                  sx={{
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1
+                  }}
+                  color='text.primary'
+                >
+                  NGƯỜI THU
                 </Typography>
-                <Box sx={{ height: 72 }} />
+
+                <Box sx={{ height: 90 }} />
+
                 <Divider />
-                <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
-                  Họ tên: <strong className='text-text-primary'>{firstItem.collectedByUserName || '—'}</strong>
+
+                <Typography
+                  sx={{
+                    mt: 1,
+                    fontWeight: 700,
+                    textTransform: 'uppercase'
+                  }}
+                  color='text.primary'
+                >
+                  {firstItem.collectedByUserName || '—'}
                 </Typography>
               </Box>
             </Box>
