@@ -234,6 +234,10 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
                 <Typography variant='body1'>{firstItem?.collectedByUserName || '-'}</Typography>
               </Box>
               <Box mb={4}>
+                <Typography variant='subtitle2' color='textSecondary'>Người tạo</Typography>
+                <Typography variant='body1'>{firstItem?.createdByUserName || '-'}</Typography>
+              </Box>
+              <Box mb={4}>
                 <Typography variant='subtitle2' color='textSecondary'>Phương thức</Typography>
                 <Typography variant='body1'>{firstItem?.method !== undefined ? paymentMethodLabels[firstItem.method] : '-'}</Typography>
               </Box>

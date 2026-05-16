@@ -20,6 +20,7 @@ export type CashHandoverType = {
   instructorName?: string
   handoverAt?: string
   snapshotTuitionAmount: number
+  snapshotExamFeeAmount: number
   snapshotProductSalesAmount: number
   snapshotTotalAmount: number
   previousHandedOverAmount: number
@@ -44,4 +45,3 @@ export type LateTuitionStudentType = {
   lastPaymentDate?: string
   daysSinceLastPayment: number
 }
-

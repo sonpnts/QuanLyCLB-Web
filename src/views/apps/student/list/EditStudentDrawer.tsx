@@ -55,6 +55,7 @@ type FormValues = {
   phoneNumber?: string
   address?: string
   dateOfBirth?: string
+  educationLevel?: string
   gender?: string
   notes?: string
 }
@@ -76,6 +77,7 @@ const EditStudentDrawer = (props: Props) => {
       phoneNumber: student?.phoneNumber || '',
       address: student?.address || '',
       dateOfBirth: student?.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
+      educationLevel: student?.educationLevel || '',
       gender: student?.gender !== undefined ? String(student.gender) : '',
       notes: student?.notes || ''
     }),
@@ -141,12 +143,13 @@ const EditStudentDrawer = (props: Props) => {
       }
 
       // Chỉ gửi thông tin cá nhân nếu chưa khóa
-      if (!isLocked) {
-        payload.fullName = values.fullName
-        payload.phoneNumber = values.phoneNumber || undefined
-        payload.dateOfBirth = values.dateOfBirth || undefined
-        payload.gender = values.gender !== '' ? values.gender === 'true' : undefined
-      }
+       if (!isLocked) {
+         payload.fullName = values.fullName
+         payload.phoneNumber = values.phoneNumber || undefined
+         payload.dateOfBirth = values.dateOfBirth || undefined
+         payload.educationLevel = values.educationLevel || undefined
+         payload.gender = values.gender !== '' ? values.gender === 'true' : undefined
+       }
 
       const res = await studentService.updateStudent(student.id, payload)
 
@@ -324,6 +327,30 @@ const EditStudentDrawer = (props: Props) => {
           </Grid>
 
           {/* Giới tính + Cấp đai liên đoàn (chỉ đọc) */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Controller
+              name='educationLevel'
+              control={control}
+              render={({ field }) => (
+                <FormControl fullWidth required disabled={isLocked}>
+                  <InputLabel>Trình độ học vấn</InputLabel>
+                  <Select {...field} label='Trình độ học vấn'>
+                    <MenuItem value=''>Chọn trình độ</MenuItem>
+                    <MenuItem value='THCS'>THCS</MenuItem>
+                    <MenuItem value='THPT'>THPT</MenuItem>
+                    <MenuItem value='TieuHoc'>Tiểu học</MenuItem>
+                    <MenuItem value='ChuaDiHoc'>Chưa đi học</MenuItem>
+                    <MenuItem value='TrungCap'>Trung cấp</MenuItem>
+                    <MenuItem value='CaoDang'>Cao đẳng</MenuItem>
+                    <MenuItem value='DaiHoc'>Đại học</MenuItem>
+                    <MenuItem value='ThacSi'>Thạc sĩ</MenuItem>
+                    <MenuItem value='TienSi'>Tiến sĩ</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
+            />
+          </Grid>
+
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name='gender'

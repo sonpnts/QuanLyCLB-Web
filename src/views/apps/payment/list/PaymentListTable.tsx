@@ -283,6 +283,14 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
           </Typography>
         )
       }),
+      columnHelper.accessor('createdByUserName', {
+        header: 'Người tạo',
+        cell: ({ row }) => (
+          <Typography variant='body2' color='text.secondary'>
+            {row.original.createdByUserName || '-'}
+          </Typography>
+        )
+      }),
       {
         id: 'actions',
         header: 'Thao tác',

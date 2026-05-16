@@ -19,6 +19,8 @@ export type TuitionSummary = {
 export type ExamFeeSummary = {
   sessionId: string
   sessionName: string
+  isCollectable?: boolean
+  registrationDeadline?: string | null
   totalRegistered: number
   paidCount: number
   unpaidCount: number

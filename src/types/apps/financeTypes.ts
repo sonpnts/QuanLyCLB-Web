@@ -15,6 +15,7 @@ export type InstructorClassCollectionType = {
   classId: string
   className?: string
   tuitionCollectedToDate: number
+  examFeeCollectedToDate: number
   productSalesCollectedToDate: number
   totalCollectedToDate: number
   totalHandedOver: number

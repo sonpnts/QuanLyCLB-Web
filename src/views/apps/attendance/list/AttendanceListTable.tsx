@@ -62,7 +62,7 @@ const AttendanceListTable = () => {
       } else {
         setSheet(null)
         setIsEditMode(false)
-        showNotification(response.message || 'Khong tai duoc du lieu diem danh', 'error')
+        showNotification(response.message || 'Không tải được điểm danh', 'error')
       }
 
       setLoading(false)
@@ -85,7 +85,7 @@ const AttendanceListTable = () => {
         setSelectedClassId('')
         setSheet(null)
         setIsEditMode(false)
-        
+
 return
       }
 
@@ -105,7 +105,7 @@ return
       if (!autoClassId) {
         setSheet(null)
         setIsEditMode(false)
-        
+
 return
       }
 
@@ -198,7 +198,7 @@ return
 
     if (invalidExcused) {
       showNotification('Nghi co phep bat buoc nhap ly do', 'warning')
-      
+
 return
     }
 

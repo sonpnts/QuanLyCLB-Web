@@ -317,6 +317,12 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
                 </Typography>
               </div>
               <div className='flex justify-between'>
+                <Typography variant='body2' color='text.secondary'>Lệ phí thi:</Typography>
+                <Typography variant='body2' className='font-medium'>
+                  {formatCurrency(selectedCollection.examFeeCollectedToDate)}
+                </Typography>
+              </div>
+              <div className='flex justify-between'>
                 <Typography variant='body2' color='text.secondary'>Bán sản phẩm:</Typography>
                 <Typography variant='body2' className='font-medium'>
                   {formatCurrency(selectedCollection.productSalesCollectedToDate)}

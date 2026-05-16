@@ -56,6 +56,7 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
               />
               <DetailRow label='Người tạo phiếu' value={data.createdByUserName || data.createdByUserId || '-'} />
               <DetailRow label='Học phí đã thu' value={formatCurrency(data.snapshotTuitionAmount)} />
+              <DetailRow label='Lệ phí thi đã thu' value={formatCurrency(data.snapshotExamFeeAmount)} />
               <DetailRow label='Bán sản phẩm' value={formatCurrency(data.snapshotProductSalesAmount)} />
               <DetailRow label='Tổng đã thu' value={formatCurrency(data.snapshotTotalAmount)} />
               <DetailRow label='Đã bàn giao trước' value={formatCurrency(data.previousHandedOverAmount)} />

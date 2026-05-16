@@ -280,6 +280,10 @@ const CashHandoverListTable = () => {
         header: 'Học phí',
         cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotTuitionAmount)}</Typography>
       }),
+      columnHelper.accessor('snapshotExamFeeAmount', {
+        header: 'Lệ phí thi',
+        cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotExamFeeAmount)}</Typography>
+      }),
       columnHelper.accessor('snapshotProductSalesAmount', {
         header: 'Sản phẩm',
         cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotProductSalesAmount)}</Typography>

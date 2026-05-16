@@ -39,6 +39,7 @@ const toCashHandover = (value: any): CashHandoverType => ({
   instructorName: value.instructorName,
   handoverAt: value.handoverAt,
   snapshotTuitionAmount: Number(value.snapshotTuitionAmount || 0),
+  snapshotExamFeeAmount: Number(value.snapshotExamFeeAmount || 0),
   snapshotProductSalesAmount: Number(value.snapshotProductSalesAmount || 0),
   snapshotTotalAmount: Number(value.snapshotTotalAmount || 0),
   previousHandedOverAmount: Number(value.previousHandedOverAmount || 0),

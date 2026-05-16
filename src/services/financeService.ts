@@ -166,19 +166,20 @@ class FinanceService {
 
       const rows: any[] = Array.isArray(apiResponse.data) ? apiResponse.data : []
 
-      return {
-        success: true,
-        data: rows.map(item => ({
-          instructorId: item.instructorId || instructorId,
-          instructorName: item.instructorName,
-          classId: item.classId,
-          className: item.className,
-          tuitionCollectedToDate: Number(item.tuitionCollectedToDate || 0),
-          productSalesCollectedToDate: Number(item.productSalesCollectedToDate || 0),
-          totalCollectedToDate: Number(item.totalCollectedToDate || 0),
-          totalHandedOver: Number(item.totalHandedOver || 0),
-          availableToHandover: Number(item.availableToHandover || 0),
-          asOf: item.asOf
+        return {
+          success: true,
+          data: rows.map(item => ({
+            instructorId: item.instructorId || instructorId,
+            instructorName: item.instructorName,
+            classId: item.classId,
+            className: item.className,
+            tuitionCollectedToDate: Number(item.tuitionCollectedToDate || 0),
+            examFeeCollectedToDate: Number(item.examFeeCollectedToDate || 0),
+            productSalesCollectedToDate: Number(item.productSalesCollectedToDate || 0),
+            totalCollectedToDate: Number(item.totalCollectedToDate || 0),
+            totalHandedOver: Number(item.totalHandedOver || 0),
+            availableToHandover: Number(item.availableToHandover || 0),
+            asOf: item.asOf
         }))
       }
     } catch (error) {
@@ -198,21 +199,22 @@ class FinanceService {
 
       const rows: any[] = Array.isArray(apiResponse.data) ? apiResponse.data : []
 
-      return {
-        success: true,
-        data: rows.map(item => ({
-          instructorId: item.instructorId,
-          instructorName: item.instructorName,
-          classId: item.classId,
-          className: item.className,
-          tuitionCollectedToDate: Number(item.tuitionCollectedToDate || 0),
-          productSalesCollectedToDate: Number(item.productSalesCollectedToDate || 0),
-          totalCollectedToDate: Number(item.totalCollectedToDate || 0),
-          totalHandedOver: Number(item.totalHandedOver || 0),
-          availableToHandover: Number(item.availableToHandover || 0),
-          asOf: item.asOf
-        }))
-      }
+        return {
+          success: true,
+          data: rows.map(item => ({
+            instructorId: item.instructorId,
+            instructorName: item.instructorName,
+            classId: item.classId,
+            className: item.className,
+            tuitionCollectedToDate: Number(item.tuitionCollectedToDate || 0),
+            examFeeCollectedToDate: Number(item.examFeeCollectedToDate || 0),
+            productSalesCollectedToDate: Number(item.productSalesCollectedToDate || 0),
+            totalCollectedToDate: Number(item.totalCollectedToDate || 0),
+            totalHandedOver: Number(item.totalHandedOver || 0),
+            availableToHandover: Number(item.availableToHandover || 0),
+            asOf: item.asOf
+          }))
+        }
     } catch (error) {
       logger.error('FinanceService', 'getMyClassCollections', error)
       return { success: true, data: [] }

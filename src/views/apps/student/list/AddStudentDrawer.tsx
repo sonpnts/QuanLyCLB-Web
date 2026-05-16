@@ -46,6 +46,7 @@ const initialForm = {
   phoneNumber: '',
   address: '',
   dateOfBirth: '',
+  educationLevel: '',
   gender: '',
   notes: ''
 }
@@ -85,6 +86,12 @@ const AddStudentDrawer = ({
       return
     }
 
+    if (!formData.educationLevel) {
+      showNotification('Vui lòng chọn trình độ học vấn.', 'error')
+
+      return
+    }
+
     if (requireClassEnrollment && !selectedClassId) {
       showNotification('Vui lòng chọn lớp cho học viên.', 'error')
 
@@ -100,6 +107,7 @@ const AddStudentDrawer = ({
         phoneNumber: formData.phoneNumber || undefined,
         address: formData.address || undefined,
         dateOfBirth: formData.dateOfBirth || undefined,
+        educationLevel: formData.educationLevel,
         gender: formData.gender !== '' ? formData.gender === 'true' : undefined,
         notes: formData.notes || undefined
       })
@@ -246,6 +254,27 @@ const AddStudentDrawer = ({
                 value={formData.dateOfBirth}
                 onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })}
               />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth required>
+                <InputLabel>Trình độ học vấn</InputLabel>
+                <Select
+                  label='Trình độ học vấn'
+                  value={formData.educationLevel}
+                  onChange={e => setFormData({ ...formData, educationLevel: e.target.value })}
+                >
+                  <MenuItem value=''>Chọn trình độ</MenuItem>
+                  <MenuItem value='THCS'>THCS</MenuItem>
+                  <MenuItem value='THPT'>THPT</MenuItem>
+                  <MenuItem value='TieuHoc'>Tiểu học</MenuItem>
+                  <MenuItem value='ChuaDiHoc'>Chưa đi học</MenuItem>
+                  <MenuItem value='TrungCap'>Trung cấp</MenuItem>
+                  <MenuItem value='CaoDang'>Cao đẳng</MenuItem>
+                  <MenuItem value='DaiHoc'>Đại học</MenuItem>
+                  <MenuItem value='ThacSi'>Thạc sĩ</MenuItem>
+                  <MenuItem value='TienSi'>Tiến sĩ</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>

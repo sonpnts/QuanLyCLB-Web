@@ -51,6 +51,7 @@ export interface CreateStudentRequest {
   phoneNumber?: string
   address?: string
   dateOfBirth?: string
+  educationLevel: string
   gender?: boolean
   notes?: string
   currentBeltLevelId?: string
@@ -62,6 +63,7 @@ export interface UpdateStudentRequest {
   phoneNumber?: string
   address?: string
   dateOfBirth?: string
+  educationLevel?: string
   gender?: boolean
   notes?: string
   isActive?: boolean

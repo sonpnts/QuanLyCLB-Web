@@ -11,10 +11,20 @@
     padding: 0 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    height: auto !important;
+    overflow: visible !important;
   }
 
+  /* Hide the app chrome entirely so it doesn't reserve layout space */
   body * {
-    visibility: hidden;
+    display: none !important;
+  }
+
+  /* Next.js root should not constrain height/overflow when printing */
+  #__next {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
   }
   #__next :is(.sm\:\!p-12) {
     padding: 0rem !important;
@@ -26,24 +36,27 @@
     --mui-palette-divider: rgba(46, 38, 61, 0.12);
   }
 
-  /* Only show the .preview-card element when printing */
+  /* Only show the receipt preview when printing */
+  .previewCard,
   .previewCard * {
-    visibility: visible;
+    display: revert !important;
+    visibility: visible !important;
   }
   .previewCard {
-    /* Avoid fixed positioning so long receipts can span multiple pages */
-    position: static;
-    inline-size: auto;
-    block-size: auto;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
     box-sizing: border-box;
     box-shadow: none !important;
     border: 0 !important;
-    break-inside: avoid;
+    height: auto !important;
+    overflow: visible !important;
   }
 
   /* Help tables/images behave nicely across A5/A4 */
   table {
     page-break-inside: auto;
+    width: 100% !important;
   }
   tr,
   td,

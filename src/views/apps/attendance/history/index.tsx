@@ -32,6 +32,14 @@ type FilterClass = {
 
 const today = new Date().toISOString().slice(0, 10)
 
+const oneMonthAgo = (() => {
+  const date = new Date()
+
+  date.setMonth(date.getMonth() - 1)
+
+  return date.toISOString().slice(0, 10)
+})()
+
 const AttendanceHistoryView = () => {
   const { auth } = useAuth()
   const isAdmin = hasAdminRole(auth?.roles)
@@ -39,7 +47,7 @@ const AttendanceHistoryView = () => {
   const [loading, setLoading] = useState(false)
   const [classOptions, setClassOptions] = useState<FilterClass[]>([])
   const [selectedClassId, setSelectedClassId] = useState('')
-  const [fromDate, setFromDate] = useState(today)
+  const [fromDate, setFromDate] = useState(oneMonthAgo)
   const [toDate, setToDate] = useState(today)
   const [logs, setLogs] = useState<StudentAttendanceSessionLogType[]>([])
 
@@ -50,7 +58,7 @@ const AttendanceHistoryView = () => {
         const classes = classRes.success && classRes.data ? classRes.data : []
 
         setClassOptions(classes.map(c => ({ id: c.id || '', name: `${c.code || ''} - ${c.name}` })))
-        
+
 return
       }
 
@@ -97,14 +105,14 @@ return
 
   return (
     <Card>
-      <CardHeader title='Lich su diem danh' subheader='Xem theo ngay, co the loc theo lop' />
+      <CardHeader title='Lịch sử điểm danh' subheader='Mặc định là hiển thị 1 tháng' />
       <CardContent>
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid size={{ xs: 12, md: 4 }}>
             <FormControl fullWidth>
-              <InputLabel>Lop hoc</InputLabel>
-              <Select value={selectedClassId} label='Lop hoc' onChange={e => setSelectedClassId(e.target.value)}>
-                <MenuItem value=''>Tat ca</MenuItem>
+              <InputLabel>Lớp học</InputLabel>
+              <Select value={selectedClassId} label='Lớp học' onChange={e => setSelectedClassId(e.target.value)}>
+                <MenuItem value=''>Tất cả</MenuItem>
                 {classOptions.map(c => (
                   <MenuItem key={c.id} value={c.id}>
                     {c.name}
@@ -114,10 +122,10 @@ return
             </FormControl>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <TextField fullWidth type='date' label='Tu ngay' value={fromDate} onChange={e => setFromDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+            <TextField fullWidth type='date' label='Từ' value={fromDate} onChange={e => setFromDate(e.target.value)} InputLabelProps={{ shrink: true }} />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-            <TextField fullWidth type='date' label='Den ngay' value={toDate} onChange={e => setToDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+            <TextField fullWidth type='date' label='Đến' value={toDate} onChange={e => setToDate(e.target.value)} InputLabelProps={{ shrink: true }} />
           </Grid>
         </Grid>
 
@@ -127,7 +135,7 @@ return
           </Box>
         ) : null}
 
-        {!loading && groupedLogs.length === 0 ? <Typography color='text.secondary'>Khong co du lieu lich su diem danh.</Typography> : null}
+        {!loading && groupedLogs.length === 0 ? <Typography color='text.secondary'>Không có dữ liệu</Typography> : null}
 
         {!loading &&
           groupedLogs.map(([date, rows]) => (
@@ -140,12 +148,12 @@ return
                   <TableHead>
                     <TableRow>
                       <TableCell>Lop</TableCell>
-                      <TableCell align='center'>Tong hoc vien</TableCell>
-                      <TableCell align='center'>Vang</TableCell>
-                      <TableCell align='center'>Co phep</TableCell>
-                      <TableCell align='center'>Khong phep</TableCell>
-                      <TableCell>Nguoi diem danh</TableCell>
-                      <TableCell>Thoi gian tao</TableCell>
+                      <TableCell align='center'>Tổng</TableCell>
+                      <TableCell align='center'>Vắng</TableCell>
+                      <TableCell align='center'>Có phép</TableCell>
+                      <TableCell align='center'>Không phép</TableCell>
+                      <TableCell>Người điểm danh</TableCell>
+                      <TableCell>Thời gian</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>

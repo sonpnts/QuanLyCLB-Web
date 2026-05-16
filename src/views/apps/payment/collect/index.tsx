@@ -72,7 +72,8 @@ const PaymentCollectView = () => {
   // Filter + pagination
   const [searchQuery, setSearchQuery] = useState('')
   const [branchFilter, setBranchFilter] = useState<string>('')
-  const [unpaidOnlyFilter, setUnpaidOnlyFilter] = useState<boolean>(false)
+  // Default: only show classes that still have unpaid items
+  const [unpaidOnlyFilter, setUnpaidOnlyFilter] = useState<boolean>(true)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const isAdmin = hasPermission(auth?.permissions, 'Payment.Collect.ManageAll') || hasAdminRole(auth?.roles)
@@ -374,89 +375,27 @@ const PaymentCollectView = () => {
                       </Collapse>
                     </Box>
 
-                    {/* Lệ phí thi */}
-                    {(cls.examFees ?? []).map(ef => (
-                      <Box key={ef.sessionId} className='px-4 py-3 border-b last:border-b-0'>
-                        <Box
-                          className='flex justify-between items-center cursor-pointer select-none'
-                          onClick={() => toggle(`exam-${cls.classId}-${ef.sessionId}`)}
-                        >
-                          <Box className='flex items-center gap-2 flex-wrap'>
-                            <Typography className='font-medium'>Lệ phí thi</Typography>
-                            <Typography variant='body2' color='text.secondary'>
-                              {ef.sessionName}
-                            </Typography>
-                            <Chip
-                              label={`${ef.unpaidCount} chưa đóng`}
-                              color={ef.unpaidCount > 0 ? 'warning' : 'success'}
-                              size='small'
-                            />
-                          </Box>
-                          <Box className='flex items-center gap-2'>
-                            <Typography
-                              variant='body2'
-                              className='font-medium'
-                              color={ef.unpaidCount > 0 ? 'warning.main' : 'success.main'}
-                            >
-                              {toSafeNumber(ef.unpaidAmount).toLocaleString('vi-VN')}đ
-                            </Typography>
-                            <i className={`ri-arrow-${expanded[`exam-${cls.classId}-${ef.sessionId}`] ? 'up' : 'down'}-s-line`} />
+                    {/* Lệ phí thi: chỉ hiển thị thông báo nếu đang có kỳ thi còn hạn thu.
+                        Việc thu sẽ thực hiện trong dialog "Thu" của học phí (include exam fee). */}
+                    {(cls.examFees ?? [])
+                      .filter(ef => Boolean(ef.isCollectable))
+                      .map(ef => (
+                        <Box key={ef.sessionId} className='px-4 py-3 border-b last:border-b-0'>
+                          <Box className='flex items-center justify-between gap-3 flex-wrap'>
+                            <Box className='flex items-center gap-2 flex-wrap'>
+                              <Typography className='font-medium'>Lệ phí thi</Typography>
+                              <Typography variant='body2' color='text.secondary'>
+                                {ef.sessionName}
+                              </Typography>
+                              <Chip
+                                label={`${ef.unpaidCount} chưa đóng`}
+                                color={ef.unpaidCount > 0 ? 'warning' : 'success'}
+                                size='small'
+                              />
+                            </Box>
                           </Box>
                         </Box>
-                        <Collapse in={!!expanded[`exam-${cls.classId}-${ef.sessionId}`]}>
-                          <TableContainer className='mt-2'>
-                            <Table size='small'>
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell>Học viên</TableCell>
-                                  <TableCell>Cấp thi</TableCell>
-                                  <TableCell align='right'>Lệ phí</TableCell>
-                                  <TableCell align='right'>Thu</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {(ef.unpaidStudents ?? []).map(s => (
-                                  <TableRow key={s.studentId}>
-                                    <TableCell>{s.studentName}</TableCell>
-                                    <TableCell>{s.targetBeltLevelName ?? '-'}</TableCell>
-                                    <TableCell align='right'>{toSafeNumber(s.amount).toLocaleString('vi-VN')}đ</TableCell>
-                                    <TableCell align='right'>
-                                      <Button
-                                        size='small'
-                                        variant='contained'
-                                        color='secondary'
-                                        onClick={() =>
-                                          setCollectTarget(() => {
-                                            const tuitionUnpaid = (cls.tuition?.unpaidStudents ?? []).find(
-                                              t => t.studentId === s.studentId
-                                            )
-
-                                            return {
-                                            studentId: s.studentId,
-                                            studentName: s.studentName,
-                                            amount: s.amount,
-                                            type: 'ExamFee',
-                                            classId: cls.classId,
-                                            examRegistrationId: s.examRegistrationId,
-                                            description: `Lệ phí thi ${s.targetBeltLevelName ?? ''} - ${ef.sessionName}`,
-                                            tuitionAmount: tuitionUnpaid ? tuitionUnpaid.amount : undefined,
-                                            tuitionForMonth: tuitionUnpaid ? month : undefined,
-                                            tuitionForYear: tuitionUnpaid ? year : undefined
-                                          }
-                                          })
-                                        }
-                                      >
-                                        Thu
-                                      </Button>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        </Collapse>
-                      </Box>
-                    ))}
+                      ))}
                   </CardContent>
                 </Card>
               )

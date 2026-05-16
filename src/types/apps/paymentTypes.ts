@@ -31,6 +31,10 @@ export type PaymentRecordType = {
   receiptNumber?: string
   collectedByUserId?: string
   collectedByUserName?: string
+  createdByUserId?: string
+  createdByUserName?: string
+  updatedByUserId?: string
+  updatedByUserName?: string
   isActive?: boolean
   createdAt?: string
   updatedAt?: string
