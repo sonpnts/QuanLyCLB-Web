@@ -1,4 +1,18 @@
 @media print {
+  /* Let browser/user choose paper size (A4/A5/Letter...) and keep safe margins */
+  @page {
+    size: auto;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   body * {
     visibility: hidden;
   }
@@ -17,15 +31,28 @@
     visibility: visible;
   }
   .previewCard {
-    inline-size: 100%;
-    block-size: 100%;
-    position: fixed;
-    inset: 0;
+    /* Avoid fixed positioning so long receipts can span multiple pages */
+    position: static;
+    inline-size: auto;
+    block-size: auto;
     box-sizing: border-box;
+    box-shadow: none !important;
+    border: 0 !important;
+    break-inside: avoid;
   }
-  @media (max-width: 600px) {
-    .previewCard {
-      position: relative !important;
-    }
+
+  /* Help tables/images behave nicely across A5/A4 */
+  table {
+    page-break-inside: auto;
+  }
+  tr,
+  td,
+  th {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  img {
+    max-width: 100% !important;
+    height: auto !important;
   }
 }

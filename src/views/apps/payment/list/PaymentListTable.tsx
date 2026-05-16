@@ -54,6 +54,9 @@ import type { GetPaymentsParams } from '@/services/paymentService'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
+import { useAuth } from '@/contexts/authContext'
+import { hasPermission } from '@/utils/permissionUtils'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -89,7 +92,14 @@ const formatCurrency = (amount: number) =>
 const columnHelper = createColumnHelper<PaymentRecordType>()
 
 const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
+  const { auth } = useAuth()
+  const isAdmin = useMemo(
+    () => hasPermission(auth?.permissions, 'Payment.Collect.ManageAll') || hasAdminRole(auth?.roles),
+    [auth?.permissions, auth?.roles]
+  )
+
   const [addPaymentOpen, setAddPaymentOpen] = useState(false)
+  const [replacementOpen, setReplacementOpen] = useState(false)
   const [receiptModalOpen, setReceiptModalOpen] = useState(false)
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
   const [proofImageOpen, setProofImageOpen] = useState(false)
@@ -376,6 +386,11 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
             >
               Xuất Excel
             </Button>
+            {isAdmin && (
+              <Button variant='outlined' color='warning' onClick={() => setReplacementOpen(true)}>
+                Tạo hóa đơn thay
+              </Button>
+            )}
             <Button variant='contained' onClick={() => setAddPaymentOpen(true)}>
               Thêm thanh toán
             </Button>
@@ -436,6 +451,12 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
       </Card>
 
       <AddPaymentDrawer open={addPaymentOpen} handleClose={() => setAddPaymentOpen(false)} setData={setData} />
+      <AddPaymentDrawer
+        open={replacementOpen}
+        handleClose={() => setReplacementOpen(false)}
+        setData={setData}
+        mode='replacement'
+      />
 
       <ReceiptModal
         open={receiptModalOpen}

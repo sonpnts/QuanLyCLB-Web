@@ -48,6 +48,10 @@ interface CollectTarget {
   forYear?: number
   examRegistrationId?: string
   description?: string
+  // When collecting exam fee, allow collecting tuition in the same receipt (bulk)
+  tuitionAmount?: number
+  tuitionForMonth?: number
+  tuitionForYear?: number
 }
 
 const toSafeNumber = (value: unknown): number => {
@@ -422,14 +426,23 @@ const PaymentCollectView = () => {
                                         variant='contained'
                                         color='secondary'
                                         onClick={() =>
-                                          setCollectTarget({
+                                          setCollectTarget(() => {
+                                            const tuitionUnpaid = (cls.tuition?.unpaidStudents ?? []).find(
+                                              t => t.studentId === s.studentId
+                                            )
+
+                                            return {
                                             studentId: s.studentId,
                                             studentName: s.studentName,
                                             amount: s.amount,
                                             type: 'ExamFee',
                                             classId: cls.classId,
                                             examRegistrationId: s.examRegistrationId,
-                                            description: `Lệ phí thi ${s.targetBeltLevelName ?? ''} - ${ef.sessionName}`
+                                            description: `Lệ phí thi ${s.targetBeltLevelName ?? ''} - ${ef.sessionName}`,
+                                            tuitionAmount: tuitionUnpaid ? tuitionUnpaid.amount : undefined,
+                                            tuitionForMonth: tuitionUnpaid ? month : undefined,
+                                            tuitionForYear: tuitionUnpaid ? year : undefined
+                                          }
                                           })
                                         }
                                       >
@@ -504,6 +517,9 @@ const PaymentCollectView = () => {
           forYear={collectTarget.forYear}
           examRegistrationId={collectTarget.examRegistrationId}
           description={collectTarget.description}
+          tuitionAmount={collectTarget.tuitionAmount}
+          tuitionForMonth={collectTarget.tuitionForMonth}
+          tuitionForYear={collectTarget.tuitionForYear}
           onSuccess={handleCollectSuccess}
           onClose={() => setCollectTarget(null)}
         />

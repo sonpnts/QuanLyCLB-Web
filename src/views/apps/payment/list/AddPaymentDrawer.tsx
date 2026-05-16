@@ -38,6 +38,7 @@ type Props = {
   open: boolean
   handleClose: () => void
   setData: React.Dispatch<React.SetStateAction<PaymentRecordType[]>>
+  mode?: 'normal' | 'replacement'
 }
 
 type AddOnProductItem = {
@@ -62,7 +63,7 @@ const createEmptyAddOnProduct = (): AddOnProductItem => ({
   quantity: 1
 })
 
-const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
+const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props) => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
 
@@ -74,6 +75,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
   const [classes, setClasses] = useState<ClassType[]>([])
   const [students, setStudents] = useState<StudentType[]>([])
   const [products, setProducts] = useState<ProductType[]>([])
+  const [collectors, setCollectors] = useState<{ id: string; fullName: string }[]>([])
   const [examFeeOptions, setExamFeeOptions] = useState<ExamFeeOptionType[]>([])
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null)
@@ -90,6 +92,8 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
 
   const [formData, setFormData] = useState({
     classId: '',
+    coachId: '',
+    collectedByUserId: '',
     studentId: '',
     type: PAYMENT_TYPE_TUITION,
     paymentDate: new Date().toISOString().split('T')[0],
@@ -141,6 +145,8 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
     setAddOnProducts([])
     setFormData({
       classId: '',
+      coachId: '',
+      collectedByUserId: '',
       studentId: '',
       type: PAYMENT_TYPE_TUITION,
       paymentDate: new Date().toISOString().split('T')[0],
@@ -205,6 +211,47 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
       resetForm()
     }
   }, [open, auth?.user.id, isAdmin, showNotification])
+
+  // Replacement invoice: admin can choose collector
+  useEffect(() => {
+    const loadCollectors = async () => {
+      if (!open) return
+      if (!isAdmin) return
+      if (mode !== 'replacement') return
+
+      try {
+        const userService = (await import('@/services/userService')).default
+        const res = await userService.getUsers({ IsActive: true, PageSize: 1000 })
+        const rows = (res.data || []).map(u => ({ id: u.id, fullName: u.fullName || u.email || u.id }))
+        setCollectors(rows)
+      } catch {
+        setCollectors([])
+      }
+    }
+
+    loadCollectors()
+  }, [open, isAdmin, mode])
+
+  // Replacement invoice: pick lead coach as default + default collector = coach
+  useEffect(() => {
+    if (!open) return
+    if (mode !== 'replacement') return
+    if (!formData.classId) return
+
+    const cls = classes.find(x => x.id === formData.classId)
+    const leadId =
+      cls?.leadInstructorId ||
+      cls?.instructorId ||
+      cls?.coaches?.find(c => c.isLeadInstructor)?.userId ||
+      cls?.coaches?.[0]?.userId ||
+      ''
+
+    setFormData(prev => {
+      const nextCoachId = prev.coachId || leadId || ''
+      const nextCollectorId = prev.collectedByUserId || nextCoachId || auth?.user?.id || ''
+      return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
+    })
+  }, [open, mode, formData.classId, classes, auth?.user?.id])
 
   useEffect(() => {
     const loadStudentsByClass = async () => {
@@ -325,7 +372,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const collectedByUserId = auth?.user?.id
+    const collectedByUserId = mode === 'replacement' ? formData.collectedByUserId || '' : auth?.user?.id
 
     if (!collectedByUserId) {
       showNotification('Không xác định được người thu tiền, vui lòng đăng nhập lại.', 'error')
@@ -336,6 +383,11 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
     if (!formData.classId) {
       showNotification('Vui lòng chọn lớp hiện tại.', 'error')
 
+      return
+    }
+
+    if (mode === 'replacement' && !formData.coachId) {
+      showNotification('Vui lòng chọn coach của lớp.', 'error')
       return
     }
 
@@ -557,6 +609,52 @@ const AddPaymentDrawer = ({ open, handleClose, setData }: Props) => {
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* Coach lớp + Người thu (replacement only) */}
+              {mode === 'replacement' && (
+                <>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormControl fullWidth disabled={!formData.classId}>
+                      <InputLabel>Coach lớp *</InputLabel>
+                      <Select
+                        label='Coach lớp *'
+                        value={formData.coachId}
+                        onChange={e => {
+                          const coachId = String(e.target.value)
+                          setFormData(prev => ({
+                            ...prev,
+                            coachId,
+                            collectedByUserId: prev.collectedByUserId || coachId
+                          }))
+                        }}
+                      >
+                        {(classes.find(c => c.id === formData.classId)?.coaches || []).map(c => (
+                          <MenuItem key={c.userId} value={c.userId}>
+                            {c.fullName}
+                            {c.isLeadInstructor ? ' (HLV chính)' : ''}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormControl fullWidth disabled={!formData.classId}>
+                      <InputLabel>Người thu *</InputLabel>
+                      <Select
+                        label='Người thu *'
+                        value={formData.collectedByUserId}
+                        onChange={e => setFormData(prev => ({ ...prev, collectedByUserId: String(e.target.value) }))}
+                      >
+                        {collectors.map(u => (
+                          <MenuItem key={u.id} value={u.id}>
+                            {u.fullName}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </>
+              )}
 
               {/* Học viên */}
               <Grid size={{ xs: 12, md: 6 }}>

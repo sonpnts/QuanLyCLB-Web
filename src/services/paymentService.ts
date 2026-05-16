@@ -63,6 +63,24 @@ export interface CreateBulkPaymentRequest {
   items: BulkPaymentItemRequest[]
 }
 
+export interface UpdatePaymentRequest {
+  type: number
+  amount: number
+  originalAmount: number
+  paymentDate: string
+  method: number
+  description?: string
+  transactionRef?: string
+  receiptNumber?: string
+  classId?: string
+  productId?: string
+  forMonth?: number
+  forYear?: number
+  transferProofImageUrl?: string
+  collectedByUserId?: string
+  isActive: boolean
+}
+
 export interface TuitionQuoteType {
   classId: string
   studentId: string
@@ -172,7 +190,7 @@ class PaymentService {
     }
   }
 
-  async updatePayment(id: string, data: Partial<CreatePaymentRequest>): Promise<ResponseResult<PaymentRecordType>> {
+  async updatePayment(id: string, data: UpdatePaymentRequest): Promise<ResponseResult<PaymentRecordType>> {
     try {
       const response = await apiClient.put<any>(API_ENDPOINTS.payments.byId(id), data)
       const apiResponse = response.data

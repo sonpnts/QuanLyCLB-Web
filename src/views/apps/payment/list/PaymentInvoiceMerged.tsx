@@ -77,10 +77,8 @@ const PaymentInvoiceMerged = () => {
     <Box className='flex flex-col gap-4'>
       <Box className='flex items-center justify-between gap-3 flex-wrap'>
         <Box>
-          <Typography variant='h5'>Thu chi</Typography>
-          <Typography variant='body2' color='text.secondary'>
-            Doanh so, bien lai va giao dich
-          </Typography>
+          <Typography variant='h5'>Doanh số, biên lai và giao dịch</Typography>
+
         </Box>
 
         <Button
@@ -90,7 +88,7 @@ const PaymentInvoiceMerged = () => {
             setCreateSignal(v => v + 1)
           }}
         >
-          Tao phieu thu
+          Tạo phiếu thu tổng hợp
         </Button>
       </Box>
 
@@ -103,9 +101,14 @@ const PaymentInvoiceMerged = () => {
             scrollButtons={isBelowSm ? 'auto' : false}
             sx={{ minHeight: 42 }}
           >
-            <Tab value='overview' label='Tong quan' icon={<i className='ri-bar-chart-2-line' />} iconPosition='start' />
-            <Tab value='receipts' label='Bien lai' icon={<i className='ri-file-list-3-line' />} iconPosition='start' />
-            <Tab value='payments' label='Giao dich' icon={<i className='ri-exchange-dollar-line' />} iconPosition='start' />
+            <Tab value='overview' label='Tổng quan' icon={<i className='ri-bar-chart-2-line' />} iconPosition='start' />
+            <Tab value='receipts' label='Biên lai' icon={<i className='ri-file-list-3-line' />} iconPosition='start' />
+            <Tab
+              value='payments'
+              label='Giao dịch'
+              icon={<i className='ri-exchange-dollar-line' />}
+              iconPosition='start'
+            />
           </Tabs>
         </CardContent>
 
@@ -127,7 +130,7 @@ const PaymentInvoiceMerged = () => {
                       }}
                       startIcon={<i className='ri-eye-line' />}
                     >
-                      Xem bien lai
+                      Xem biên lai
                     </Button>
                     <Button
                       variant='outlined'
@@ -136,12 +139,10 @@ const PaymentInvoiceMerged = () => {
                       }}
                       startIcon={<i className='ri-search-line' />}
                     >
-                      Tra cuu giao dich
+                      Tra cứu giao dịch
                     </Button>
                   </Box>
-                  <Typography variant='body2' color='text.secondary'>
-                    Tren dien thoai, hay dung tab de chuyen man hinh cho gon.
-                  </Typography>
+
                 </CardContent>
               </Card>
             </Box>

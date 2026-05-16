@@ -30,6 +30,13 @@ export type StudentType = {
   updatedAt?: string
   classes?: StudentClassInfo[]
   userIdZalo?: string
+
+  tuitionDiscountAmount?: number
+  tuitionDiscountReason?: string
+  tuitionDiscountStatus?: number | string
+  tuitionDiscountRequestedAt?: string
+  tuitionDiscountDecidedAt?: string
+  tuitionDiscountDecisionNote?: string
 }
 
 export type EnrollmentStatus = 'Active' | 'Inactive' | 'Completed'

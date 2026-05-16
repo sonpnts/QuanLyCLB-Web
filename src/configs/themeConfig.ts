@@ -38,6 +38,7 @@ type Footer = {
 
 export type Config = {
   templateName: string
+  name: string
   homePageUrl: string
   settingsCookieName: string
   mode: Mode
@@ -55,6 +56,7 @@ export type Config = {
 
 const themeConfig: Config = {
   templateName: 'Hệ thống quản lý câu lạc bộ (CMIS) - Tấn Đạt Taekwondo',
+  name: 'Câu lạc bộ võ thuật Tấn Đạt Taekwondo',
   homePageUrl: '/dashboards/home',
   settingsCookieName: 'mis-tandattaekwondo',
   mode: 'system', // 'system', 'light', 'dark'

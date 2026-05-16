@@ -190,6 +190,10 @@ export const API_ENDPOINTS = {
     examHistory: (studentId: string) => `/Students/${studentId}/exam-history`,
     payments: (studentId: string) => `/Students/${studentId}/payments`,
     attendance: (studentId: string) => `/Students/${studentId}/attendance`,
+    tuitionDiscountRequest: (studentId: string) => `/Students/${studentId}/tuition-discount/request`,
+    tuitionDiscountDecide: (studentId: string) => `/Students/${studentId}/tuition-discount/decide`,
+    tuitionDiscountMy: '/Students/tuition-discount/requests/my',
+    tuitionDiscountPending: '/Students/tuition-discount/requests/pending',
     zaloVerifyPhone: '/Students/zalo/verify-phone',
     zaloUpdate: (id: string) => `/Students/${id}/zalo`
   },

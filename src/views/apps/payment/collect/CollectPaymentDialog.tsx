@@ -53,6 +53,10 @@ interface Props {
   forYear?: number
   examRegistrationId?: string
   description?: string
+  // When opened from ExamFee flow, allow collecting tuition together (1 receipt)
+  tuitionAmount?: number
+  tuitionForMonth?: number
+  tuitionForYear?: number
   onSuccess: () => void
   onClose: () => void
 }
@@ -68,6 +72,9 @@ const CollectPaymentDialog = ({
   forYear,
   examRegistrationId,
   description,
+  tuitionAmount,
+  tuitionForMonth,
+  tuitionForYear,
   onSuccess,
   onClose
 }: Props) => {
@@ -86,6 +93,9 @@ const CollectPaymentDialog = ({
   const [discountAmount, setDiscountAmount] = useState<number>(0)
   const [discountReason, setDiscountReason] = useState<string>('')
 
+  // Optional tuition (when collecting exam fee but student still owes tuition)
+  const [includeTuition, setIncludeTuition] = useState(false)
+
   // Optional exam fee (suggested when student is in draft exam registration list within deadline)
   const [loadingExamOptions, setLoadingExamOptions] = useState(false)
   const [examFeeOptions, setExamFeeOptions] = useState<ExamFeeOptionType[]>([])
@@ -103,6 +113,7 @@ const CollectPaymentDialog = ({
     setExamFeeOptions([])
     setIncludeExamFee(false)
     setSelectedExamRegistrationId('')
+    setIncludeTuition(false)
   }
 
   const handleClose = () => {
@@ -149,6 +160,14 @@ const CollectPaymentDialog = ({
     }
   }, [open, paymentType, classId, studentId])
 
+  useEffect(() => {
+    if (!open) return
+    if (paymentType !== 'ExamFee') return
+
+    // Default: if we know the student still owes tuition, suggest collecting it together
+    setIncludeTuition(Boolean(tuitionAmount && tuitionAmount > 0))
+  }, [open, paymentType, tuitionAmount])
+
   const handleMethodChange = (newMethod: 'Cash' | 'BankTransfer') => {
     setMethod(newMethod)
     if (newMethod === 'Cash') {
@@ -192,6 +211,13 @@ const CollectPaymentDialog = ({
   }
 
   const handleSubmit = async () => {
+    const hasTuitionLine = paymentType === 'Tuition' || (paymentType === 'ExamFee' && includeTuition)
+
+    if (discountAmount > 0 && !hasTuitionLine) {
+      showNotification('Giảm trừ chỉ áp dụng cho học phí.', 'error')
+      return
+    }
+
     if (discountAmount > 0 && !discountReason.trim()) {
       showNotification('Vui lòng nhập lý do giảm trừ', 'error')
       return
@@ -214,10 +240,12 @@ const CollectPaymentDialog = ({
 	        collectedByUserId: auth?.user?.id
 	      }
 
-	      const shouldBulk =
+	      const shouldBulkForTuition =
 	        paymentType === 'Tuition' && includeExamFee && !!selectedExamRegistrationId && (examFeeOptions ?? []).length > 0
 
-	      const result = shouldBulk
+        const shouldBulkForExamFee = paymentType === 'ExamFee' && includeTuition && !!tuitionAmount && tuitionAmount > 0
+
+	      const result = shouldBulkForTuition
 	        ? await paymentService.createBulkPayment({
 	            ...basePayload,
 	            items: [
@@ -238,12 +266,33 @@ const CollectPaymentDialog = ({
 	              }
 	            ]
 	          })
-	        : await paymentService.createPayment({
+	        : shouldBulkForExamFee
+            ? await paymentService.createBulkPayment({
+                ...basePayload,
+                items: [
+                  {
+                    type: PAYMENT_TYPE_MAP['Tuition'],
+                    classId: classId || undefined,
+                    forMonth: tuitionForMonth || forMonth || undefined,
+                    forYear: tuitionForYear || forYear || undefined,
+                    description: `Học phí tháng ${tuitionForMonth || forMonth}/${tuitionForYear || forYear}`,
+                    discountAmount: discountAmount > 0 ? discountAmount : undefined,
+                    discountReason: discountAmount > 0 ? discountReason.trim() : undefined
+                  },
+                  {
+                    type: PAYMENT_TYPE_MAP['ExamFee'],
+                    classId: classId || undefined,
+                    examRegistrationId: examRegistrationId || undefined,
+                    description: description || note || 'Lệ phí thi'
+                  }
+                ]
+              })
+            : await paymentService.createPayment({
 	            studentId,
 	            type: PAYMENT_TYPE_MAP[paymentType] ?? 3,
 	            amount,
-	            discountAmount: discountAmount > 0 ? discountAmount : undefined,
-	            discountReason: discountAmount > 0 ? discountReason.trim() : undefined,
+	            discountAmount: hasTuitionLine && discountAmount > 0 ? discountAmount : undefined,
+	            discountReason: hasTuitionLine && discountAmount > 0 ? discountReason.trim() : undefined,
 	            paymentDate: new Date().toISOString(),
 	            method: PAYMENT_METHOD_MAP[method] ?? 0,
 	            description: description || note || undefined,
@@ -267,6 +316,16 @@ const CollectPaymentDialog = ({
     }
   }
 
+  const selectedExamFeeAmount =
+    paymentType === 'Tuition' && includeExamFee
+      ? Number(examFeeOptions.find(o => o.registrationId === selectedExamRegistrationId)?.feeAmount || 0)
+      : 0
+
+  const selectedTuitionAmount = paymentType === 'ExamFee' && includeTuition ? Number(tuitionAmount || 0) : 0
+  const grossAmount = Number(amount || 0) + selectedExamFeeAmount + selectedTuitionAmount
+  const hasTuitionLineForUi = paymentType === 'Tuition' || (paymentType === 'ExamFee' && includeTuition)
+  const netAmount = hasTuitionLineForUi ? Math.max(0, grossAmount - Number(discountAmount || 0)) : grossAmount
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
       <DialogTitle>Thu tiền — {studentName}</DialogTitle>
@@ -279,11 +338,21 @@ const CollectPaymentDialog = ({
             </Typography>
           )}
           <Typography variant='h5' color='primary.main'>
-            {amount.toLocaleString('vi-VN')}đ
+            {netAmount.toLocaleString('vi-VN')}đ
           </Typography>
         </Box>
 
 	        <Divider />
+
+          {/* Collect tuition together when collecting exam fee (single receipt) */}
+          {paymentType === 'ExamFee' && tuitionAmount && tuitionAmount > 0 && (
+            <Box>
+              <FormControlLabel
+                control={<Checkbox checked={includeTuition} onChange={e => setIncludeTuition(e.target.checked)} />}
+                label={`Thu học phí tháng ${tuitionForMonth || forMonth}/${tuitionForYear || forYear} (${Number(tuitionAmount).toLocaleString('vi-VN')}đ)`}
+              />
+            </Box>
+          )}
 
 	        {/* Thu lệ phí thi (nếu có) */}
 	        {paymentType === 'Tuition' && (examFeeOptions ?? []).length > 0 && (
@@ -328,32 +397,33 @@ const CollectPaymentDialog = ({
 	          </Box>
 	        )}
 
-	        {/* Giảm trừ */}
-	        <Box>
-	          <Typography variant='body2' className='mb-1 font-medium'>
-	            Giảm trừ
-	          </Typography>
-	          <TextField
-	            label='Số tiền giảm'
-	            size='small'
-	            fullWidth
-	            type='number'
-	            inputProps={{ min: 0 }}
-	            value={discountAmount}
-	            onChange={e => setDiscountAmount(Number(e.target.value))}
-	            InputProps={{ endAdornment: <InputAdornment position='end'>VND</InputAdornment> }}
-	          />
-	          <TextField
-	            label='Lý do giảm trừ'
-	            size='small'
-	            fullWidth
-	            value={discountReason}
-	            onChange={e => setDiscountReason(e.target.value)}
-	            required={discountAmount > 0}
-	            sx={{ mt: 2 }}
-	            helperText={discountAmount > 0 ? 'Bắt buộc khi có giảm trừ' : undefined}
-	          />
-	        </Box>
+	        {hasTuitionLineForUi && (
+	          <Box>
+	            <Typography variant='body2' className='mb-1 font-medium'>
+	              Giảm trừ
+	            </Typography>
+	            <TextField
+	              label='Số tiền giảm'
+	              size='small'
+	              fullWidth
+	              type='number'
+	              inputProps={{ min: 0 }}
+	              value={discountAmount}
+	              onChange={e => setDiscountAmount(Number(e.target.value))}
+	              InputProps={{ endAdornment: <InputAdornment position='end'>VND</InputAdornment> }}
+	            />
+	            <TextField
+	              label='Lý do giảm trừ'
+	              size='small'
+	              fullWidth
+	              value={discountReason}
+	              onChange={e => setDiscountReason(e.target.value)}
+	              required={discountAmount > 0}
+	              sx={{ mt: 2 }}
+	              helperText={discountAmount > 0 ? 'Bắt buộc khi có giảm trừ' : undefined}
+	            />
+	          </Box>
+	        )}
 
         {/* Phương thức */}
         <Box>
@@ -466,7 +536,7 @@ const CollectPaymentDialog = ({
           onClick={handleSubmit}
           disabled={saving || uploading || (method === 'BankTransfer' && !transferProofUrl)}
         >
-          {saving ? <CircularProgress size={18} /> : `Thu ${amount.toLocaleString('vi-VN')}đ`}
+          {saving ? <CircularProgress size={18} /> : `Thu ${netAmount.toLocaleString('vi-VN')}đ`}
         </Button>
       </DialogActions>
     </Dialog>

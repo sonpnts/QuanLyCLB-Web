@@ -4,6 +4,36 @@ import type { StudentType, EnrollmentType, TuitionStatusType, ExamHistoryType } 
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
+export type TuitionDiscountStatus = 'None' | 'Pending' | 'Approved' | 'Rejected' | number
+
+export interface TuitionDiscountRequestPayload {
+  discountAmount: number
+  reason: string
+  isExempt?: boolean
+}
+
+export interface DecideTuitionDiscountPayload {
+  approve: boolean
+  note?: string
+}
+
+export interface TuitionDiscountRequestRow {
+  studentId: string
+  studentCode: string
+  studentName: string
+  phoneNumber?: string
+  discountAmount: number
+  reason: string
+  status: TuitionDiscountStatus
+  requestedAt?: string
+  requestedByUserId?: string
+  requestedByName?: string
+  decidedAt?: string
+  decidedByUserId?: string
+  decidedByName?: string
+  decisionNote?: string
+}
+
 export interface GetStudentsParams {
   pageNumber?: number
   pageSize?: number
@@ -334,6 +364,54 @@ class StudentService {
     } catch (error: any) {
       logger.error('StudentService', 'verifyZaloPhone', error)
       return { success: false, isFollower: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async requestTuitionDiscount(studentId: string, payload: TuitionDiscountRequestPayload): Promise<ResponseResult<StudentType>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.students.tuitionDiscountRequest(studentId), payload)
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'requestTuitionDiscount', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async decideTuitionDiscount(studentId: string, payload: DecideTuitionDiscountPayload): Promise<ResponseResult<StudentType>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.students.tuitionDiscountDecide(studentId), payload)
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'decideTuitionDiscount', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getMyTuitionDiscountRequests(params?: { pageNumber?: number; pageSize?: number; keyword?: string; status?: any }): Promise<ResponseResult<TuitionDiscountRequestRow[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionDiscountMy, { params })
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
+      return { success: true, data: unwrapList(apiResponse.data) as TuitionDiscountRequestRow[] }
+    } catch (error) {
+      logger.error('StudentService', 'getMyTuitionDiscountRequests', error)
+      return { success: true, data: [] }
+    }
+  }
+
+  async getPendingTuitionDiscountRequests(params?: { pageNumber?: number; pageSize?: number; keyword?: string }): Promise<ResponseResult<TuitionDiscountRequestRow[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionDiscountPending, { params })
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
+      return { success: true, data: unwrapList(apiResponse.data) as TuitionDiscountRequestRow[] }
+    } catch (error) {
+      logger.error('StudentService', 'getPendingTuitionDiscountRequests', error)
+      return { success: true, data: [] }
     }
   }
 

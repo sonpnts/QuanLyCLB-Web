@@ -8,7 +8,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
 
 // Component Imports
-import Logo from '@components/layout/shared/Logo'
+import Logo from '@components/layout/shared/Logo-Invoice'
 
 // Type Imports
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
@@ -80,14 +80,14 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                   <div className='flex items-center'>
                     <Logo />
                   </div>
-                  <div>
-                    <Typography color='text.primary' className='font-medium'>
-                      Câu lạc bộ
-                    </Typography>
-                    <Typography color='text.secondary' variant='body2'>
-                      Hệ thống quản lý câu lạc bộ
-                    </Typography>
-                  </div>
+                  {/*<div>*/}
+                  {/*  <Typography color='text.primary' className='font-medium'>*/}
+                  {/*    Câu lạc bộ*/}
+                  {/*  </Typography>*/}
+                  {/*  <Typography color='text.secondary' variant='body2'>*/}
+                  {/*    Hệ thống quản lý câu lạc bộ*/}
+                  {/*  </Typography>*/}
+                  {/*</div>*/}
                 </div>
                 <div className='flex flex-col gap-2'>
                   <Typography variant='h5' color='primary'>
@@ -99,9 +99,7 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                   <Typography color='text.secondary' variant='body2'>
                     Ngày thu: <strong className='text-text-primary'>{formatDateTime(firstItem.paymentDate)}</strong>
                   </Typography>
-                  <Typography color='text.secondary' variant='body2'>
-                    Người thu: <strong className='text-text-primary'>{firstItem.collectedByUserName || '—'}</strong>
-                  </Typography>
+
                 </div>
               </div>
             </div>
@@ -266,8 +264,32 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
             <Divider className='border-dashed' />
           </Grid>
           <Grid size={{ xs: 12 }}>
+            <Box display='flex' justifyContent='space-between' gap={6} sx={{ mt: 2 }}>
+              <Box flex={1}>
+                <Typography variant='body2' color='text.secondary' className='font-medium'>
+                  Người nộp
+                </Typography>
+                <Box sx={{ height: 72 }} />
+                <Divider />
+              </Box>
+              <Box flex={1}>
+                <Typography variant='body2' color='text.secondary' className='font-medium'>
+                  Người thu
+                </Typography>
+                <Box sx={{ height: 72 }} />
+                <Divider />
+                <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
+                  Họ tên: <strong className='text-text-primary'>{firstItem.collectedByUserName || '—'}</strong>
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 12 }}>
             <Typography variant='body2' color='text.secondary' textAlign='center'>
               Biên lai này là chứng từ hợp lệ cho khoản thu từ hệ thống quản lý câu lạc bộ.
+            </Typography>
+            <Typography variant='body2' color='text.secondary' textAlign='center'>
+              Khoản phí đã thanh toán sẽ không được hoàn lại và chỉ được bảo lưu 1 lần.
             </Typography>
           </Grid>
         </Grid>
@@ -277,4 +299,3 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
 }
 
 export default PreviewCard
-

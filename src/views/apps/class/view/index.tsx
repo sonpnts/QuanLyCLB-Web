@@ -356,7 +356,7 @@ const ClassViewPage = ({ classId }: Props) => {
                           <TableCell>Ngày sinh</TableCell>
                           <TableCell>Giới tính</TableCell>
                           <TableCell>Cấp đai hiện tại</TableCell>
-                          <TableCell>Trạng thái</TableCell>
+                          {/*<TableCell>Trạng thái</TableCell>*/}
                           <TableCell>Thao tác</TableCell>
                         </TableRow>
                       </TableHead>
@@ -378,26 +378,26 @@ const ClassViewPage = ({ classId }: Props) => {
                             <TableCell>
                               <Chip label={student.beltLevelName || 'Chưa có'} size='small' color='warning' variant='tonal' />
                             </TableCell>
-                            <TableCell>
-                              <Chip
-                                label={
-                                  (student as any).status === 'Active' && !student.isSuspended
-                                    ? 'Đang học'
-                                    : (student as any).status === 'Inactive' || student.isSuspended
-                                      ? 'Tạm nghỉ'
-                                      : 'Hoàn thành'
-                                }
-                                size='small'
-                                color={
-                                  (student as any).status === 'Active' && !student.isSuspended
-                                    ? 'success'
-                                    : (student as any).status === 'Inactive' || student.isSuspended
-                                      ? 'warning'
-                                      : 'info'
-                                }
-                                variant='tonal'
-                              />
-                            </TableCell>
+                            {/*<TableCell>*/}
+                            {/*  <Chip*/}
+                            {/*    label={*/}
+                            {/*      (student as any).status === 'Active' && !student.isSuspended*/}
+                            {/*        ? 'Đang học'*/}
+                            {/*        : (student as any).status === 'Inactive' || student.isSuspended*/}
+                            {/*          ? 'Tạm nghỉ'*/}
+                            {/*          : 'Hoàn thành'*/}
+                            {/*    }*/}
+                            {/*    size='small'*/}
+                            {/*    color={*/}
+                            {/*      (student as any).status === 'Active' && !student.isSuspended*/}
+                            {/*        ? 'success'*/}
+                            {/*        : (student as any).status === 'Inactive' || student.isSuspended*/}
+                            {/*          ? 'warning'*/}
+                            {/*          : 'info'*/}
+                            {/*    }*/}
+                            {/*    variant='tonal'*/}
+                            {/*  />*/}
+                            {/*</TableCell>*/}
                             <TableCell onClick={event => event.stopPropagation()}>
                               <Box className='flex items-center'>
                                 {student.isSuspended ? (

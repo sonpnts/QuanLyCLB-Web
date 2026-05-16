@@ -14,6 +14,7 @@ import Chip from '@mui/material/Chip'
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
+import Alert from '@mui/material/Alert'
 import List from '@mui/material/List'
 import ListItem from '@mui/material/ListItem'
 import ListItemText from '@mui/material/ListItemText'
@@ -392,6 +393,19 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
             </div>
           </Box>
         </Box>
+
+        {student.tuitionDiscountAmount && student.tuitionDiscountAmount > 0 && (
+          <Alert severity='info' sx={{ mb: 3, py: 1 }}>
+            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+              Giảm trừ học phí: -{Number(student.tuitionDiscountAmount).toLocaleString('vi-VN')}đ
+            </Typography>
+            {student.tuitionDiscountReason && (
+              <Typography variant='caption' color='text.secondary'>
+                Lý do: {student.tuitionDiscountReason}
+              </Typography>
+            )}
+          </Alert>
+        )}
 
         {/* Tabs */}
         <TabContext value={activeTab}>
