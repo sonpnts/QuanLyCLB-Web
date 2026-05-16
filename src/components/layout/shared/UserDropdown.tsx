@@ -77,7 +77,7 @@ const UserDropdown = () => {
   }
 
   const SYSTEM_LOGO = '/images/logos/logo.svg'
-  const avatarSrc = auth?.user?.avatarUrl && auth.user.avatarUrl.trim() !== '' ? auth.user.avatarUrl : SYSTEM_LOGO
+  const avatarSrc = auth?.user?.avatar?.trim() ? auth.user.avatar.trim() : SYSTEM_LOGO
 
   return (
     <>

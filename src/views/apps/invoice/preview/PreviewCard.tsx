@@ -321,9 +321,9 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
             </Box>
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <Typography variant='body2' color='text.secondary' textAlign='center'>
-              Biên lai này là chứng từ hợp lệ cho khoản thu từ hệ thống quản lý câu lạc bộ.
-            </Typography>
+            {/*<Typography variant='body2' color='text.secondary' textAlign='center'>*/}
+            {/*  Biên lai này là chứng từ hợp lệ cho khoản thu từ hệ thống quản lý câu lạc bộ.*/}
+            {/*</Typography>*/}
             <Typography variant='body2' color='text.secondary' textAlign='center'>
               Khoản phí đã thanh toán sẽ không được hoàn lại và chỉ được bảo lưu 1 lần.
             </Typography>

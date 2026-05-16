@@ -6,7 +6,7 @@ export type AuthUser = {
   email: string
   phoneNumber?: string | null
   beltLevelName?: string | null
-  avatarUrl?: string | null
+  avatar?: string | null
 }
 
 export type AuthSnapshot = {

@@ -27,6 +27,7 @@ type ApiAuthResponse = {
   roles?: string[]
   permissions?: string[]
   instructor?: AuthUser
+  avatar?: string
 }
 
 type ApiLoginResponse = {
