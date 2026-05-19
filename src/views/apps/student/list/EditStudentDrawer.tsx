@@ -53,6 +53,7 @@ type FormValues = {
   code: string
   fullName: string
   phoneNumber?: string
+  personalIdNumber?: string
   address?: string
   dateOfBirth?: string
   educationLevel?: string
@@ -75,6 +76,7 @@ const EditStudentDrawer = (props: Props) => {
       code: student?.code || '',
       fullName: student?.fullName || '',
       phoneNumber: student?.phoneNumber || '',
+      personalIdNumber: student?.personalIdNumber || '',
       address: student?.address || '',
       dateOfBirth: student?.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
       educationLevel: student?.educationLevel || '',
@@ -125,6 +127,7 @@ const EditStudentDrawer = (props: Props) => {
     if (info.gender !== undefined) setValue('gender', String(info.gender))
     if (info.dateOfBirth) setValue('dateOfBirth', info.dateOfBirth)
     if (info.phoneNumber) setValue('phoneNumber', info.phoneNumber)
+    if (info.personalIdNumber) setValue('personalIdNumber', info.personalIdNumber)
     if (info.address) setValue('address', info.address)
     showNotification('Đã áp dụng thông tin từ liên đoàn.', 'info')
   }
@@ -138,6 +141,7 @@ const EditStudentDrawer = (props: Props) => {
       const payload: any = {
         // Mã HV luôn được phép cập nhật (dù đã khóa, vẫn có thể đổi mã)
         code: memberCode.trim(),
+        personalIdNumber: values.personalIdNumber || undefined,
         address: values.address || undefined,
         notes: values.notes || undefined
       }
@@ -321,6 +325,22 @@ const EditStudentDrawer = (props: Props) => {
                   type='date'
                   disabled={isLocked}
                   InputLabelProps={{ shrink: true }}
+                />
+              )}
+            />
+          </Grid>
+
+          {/* CCCD */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Controller
+              name='personalIdNumber'
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label='CCCD / Số định danh cá nhân'
+                  placeholder='Ví dụ: 012345678901'
                 />
               )}
             />

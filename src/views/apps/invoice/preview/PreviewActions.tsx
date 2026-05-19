@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // Next Imports
 import Link from 'next/link'
@@ -29,7 +29,7 @@ const PreviewActions = ({ onPrint }: Props) => {
           color='secondary'
           variant='outlined'
           component={Link}
-          href='/apps/payment/list?tab=receipts'
+          href='/apps/payment/list'
           startIcon={<i className='ri-arrow-left-line' />}
         >
           Quay lại danh sách
@@ -40,3 +40,4 @@ const PreviewActions = ({ onPrint }: Props) => {
 }
 
 export default PreviewActions
+

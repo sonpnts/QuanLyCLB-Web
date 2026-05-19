@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
 
@@ -29,20 +29,18 @@ import menuAdminService, {
 import roleService, { type RoleType } from '@/services/roleService'
 import { useNotification } from '@/contexts/notificationContext'
 import menuService from '@/services/menuService'
+import {
+  RBAC_ACTION_LABELS,
+  RBAC_ACTION_ORDER,
+  getModuleDisplayName,
+  getModuleSupportedActions,
+  getPermissionModuleFromCode,
+  type RbacAction
+} from '@/utils/rbac'
 
 type MatrixState = Record<string, string[]>
-type ActionKey = 'View' | 'Create' | 'Update' | 'Delete' | 'Approve'
+type ActionKey = RbacAction
 type FunctionForm = UpsertFunctionRequest & { functionId?: string }
-
-const ACTION_LABELS: Record<ActionKey, string> = {
-  View: 'Xem',
-  Create: 'Thêm',
-  Update: 'Sửa',
-  Delete: 'Xóa',
-  Approve: 'Duyệt'
-}
-
-const ACTION_ORDER: ActionKey[] = ['View', 'Create', 'Update', 'Delete', 'Approve']
 
 const normalize = (values: string[] = []) =>
   [...new Set(values.filter(Boolean).map(value => value.trim()))].sort((a, b) => a.localeCompare(b))
@@ -166,7 +164,7 @@ const PermissionMatrix = () => {
       const action = parts[parts.length - 1] as ActionKey
       const module = parts.slice(0, parts.length - 1).join('.')
 
-      if (!module || !ACTION_ORDER.includes(action)) return
+      if (!module || !RBAC_ACTION_ORDER.includes(action)) return
 
       if (!rowMap[module]) rowMap[module] = {}
       rowMap[module][action] = permission
@@ -365,10 +363,10 @@ const PermissionMatrix = () => {
               <table className='w-full text-sm border-collapse'>
                 <thead>
                   <tr className='bg-action-hover'>
-                    <th className='p-3 text-left min-w-[180px]'>Module</th>
-                    {ACTION_ORDER.map(action => (
+                    <th className='p-3 text-left min-w-[180px]'>Tên</th>
+                    {RBAC_ACTION_ORDER.map(action => (
                       <th key={action} className='p-3 text-center min-w-[120px]'>
-                        {ACTION_LABELS[action]}
+                        {RBAC_ACTION_LABELS[action]}
                       </th>
                     ))}
                   </tr>
@@ -378,13 +376,17 @@ const PermissionMatrix = () => {
                     <tr key={row.module} className={`border-t ${index % 2 ? 'bg-action-hover' : ''}`}>
                       <td className='p-3'>
                         <Typography variant='body2' className='font-semibold'>
+                          {getModuleDisplayName(row.module)}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
                           {row.module}
                         </Typography>
                       </td>
-                      {ACTION_ORDER.map(action => {
+                      {RBAC_ACTION_ORDER.map(action => {
+                        const supportedActions = getModuleSupportedActions(row.module)
                         const permission = row.actions[action]
 
-                        if (!permission) {
+                        if (!supportedActions.includes(action) || !permission) {
                           return (
                             <td key={`${row.module}-${action}`} className='text-center p-3'>
                               -
@@ -461,16 +463,29 @@ const PermissionMatrix = () => {
                 </thead>
                 <tbody>
                   {permissions.map((permission, index) => {
-                    const action = permission.permissionCode.split('.').pop() || '-'
+                    const action = (permission.permissionCode.split('.').pop() || '-') as ActionKey | '-'
+                    const moduleCode = getPermissionModuleFromCode(permission.permissionCode)
                     const checked = selectedFunctionCode
                       ? (functionMatrix[permission.permissionId] || []).includes(selectedFunctionCode)
                       : false
 
                     return (
                       <tr key={permission.permissionId} className={`border-t ${index % 2 ? 'bg-action-hover' : ''}`}>
-                        <td className='p-3'>{action}</td>
+                        <td className='p-3'>
+                          <Typography variant='body2' className='font-semibold'>
+                            {getModuleDisplayName(moduleCode)}
+                          </Typography>
+                          <Typography variant='caption' color='text.secondary'>
+                            {RBAC_ACTION_LABELS[action as ActionKey] || action}
+                          </Typography>
+                        </td>
                         <td className='p-3'>{permission.permissionCode}</td>
-                        <td className='p-3'>{permission.permissionName}</td>
+                        <td className='p-3'>
+                          <Typography variant='body2'>{permission.permissionName}</Typography>
+                          <Typography variant='caption' color='text.secondary'>
+                            {getModuleDisplayName(moduleCode)} - {RBAC_ACTION_LABELS[action as ActionKey] || action}
+                          </Typography>
+                        </td>
                         <td className='p-3 text-center'>
                           <Checkbox
                             size='small'
@@ -624,3 +639,4 @@ const PermissionMatrix = () => {
 }
 
 export default PermissionMatrix
+

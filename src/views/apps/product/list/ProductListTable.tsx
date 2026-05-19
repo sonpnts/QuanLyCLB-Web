@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -30,6 +30,8 @@ import type { ProductType } from '@/types/apps/productTypes'
 import productService from '@/services/productService'
 import type { GetProductsParams } from '@/services/productService'
 import { useNotification } from '@/contexts/notificationContext'
+import { useAuth } from '@/contexts/authContext'
+import { buildModulePermissionMap } from '@/utils/rbac'
 
 import AddProductDrawer from './AddProductDrawer'
 import EditProductDrawer from './EditProductDrawer'
@@ -76,6 +78,11 @@ const columnHelper = createColumnHelper<ProductType>()
 
 const ProductListTable = () => {
   const { showNotification } = useNotification()
+  const { auth } = useAuth()
+  const productPermissions = useMemo(
+    () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'Product'),
+    [auth?.permissions, auth?.roles]
+  )
   const [addDrawerOpen, setAddDrawerOpen] = useState(false)
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null)
@@ -154,8 +161,8 @@ const ProductListTable = () => {
     }
   }
 
-  const columns = useMemo<ColumnDef<ProductType, any>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<ProductType, any>[]>(() => {
+    const nextColumns: ColumnDef<ProductType, any>[] = [
       columnHelper.accessor('code', {
         header: 'Mã sản phẩm',
         cell: ({ row }) => <Typography className='font-medium'>{row.original.code}</Typography>
@@ -186,30 +193,37 @@ const ProductListTable = () => {
             label={row.original.isActive ? 'Đang hoạt động' : 'Ngừng hoạt động'}
           />
         )
-      }),
-      {
+      })
+    ]
+
+    if (productPermissions.canUpdate || productPermissions.canDelete) {
+      nextColumns.push({
         id: 'actions',
         header: 'Thao tác',
         cell: ({ row }) => (
           <div className='flex items-center gap-2'>
-            <IconButton color='primary' title='Chỉnh sửa' onClick={() => handleEdit(row.original)}>
-              <i className='ri-edit-box-line' />
-            </IconButton>
-            {row.original.isActive ? (
-              <IconButton color='error' title='Xóa mềm' onClick={() => handleDelete(row.original.id)}>
-                <i className='ri-delete-bin-6-line' />
-              </IconButton>
-            ) : (
-              <IconButton color='success' title='Khôi phục' onClick={() => handleRestore(row.original.id)}>
-                <i className='ri-loop-left-line' />
+            {productPermissions.canUpdate && (
+              <IconButton color='primary' title='Chỉnh sửa' onClick={() => handleEdit(row.original)}>
+                <i className='ri-edit-box-line' />
               </IconButton>
             )}
+            {productPermissions.canDelete &&
+              (row.original.isActive ? (
+                <IconButton color='error' title='Xóa mềm' onClick={() => handleDelete(row.original.id)}>
+                  <i className='ri-delete-bin-6-line' />
+                </IconButton>
+              ) : (
+                <IconButton color='success' title='Khôi phục' onClick={() => handleRestore(row.original.id)}>
+                  <i className='ri-loop-left-line' />
+                </IconButton>
+              ))}
           </div>
         )
-      }
-    ],
-    []
-  )
+      })
+    }
+
+    return nextColumns
+  }, [productPermissions.canDelete, productPermissions.canUpdate])
 
   const table = useReactTable({
     data,
@@ -238,9 +252,11 @@ const ProductListTable = () => {
             placeholder='Tìm kiếm sản phẩm...'
             className='max-sm:is-full'
           />
-          <Button variant='contained' onClick={() => setAddDrawerOpen(true)}>
-            Thêm sản phẩm
-          </Button>
+          {productPermissions.canCreate && (
+            <Button variant='contained' onClick={() => setAddDrawerOpen(true)}>
+              Thêm sản phẩm
+            </Button>
+          )}
         </div>
         <div className='overflow-x-auto'>
           <table className={tableStyles.table}>
@@ -296,13 +312,20 @@ const ProductListTable = () => {
         />
       </Card>
 
-      <AddProductDrawer open={addDrawerOpen} handleClose={() => setAddDrawerOpen(false)} setData={setData} />
-      <EditProductDrawer
-        open={editDrawerOpen}
-        handleClose={() => { setEditDrawerOpen(false); setSelectedProduct(null) }}
-        product={selectedProduct}
-        onSaved={handleSaved}
-      />
+      {productPermissions.canCreate && (
+        <AddProductDrawer open={addDrawerOpen} handleClose={() => setAddDrawerOpen(false)} setData={setData} />
+      )}
+      {productPermissions.canUpdate && (
+        <EditProductDrawer
+          open={editDrawerOpen}
+          handleClose={() => {
+            setEditDrawerOpen(false)
+            setSelectedProduct(null)
+          }}
+          product={selectedProduct}
+          onSaved={handleSaved}
+        />
+      )}
     </>
   )
 }

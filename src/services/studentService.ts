@@ -49,6 +49,7 @@ export interface CreateStudentRequest {
   fullName: string
   code?: string
   phoneNumber?: string
+  personalIdNumber?: string
   address?: string
   dateOfBirth?: string
   educationLevel: string
@@ -61,6 +62,7 @@ export interface UpdateStudentRequest {
   code?: string | null
   fullName?: string
   phoneNumber?: string
+  personalIdNumber?: string | null
   address?: string
   dateOfBirth?: string
   educationLevel?: string

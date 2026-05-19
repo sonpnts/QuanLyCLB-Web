@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 
@@ -26,30 +26,32 @@ import userService from '@/services/userService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
-import { hasPermission } from '@/utils/permissionUtils'
 import studentService from '@/services/studentService'
 
 type Props = {
   open: boolean
   handleClose: () => void
   setData: React.Dispatch<React.SetStateAction<ProductSaleType[]>>
+  sale?: ProductSaleType | null
 }
 
-const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
+const AddProductSaleDrawer = ({ open, handleClose, setData, sale }: Props) => {
   const { auth } = useAuth()
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState<ProductType[]>([])
   const [classes, setClasses] = useState<ClassType[]>([])
   const [collectors, setCollectors] = useState<UsersType[]>([])
   const [classStudents, setClassStudents] = useState<StudentType[]>([])
-  const isAdmin = hasPermission(auth?.permissions, 'ProductSale.ManageAll') || hasAdminRole(auth?.roles)
+  const isAdmin = hasAdminRole(auth?.roles)
+  const isEditMode = !!sale
 
   const [formData, setFormData] = useState({
     productId: '',
     classId: '',
     quantity: '1',
     unitPrice: '',
-    soldByUserId: auth?.user.id || '',
+    saleDate: '',
+    soldByUserId: auth?.user?.id || '',
     buyerName: '',
     notes: ''
   })
@@ -69,10 +71,6 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
         if (classesRes.success && classesRes.data) setClasses(classesRes.data)
         if (coachesRes.success && coachesRes.data) {
           setCollectors(coachesRes.data)
-          setFormData(prev => ({
-            ...prev,
-            soldByUserId: prev.soldByUserId || auth?.user.id || ''
-          }))
         }
       } catch (error) {
         showNotification('Không thể tải dữ liệu cho form bán sản phẩm.', 'error')
@@ -80,13 +78,46 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
     }
 
     if (open) loadData()
-  }, [open, auth?.user.id, showNotification])
+  }, [open, isAdmin, showNotification])
+
+  useEffect(() => {
+    if (!open) return
+
+    if (sale) {
+      setFormData({
+        productId: sale.productId || '',
+        classId: sale.classId || '',
+        quantity: String(sale.quantity || 1),
+        unitPrice: String(sale.unitPrice || ''),
+        saleDate: sale.saleDate ? sale.saleDate.slice(0, 10) : '',
+        soldByUserId: sale.soldByUserId || auth?.user?.id || '',
+        buyerName: sale.buyerName || '',
+        notes: sale.notes || ''
+      })
+
+      return
+    }
+
+    setFormData({
+      productId: '',
+      classId: '',
+      quantity: '1',
+      unitPrice: '',
+      saleDate: '',
+      soldByUserId: auth?.user?.id || '',
+      buyerName: '',
+      notes: ''
+    })
+  }, [open, sale, auth?.user?.id])
 
   useEffect(() => {
     if (formData.classId) {
-      studentService.getStudents({ classId: formData.classId, pageSize: 1000 }).then(res => {
-        if (res.success && res.data) setClassStudents(res.data)
-      }).catch(() => setClassStudents([]))
+      studentService
+        .getStudents({ classId: formData.classId, pageSize: 1000 })
+        .then(res => {
+          if (res.success && res.data) setClassStudents(res.data)
+        })
+        .catch(() => setClassStudents([]))
     } else {
       setClassStudents([])
     }
@@ -98,7 +129,8 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
       classId: '',
       quantity: '1',
       unitPrice: '',
-      soldByUserId: auth?.user.id || '',
+      saleDate: '',
+      soldByUserId: auth?.user?.id || '',
       buyerName: '',
       notes: ''
     })
@@ -118,26 +150,40 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
 
     try {
       setLoading(true)
-      const response = await productSaleService.createProductSale({
-        productId: formData.productId,
-        classId: formData.classId,
-        quantity,
-        unitPrice,
-        soldByUserId: formData.soldByUserId || undefined,
-        buyerName: formData.buyerName.trim() || undefined,
-        notes: formData.notes.trim() || undefined
-      })
+      const response =
+        isEditMode && sale
+          ? await productSaleService.updateProductSale(sale.id, {
+              quantity,
+              unitPrice,
+              saleDate: formData.saleDate || sale.saleDate || new Date().toISOString(),
+              isActive: sale.isActive !== false,
+              soldByUserId: formData.soldByUserId || undefined,
+              buyerName: formData.buyerName.trim() || undefined,
+              notes: formData.notes.trim() || undefined
+            })
+          : await productSaleService.createProductSale({
+              productId: formData.productId,
+              classId: formData.classId,
+              quantity,
+              unitPrice,
+              saleDate: formData.saleDate || undefined,
+              soldByUserId: formData.soldByUserId || undefined,
+              buyerName: formData.buyerName.trim() || undefined,
+              notes: formData.notes.trim() || undefined
+            })
 
       if (!response.success || !response.data) {
-        showNotification(response.message || 'Không thể tạo giao dịch bán sản phẩm.', 'error')
+        showNotification(response.message || 'Không thể lưu giao dịch bán sản phẩm.', 'error')
         return
       }
 
-      setData(prev => [response.data!, ...prev])
-      showNotification('Tạo giao dịch bán sản phẩm thành công.', 'success')
+      setData(prev =>
+        isEditMode ? prev.map(item => (item.id === response.data!.id ? response.data! : item)) : [response.data!, ...prev]
+      )
+      showNotification(isEditMode ? 'Cập nhật giao dịch bán sản phẩm thành công.' : 'Tạo giao dịch bán sản phẩm thành công.', 'success')
       resetAndClose()
     } catch (error) {
-      showNotification('Đã có lỗi khi tạo giao dịch.', 'error')
+      showNotification('Đã có lỗi khi lưu giao dịch.', 'error')
     } finally {
       setLoading(false)
     }
@@ -163,7 +209,7 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 320, sm: 440 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Tạo giao dịch bán sản phẩm</Typography>
+        <Typography variant='h5'>{isEditMode ? 'Sửa giao dịch bán sản phẩm' : 'Tạo giao dịch bán sản phẩm'}</Typography>
         <IconButton size='small' onClick={resetAndClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -176,6 +222,7 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
             <Select
               label='Sản phẩm *'
               value={formData.productId}
+              disabled={isEditMode}
               onChange={event => handleProductChange(event.target.value)}
             >
               {products.map(product => (
@@ -191,6 +238,7 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
             <Select
               label='Lớp *'
               value={formData.classId}
+              disabled={isEditMode}
               onChange={event => setFormData(prev => ({ ...prev, classId: event.target.value }))}
             >
               {classes.map(item => (
@@ -226,17 +274,21 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
               value={formData.quantity}
               onChange={event => setFormData(prev => ({ ...prev, quantity: event.target.value }))}
             />
-            <TextField
-              label='Đơn giá *'
-              type='number'
-              value={formData.unitPrice}
-              onChange={event => setFormData(prev => ({ ...prev, unitPrice: event.target.value }))}
-            />
+            <TextField label='Đơn giá *' type='number' value={formData.unitPrice} disabled />
           </div>
+
+          <TextField
+            fullWidth
+            type='date'
+            label='Ngày bán'
+            value={formData.saleDate}
+            onChange={event => setFormData(prev => ({ ...prev, saleDate: event.target.value }))}
+            InputLabelProps={{ shrink: true }}
+          />
 
           <Autocomplete
             freeSolo
-            options={classStudents.map(s => s.fullName)}
+            options={classStudents.map(student => student.fullName)}
             value={formData.buyerName}
             onChange={(_, newValue) => setFormData(prev => ({ ...prev, buyerName: newValue || '' }))}
             onInputChange={(_, newInputValue) => setFormData(prev => ({ ...prev, buyerName: newInputValue }))}
@@ -257,7 +309,7 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
 
           <div className='flex items-center gap-4'>
             <Button type='submit' variant='contained' disabled={loading}>
-              {loading ? 'Đang xử lý...' : 'Tạo giao dịch'}
+              {loading ? 'Đang xử lý...' : isEditMode ? 'Lưu cập nhật' : 'Tạo giao dịch'}
             </Button>
             <Button variant='outlined' color='error' onClick={resetAndClose}>
               Hủy
@@ -270,4 +322,3 @@ const AddProductSaleDrawer = ({ open, handleClose, setData }: Props) => {
 }
 
 export default AddProductSaleDrawer
-

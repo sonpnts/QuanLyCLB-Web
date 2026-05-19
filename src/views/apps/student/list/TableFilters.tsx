@@ -19,9 +19,10 @@ import type { GetStudentsParams } from '@/services/studentService'
 
 interface TableFiltersProps {
   onFilterChange: (params: GetStudentsParams) => void
+  classOptions?: any[]
 }
 
-const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
+const TableFilters = memo(({ onFilterChange, classOptions }: TableFiltersProps) => {
   // States
   const [classId, setClassId] = useState<string>('')
   const [gender, setGender] = useState<string>('')
@@ -34,6 +35,12 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
 
   // Load classes for filter - chỉ load 1 lần
   useEffect(() => {
+    if (classOptions && classOptions.length > 0) {
+      setClasses(classOptions)
+      classesLoaded.current = true
+      return
+    }
+
     if (classesLoaded.current) return
 
     const loadClasses = async () => {
@@ -49,7 +56,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
       }
     }
     loadClasses()
-  }, [])
+  }, [classOptions])
 
   // Handle filter changes - chỉ gọi khi filter thực sự thay đổi
   useEffect(() => {

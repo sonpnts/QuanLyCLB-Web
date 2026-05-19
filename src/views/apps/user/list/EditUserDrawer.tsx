@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -61,7 +61,6 @@ const EditUserDrawer = (props: Props) => {
   const { open, onClose, user, roles, onSaved } = props
   const { showNotification } = useNotification()
   const [submitting, setSubmitting] = useState(false)
-  const [memberCodeLocal, setMemberCodeLocal] = useState(user?.memberCode || '')
 
   const defaultValues = useMemo<FormValues>(
     () => ({
@@ -92,7 +91,6 @@ const EditUserDrawer = (props: Props) => {
   useEffect(() => {
     if (user) {
       reset(defaultValues)
-      setMemberCodeLocal(user.memberCode || '')
 
       const currentRoleIds = (user.roles || [])
         .map(rn => roles.find(r => r.name === rn)?.id)
@@ -124,7 +122,7 @@ const EditUserDrawer = (props: Props) => {
         isActive: values.isActive,
         certification: values.certification || undefined,
         roleIds: values.roleIds,
-        memberCode: memberCodeLocal.trim() || null
+        memberCode: values.memberCode?.trim() || null
       }
 
       const res = await userService.updateUser(user.id, payload)
@@ -213,11 +211,17 @@ const EditUserDrawer = (props: Props) => {
           </Grid>
           {/* Mã hội viên liên đoàn — có nút tìm kiếm giống học viên */}
           <Grid size={{ xs: 12, sm: 6 }}>
-            <MemberCodeField
-              value={memberCodeLocal}
-              onChange={setMemberCodeLocal}
-              onMemberInfoConfirmed={handleMemberInfoConfirmed}
-              helperText='Nhập mã hoặc dùng kính lúp tìm theo tên'
+            <Controller
+              name='memberCode'
+              control={control}
+              render={({ field }) => (
+                <MemberCodeField
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  onMemberInfoConfirmed={handleMemberInfoConfirmed}
+                  helperText='Nhập mã hoặc dùng kính lúp tìm theo tên'
+                />
+              )}
             />
           </Grid>
           {/* Cấp đai — chỉ đọc, tra cứu từ liên đoàn */}

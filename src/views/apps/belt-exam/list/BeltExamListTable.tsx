@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -54,6 +55,7 @@ const statusLabels: { [key: string]: string } = {
 const columnHelper = createColumnHelper<ExamSessionType>()
 
 const BeltExamListTable = () => {
+  const router = useRouter()
   const [addExamOpen, setAddExamOpen] = useState(false)
   const [editExamOpen, setEditExamOpen] = useState(false)
   const [editingExam, setEditingExam] = useState<ExamSessionType | null>(null)
@@ -185,8 +187,8 @@ const BeltExamListTable = () => {
         cell: ({ row }) => {
           const exam = row.original
           const isNewFlow = ['Open', 'Closed', 'Locked'].includes(exam.status as string)
-          return (
-            <Box className='flex items-center gap-1'>
+            return (
+              <Box className='flex items-center gap-1' onClick={event => event.stopPropagation()}>
               <IconButton color='primary' title='Chỉnh sửa' onClick={() => openEditDrawer(exam)}>
                 <i className='ri-pencil-line' />
               </IconButton>
@@ -245,9 +247,7 @@ const BeltExamListTable = () => {
                   <i className='ri-admin-line' />
                 </IconButton>
               )}
-              <IconButton component={Link} href={`/apps/belt-exam/${exam.id}`} title='Xem chi tiết'>
-                <i className='ri-eye-line text-textSecondary' />
-              </IconButton>
+              {/* Row click handles "view" */}
             </Box>
           )
         }
@@ -311,7 +311,11 @@ const BeltExamListTable = () => {
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
+                  <tr
+                    key={row.id}
+                    onClick={() => router.push(`/apps/belt-exam/${row.original.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                     ))}

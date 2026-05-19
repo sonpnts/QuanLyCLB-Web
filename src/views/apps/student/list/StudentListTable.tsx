@@ -1,9 +1,7 @@
-'use client'
+﻿'use client'
 
-// React Imports
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 
-// MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import Divider from '@mui/material/Divider'
@@ -23,7 +21,6 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import type { TextFieldProps } from '@mui/material/TextField'
 
-// Third-party Imports
 import classnames from 'classnames'
 import {
   createColumnHelper,
@@ -39,11 +36,9 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef } from '@tanstack/react-table'
 
-// Type Imports
 import type { StudentType } from '@/types/apps/studentTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 
-// Component Imports
 import TableFilters from './TableFilters'
 import AddStudentDrawer from './AddStudentDrawer'
 import EditStudentDrawer from './EditStudentDrawer'
@@ -53,24 +48,18 @@ import TransferStudentDialog from './TransferStudentDialog'
 import ImportStudentsDialog from './ImportStudentsDialog'
 import CustomAvatar from '@core/components/mui/Avatar'
 
-// Service Imports
 import studentService from '@/services/studentService'
 import classService from '@/services/classService'
 import type { GetStudentsParams } from '@/services/studentService'
 
-// Context Imports
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 
-// Role utils
 import { hasAdminRole, isInstructorUser } from '@/utils/roleUtils'
-import { hasPermission } from '@/utils/permissionUtils'
-
-// Utils
+import { buildModulePermissionMap } from '@/utils/rbac'
 import { logger } from '@/utils/logger'
 import { exportToExcel, formatVnDate, formatBool } from '@/utils/exportToExcel'
 
-// Style Imports
 import tableStyles from '@core/styles/table.module.css'
 import { fuzzyFilter } from '@/utils/tableHelpers'
 
@@ -93,28 +82,41 @@ const DebouncedInput = ({
   }, [initialValue])
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
+    const timeout = setTimeout(() => onChange(value), debounce)
     return () => clearTimeout(timeout)
   }, [value, debounce, onChange])
 
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
 }
 
-const getInitials = (name: string) => {
-  return name
+const getInitials = (name: string) =>
+  name
     .split(' ')
     .map(word => word[0])
     .join('')
     .toUpperCase()
     .slice(0, 2)
+
+const getSortedClassNames = (student: StudentType) =>
+  (student.classes || [])
+    .filter(c => !c.status || c.status === 'Active')
+    .map(c => c.className || '')
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, 'vi'))
+
+const getCoachClassSortIndex = (student: StudentType, orderedClassIds: string[]) => {
+  const activeClassIds = (student.classes || [])
+    .filter(c => !c.status || c.status === 'Active')
+    .map(c => c.classId)
+
+  const firstMatchedIndex = orderedClassIds.findIndex(classId => activeClassIds.includes(classId))
+
+  return firstMatchedIndex >= 0 ? firstMatchedIndex : Number.MAX_SAFE_INTEGER
 }
 
 const columnHelper = createColumnHelper<StudentType>()
 
 const StudentListTable = () => {
-  // States
   const [addStudentOpen, setAddStudentOpen] = useState(false)
   const [editStudentOpen, setEditStudentOpen] = useState(false)
   const [viewStudentOpen, setViewStudentOpen] = useState(false)
@@ -129,19 +131,19 @@ const StudentListTable = () => {
   const [loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetStudentsParams>({})
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-
-  // Suspend dialog
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
   const [suspendTarget, setSuspendTarget] = useState<StudentType | null>(null)
   const [suspendReason, setSuspendReason] = useState('')
   const [suspendLoading, setSuspendLoading] = useState(false)
 
   const { showNotification } = useNotification()
-
-  // Auth & role detection
   const { auth } = useAuth()
-  const isAdmin = useMemo(() => hasPermission(auth?.permissions, 'Student.ManageAll') || hasAdminRole(auth?.roles), [auth])
-  const isInstructor = useMemo(() => isInstructorUser(auth?.roles), [auth])
+  const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth?.roles])
+  const isInstructor = useMemo(() => isInstructorUser(auth?.roles), [auth?.roles])
+  const studentPermissions = useMemo(
+    () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'Student'),
+    [auth?.permissions, auth?.roles]
+  )
   const userId = auth?.user?.id
 
   const showNotificationRef = useRef(showNotification)
@@ -154,23 +156,16 @@ const StudentListTable = () => {
     setFilterParams(params)
   }, [])
 
-  // Tính filterParams thực tế (kết hợp base filter + status filter)
   const effectiveParams = useMemo<GetStudentsParams>(() => {
     const p = { ...filterParams }
-    if (statusFilter === 'suspended') {
-      p.isSuspended = true
-    } else if (statusFilter === 'active') {
-      p.isSuspended = false
-    } else {
-      delete p.isSuspended
-    }
+    if (statusFilter === 'suspended') p.isSuspended = true
+    else if (statusFilter === 'active') p.isSuspended = false
+    else delete p.isSuspended
     return p
   }, [filterParams, statusFilter])
 
-  // Load students - phụ thuộc vào effectiveParams và role
   useEffect(() => {
     const filterKey = JSON.stringify(effectiveParams) + `|${userId}|${isInstructor}|${isAdmin}`
-
     if (studentsLoadedRef.current && currentFilterRef.current === filterKey) return
 
     const loadStudents = async () => {
@@ -179,23 +174,21 @@ const StudentListTable = () => {
         currentFilterRef.current = filterKey
         studentsLoadedRef.current = true
 
-        if (!isAdmin && isInstructor && userId) {
-          // HLV / trợ giảng: lấy lớp được phân công, sau đó lấy học viên từng lớp
+        if (!isAdmin && userId) {
           const classRes = await classService.getClassesByUserId(userId, { isActive: true, pageSize: 1000 })
-          const activeClasses = (classRes.data || []).filter(c => c.isActive !== false)
+          const activeClasses = (classRes.data || [])
+            .filter(c => c.isActive !== false)
+            .sort((left, right) => (left.name || '').localeCompare(right.name || '', 'vi'))
           const classIds = activeClasses.map(c => c.id)
 
           setAssignedClasses(activeClasses)
 
-          // Allow filtering by a specific class for instructor view.
           const targetClassIds = effectiveParams.classId ? [effectiveParams.classId] : classIds
-
           if (targetClassIds.length === 0) {
             setData([])
             return
           }
 
-          // Fetch students per class in parallel, then deduplicate by student.id
           const results = await Promise.all(
             targetClassIds.map(classId => studentService.getStudents({ classId, pageSize: 1000 }))
           )
@@ -207,10 +200,24 @@ const StudentListTable = () => {
             }
           }
 
-          setData(Array.from(studentMap.values()))
+          const sortedStudents = Array.from(studentMap.values()).sort((left, right) => {
+            const leftClassIndex = getCoachClassSortIndex(left, targetClassIds)
+            const rightClassIndex = getCoachClassSortIndex(right, targetClassIds)
+
+            if (leftClassIndex !== rightClassIndex) return leftClassIndex - rightClassIndex
+
+            const leftClassName = getSortedClassNames(left)[0] || ''
+            const rightClassName = getSortedClassNames(right)[0] || ''
+            const classNameCompare = leftClassName.localeCompare(rightClassName, 'vi')
+
+            if (classNameCompare !== 0) return classNameCompare
+
+            return left.fullName.localeCompare(right.fullName, 'vi')
+          })
+
+          setData(sortedStudents)
         } else {
           setAssignedClasses([])
-          // Admin: lấy tất cả theo filter
           const response = await studentService.getStudents(effectiveParams)
           setData(response.data || [])
         }
@@ -221,6 +228,7 @@ const StudentListTable = () => {
         setLoading(false)
       }
     }
+
     loadStudents()
   }, [effectiveParams, isAdmin, isInstructor, userId])
 
@@ -228,7 +236,7 @@ const StudentListTable = () => {
     studentsLoadedRef.current = false
     currentFilterRef.current = ''
     setFilterParams(prev => ({ ...prev }))
-  }, []) // intentionally stable - resetting refs + triggering re-render is enough
+  }, [])
 
   const handleDelete = useCallback(async (id: string) => {
     try {
@@ -236,9 +244,9 @@ const StudentListTable = () => {
       const response = await studentService.deleteStudent(id)
       if (response.success) {
         setData(prev => prev.filter(s => s.id !== id))
-        showNotificationRef.current('Xóa học viên thành công!', 'success')
+      showNotificationRef.current('Xóa học viên thành công!', 'success')
       } else {
-        showNotificationRef.current(response.message || 'Không thể xóa học viên.', 'error')
+      showNotificationRef.current(response.message || 'Không thể xóa học viên.', 'error')
       }
     } catch (error) {
       logger.error('StudentListTable', 'handleDelete', error)
@@ -268,25 +276,28 @@ const StudentListTable = () => {
     setTransferStudentOpen(true)
   }, [])
 
-  const handleStudentUpdated = useCallback((updated: StudentType) => {
-    setData(prev =>
-      prev.map(s => {
-        if (s.id !== updated.id) return s
-        return {
-          ...s,
-          ...updated,
-          classes: (updated.classes && updated.classes.length > 0) ? updated.classes : s.classes
-        }
-      })
-    )
-    reloadData()
-  }, [reloadData])
+  const handleStudentUpdated = useCallback(
+    (updated: StudentType) => {
+      setData(prev =>
+        prev.map(s =>
+          s.id !== updated.id
+            ? s
+            : {
+                ...s,
+                ...updated,
+                classes: updated.classes && updated.classes.length > 0 ? updated.classes : s.classes
+              }
+        )
+      )
+      reloadData()
+    },
+    [reloadData]
+  )
 
   const handleEnrolled = useCallback(() => {
     reloadData()
   }, [reloadData])
 
-  // Suspend handlers
   const openSuspendDialog = useCallback((student: StudentType) => {
     setSuspendTarget(student)
     setSuspendReason('')
@@ -299,7 +310,18 @@ const StudentListTable = () => {
       setSuspendLoading(true)
       const response = await studentService.suspendStudent(suspendTarget.id, suspendReason.trim() || undefined)
       if (response.success) {
-        setData(prev => prev.map(s => (s.id === suspendTarget.id ? { ...s, isSuspended: true, suspendedAt: new Date().toISOString(), suspendReason: suspendReason.trim() || undefined } : s)))
+        setData(prev =>
+          prev.map(s =>
+            s.id === suspendTarget.id
+              ? {
+                  ...s,
+                  isSuspended: true,
+                  suspendedAt: new Date().toISOString(),
+                  suspendReason: suspendReason.trim() || undefined
+                }
+              : s
+          )
+        )
         showNotificationRef.current('Đã chuyển học viên sang trạng thái tạm nghỉ.', 'success')
         setSuspendDialogOpen(false)
         setSuspendTarget(null)
@@ -313,26 +335,33 @@ const StudentListTable = () => {
     } finally {
       setSuspendLoading(false)
     }
-  }, [suspendTarget, suspendReason, statusFilter, reloadData])
+  }, [reloadData, statusFilter, suspendReason, suspendTarget])
 
-  const handleResume = useCallback(async (student: StudentType) => {
-    try {
-      setLoading(true)
-      const response = await studentService.resumeStudent(student.id)
-      if (response.success) {
-        setData(prev => prev.map(s => (s.id === student.id ? { ...s, isSuspended: false, suspendedAt: undefined, suspendReason: undefined } : s)))
+  const handleResume = useCallback(
+    async (student: StudentType) => {
+      try {
+        setLoading(true)
+        const response = await studentService.resumeStudent(student.id)
+        if (response.success) {
+          setData(prev =>
+            prev.map(s =>
+              s.id === student.id ? { ...s, isSuspended: false, suspendedAt: undefined, suspendReason: undefined } : s
+            )
+          )
         showNotificationRef.current('Đã khôi phục học viên.', 'success')
-        if (statusFilter !== 'all') reloadData()
-      } else {
+          if (statusFilter !== 'all') reloadData()
+        } else {
         showNotificationRef.current(response.message || 'Không thể khôi phục học viên.', 'error')
-      }
-    } catch (error) {
-      logger.error('StudentListTable', 'handleResume', error)
+        }
+      } catch (error) {
+        logger.error('StudentListTable', 'handleResume', error)
       showNotificationRef.current('Đã có lỗi xảy ra.', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }, [statusFilter, reloadData])
+      } finally {
+        setLoading(false)
+      }
+    },
+    [reloadData, statusFilter]
+  )
 
   const columns = useMemo<ColumnDef<StudentType, any>[]>(
     () => [
@@ -355,7 +384,7 @@ const StudentListTable = () => {
         )
       },
       columnHelper.accessor('fullName', {
-        header: 'Học viên',
+      header: 'Học viên',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
             <CustomAvatar
@@ -381,7 +410,7 @@ const StudentListTable = () => {
                     }
                   >
                     <Chip
-                      label='Tạm nghỉ'
+                    label='Tạm nghỉ'
                       size='small'
                       color='warning'
                       variant='tonal'
@@ -396,11 +425,11 @@ const StudentListTable = () => {
         )
       }),
       columnHelper.accessor('phoneNumber', {
-        header: 'Số điện thoại',
+      header: 'Số điện thoại',
         cell: ({ row }) => <Typography>{row.original.phoneNumber || '-'}</Typography>
       }),
       columnHelper.accessor('gender', {
-        header: 'Giới tính',
+      header: 'Giới tính',
         cell: ({ row }) => (
           <Chip
             label={row.original.gender === true ? 'Nam' : row.original.gender === false ? 'Nữ' : '-'}
@@ -411,7 +440,7 @@ const StudentListTable = () => {
         )
       }),
       columnHelper.accessor('dateOfBirth', {
-        header: 'Ngày sinh',
+      header: 'Ngày sinh',
         cell: ({ row }) => (
           <Typography>
             {row.original.dateOfBirth ? new Date(row.original.dateOfBirth).toLocaleDateString('vi-VN') : '-'}
@@ -419,24 +448,24 @@ const StudentListTable = () => {
         )
       }),
       columnHelper.accessor('beltLevelName', {
-        header: 'Cấp đai',
+      header: 'Cấp đai',
         cell: ({ row }) => (
-          <Chip label={row.original.beltLevelName || 'Chưa có'} size='small' color='warning' variant='tonal' />
+        <Chip label={row.original.beltLevelName || 'Chưa có'} size='small' color='warning' variant='tonal' />
         )
       }),
       {
         id: 'classes',
-        header: 'Lớp đang học',
+      header: 'Lớp đang học',
         cell: ({ row }) => {
-          // Chỉ hiển thị enrollment đang Active (đang theo học)
           const activeClasses = (row.original.classes || []).filter(c => !c.status || c.status === 'Active')
           if (activeClasses.length === 0) {
             return (
               <Typography variant='body2' color='text.disabled'>
-                Chưa đăng ký
+                  Chưa đăng ký
               </Typography>
             )
           }
+
           return (
             <div className='flex flex-wrap gap-1 max-w-[220px]'>
               {activeClasses.map(cls => (
@@ -446,7 +475,7 @@ const StudentListTable = () => {
                   size='small'
                   color='primary'
                   variant='tonal'
-                  title={`Đăng ký: ${cls.enrollmentDate ? new Date(cls.enrollmentDate).toLocaleDateString('vi-VN') : ''}`}
+              title={`Đăng ký: ${cls.enrollmentDate ? new Date(cls.enrollmentDate).toLocaleDateString('vi-VN') : ''}`}
                 />
               ))}
             </div>
@@ -455,51 +484,62 @@ const StudentListTable = () => {
       },
       {
         id: 'actions',
-        header: 'Thao tác',
+      header: 'Thao tác',
         cell: ({ row }) => {
           const activeClasses = (row.original.classes || []).filter(c => !c.status || c.status === 'Active')
           return (
-          <div className='flex items-center' onClick={event => event.stopPropagation()}>
-            {!row.original.isSuspended ? (
-              <>
-                {activeClasses.length === 0 ? (
-                  <IconButton onClick={() => handleEnroll(row.original)} title='Đăng ký lớp' color='success'>
-                    <i className='ri-user-add-line' />
+            <div className='flex items-center' onClick={event => event.stopPropagation()}>
+              {studentPermissions.canUpdate && !row.original.isSuspended ? (
+                <>
+                  {activeClasses.length === 0 ? (
+              <IconButton onClick={() => handleEnroll(row.original)} title='Đăng ký lớp' color='success'>
+                      <i className='ri-user-add-line' />
+                    </IconButton>
+                  ) : (
+              <IconButton onClick={() => handleTransfer(row.original)} title='Yêu cầu chuyển lớp' color='warning'>
+                      <i className='ri-arrow-left-right-line' />
+                    </IconButton>
+                  )}
+              <IconButton onClick={() => openSuspendDialog(row.original)} title='Tạm nghỉ' color='warning'>
+                    <i className='ri-pause-circle-line' />
                   </IconButton>
-                ) : (
-                  <IconButton onClick={() => handleTransfer(row.original)} title='Yêu cầu chuyển lớp' color='warning'>
-                    <i className='ri-arrow-left-right-line' />
-                  </IconButton>
-                )}
-                <IconButton onClick={() => openSuspendDialog(row.original)} title='Tạm nghỉ' color='warning'>
-                  <i className='ri-pause-circle-line' />
-                </IconButton>
-                {/*<IconButton onClick={() => handleDelete(row.original.id)} title='Xóa học viên' color='error'>*/}
-                {/*  <i className='ri-delete-bin-7-line' />*/}
-                {/*</IconButton>*/}
-              </>
-            ) : (
+                </>
+              ) : studentPermissions.canUpdate && row.original.isSuspended ? (
               <IconButton onClick={() => handleResume(row.original)} title='Khôi phục' color='success'>
-                <i className='ri-play-circle-line' />
-              </IconButton>
-            )}
-            <IconButton title='Xem chi tiết' onClick={() => handleView(row.original)}>
-              <i className='ri-eye-line text-textSecondary' />
-            </IconButton>
+                  <i className='ri-play-circle-line' />
+                </IconButton>
+              ) : null}
+
+              {studentPermissions.canDelete && (
+              <IconButton onClick={() => handleDelete(row.original.id)} title='Xóa học viên' color='error'>
+                  <i className='ri-delete-bin-7-line' />
+                </IconButton>
+              )}
+
+              {studentPermissions.canUpdate && (
             <IconButton title='Chỉnh sửa' onClick={() => handleEdit(row.original)} color='primary'>
-              <i className='ri-edit-box-line' />
-            </IconButton>
-          </div>
+                  <i className='ri-edit-box-line' />
+                </IconButton>
+              )}
+            </div>
           )
         }
       }
     ],
-    [handleDelete, handleEdit, handleView, handleEnroll, handleTransfer, openSuspendDialog, handleResume]
+    [
+      handleDelete,
+      handleEdit,
+      handleEnroll,
+      handleResume,
+      handleTransfer,
+      openSuspendDialog,
+      studentPermissions.canDelete,
+      studentPermissions.canUpdate
+    ]
   )
 
-  // Với instructor mode, statusFilter áp dụng client-side vì data đã load toàn bộ từ các lớp
   const displayData = useMemo(() => {
-    if (!isInstructor) return data  // admin dùng server-side filtering từ effectiveParams
+    if (!isInstructor) return data
     if (statusFilter === 'suspended') return data.filter(s => s.isSuspended)
     if (statusFilter === 'active') return data.filter(s => !s.isSuspended)
     return data
@@ -529,16 +569,17 @@ const StudentListTable = () => {
   return (
     <>
       <Card>
-        {/* Bộ lọc nâng cao chỉ hiển thị cho admin */}
-        {isAdmin && (
+        {(isAdmin || (isInstructor && assignedClasses.length > 0)) && (
           <>
             <CardHeader title='Bộ lọc' />
-            <TableFilters onFilterChange={handleFilterChange} />
+            <TableFilters
+              onFilterChange={handleFilterChange}
+              classOptions={!isAdmin ? assignedClasses : undefined}
+            />
           </>
         )}
         <Divider />
 
-        {/* Status filter bar */}
         <div className='flex items-center justify-between px-5 pt-4 pb-2 gap-4 flex-wrap'>
           <ToggleButtonGroup
             value={statusFilter}
@@ -556,7 +597,7 @@ const StudentListTable = () => {
             <ToggleButton value='all'>Tất cả</ToggleButton>
             <ToggleButton value='active'>Đang học</ToggleButton>
             <ToggleButton value='suspended'>
-              Tạm nghỉ
+            Tạm nghỉ
               {suspendedCount > 0 && statusFilter !== 'suspended' && (
                 <Chip label={suspendedCount} size='small' color='warning' sx={{ ml: 1, height: 18, fontSize: 11 }} />
               )}
@@ -567,9 +608,10 @@ const StudentListTable = () => {
             <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
-              placeholder='Tìm kiếm học viên'
+          placeholder='Tìm kiếm học viên'
               className='max-sm:is-full'
             />
+
             <Button
               variant='outlined'
               color='success'
@@ -578,22 +620,23 @@ const StudentListTable = () => {
               onClick={() => {
                 const tabLabel =
                   statusFilter === 'active' ? 'dang-hoc' : statusFilter === 'suspended' ? 'tam-nghi' : 'tat-ca'
+
                 exportToExcel({
                   filename: `danh-sach-hoc-vien_${tabLabel}`,
                   rows: data,
                   columns: [
-                    { header: 'Mã học viên', accessor: 'code' },
-                    { header: 'Họ và tên', accessor: 'fullName' },
-                    { header: 'Số điện thoại', accessor: 'phoneNumber' },
+    { header: 'Mã học viên', accessor: 'code' },
+    { header: 'Họ và tên', accessor: 'fullName' },
+    { header: 'Số điện thoại', accessor: 'phoneNumber' },
                     {
-                      header: 'Giới tính',
+      header: 'Giới tính',
                       accessor: 'gender',
-                      formatter: v => (v === true ? 'Nam' : v === false ? 'Nữ' : '')
+      formatter: v => (v === true ? 'Nam' : v === false ? 'Nữ' : '')
                     },
-                    { header: 'Ngày sinh', accessor: 'dateOfBirth', formatter: formatVnDate },
-                    { header: 'Cấp đai', accessor: 'currentBeltLevelName' as any },
+    { header: 'Ngày sinh', accessor: 'dateOfBirth', formatter: formatVnDate },
+    { header: 'Cấp đai', accessor: 'currentBeltLevelName' as any },
                     {
-                      header: 'Lớp đang học',
+      header: 'Lớp đang học',
                       accessor: r =>
                         Array.isArray(r.classes)
                           ? r.classes
@@ -603,31 +646,32 @@ const StudentListTable = () => {
                           : ''
                     },
                     {
-                      header: 'Trạng thái',
+      header: 'Trạng thái',
                       accessor: 'isSuspended',
-                      formatter: v => (v ? 'Tạm nghỉ' : 'Đang học')
+      formatter: v => (v ? 'Tạm nghỉ' : 'Đang học')
                     },
-                    { header: 'Lý do tạm nghỉ', accessor: 'suspendReason' as any },
-                    { header: 'Ngày tạm nghỉ', accessor: 'suspendedAt' as any, formatter: formatVnDate },
-                    { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }
+    { header: 'Lý do tạm nghỉ', accessor: 'suspendReason' as any },
+    { header: 'Ngày tạm nghỉ', accessor: 'suspendedAt' as any, formatter: formatVnDate },
+    { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }
                   ]
                 })
-                showNotificationRef.current(`Đã xuất ${data.length} học viên ra file Excel.`, 'success')
+
+      showNotificationRef.current(`Đã xuất ${data.length} học viên ra file Excel.`, 'success')
               }}
               className='max-sm:is-full'
             >
-              Xuất Excel
+            Xuất Excel
             </Button>
-            {isAdmin && (
-              <>
-                <Button variant='outlined' onClick={() => setImportOpen(true)} className='max-sm:is-full'>
-                  Import học viên
-                </Button>
-              </>
+
+            {isAdmin && studentPermissions.canCreate && (
+              <Button variant='outlined' onClick={() => setImportOpen(true)} className='max-sm:is-full'>
+            Import học viên
+              </Button>
             )}
-            {(isAdmin || (isInstructor && assignedClasses.length > 0)) && (
+
+            {studentPermissions.canCreate && (isAdmin || (isInstructor && assignedClasses.length > 0)) && (
               <Button variant='contained' onClick={() => setAddStudentOpen(true)} className='max-sm:is-full'>
-                Thêm học viên
+            Thêm học viên
               </Button>
             )}
           </div>
@@ -664,7 +708,7 @@ const StudentListTable = () => {
               {table.getFilteredRowModel().rows.length === 0 ? (
                 <tr>
                   <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                    {loading ? 'Đang tải...' : 'Không có dữ liệu'}
+                {loading ? 'Đang tải...' : 'Không có dữ liệu'}
                   </td>
                 </tr>
               ) : (
@@ -687,8 +731,9 @@ const StudentListTable = () => {
             </tbody>
           </table>
         </div>
+
         <TablePagination
-          labelRowsPerPage='Số dòng mỗi trang:'
+            labelRowsPerPage='Số dòng mỗi trang:'
           labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
@@ -701,12 +746,11 @@ const StudentListTable = () => {
         />
       </Card>
 
-      {/* Suspend Confirmation Dialog */}
       <Dialog open={suspendDialogOpen} onClose={() => setSuspendDialogOpen(false)} maxWidth='xs' fullWidth>
         <DialogTitle>Tạm nghỉ học viên</DialogTitle>
         <DialogContent>
           <Typography variant='body2' color='text.secondary' className='mb-4'>
-            Học viên <strong>{suspendTarget?.fullName}</strong> sẽ được chuyển sang trạng thái tạm nghỉ.
+          Học viên <strong>{suspendTarget?.fullName}</strong> sẽ được chuyển sang trạng thái tạm nghỉ.
           </Typography>
           <TextField
             fullWidth
@@ -721,7 +765,7 @@ const StudentListTable = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setSuspendDialogOpen(false)} disabled={suspendLoading}>
-            Hủy
+          Huỷ
           </Button>
           <Button variant='contained' color='warning' onClick={handleSuspendConfirm} disabled={suspendLoading}>
             {suspendLoading ? 'Đang xử lý...' : 'Xác nhận tạm nghỉ'}
@@ -729,7 +773,7 @@ const StudentListTable = () => {
         </DialogActions>
       </Dialog>
 
-      {(isAdmin || isInstructor) && (
+      {studentPermissions.canCreate && (isAdmin || isInstructor) && (
         <AddStudentDrawer
           open={addStudentOpen}
           handleClose={() => setAddStudentOpen(false)}
@@ -739,15 +783,19 @@ const StudentListTable = () => {
           onStudentCreated={reloadData}
         />
       )}
-      <EditStudentDrawer
-        open={editStudentOpen}
-        onClose={() => {
-          setEditStudentOpen(false)
-          setSelectedStudent(null)
-        }}
-        student={selectedStudent}
-        onSaved={handleStudentUpdated}
-      />
+
+      {studentPermissions.canUpdate && (
+        <EditStudentDrawer
+          open={editStudentOpen}
+          onClose={() => {
+            setEditStudentOpen(false)
+            setSelectedStudent(null)
+          }}
+          student={selectedStudent}
+          onSaved={handleStudentUpdated}
+        />
+      )}
+
       <ViewStudentDrawer
         open={viewStudentOpen}
         onClose={() => {
@@ -755,27 +803,42 @@ const StudentListTable = () => {
           setSelectedStudent(null)
         }}
         student={selectedStudent}
-        onSuspend={openSuspendDialog}
-        onResume={handleResume}
+        onEdit={
+          studentPermissions.canUpdate
+            ? student => {
+                setViewStudentOpen(false)
+                handleEdit(student)
+              }
+            : undefined
+        }
+        onSuspend={studentPermissions.canUpdate ? openSuspendDialog : undefined}
+        onResume={studentPermissions.canUpdate ? handleResume : undefined}
       />
-      <EnrollStudentDrawer
-        open={enrollStudentOpen}
-        onClose={() => {
-          setEnrollStudentOpen(false)
-          setSelectedStudent(null)
-        }}
-        student={selectedStudent}
-        onEnrolled={handleEnrolled}
-      />
-      <TransferStudentDialog
-        open={transferStudentOpen}
-        onClose={() => {
-          setTransferStudentOpen(false)
-          setSelectedStudent(null)
-        }}
-        student={selectedStudent}
-        onTransferred={handleEnrolled}
-      />
+
+      {studentPermissions.canUpdate && (
+        <EnrollStudentDrawer
+          open={enrollStudentOpen}
+          onClose={() => {
+            setEnrollStudentOpen(false)
+            setSelectedStudent(null)
+          }}
+          student={selectedStudent}
+          onEnrolled={handleEnrolled}
+        />
+      )}
+
+      {studentPermissions.canUpdate && (
+        <TransferStudentDialog
+          open={transferStudentOpen}
+          onClose={() => {
+            setTransferStudentOpen(false)
+            setSelectedStudent(null)
+          }}
+          student={selectedStudent}
+          onTransferred={handleEnrolled}
+        />
+      )}
+
       <ImportStudentsDialog open={importOpen} onClose={() => setImportOpen(false)} onImported={reloadData} />
     </>
   )

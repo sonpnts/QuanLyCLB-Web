@@ -9,7 +9,6 @@ import CardHeader from '@mui/material/CardHeader'
 import Divider from '@mui/material/Divider'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
 import TablePagination from '@mui/material/TablePagination'
 import Chip from '@mui/material/Chip'
 import Dialog from '@mui/material/Dialog'
@@ -211,16 +210,7 @@ const AuditLogListTable = () => {
         cell: ({ row }) => (
           <Typography variant='body2'>{row.original.ipAddress || '-'}</Typography>
         )
-      }),
-      {
-        id: 'actions',
-        header: 'Chi tiết',
-        cell: ({ row }) => (
-          <IconButton title='Xem chi tiết' onClick={() => handleViewDetail(row.original)}>
-            <i className='ri-eye-line text-textSecondary' />
-          </IconButton>
-        )
-      }
+      })
     ],
     []
   )
@@ -285,7 +275,7 @@ const AuditLogListTable = () => {
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
+                  <tr key={row.id} onClick={() => handleViewDetail(row.original)} style={{ cursor: 'pointer' }}>
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                     ))}

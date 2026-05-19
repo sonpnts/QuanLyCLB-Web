@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -43,11 +43,13 @@ import InputLabel from '@mui/material/InputLabel'
 // Types
 import type { StudentType, EnrollmentType, ExamHistoryType } from '@/types/apps/studentTypes'
 import type { ClassType } from '@/types/apps/classTypes'
+import type { StudentOneTimeFeeStatusType } from '@/types/apps/oneTimeFeeTypes'
 
 // Services
 import studentService from '@/services/studentService'
 import classService from '@/services/classService'
 import classTransferService from '@/services/classTransferService'
+import oneTimeFeeService from '@/services/oneTimeFeeService'
 
 // Context
 import { useNotification } from '@/contexts/notificationContext'
@@ -59,6 +61,7 @@ type Props = {
   open: boolean
   onClose: () => void
   student: StudentType | null
+  onEdit?: (student: StudentType) => void
   onSuspend?: (student: StudentType) => void
   onResume?: (student: StudentType) => void
 }
@@ -107,16 +110,18 @@ const paymentMethodLabels: { [key: number]: string } = {
   2: 'Thẻ'
 }
 
-const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Props) => {
+const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume }: Props) => {
   const [activeTab, setActiveTab] = useState('1')
   const [enrollments, setEnrollments] = useState<EnrollmentType[]>([])
   const [payments, setPayments] = useState<PaymentHistoryType[]>([])
   const [attendance, setAttendance] = useState<AttendanceHistoryType[]>([])
   const [examHistory, setExamHistory] = useState<ExamHistoryType[]>([])
+  const [oneTimeFeeStatuses, setOneTimeFeeStatuses] = useState<StudentOneTimeFeeStatusType[]>([])
   const [loadingEnrollments, setLoadingEnrollments] = useState(false)
   const [loadingPayments, setLoadingPayments] = useState(false)
   const [loadingAttendance, setLoadingAttendance] = useState(false)
   const [loadingExamHistory, setLoadingExamHistory] = useState(false)
+  const [loadingOneTimeFees, setLoadingOneTimeFees] = useState(false)
 
   // Transfer dialog state
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
@@ -135,12 +140,14 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
     payments: boolean
     attendance: boolean
     examHistory: boolean
+    oneTimeFees: boolean
   }>({
     studentId: null,
     enrollments: false,
     payments: false,
     attendance: false,
-    examHistory: false
+    examHistory: false,
+    oneTimeFees: false
   })
 
   // Reset cache khi student thay đổi
@@ -151,13 +158,15 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
         enrollments: false,
         payments: false,
         attendance: false,
-        examHistory: false
+        examHistory: false,
+        oneTimeFees: false
       }
       // Reset data
       setEnrollments([])
       setPayments([])
       setAttendance([])
       setExamHistory([])
+      setOneTimeFeeStatuses([])
     }
   }, [student?.id])
 
@@ -253,12 +262,38 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
     }
   }, [student?.id])
 
+  const loadOneTimeFees = useCallback(async () => {
+    if (!student?.id || loadedDataRef.current.oneTimeFees) return
+
+    try {
+      setLoadingOneTimeFees(true)
+      const response = await oneTimeFeeService.getStudentStatuses(student.id)
+
+      if (response.success && Array.isArray(response.data)) {
+        setOneTimeFeeStatuses(response.data)
+      } else {
+        setOneTimeFeeStatuses([])
+      }
+      loadedDataRef.current.oneTimeFees = true
+    } catch (error) {
+      logger.error('ViewStudentDrawer', 'Error loading one-time fees', error)
+      setOneTimeFeeStatuses([])
+    } finally {
+      setLoadingOneTimeFees(false)
+    }
+  }, [student?.id])
+
   // Reset tab khi drawer đóng
   useEffect(() => {
     if (!open) {
       setActiveTab('1')
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open || !student?.id || loadedDataRef.current.oneTimeFees) return
+    loadOneTimeFees()
+  }, [loadOneTimeFees, open, student?.id])
 
   if (!student) return null
 
@@ -368,7 +403,18 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
                 </Typography>
               )}
             </div>
-            <div className='flex gap-2 mt-2'>
+            <div className='flex gap-2 mt-2 flex-wrap'>
+              {onEdit && (
+                <Button
+                  size='small'
+                  variant='contained'
+                  color='primary'
+                  startIcon={<i className='ri-edit-box-line' />}
+                  onClick={() => onEdit(student)}
+                >
+                  Chỉnh sửa
+                </Button>
+              )}
               {student.isSuspended ? (
                 <Button
                   size='small'
@@ -426,9 +472,9 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
-                      Số điện thoại
+                      CCCD / Số định danh
                     </Typography>
-                    <Typography variant='body1'>{student.phoneNumber || '-'}</Typography>
+                    <Typography variant='body1'>{student.personalIdNumber || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
@@ -479,6 +525,58 @@ const ViewStudentDrawer = ({ open, onClose, student, onSuspend, onResume }: Prop
                     </Grid>
                   )}
                 </Grid>
+              </CardContent>
+            </Card>
+
+            <Card variant='outlined' className='mb-4'>
+              <CardContent>
+                <Typography variant='subtitle1' className='font-medium mb-3'>
+                  Phí 1 lần
+                </Typography>
+                {loadingOneTimeFees ? (
+                  <Box className='flex justify-center py-4'>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : oneTimeFeeStatuses.length === 0 ? (
+                  <Typography variant='body2' color='text.secondary'>
+                    Chưa có khoản phí 1 lần nào được ghi nhận.
+                  </Typography>
+                ) : (
+                  <List dense disablePadding>
+                    {oneTimeFeeStatuses.map(item => (
+                      <ListItem key={`${item.feeCode}-${item.paymentRecordId || item.paidAt}`} disablePadding className='mb-2'>
+                        <ListItemText
+                          primary={
+                            <Box className='flex items-center justify-between gap-2 flex-wrap'>
+                              <Typography variant='body1'>{item.feeName}</Typography>
+                              <Chip
+                                label={`${Number(item.amount || 0).toLocaleString('vi-VN')}đ`}
+                                size='small'
+                                color='secondary'
+                                variant='tonal'
+                              />
+                            </Box>
+                          }
+                          secondary={
+                            <Box className='flex flex-col gap-1 mt-1'>
+                              <Typography variant='caption' color='text.secondary'>
+                                Đã thu: {item.paidAt ? new Date(item.paidAt).toLocaleString('vi-VN') : '-'}
+                              </Typography>
+                              <Typography variant='caption' color='text.secondary'>
+                                Người thu: {item.recordedByUserName || '-'}
+                              </Typography>
+                              {item.note && (
+                                <Typography variant='caption' color='text.secondary'>
+                                  Ghi chú: {item.note}
+                                </Typography>
+                              )}
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
               </CardContent>
             </Card>
 

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -39,7 +39,7 @@ import userService from '@/services/userService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
-import { hasPermission } from '@/utils/permissionUtils'
+import { buildModulePermissionMap } from '@/utils/rbac'
 
 import AddProductSaleDrawer from './AddProductSaleDrawer'
 import TableFilters from './TableFilters'
@@ -79,9 +79,15 @@ const columnHelper = createColumnHelper<ProductSaleType>()
 const ProductSaleListTable = () => {
   const { showNotification } = useNotification()
   const { auth } = useAuth()
-  const isAdmin = hasPermission(auth?.permissions, 'ProductSale.ManageAll') || hasAdminRole(auth?.roles)
+  const isAdmin = hasAdminRole(auth?.roles)
+  const productSalePermissions = useMemo(
+    () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductSale'),
+    [auth?.permissions, auth?.roles]
+  )
 
   const [addDrawerOpen, setAddDrawerOpen] = useState(false)
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false)
+  const [selectedSale, setSelectedSale] = useState<ProductSaleType | null>(null)
   const [data, setData] = useState<ProductSaleType[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(false)
@@ -172,8 +178,13 @@ const ProductSaleListTable = () => {
     }
   }
 
-  const columns = useMemo<ColumnDef<ProductSaleType, any>[]>(
-    () => [
+  const handleEdit = (sale: ProductSaleType) => {
+    setSelectedSale(sale)
+    setEditDrawerOpen(true)
+  }
+
+  const columns = useMemo<ColumnDef<ProductSaleType, any>[]>(() => {
+    const nextColumns: ColumnDef<ProductSaleType, any>[] = [
       columnHelper.accessor('productName', {
         header: 'Sản phẩm',
         cell: ({ row }) => <Typography className='font-medium'>{row.original.productName || '-'}</Typography>
@@ -216,27 +227,37 @@ const ProductSaleListTable = () => {
             label={row.original.isActive !== false ? 'Đang hoạt động' : 'Ngừng hoạt động'}
           />
         )
-      }),
-      {
+      })
+    ]
+
+    if (productSalePermissions.canUpdate || productSalePermissions.canDelete) {
+      nextColumns.push({
         id: 'actions',
         header: 'Thao tác',
         cell: ({ row }) => (
           <div className='flex items-center gap-2'>
-            {row.original.isActive !== false ? (
-              <IconButton color='error' title='Xóa mềm' onClick={() => handleDelete(row.original.id)}>
-                <i className='ri-delete-bin-6-line' />
-              </IconButton>
-            ) : (
-              <IconButton color='success' title='Khôi phục' onClick={() => handleRestore(row.original.id)}>
-                <i className='ri-loop-left-line' />
+            {productSalePermissions.canUpdate && row.original.isActive !== false && (
+              <IconButton color='primary' title='Chỉnh sửa' onClick={() => handleEdit(row.original)}>
+                <i className='ri-edit-box-line' />
               </IconButton>
             )}
+            {productSalePermissions.canDelete &&
+              (row.original.isActive !== false ? (
+                <IconButton color='error' title='Xóa mềm' onClick={() => handleDelete(row.original.id)}>
+                  <i className='ri-delete-bin-6-line' />
+                </IconButton>
+              ) : (
+                <IconButton color='success' title='Khôi phục' onClick={() => handleRestore(row.original.id)}>
+                  <i className='ri-loop-left-line' />
+                </IconButton>
+              ))}
           </div>
         )
-      }
-    ],
-    []
-  )
+      })
+    }
+
+    return nextColumns
+  }, [productSalePermissions.canDelete, productSalePermissions.canUpdate])
 
   const table = useReactTable({
     data,
@@ -265,9 +286,11 @@ const ProductSaleListTable = () => {
             placeholder='Tìm kiếm giao dịch...'
             className='max-sm:is-full'
           />
-          <Button variant='contained' onClick={() => setAddDrawerOpen(true)}>
-            Tạo giao dịch
-          </Button>
+          {productSalePermissions.canCreate && (
+            <Button variant='contained' onClick={() => setAddDrawerOpen(true)}>
+              Tạo giao dịch
+            </Button>
+          )}
         </div>
         <div className='overflow-x-auto'>
           <table className={tableStyles.table}>
@@ -323,10 +346,22 @@ const ProductSaleListTable = () => {
         />
       </Card>
 
-      <AddProductSaleDrawer open={addDrawerOpen} handleClose={() => setAddDrawerOpen(false)} setData={setData} />
+      {productSalePermissions.canCreate && (
+        <AddProductSaleDrawer open={addDrawerOpen} handleClose={() => setAddDrawerOpen(false)} setData={setData} />
+      )}
+      {productSalePermissions.canUpdate && (
+        <AddProductSaleDrawer
+          open={editDrawerOpen}
+          handleClose={() => {
+            setEditDrawerOpen(false)
+            setSelectedSale(null)
+          }}
+          setData={setData}
+          sale={selectedSale}
+        />
+      )}
     </>
   )
 }
 
 export default ProductSaleListTable
-

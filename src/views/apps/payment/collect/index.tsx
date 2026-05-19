@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
+import { useRouter } from 'next/navigation'
+
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -28,31 +30,20 @@ import Typography from '@mui/material/Typography'
 
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
+import oneTimeFeeService from '@/services/oneTimeFeeService'
 import paymentService from '@/services/paymentService'
+import studentService from '@/services/studentService'
 import type { ClassPaymentSummary, CoachPaymentSummaryType } from '@/types/apps/paymentSummaryTypes'
+import type { OneTimeFeeOptionType } from '@/types/apps/oneTimeFeeTypes'
+import type { StudentType } from '@/types/apps/studentTypes'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
-
-import CollectPaymentDialog from './CollectPaymentDialog'
+import { savePaymentInvoiceDraft } from '@/utils/paymentDraft'
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 const YEARS = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() - i)
 
-interface CollectTarget {
-  studentId: string
-  studentName: string
-  amount: number
-  type: string
-  classId?: string
-  forMonth?: number
-  forYear?: number
-  examRegistrationId?: string
-  description?: string
-  // When collecting exam fee, allow collecting tuition in the same receipt (bulk)
-  tuitionAmount?: number
-  tuitionForMonth?: number
-  tuitionForYear?: number
-}
+type ClassStudentOption = Pick<StudentType, 'id' | 'fullName' | 'phoneNumber'>
 
 const toSafeNumber = (value: unknown): number => {
   const num = Number(value)
@@ -60,6 +51,7 @@ const toSafeNumber = (value: unknown): number => {
 }
 
 const PaymentCollectView = () => {
+  const router = useRouter()
   const { auth } = useAuth()
   const { showNotification } = useNotification()
   const [month, setMonth] = useState(new Date().getMonth() + 1)
@@ -67,7 +59,9 @@ const PaymentCollectView = () => {
   const [summary, setSummary] = useState<CoachPaymentSummaryType | null>(null)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
-  const [collectTarget, setCollectTarget] = useState<CollectTarget | null>(null)
+  const [classStudents, setClassStudents] = useState<Record<string, ClassStudentOption[]>>({})
+  const [oneTimeFeeMap, setOneTimeFeeMap] = useState<Record<string, Record<string, OneTimeFeeOptionType[]>>>({})
+  const [loadingOneTimeFees, setLoadingOneTimeFees] = useState<Record<string, boolean>>({})
 
   // Filter + pagination
   const [searchQuery, setSearchQuery] = useState('')
@@ -101,6 +95,46 @@ const PaymentCollectView = () => {
 
   const toggle = (key: string) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))
 
+  const loadOneTimeFeesForClass = async (cls: ClassPaymentSummary) => {
+    if ((oneTimeFeeMap[cls.classId] && classStudents[cls.classId]) || loadingOneTimeFees[cls.classId]) return
+
+    try {
+      setLoadingOneTimeFees(prev => ({ ...prev, [cls.classId]: true }))
+      const studentResponse = await studentService.getStudents({ classId: cls.classId, pageSize: 1000 })
+      const students = studentResponse.success && studentResponse.data ? studentResponse.data : []
+      const sortedStudents = [...students].sort((left, right) => left.fullName.localeCompare(right.fullName, 'vi'))
+
+      setClassStudents(prev => ({ ...prev, [cls.classId]: sortedStudents }))
+
+      const results = await Promise.all(
+        sortedStudents.map(async student => {
+          const response = await oneTimeFeeService.getOptions(student.id, cls.classId)
+          const options = response.success && response.data ? response.data.filter(item => !item.isPaid) : []
+
+          return [student.id, options] as const
+        })
+      )
+
+      setOneTimeFeeMap(prev => ({
+        ...prev,
+        [cls.classId]: Object.fromEntries(results)
+      }))
+    } finally {
+      setLoadingOneTimeFees(prev => ({ ...prev, [cls.classId]: false }))
+    }
+  }
+
+  const toggleTuitionSection = (cls: ClassPaymentSummary) => {
+    const key = `tuition-${cls.classId}`
+    const nextOpen = !expanded[key]
+
+    setExpanded(prev => ({ ...prev, [key]: nextOpen }))
+
+    if (nextOpen) {
+      loadOneTimeFeesForClass(cls)
+    }
+  }
+
   // Danh sách chi nhánh duy nhất từ classes (cho dropdown filter)
   const branchOptions = useMemo(() => {
     if (!summary?.classes) return [] as { id: string; name: string }[]
@@ -110,6 +144,19 @@ const PaymentCollectView = () => {
     }
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
   }, [summary])
+
+  const classOneTimeOutstandingAmountMap = useMemo(() => {
+    const result: Record<string, number> = {}
+
+    for (const [classId, studentFees] of Object.entries(oneTimeFeeMap)) {
+      result[classId] = Object.values(studentFees).reduce(
+        (classSum, items) => classSum + items.reduce((feeSum, item) => feeSum + Number(item.amount || 0), 0),
+        0
+      )
+    }
+
+    return result
+  }, [oneTimeFeeMap])
 
   // Áp dụng filter
   const filteredClasses = useMemo(() => {
@@ -129,12 +176,13 @@ const PaymentCollectView = () => {
       if (unpaidOnlyFilter) {
         const totalUnpaid =
           toSafeNumber(cls.tuition?.unpaidAmount) +
-          (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0)
+          (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0) +
+          toSafeNumber(classOneTimeOutstandingAmountMap[cls.classId])
         if (totalUnpaid <= 0) return false
       }
       return true
     })
-  }, [summary, searchQuery, branchFilter, unpaidOnlyFilter])
+  }, [summary, searchQuery, branchFilter, unpaidOnlyFilter, classOneTimeOutstandingAmountMap])
 
   // Pagination (pageSize=0 -> hiển thị tất cả)
   const effectivePageSize = pageSize === 0 ? filteredClasses.length || 1 : pageSize
@@ -153,10 +201,35 @@ const PaymentCollectView = () => {
     setPage(1)
   }, [searchQuery, branchFilter, unpaidOnlyFilter, pageSize, month, year])
 
-  const handleCollectSuccess = () => {
-    setCollectTarget(null)
-    showNotification('Thu tiền thành công!', 'success')
-    loadSummary()
+  useEffect(() => {
+    if (!summary?.classes?.length) return
+
+    summary.classes.forEach(cls => {
+      if (!oneTimeFeeMap[cls.classId] && !loadingOneTimeFees[cls.classId]) {
+        loadOneTimeFeesForClass(cls)
+      }
+    })
+  }, [summary, oneTimeFeeMap, loadingOneTimeFees])
+
+  const handleOpenCreateInvoice = (payload: {
+    classId: string
+    className: string
+    studentId: string
+    studentName: string
+    tuitionAmount: number
+    hasOneTimeFees: boolean
+  }) => {
+    const draftKey = savePaymentInvoiceDraft({
+      classId: payload.classId,
+      className: payload.className,
+      studentId: payload.studentId,
+      studentName: payload.studentName,
+      forMonth: month,
+      forYear: year,
+      initialMode: payload.tuitionAmount > 0 ? 'tuition' : payload.hasOneTimeFees ? 'one-time' : 'blank'
+    })
+
+    router.push(`/apps/invoice/add?draft=${encodeURIComponent(draftKey)}`)
   }
 
   return (
@@ -285,7 +358,38 @@ const PaymentCollectView = () => {
             pagedClasses.map((cls: ClassPaymentSummary) => {
               const totalUnpaid =
                 toSafeNumber(cls.tuition?.unpaidAmount) +
-                (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0)
+                (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0) +
+                toSafeNumber(classOneTimeOutstandingAmountMap[cls.classId])
+              const classOneTimeOutstanding = toSafeNumber(classOneTimeOutstandingAmountMap[cls.classId])
+
+              const tuitionAmountByStudentId = new Map(
+                (cls.tuition?.unpaidStudents ?? []).map(student => [student.studentId, Number(student.amount || 0)])
+              )
+
+              const mergedCollectRows = (classStudents[cls.classId] ?? [])
+                .map(student => {
+                  const oneTimeItems = oneTimeFeeMap[cls.classId]?.[student.id] ?? []
+                  const tuitionAmount = tuitionAmountByStudentId.get(student.id) ?? 0
+
+                  if (tuitionAmount <= 0 && oneTimeItems.length === 0) {
+                    return null
+                  }
+
+                  return {
+                    studentId: student.id,
+                    studentName: student.fullName,
+                    phoneNumber: student.phoneNumber,
+                    tuitionAmount,
+                    oneTimeItems
+                  }
+                })
+                .filter(Boolean) as Array<{
+                studentId: string
+                studentName: string
+                phoneNumber?: string
+                tuitionAmount: number
+                oneTimeItems: OneTimeFeeOptionType[]
+              }>
 
               return (
                 <Card key={cls.classId} className='mb-4'>
@@ -311,7 +415,7 @@ const PaymentCollectView = () => {
                     <Box className='px-4 py-3 border-b'>
                       <Box
                         className='flex justify-between items-center cursor-pointer select-none'
-                        onClick={() => toggle(`tuition-${cls.classId}`)}
+                        onClick={() => toggleTuitionSection(cls)}
                       >
                         <Box className='flex items-center gap-2'>
                           <Typography className='font-medium'>Học phí tháng {month}/{year}</Typography>
@@ -320,6 +424,14 @@ const PaymentCollectView = () => {
                             color={toSafeNumber(cls.tuition?.unpaidCount) > 0 ? 'warning' : 'success'}
                             size='small'
                           />
+                          {classOneTimeOutstanding > 0 && (
+                            <Chip
+                              label={`Phí 1 lần còn ${classOneTimeOutstanding.toLocaleString('vi-VN')}đ`}
+                              color='secondary'
+                              size='small'
+                              variant='tonal'
+                            />
+                          )}
                         </Box>
                         <Box className='flex items-center gap-2'>
                           <Typography
@@ -343,24 +455,52 @@ const PaymentCollectView = () => {
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {(cls.tuition?.unpaidStudents ?? []).map(s => (
-                                <TableRow key={s.studentId}>
-                                  <TableCell>{s.studentName}</TableCell>
-                                  <TableCell align='right'>{toSafeNumber(s.amount).toLocaleString('vi-VN')}đ</TableCell>
+                              {mergedCollectRows.map(student => (
+                                <TableRow key={student.studentId}>
+                                  <TableCell>
+                                    <Box className='flex items-center gap-2 flex-wrap'>
+                                      <Typography>{student.studentName}</Typography>
+                                      {loadingOneTimeFees[cls.classId] ? (
+                                        <Chip label='Đang kiểm tra phí 1 lần...' size='small' variant='outlined' />
+                                      ) : student.oneTimeItems.length > 0 ? (
+                                        <Chip
+                                          label={`${student.oneTimeItems.length} phí 1 lần chưa đóng`}
+                                          size='small'
+                                          color='secondary'
+                                          variant='tonal'
+                                        />
+                                      ) : null}
+                                    </Box>
+                                  </TableCell>
+                                  <TableCell align='right'>
+                                    <Box className='flex flex-col items-end gap-1'>
+                                      <Typography variant='body2'>
+                                        {student.tuitionAmount > 0
+                                          ? `${toSafeNumber(student.tuitionAmount).toLocaleString('vi-VN')}đ`
+                                          : '-'}
+                                      </Typography>
+                                      {student.oneTimeItems.length > 0 && (
+                                        <Typography variant='caption' color='secondary.main'>
+                                          {student.oneTimeItems
+                                            .reduce((sum, item) => sum + Number(item.amount || 0), 0)
+                                            .toLocaleString('vi-VN')}
+                                          đ phí 1 lần
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                  </TableCell>
                                   <TableCell align='right'>
                                     <Button
                                       size='small'
                                       variant='contained'
                                       onClick={() =>
-                                        setCollectTarget({
-                                          studentId: s.studentId,
-                                          studentName: s.studentName,
-                                          amount: s.amount,
-                                          type: 'Tuition',
+                                        handleOpenCreateInvoice({
                                           classId: cls.classId,
-                                          forMonth: month,
-                                          forYear: year,
-                                          description: `Học phí tháng ${month}/${year}`
+                                          className: cls.className,
+                                          studentId: student.studentId,
+                                          studentName: student.studentName,
+                                          tuitionAmount: student.tuitionAmount,
+                                          hasOneTimeFees: student.oneTimeItems.length > 0
                                         })
                                       }
                                     >
@@ -441,27 +581,6 @@ const PaymentCollectView = () => {
             </Card>
           )}
         </>
-      )}
-
-      {/* Dialog thu tiền */}
-      {collectTarget && (
-        <CollectPaymentDialog
-          open={!!collectTarget}
-          studentId={collectTarget.studentId}
-          studentName={collectTarget.studentName}
-          amount={collectTarget.amount}
-          paymentType={collectTarget.type}
-          classId={collectTarget.classId}
-          forMonth={collectTarget.forMonth}
-          forYear={collectTarget.forYear}
-          examRegistrationId={collectTarget.examRegistrationId}
-          description={collectTarget.description}
-          tuitionAmount={collectTarget.tuitionAmount}
-          tuitionForMonth={collectTarget.tuitionForMonth}
-          tuitionForYear={collectTarget.tuitionForYear}
-          onSuccess={handleCollectSuccess}
-          onClose={() => setCollectTarget(null)}
-        />
       )}
     </Box>
   )

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -13,6 +13,7 @@ import FormControl from '@mui/material/FormControl'
 import Grid from '@mui/material/Grid2'
 import InputAdornment from '@mui/material/InputAdornment'
 import InputLabel from '@mui/material/InputLabel'
+import Button from '@mui/material/Button'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import Table from '@mui/material/Table'
@@ -29,12 +30,15 @@ import Typography from '@mui/material/Typography'
 import beltExamService from '@/services/beltExamService'
 import classService from '@/services/classService'
 import studentAttendanceService from '@/services/studentAttendanceService'
+import studentService from '@/services/studentService'
 import type { ExamRegistrationType, ExamSessionType } from '@/types/apps/beltExamTypes'
 import type { ClassType } from '@/types/apps/classTypes'
+import type { StudentType } from '@/types/apps/studentTypes'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { hasPermission } from '@/utils/permissionUtils'
+import ViewStudentDrawer from '@/views/apps/student/list/ViewStudentDrawer'
 
 const text = {
   title: '\u0051u\u1ea3n l\u00fd \u0111\u0103ng k\u00fd thi c\u1ea5p',
@@ -103,6 +107,25 @@ const BeltExamRegistrationsView = () => {
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(25)
+  const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
+  const [viewStudentOpen, setViewStudentOpen] = useState(false)
+  const [loadingStudent, setLoadingStudent] = useState(false)
+
+  const openStudentDrawer = async (studentId: string) => {
+    try {
+      setLoadingStudent(true)
+      const result = await studentService.getStudentById(studentId)
+
+      if (result.success && result.data) {
+        setSelectedStudent(result.data)
+        setViewStudentOpen(true)
+      } else {
+        showNotification(result.message || 'Không thể tải thông tin học viên', 'error')
+      }
+    } finally {
+      setLoadingStudent(false)
+    }
+  }
 
   const loadFilters = async () => {
     const [sessionRes, classRes] = await Promise.all([
@@ -240,6 +263,7 @@ const BeltExamRegistrationsView = () => {
                   <TableCell>{text.class}</TableCell>
                   <TableCell>{text.registerStatus}</TableCell>
                   <TableCell>{text.feePaid}</TableCell>
+                  <TableCell>Phí bắt buộc</TableCell>
                   <TableCell>{text.currentBelt}</TableCell>
                   <TableCell>{text.targetBelt}</TableCell>
                   <TableCell>{text.registeredBy}</TableCell>
@@ -247,7 +271,7 @@ const BeltExamRegistrationsView = () => {
               </TableHead>
               <TableBody>
                 {pagedRows.map(row => (
-                  <TableRow key={row.id} hover>
+                  <TableRow key={row.id} hover onClick={() => openStudentDrawer(row.studentId)} sx={{ cursor: 'pointer' }}>
                     <TableCell><Typography color='text.primary' fontWeight={600}>{row.studentName}</Typography><Typography variant='caption' color='text.secondary'>{formatDateTime(row.createdAt)}</Typography></TableCell>
                     <TableCell>{row.examSessionName}</TableCell>
                     <TableCell>{row.className}</TableCell>
@@ -256,6 +280,16 @@ const BeltExamRegistrationsView = () => {
                       <Box className='flex flex-col items-start gap-1'>
                         <Chip label={row.isFeePaid ? text.paid : text.unpaid} color={row.isFeePaid ? 'success' : 'warning'} size='small' variant='tonal' />
                         {row.isFeePaid && row.paidAt && <Typography variant='caption' color='text.secondary'>{formatDateTime(row.paidAt)}</Typography>}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box className='flex items-center gap-1'>
+                        <Chip
+                          label={row.oneTimeFeesCompleted ? 'Hoàn thành' : 'Chưa'}
+                          color={row.oneTimeFeesCompleted ? 'success' : 'warning'}
+                          size='small'
+                          variant='tonal'
+                        />
                       </Box>
                     </TableCell>
                     <TableCell>{row.currentBeltLevelName || text.noBelt}</TableCell>
@@ -269,6 +303,30 @@ const BeltExamRegistrationsView = () => {
           <TablePagination component='div' count={sortedRegistrations.length} page={page} rowsPerPage={rowsPerPage} rowsPerPageOptions={[10, 25, 50, 100]} onPageChange={(_, nextPage) => setPage(nextPage)} onRowsPerPageChange={event => { setRowsPerPage(Number(event.target.value)); setPage(0) }} />
         </>
       )}
+      {loadingStudent && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: theme => theme.zIndex.modal + 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'rgba(255,255,255,0.45)'
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
+
+      <ViewStudentDrawer
+        open={viewStudentOpen}
+        onClose={() => {
+          setViewStudentOpen(false)
+          setSelectedStudent(null)
+        }}
+        student={selectedStudent}
+      />
     </Card>
   )
 }

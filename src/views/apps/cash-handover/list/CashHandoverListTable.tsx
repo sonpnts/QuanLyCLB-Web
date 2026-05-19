@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -54,6 +54,15 @@ import tableStyles from '@core/styles/table.module.css'
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+
+const getOtherFeeAmount = (row: CashHandoverType) =>
+  Math.max(
+    0,
+    Number(row.snapshotTotalAmount || 0) -
+      Number(row.snapshotTuitionAmount || 0) -
+      Number(row.snapshotExamFeeAmount || 0) -
+      Number(row.snapshotProductSalesAmount || 0)
+  )
 
 const DebouncedInput = ({
   value: initialValue,
@@ -119,7 +128,7 @@ const CashHandoverListTable = () => {
     const loadReferences = async () => {
       try {
         if (isAdmin) {
-          // Admin: load tất cả lớp và danh sách HLV
+          // Admin: load táº¥t cáº£ lá»›p vÃ  danh sÃ¡ch HLV
           const [classRes, instructorRes] = await Promise.all([
             classService.getClasses({ isActive: true, pageSize: 1000 }),
             userService.getCoaches()
@@ -128,10 +137,10 @@ const CashHandoverListTable = () => {
           setClasses(classRes.data || [])
           setInstructors(instructorRes.data || [])
         } else if (userId) {
-          // HLV/Trợ giảng: chỉ load lớp được phân công
+          // HLV/Trá»£ giáº£ng: chá»‰ load lá»›p Ä‘Æ°á»£c phÃ¢n cÃ´ng
           const classRes = await classService.getClassesByUserId(userId)
           setClasses((classRes.data || []).filter(c => c.isActive !== false))
-          setInstructors([]) // không cần danh sách HLV
+          setInstructors([]) // khÃ´ng cáº§n danh sÃ¡ch HLV
         }
       } catch {
         // Silently fail - list shows empty state
@@ -165,7 +174,7 @@ const CashHandoverListTable = () => {
     try {
       setLoading(true)
 
-      // HLV / trợ giảng: tự động lọc theo instructorId của họ
+      // HLV / trá»£ giáº£ng: tá»± Ä‘á»™ng lá»c theo instructorId cá»§a há»
       const effectiveParams: GetCashHandoversParams = isAdmin
         ? filterParams
         : { ...filterParams, instructorId: userId }
@@ -193,14 +202,14 @@ const CashHandoverListTable = () => {
       const response = await cashHandoverService.getCashHandoverById(row.id)
 
       if (!response.success || !response.data) {
-        showNotificationRef.current(response.message || 'Không thể tải chi tiết phiếu bàn giao.', 'error')
+        showNotificationRef.current(response.message || 'KhÃ´ng thá»ƒ táº£i chi tiáº¿t phiáº¿u bÃ n giao.', 'error')
         return
       }
 
       setSelectedHandover(response.data)
       setDetailOpen(true)
     } catch {
-      showNotificationRef.current('Đã có lỗi khi tải chi tiết phiếu.', 'error')
+      showNotificationRef.current('ÄÃ£ cÃ³ lá»—i khi táº£i chi tiáº¿t phiáº¿u.', 'error')
     }
   }
 
@@ -210,14 +219,14 @@ const CashHandoverListTable = () => {
       const response = await cashHandoverService.confirmCashHandover(id)
 
       if (!response.success || !response.data) {
-        showNotificationRef.current(response.message || 'Không thể xác nhận phiếu bàn giao.', 'error')
+        showNotificationRef.current(response.message || 'KhÃ´ng thá»ƒ xÃ¡c nháº­n phiáº¿u bÃ n giao.', 'error')
         return
       }
 
       setData(prev => prev.map(item => (item.id === id ? response.data! : item)))
-      showNotificationRef.current('Xác nhận bàn giao tiền thành công.', 'success')
+      showNotificationRef.current('Xác nhận bàn giao tiá»n thÃ nh cÃ´ng.', 'success')
     } catch {
-      showNotificationRef.current('Đã có lỗi khi xác nhận phiếu bàn giao.', 'error')
+      showNotificationRef.current('ÄÃ£ cÃ³ lá»—i khi xÃ¡c nháº­n phiáº¿u bÃ n giao.', 'error')
     } finally {
       setConfirmingId(null)
     }
@@ -232,7 +241,7 @@ const CashHandoverListTable = () => {
   const handleReject = async () => {
     if (!rejectTarget) return
     if (!rejectReason.trim()) {
-      showNotificationRef.current('Vui lòng nhập lý do từ chối.', 'error')
+      showNotificationRef.current('Vui lÃ²ng nháº­p lÃ½ do tá»« chá»‘i.', 'error')
       return
     }
 
@@ -240,17 +249,17 @@ const CashHandoverListTable = () => {
       setRejectingId(rejectTarget.id)
       const response = await cashHandoverService.rejectCashHandover(rejectTarget.id, rejectReason.trim())
       if (!response.success || !response.data) {
-        showNotificationRef.current(response.message || 'Không thể từ chối phiếu bàn giao.', 'error')
+        showNotificationRef.current(response.message || 'KhÃ´ng thá»ƒ tá»« chá»‘i phiáº¿u bÃ n giao.', 'error')
         return
       }
 
       setData(prev => prev.map(item => (item.id === rejectTarget.id ? response.data! : item)))
-      showNotificationRef.current('Từ chối phiếu bàn giao thành công.', 'success')
+      showNotificationRef.current('Từ chối phiếu bàn giao thÃ nh cÃ´ng.', 'success')
       setRejectDialogOpen(false)
       setRejectTarget(null)
       setRejectReason('')
     } catch {
-      showNotificationRef.current('Đã có lỗi khi từ chối phiếu bàn giao.', 'error')
+      showNotificationRef.current('ÄÃ£ cÃ³ lá»—i khi tá»« chá»‘i phiáº¿u bÃ n giao.', 'error')
     } finally {
       setRejectingId(null)
     }
@@ -259,7 +268,7 @@ const CashHandoverListTable = () => {
   const columns = useMemo<ColumnDef<CashHandoverType, any>[]>(
     () => [
       columnHelper.accessor('className', {
-        header: 'Lớp',
+        header: 'Lá»›p',
         cell: ({ row }) => (
           <Typography className='font-medium'>{row.original.className || row.original.classId}</Typography>
         )
@@ -269,7 +278,7 @@ const CashHandoverListTable = () => {
         cell: ({ row }) => <Typography>{row.original.instructorName || row.original.instructorId}</Typography>
       }),
       columnHelper.accessor('handoverAt', {
-        header: 'Ngày bàn giao',
+        header: 'NgÃ y bÃ n giao',
         cell: ({ row }) => (
           <Typography>
             {row.original.handoverAt ? new Date(row.original.handoverAt).toLocaleString('vi-VN') : '-'}
@@ -277,7 +286,7 @@ const CashHandoverListTable = () => {
         )
       }),
       columnHelper.accessor('snapshotTuitionAmount', {
-        header: 'Học phí',
+        header: 'Há»c phÃ­',
         cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotTuitionAmount)}</Typography>
       }),
       columnHelper.accessor('snapshotExamFeeAmount', {
@@ -288,6 +297,11 @@ const CashHandoverListTable = () => {
         header: 'Sản phẩm',
         cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotProductSalesAmount)}</Typography>
       }),
+      {
+        id: 'otherFeesAmount',
+        header: 'Phí 1 lần',
+        cell: ({ row }) => <Typography>{formatCurrency(getOtherFeeAmount(row.original))}</Typography>
+      },
       columnHelper.accessor('totalDeductionAmount', {
         header: 'Khoản trừ',
         cell: ({ row }) => (
@@ -297,7 +311,7 @@ const CashHandoverListTable = () => {
         )
       }),
       columnHelper.accessor('amountHandedOver', {
-        header: 'Đã nộp',
+        header: 'ÄÃ£ ná»™p',
         cell: ({ row }) => (
           <Typography className='font-medium' color='success.main'>
             {formatCurrency(row.original.amountHandedOver)}
@@ -325,12 +339,7 @@ const CashHandoverListTable = () => {
         id: 'actions',
         header: 'Thao tác',
         cell: ({ row }) => (
-          <div className='flex items-center gap-1'>
-            <Tooltip title='Xem chi tiết'>
-              <IconButton size='small' onClick={() => handleOpenDetail(row.original)}>
-                <i className='ri-eye-line text-textSecondary' />
-              </IconButton>
-            </Tooltip>
+          <div className='flex items-center gap-1' onClick={event => event.stopPropagation()}>
             {isAdmin && row.original.status === 'Pending' && (
               <>
                 <Tooltip title='Xác nhận bàn giao'>
@@ -385,7 +394,7 @@ const CashHandoverListTable = () => {
   return (
     <>
       <Card>
-        <CardHeader title='Lịch sử bàn giao tiền' />
+        <CardHeader title='Lá»‹ch sá»­ bÃ n giao tiá»n' />
         <TableFilters
           classes={classes}
           instructors={instructors}
@@ -407,7 +416,7 @@ const CashHandoverListTable = () => {
         </div>
         {isAdmin && outstandingCollections.length > 0 && (
           <div className='px-5 pb-4'>
-            <Typography variant='subtitle2' className='mb-2'>Huấn luyện viên còn tiền cần bàn giao</Typography>
+            <Typography variant='subtitle2' className='mb-2'>Huấn luyện viên cÃ²n tiá»n cáº§n bÃ n giao</Typography>
             <div className='flex flex-col gap-2'>
               {outstandingCollections.map(item => (
                 <div key={`${item.instructorId}-${item.classId}`} className='flex items-center justify-between border rounded p-2'>
@@ -454,12 +463,12 @@ const CashHandoverListTable = () => {
               {table.getFilteredRowModel().rows.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className='text-center'>
-                    {loading ? 'Đang tải...' : 'Không có dữ liệu'}
+                    {loading ? 'Äang táº£i...' : 'Không có dữ liệu'}
                   </td>
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
+                  <tr key={row.id} onClick={() => handleOpenDetail(row.original)} style={{ cursor: 'pointer' }}>
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                     ))}

@@ -4,7 +4,6 @@
 import { useState, useMemo, useEffect } from 'react'
 
 // Next Imports
-import Link from 'next/link'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -234,14 +233,9 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
       columnHelper.accessor('action', {
         header: 'Actions',
         cell: ({ row }) => (
-          <div className='flex items-center'>
+          <div className='flex items-center' onClick={event => event.stopPropagation()}>
             <IconButton onClick={() => setData(data?.filter(product => product.id !== row.original.id))}>
               <i className='ri-delete-bin-7-line text-textSecondary' />
-            </IconButton>
-            <IconButton>
-              <Link href={'/apps/user/view'} className='flex'>
-                <i className='ri-eye-line text-textSecondary' />
-              </Link>
             </IconButton>
             <OptionMenu
               iconButtonProps={{ size: 'medium' }}

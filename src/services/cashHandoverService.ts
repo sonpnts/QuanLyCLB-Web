@@ -148,7 +148,7 @@ class CashHandoverService {
       return { success: true, data: toCashHandover(apiResponse.data), message: apiResponse.message }
     } catch (error: any) {
       logger.error('CashHandoverService', 'rejectCashHandover', error)
-      return { success: false, message: error?.response?.data?.message || 'Lá»—i káº¿t ná»‘i mÃ¡y chá»§' }
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 

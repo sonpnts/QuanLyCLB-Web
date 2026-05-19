@@ -76,6 +76,7 @@ export const API_ENDPOINTS = {
     payments: (classId: string) => `/Classes/${classId}/payments`,
     duplicate: (classId: string) => `/Classes/${classId}/duplicate`,
     permissions: (classId: string) => `/Classes/${classId}/permissions`,
+    permissionsUser: (classId: string, userId: string) => `/Classes/${classId}/users/${userId}/permissions`,
     permissionsByUser: (classId: string, userId: string) => `/Classes/${classId}/permissions/${userId}`,
     permissionsCatalog: '/Classes/permissions/catalog'
   },
@@ -115,6 +116,7 @@ export const API_ENDPOINTS = {
   },
   menu: {
     byRole: '/menu/by-role',
+    byUser: (userId: string) => `/menu/by-user/${userId}`,
     seed: '/menu/seed',
     rbacCanonical: '/menu/rbac-canonical',
     patchPermissionRoles: (permissionId: string) => `/menu/permissions/${permissionId}/roles`,
@@ -254,6 +256,21 @@ export const API_ENDPOINTS = {
     approve: (id: string) => `/user-documents/${id}/approve`,
     requestResubmission: (id: string) => `/user-documents/${id}/request-resubmission`,
   },
+  zaloLinks: {
+    stats: '/zalo-links/stats',
+    unlinked: '/zalo-links/unlinked',
+    lookup: '/zalo-links/lookup',
+    coachOverview: '/zalo-links/coach/overview',
+    coachStudents: '/zalo-links/coach/students'
+  },
+  oneTimeFees: {
+    options: '/one-time-fees/options',
+    studentStatuses: (studentId: string) => `/one-time-fees/students/${studentId}`,
+    definitions: '/one-time-fees/definitions',
+    updateDefinition: (feeCode: string) => `/one-time-fees/definitions/${encodeURIComponent(feeCode)}`,
+    prices: '/one-time-fees/prices',
+    upsertPrice: '/one-time-fees/prices'
+  }
 } as const
 
 export type ApiEndpoints = typeof API_ENDPOINTS

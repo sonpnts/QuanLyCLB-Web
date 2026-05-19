@@ -1,0 +1,36 @@
+==19/05/2026 10:53:14==
+- Level: ERROR
+- ClassName: StudentService
+- Method: verifyZaloPhone
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async StudentService.verifyZaloPhone (http://localhost:3000/_next/static/chunks/src_f0d86a._.js:543:30)
+    at async handleVerify (http://localhost:3000/_next/static/chunks/src_f0d86a._.js:777:28)
+==END==
+
+==19/05/2026 10:56:13==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_f0d86a._.js:18:26)
+    at async ZaloLinkCoachView.useCallback[loadRows] (http://localhost:3000/_next/static/chunks/src_f0d86a._.js:1474:29)
+==END==
+
+==19/05/2026 10:56:38==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_f0d86a._.js:18:26)
+    at async ZaloLinkCoachView.useCallback[loadRows] (http://localhost:3000/_next/static/chunks/src_f0d86a._.js:1474:29)
+==END==
+

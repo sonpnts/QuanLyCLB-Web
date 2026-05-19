@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 
@@ -27,13 +27,16 @@ import Typography from '@mui/material/Typography'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import paymentService, { type ExamFeeOptionType } from '@/services/paymentService'
+import oneTimeFeeService from '@/services/oneTimeFeeService'
+import type { OneTimeFeeOptionType } from '@/types/apps/oneTimeFeeTypes'
 
-// Enum mapping cho backend
 const PAYMENT_TYPE_MAP: Record<string, number> = {
   Tuition: 0,
   ExamFee: 1,
   Registration: 2,
-  Other: 3
+  Other: 3,
+  FacilityFee: 4,
+  CodeChangeFee: 5
 }
 
 const PAYMENT_METHOD_MAP: Record<string, number> = {
@@ -53,7 +56,6 @@ interface Props {
   forYear?: number
   examRegistrationId?: string
   description?: string
-  // When opened from ExamFee flow, allow collecting tuition together (1 receipt)
   tuitionAmount?: number
   tuitionForMonth?: number
   tuitionForYear?: number
@@ -89,18 +91,15 @@ const CollectPaymentDialog = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Reduce (manual discount on this receipt)
   const [discountAmount, setDiscountAmount] = useState<number>(0)
-  const [discountReason, setDiscountReason] = useState<string>('')
-
-  // Optional tuition (when collecting exam fee but student still owes tuition)
+  const [discountReason, setDiscountReason] = useState('')
   const [includeTuition, setIncludeTuition] = useState(false)
-
-  // Optional exam fee (suggested when student is in draft exam registration list within deadline)
   const [loadingExamOptions, setLoadingExamOptions] = useState(false)
   const [examFeeOptions, setExamFeeOptions] = useState<ExamFeeOptionType[]>([])
   const [includeExamFee, setIncludeExamFee] = useState(false)
-  const [selectedExamRegistrationId, setSelectedExamRegistrationId] = useState<string>('')
+  const [selectedExamRegistrationId, setSelectedExamRegistrationId] = useState('')
+  const [oneTimeFeeOptions, setOneTimeFeeOptions] = useState<OneTimeFeeOptionType[]>([])
+  const [selectedOneTimeFees, setSelectedOneTimeFees] = useState<Record<string, boolean>>({})
 
   const resetForm = () => {
     setNote('')
@@ -114,6 +113,8 @@ const CollectPaymentDialog = ({
     setIncludeExamFee(false)
     setSelectedExamRegistrationId('')
     setIncludeTuition(false)
+    setOneTimeFeeOptions([])
+    setSelectedOneTimeFees({})
   }
 
   const handleClose = () => {
@@ -125,9 +126,7 @@ const CollectPaymentDialog = ({
     let ignore = false
 
     const loadExamFeeOptions = async () => {
-      if (!open) return
-      if (paymentType !== 'Tuition') return
-      if (!classId) return
+      if (!open || paymentType !== 'Tuition' || !classId) return
 
       try {
         setLoadingExamOptions(true)
@@ -137,9 +136,8 @@ const CollectPaymentDialog = ({
         const options = res.success && res.data ? res.data : []
         setExamFeeOptions(options)
 
-        const suggested = options.find(o => o.isSuggested) || null
+        const suggested = options.find(option => option.isSuggested) || null
         const shouldInclude = Boolean(suggested)
-
         setIncludeExamFee(shouldInclude)
         setSelectedExamRegistrationId(shouldInclude ? suggested!.registrationId : options[0]?.registrationId || '')
       } catch {
@@ -161,10 +159,31 @@ const CollectPaymentDialog = ({
   }, [open, paymentType, classId, studentId])
 
   useEffect(() => {
-    if (!open) return
-    if (paymentType !== 'ExamFee') return
+    let ignore = false
 
-    // Default: if we know the student still owes tuition, suggest collecting it together
+    const loadOneTimeFeeOptions = async () => {
+      if (!open || !classId) return
+
+      const res = await oneTimeFeeService.getOptions(studentId, classId)
+      if (ignore) return
+
+      const options = res.success && res.data ? res.data : []
+      setOneTimeFeeOptions(options)
+
+      const selected: Record<string, boolean> = {}
+      for (const option of options) selected[option.feeCode] = true
+      setSelectedOneTimeFees(selected)
+    }
+
+    loadOneTimeFeeOptions()
+
+    return () => {
+      ignore = true
+    }
+  }, [open, classId, studentId])
+
+  useEffect(() => {
+    if (!open || paymentType !== 'ExamFee') return
     setIncludeTuition(Boolean(tuitionAmount && tuitionAmount > 0))
   }, [open, paymentType, tuitionAmount])
 
@@ -176,8 +195,8 @@ const CollectPaymentDialog = ({
     }
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
@@ -192,6 +211,7 @@ const CollectPaymentDialog = ({
     try {
       setUploading(true)
       const result = await paymentService.uploadTransferProof(file)
+
       if (result.success && result.data?.imageUrl) {
         setTransferProofUrl(result.data.imageUrl)
         showNotification('Upload ảnh thành công', 'success')
@@ -210,9 +230,22 @@ const CollectPaymentDialog = ({
     }
   }
 
-  const handleSubmit = async () => {
-    const hasTuitionLine = paymentType === 'Tuition' || (paymentType === 'ExamFee' && includeTuition)
+  const selectedExamFeeAmount =
+    paymentType === 'Tuition' && includeExamFee
+      ? Number(examFeeOptions.find(option => option.registrationId === selectedExamRegistrationId)?.feeAmount || 0)
+      : 0
 
+  const selectedOneTimeFeeAmount = oneTimeFeeOptions.reduce((sum, option) => {
+    return sum + (selectedOneTimeFees[option.feeCode] ? Number(option.amount || 0) : 0)
+  }, 0)
+
+  const selectedTuitionAmount = paymentType === 'ExamFee' && includeTuition ? Number(tuitionAmount || 0) : 0
+  const isOneTimeFeeOnly = Number(amount || 0) <= 0 && selectedOneTimeFeeAmount > 0
+  const grossAmount = Number(amount || 0) + selectedExamFeeAmount + selectedTuitionAmount + selectedOneTimeFeeAmount
+  const hasTuitionLine = paymentType === 'Tuition' || (paymentType === 'ExamFee' && includeTuition)
+  const netAmount = hasTuitionLine ? Math.max(0, grossAmount - Number(discountAmount || 0)) : grossAmount
+
+  const handleSubmit = async () => {
     if (discountAmount > 0 && !hasTuitionLine) {
       showNotification('Giảm trừ chỉ áp dụng cho học phí.', 'error')
       return
@@ -228,82 +261,126 @@ const CollectPaymentDialog = ({
       return
     }
 
-	    try {
-	      setSaving(true)
+    if (Number(amount || 0) <= 0 && selectedOneTimeFeeAmount <= 0) {
+      showNotification('Vui lòng chọn ít nhất một khoản phí cần thu.', 'error')
+      return
+    }
 
-	      const basePayload = {
-	        studentId,
-	        paymentDate: new Date().toISOString(),
-	        method: PAYMENT_METHOD_MAP[method] ?? 0,
-	        transactionRef: transactionRef || undefined,
-	        transferProofImageUrl: transferProofUrl || undefined,
-	        collectedByUserId: auth?.user?.id
-	      }
+    try {
+      setSaving(true)
 
-	      const shouldBulkForTuition =
-	        paymentType === 'Tuition' && includeExamFee && !!selectedExamRegistrationId && (examFeeOptions ?? []).length > 0
+      const basePayload = {
+        studentId,
+        paymentDate: new Date().toISOString(),
+        method: PAYMENT_METHOD_MAP[method] ?? 0,
+        transactionRef: transactionRef || undefined,
+        transferProofImageUrl: transferProofUrl || undefined,
+        collectedByUserId: auth?.user?.id
+      }
 
-        const shouldBulkForExamFee = paymentType === 'ExamFee' && includeTuition && !!tuitionAmount && tuitionAmount > 0
+      const shouldBulkForTuition =
+        paymentType === 'Tuition' && includeExamFee && !!selectedExamRegistrationId && (examFeeOptions ?? []).length > 0
 
-	      const result = shouldBulkForTuition
-	        ? await paymentService.createBulkPayment({
-	            ...basePayload,
-	            items: [
-	              {
-	                type: PAYMENT_TYPE_MAP['Tuition'],
-	                classId: classId || undefined,
-	                forMonth: forMonth || undefined,
-	                forYear: forYear || undefined,
-	                description: description || note || undefined,
-	                discountAmount: discountAmount > 0 ? discountAmount : undefined,
-	                discountReason: discountAmount > 0 ? discountReason.trim() : undefined
-	              },
-	              {
-	                type: PAYMENT_TYPE_MAP['ExamFee'],
-	                classId: classId || undefined,
-	                examRegistrationId: selectedExamRegistrationId,
-	                description: 'Lệ phí thi'
-	              }
-	            ]
-	          })
-	        : shouldBulkForExamFee
+      const shouldBulkForExamFee = paymentType === 'ExamFee' && includeTuition && !!tuitionAmount && tuitionAmount > 0
+
+      const oneTimeFeeItems = oneTimeFeeOptions
+        .filter(option => Boolean(selectedOneTimeFees[option.feeCode]))
+        .map(option => {
+          const typeKey = option.feeCode === 'CSVC' ? 'FacilityFee' : 'CodeChangeFee'
+          return {
+            type: PAYMENT_TYPE_MAP[typeKey] ?? 3,
+            classId: classId || undefined,
+            amount: Number(option.amount || 0),
+            description: option.feeName
+          }
+        })
+
+      const shouldBulkForOneTimeFees = oneTimeFeeItems.length > 0
+
+      const result = shouldBulkForTuition
+        ? await paymentService.createBulkPayment({
+            ...basePayload,
+            items: [
+              {
+                type: PAYMENT_TYPE_MAP.Tuition,
+                classId: classId || undefined,
+                forMonth: forMonth || undefined,
+                forYear: forYear || undefined,
+                description: description || note || undefined,
+                discountAmount: discountAmount > 0 ? discountAmount : undefined,
+                discountReason: discountAmount > 0 ? discountReason.trim() : undefined
+              },
+              {
+                type: PAYMENT_TYPE_MAP.ExamFee,
+                classId: classId || undefined,
+                examRegistrationId: selectedExamRegistrationId,
+                description: 'Lệ phí thi'
+              },
+              ...oneTimeFeeItems
+            ]
+          })
+        : shouldBulkForExamFee
+          ? await paymentService.createBulkPayment({
+              ...basePayload,
+              items: [
+                {
+                  type: PAYMENT_TYPE_MAP.Tuition,
+                  classId: classId || undefined,
+                  forMonth: tuitionForMonth || forMonth || undefined,
+                  forYear: tuitionForYear || forYear || undefined,
+                  description: `Học phí tháng ${tuitionForMonth || forMonth}/${tuitionForYear || forYear}`,
+                  discountAmount: discountAmount > 0 ? discountAmount : undefined,
+                  discountReason: discountAmount > 0 ? discountReason.trim() : undefined
+                },
+                {
+                  type: PAYMENT_TYPE_MAP.ExamFee,
+                  classId: classId || undefined,
+                  examRegistrationId: examRegistrationId || undefined,
+                  description: description || note || 'Lệ phí thi'
+                },
+                ...oneTimeFeeItems
+              ]
+            })
+          : shouldBulkForOneTimeFees && isOneTimeFeeOnly
             ? await paymentService.createBulkPayment({
                 ...basePayload,
-                items: [
-                  {
-                    type: PAYMENT_TYPE_MAP['Tuition'],
-                    classId: classId || undefined,
-                    forMonth: tuitionForMonth || forMonth || undefined,
-                    forYear: tuitionForYear || forYear || undefined,
-                    description: `Học phí tháng ${tuitionForMonth || forMonth}/${tuitionForYear || forYear}`,
-                    discountAmount: discountAmount > 0 ? discountAmount : undefined,
-                    discountReason: discountAmount > 0 ? discountReason.trim() : undefined
-                  },
-                  {
-                    type: PAYMENT_TYPE_MAP['ExamFee'],
-                    classId: classId || undefined,
-                    examRegistrationId: examRegistrationId || undefined,
-                    description: description || note || 'Lệ phí thi'
-                  }
-                ]
+                items: oneTimeFeeItems
               })
-            : await paymentService.createPayment({
-	            studentId,
-	            type: PAYMENT_TYPE_MAP[paymentType] ?? 3,
-	            amount,
-	            discountAmount: hasTuitionLine && discountAmount > 0 ? discountAmount : undefined,
-	            discountReason: hasTuitionLine && discountAmount > 0 ? discountReason.trim() : undefined,
-	            paymentDate: new Date().toISOString(),
-	            method: PAYMENT_METHOD_MAP[method] ?? 0,
-	            description: description || note || undefined,
-	            transactionRef: transactionRef || undefined,
-	            transferProofImageUrl: transferProofUrl || undefined,
-	            classId: classId || undefined,
-	            forMonth: forMonth || undefined,
-	            forYear: forYear || undefined,
-	            examRegistrationId: examRegistrationId || undefined,
-	            collectedByUserId: auth?.user?.id
-	          })
+            : shouldBulkForOneTimeFees
+              ? await paymentService.createBulkPayment({
+                  ...basePayload,
+                  items: [
+                    {
+                      type: PAYMENT_TYPE_MAP[paymentType] ?? 3,
+                      classId: classId || undefined,
+                      forMonth: forMonth || undefined,
+                      forYear: forYear || undefined,
+                      examRegistrationId: examRegistrationId || undefined,
+                      amount: Number(amount || 0),
+                      description: description || note || undefined,
+                      discountAmount: hasTuitionLine && discountAmount > 0 ? discountAmount : undefined,
+                      discountReason: hasTuitionLine && discountAmount > 0 ? discountReason.trim() : undefined
+                    },
+                    ...oneTimeFeeItems
+                  ]
+                })
+              : await paymentService.createPayment({
+                  studentId,
+                  type: PAYMENT_TYPE_MAP[paymentType] ?? 3,
+                  amount,
+                  discountAmount: hasTuitionLine && discountAmount > 0 ? discountAmount : undefined,
+                  discountReason: hasTuitionLine && discountAmount > 0 ? discountReason.trim() : undefined,
+                  paymentDate: new Date().toISOString(),
+                  method: PAYMENT_METHOD_MAP[method] ?? 0,
+                  description: description || note || undefined,
+                  transactionRef: transactionRef || undefined,
+                  transferProofImageUrl: transferProofUrl || undefined,
+                  classId: classId || undefined,
+                  forMonth: forMonth || undefined,
+                  forYear: forYear || undefined,
+                  examRegistrationId: examRegistrationId || undefined,
+                  collectedByUserId: auth?.user?.id
+                })
 
       if (result.success) {
         resetForm()
@@ -316,21 +393,10 @@ const CollectPaymentDialog = ({
     }
   }
 
-  const selectedExamFeeAmount =
-    paymentType === 'Tuition' && includeExamFee
-      ? Number(examFeeOptions.find(o => o.registrationId === selectedExamRegistrationId)?.feeAmount || 0)
-      : 0
-
-  const selectedTuitionAmount = paymentType === 'ExamFee' && includeTuition ? Number(tuitionAmount || 0) : 0
-  const grossAmount = Number(amount || 0) + selectedExamFeeAmount + selectedTuitionAmount
-  const hasTuitionLineForUi = paymentType === 'Tuition' || (paymentType === 'ExamFee' && includeTuition)
-  const netAmount = hasTuitionLineForUi ? Math.max(0, grossAmount - Number(discountAmount || 0)) : grossAmount
-
   return (
     <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
-      <DialogTitle>Thu tiền — {studentName}</DialogTitle>
+      <DialogTitle>{`Thu tiền - ${studentName}`}</DialogTitle>
       <DialogContent className='flex flex-col gap-4 pt-2'>
-        {/* Tóm tắt */}
         <Box className='rounded-lg p-3' sx={{ bgcolor: 'action.hover' }}>
           {description && (
             <Typography variant='body2' color='text.secondary' className='mb-1'>
@@ -342,99 +408,112 @@ const CollectPaymentDialog = ({
           </Typography>
         </Box>
 
-	        <Divider />
+        <Divider />
 
-          {/* Collect tuition together when collecting exam fee (single receipt) */}
-          {paymentType === 'ExamFee' && tuitionAmount && tuitionAmount > 0 && (
-            <Box>
+        {paymentType === 'ExamFee' && tuitionAmount && tuitionAmount > 0 && (
+          <Box>
+            <FormControlLabel
+              control={<Checkbox checked={includeTuition} onChange={event => setIncludeTuition(event.target.checked)} />}
+              label={`Thu học phí tháng ${tuitionForMonth || forMonth}/${tuitionForYear || forYear} (${Number(tuitionAmount).toLocaleString('vi-VN')}đ)`}
+            />
+          </Box>
+        )}
+
+        {paymentType === 'Tuition' && examFeeOptions.length > 0 && (
+          <Box>
+            <Box className='flex items-center justify-between gap-2 flex-wrap'>
               <FormControlLabel
-                control={<Checkbox checked={includeTuition} onChange={e => setIncludeTuition(e.target.checked)} />}
-                label={`Thu học phí tháng ${tuitionForMonth || forMonth}/${tuitionForYear || forYear} (${Number(tuitionAmount).toLocaleString('vi-VN')}đ)`}
+                control={
+                  <Checkbox
+                    checked={includeExamFee}
+                    onChange={event => setIncludeExamFee(event.target.checked)}
+                    disabled={loadingExamOptions}
+                  />
+                }
+                label='Thu lệ phí thi'
               />
+              {loadingExamOptions && (
+                <Box className='flex items-center gap-2'>
+                  <CircularProgress size={16} />
+                  <Typography variant='caption' color='text.secondary'>
+                    Đang tải...
+                  </Typography>
+                </Box>
+              )}
             </Box>
-          )}
 
-	        {/* Thu lệ phí thi (nếu có) */}
-	        {paymentType === 'Tuition' && (examFeeOptions ?? []).length > 0 && (
-	          <Box>
-	            <Box className='flex items-center justify-between gap-2 flex-wrap'>
-	              <FormControlLabel
-	                control={
-	                  <Checkbox
-	                    checked={includeExamFee}
-	                    onChange={e => setIncludeExamFee(e.target.checked)}
-	                    disabled={loadingExamOptions}
-	                  />
-	                }
-	                label='Thu lệ phí thi'
-	              />
-	              {loadingExamOptions && (
-	                <Box className='flex items-center gap-2'>
-	                  <CircularProgress size={16} />
-	                  <Typography variant='caption' color='text.secondary'>
-	                    Đang tải...
-	                  </Typography>
-	                </Box>
-	              )}
-	            </Box>
+            {includeExamFee && (
+              <FormControl size='small' fullWidth sx={{ mt: 1 }}>
+                <InputLabel>Kỳ thi</InputLabel>
+                <Select
+                  label='Kỳ thi'
+                  value={selectedExamRegistrationId}
+                  onChange={event => setSelectedExamRegistrationId(String(event.target.value))}
+                >
+                  {examFeeOptions.map(option => (
+                    <MenuItem key={option.registrationId} value={option.registrationId}>
+                      {option.examSessionName} - {option.targetBeltLevelName} ({Number(option.feeAmount).toLocaleString('vi-VN')}đ)
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          </Box>
+        )}
 
-	            {includeExamFee && (
-	              <FormControl size='small' fullWidth sx={{ mt: 1 }}>
-	                <InputLabel>Kỳ thi</InputLabel>
-	                <Select
-	                  label='Kỳ thi'
-	                  value={selectedExamRegistrationId}
-	                  onChange={e => setSelectedExamRegistrationId(String(e.target.value))}
-	                >
-	                  {examFeeOptions.map(o => (
-	                    <MenuItem key={o.registrationId} value={o.registrationId}>
-	                      {o.examSessionName} - {o.targetBeltLevelName} ({Number(o.feeAmount).toLocaleString('vi-VN')}đ)
-	                    </MenuItem>
-	                  ))}
-	                </Select>
-	              </FormControl>
-	            )}
-	          </Box>
-	        )}
+        {oneTimeFeeOptions.length > 0 && (
+          <Box>
+            <Typography variant='body2' className='mb-1 font-medium'>
+              Phí 1 lần
+            </Typography>
+            {oneTimeFeeOptions.map(option => (
+              <FormControlLabel
+                key={option.feeCode}
+                control={
+                  <Checkbox
+                    checked={Boolean(selectedOneTimeFees[option.feeCode])}
+                    onChange={event => setSelectedOneTimeFees(prev => ({ ...prev, [option.feeCode]: event.target.checked }))}
+                  />
+                }
+                label={`${option.feeName} (${Number(option.amount).toLocaleString('vi-VN')}đ)`}
+              />
+            ))}
+          </Box>
+        )}
 
-	        {hasTuitionLineForUi && (
-	          <Box>
-	            <Typography variant='body2' className='mb-1 font-medium'>
-	              Giảm trừ
-	            </Typography>
-	            <TextField
-	              label='Số tiền giảm'
-	              size='small'
-	              fullWidth
-	              type='number'
-	              inputProps={{ min: 0 }}
-	              value={discountAmount}
-	              onChange={e => setDiscountAmount(Number(e.target.value))}
-	              InputProps={{ endAdornment: <InputAdornment position='end'>VND</InputAdornment> }}
-	            />
-	            <TextField
-	              label='Lý do giảm trừ'
-	              size='small'
-	              fullWidth
-	              value={discountReason}
-	              onChange={e => setDiscountReason(e.target.value)}
-	              required={discountAmount > 0}
-	              sx={{ mt: 2 }}
-	              helperText={discountAmount > 0 ? 'Bắt buộc khi có giảm trừ' : undefined}
-	            />
-	          </Box>
-	        )}
+        {hasTuitionLine && (
+          <Box>
+            <Typography variant='body2' className='mb-1 font-medium'>
+              Giảm trừ
+            </Typography>
+            <TextField
+              label='Số tiền giảm'
+              size='small'
+              fullWidth
+              type='number'
+              inputProps={{ min: 0 }}
+              value={discountAmount}
+              onChange={event => setDiscountAmount(Number(event.target.value))}
+              InputProps={{ endAdornment: <InputAdornment position='end'>VND</InputAdornment> }}
+            />
+            <TextField
+              label='Lý do giảm trừ'
+              size='small'
+              fullWidth
+              value={discountReason}
+              onChange={event => setDiscountReason(event.target.value)}
+              required={discountAmount > 0}
+              sx={{ mt: 2 }}
+              helperText={discountAmount > 0 ? 'Bắt buộc khi có giảm trừ' : undefined}
+            />
+          </Box>
+        )}
 
-        {/* Phương thức */}
         <Box>
           <Typography variant='body2' className='mb-1 font-medium'>
             Phương thức thanh toán
           </Typography>
-          <RadioGroup
-            row
-            value={method}
-            onChange={e => handleMethodChange(e.target.value as 'Cash' | 'BankTransfer')}
-          >
+          <RadioGroup row value={method} onChange={event => handleMethodChange(event.target.value as 'Cash' | 'BankTransfer')}>
             <FormControlLabel value='Cash' control={<Radio />} label='Tiền mặt' />
             <FormControlLabel value='BankTransfer' control={<Radio />} label='Chuyển khoản' />
           </RadioGroup>
@@ -447,14 +526,12 @@ const CollectPaymentDialog = ({
               size='small'
               fullWidth
               value={transactionRef}
-              onChange={e => setTransactionRef(e.target.value)}
+              onChange={event => setTransactionRef(event.target.value)}
             />
 
-            {/* Upload ảnh chuyển khoản - bắt buộc */}
             <Box>
               <Typography variant='body2' className='mb-2 font-medium'>
-                Ảnh chụp màn hình chuyển khoản{' '}
-                <Typography component='span' color='error' variant='body2'>*</Typography>
+                Ảnh chụp màn hình chuyển khoản <Typography component='span' color='error' variant='body2'>*</Typography>
               </Typography>
 
               <input
@@ -524,7 +601,7 @@ const CollectPaymentDialog = ({
           multiline
           rows={2}
           value={note}
-          onChange={e => setNote(e.target.value)}
+          onChange={event => setNote(event.target.value)}
         />
       </DialogContent>
       <DialogActions>

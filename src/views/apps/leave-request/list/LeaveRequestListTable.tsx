@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -32,7 +32,7 @@ import type { GetStudentAbsencesParams, StudentAbsenceType } from '@/services/st
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import { hasAdminRole } from '@/utils/roleUtils'
-import { hasPermission } from '@/utils/permissionUtils'
+import { buildModulePermissionMap } from '@/utils/rbac'
 
 import AddLeaveRequestDrawer from './AddLeaveRequestDrawer'
 import TableFilters from './TableFilters'
@@ -74,7 +74,11 @@ const columnHelper = createColumnHelper<StudentAbsenceType>()
 
 const LeaveRequestListTable = () => {
   const { auth } = useAuth()
-  const isAdmin = hasPermission(auth?.permissions, 'LeaveRequest.ManageAll') || hasAdminRole(auth?.roles)
+  const isAdmin = hasAdminRole(auth?.roles)
+  const leaveRequestPermissions = useMemo(
+    () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'LeaveRequest'),
+    [auth?.permissions, auth?.roles]
+  )
   const { showNotification } = useNotification()
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
@@ -134,16 +138,16 @@ const LeaveRequestListTable = () => {
     const response = await studentAttendanceService.deleteAttendance(id)
 
     if (!response.success) {
-      showNotificationRef.current(response.message || 'Không thể xóa dòng nghỉ học.', 'error')
+      showNotificationRef.current(response.message || 'Không thể xóa dòng xin nghỉ phép.', 'error')
       return
     }
 
     setData(prev => prev.filter(item => item.id !== id))
-    showNotificationRef.current('Đã xóa dòng nghỉ học.', 'success')
+    showNotificationRef.current('Đã xóa dòng xin nghỉ phép.', 'success')
   }
 
-  const columns = useMemo<ColumnDef<StudentAbsenceType, any>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<StudentAbsenceType, any>[]>(() => {
+    const nextColumns: ColumnDef<StudentAbsenceType, any>[] = [
       columnHelper.accessor('studentName', {
         header: 'Học viên',
         cell: ({ row }) => (
@@ -185,19 +189,23 @@ const LeaveRequestListTable = () => {
       columnHelper.accessor('markedByUserName', {
         header: 'Người ghi nhận',
         cell: ({ row }) => <Typography>{row.original.markedByUserName || '-'}</Typography>
-      }),
-      {
+      })
+    ]
+
+    if (leaveRequestPermissions.canDelete) {
+      nextColumns.push({
         id: 'actions',
         header: 'Thao tác',
         cell: ({ row }) => (
-          <IconButton color='error' title='Xóa dòng nghỉ' onClick={() => handleDelete(row.original.id)}>
+          <IconButton color='error' title='Xóa dòng xin nghỉ phép' onClick={() => handleDelete(row.original.id)}>
             <i className='ri-delete-bin-6-line' />
           </IconButton>
         )
-      }
-    ],
-    []
-  )
+      })
+    }
+
+    return nextColumns
+  }, [leaveRequestPermissions.canDelete])
 
   const table = useReactTable({
     data,
@@ -217,7 +225,7 @@ const LeaveRequestListTable = () => {
     <>
       <Card>
         <CardHeader
-          title='Quản lý nghỉ học học viên'
+          title='Quản lý xin nghỉ phép'
           subheader='Danh sách này lấy trực tiếp từ dữ liệu điểm danh: chỉ lưu các buổi vắng có phép hoặc không phép.'
         />
         <TableFilters classes={classes} onFilterChange={handleFilterChange} />
@@ -229,9 +237,11 @@ const LeaveRequestListTable = () => {
             placeholder='Tìm học viên, lớp, lý do...'
             className='max-sm:is-full'
           />
-          <Button variant='contained' onClick={() => setAddRequestOpen(true)}>
-            Thêm nghỉ phép
-          </Button>
+          {leaveRequestPermissions.canCreate && (
+            <Button variant='contained' onClick={() => setAddRequestOpen(true)}>
+              Xin nghỉ phép
+            </Button>
+          )}
         </div>
         <div className='overflow-x-auto'>
           <table className={tableStyles.table}>
@@ -287,10 +297,11 @@ const LeaveRequestListTable = () => {
         />
       </Card>
 
-      <AddLeaveRequestDrawer open={addRequestOpen} handleClose={() => setAddRequestOpen(false)} setData={setData} />
+      {leaveRequestPermissions.canCreate && (
+        <AddLeaveRequestDrawer open={addRequestOpen} handleClose={() => setAddRequestOpen(false)} setData={setData} />
+      )}
     </>
   )
 }
 
 export default LeaveRequestListTable
-

@@ -72,7 +72,6 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
     <Card className='previewCard'>
       <CardContent className='sm:!p-12'>
         <Grid container spacing={6}>
-          {/* Header */}
           <Grid size={{ xs: 12 }}>
             <div className='p-6 bg-actionHover rounded'>
               <div className='flex justify-between gap-y-4 flex-col sm:flex-row'>
@@ -80,14 +79,6 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                   <div className='flex items-center'>
                     <Logo />
                   </div>
-                  {/*<div>*/}
-                  {/*  <Typography color='text.primary' className='font-medium'>*/}
-                  {/*    Câu lạc bộ*/}
-                  {/*  </Typography>*/}
-                  {/*  <Typography color='text.secondary' variant='body2'>*/}
-                  {/*    Hệ thống quản lý câu lạc bộ*/}
-                  {/*  </Typography>*/}
-                  {/*</div>*/}
                 </div>
                 <div className='flex flex-col gap-2'>
                   <Typography variant='h5' color='primary'>
@@ -104,7 +95,6 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
             </div>
           </Grid>
 
-          {/* Student & Payment Info */}
           <Grid size={{ xs: 12 }}>
             <Grid container spacing={6}>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -148,7 +138,6 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
             </Grid>
           </Grid>
 
-          {/* Items Table */}
           <Grid size={{ xs: 12 }}>
             <div className='overflow-x-auto border rounded'>
               <table className={tableStyles.table}>
@@ -204,7 +193,6 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
             </div>
           </Grid>
 
-          {/* Totals */}
           <Grid size={{ xs: 12 }}>
             <div className='flex justify-end'>
               <div className='min-is-[220px] flex flex-col gap-1'>
@@ -233,7 +221,6 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
             </div>
           </Grid>
 
-          {/* Transfer proof image */}
           {firstItem.transferProofImageUrl && (
             <>
               <Grid size={{ xs: 12 }}>
@@ -245,6 +232,7 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                 </Typography>
                 <Box
                   component='img'
+                  className='previewCard__transfer-proof'
                   src={firstItem.transferProofImageUrl}
                   alt='Minh chứng chuyển khoản'
                   sx={{
@@ -260,7 +248,6 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
             </>
           )}
 
-          {/* Footer note */}
           <Grid size={{ xs: 12 }}>
             <Divider className='border-dashed' />
           </Grid>
@@ -280,14 +267,9 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                   NGƯỜI NỘP TIỀN
                 </Typography>
 
-                <Box sx={{ height: 90 }} />
+                <Box className='previewCard__signature-space' sx={{ height: 90 }} />
 
                 <Divider />
-
-                {/* Optional tên người nộp */}
-                {/* <Typography sx={{ mt: 1, fontWeight: 600 }}>
-        {firstItem.studentName || '—'}
-      </Typography> */}
               </Box>
 
               <Box flex={1} textAlign='center'>
@@ -303,7 +285,7 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                   NGƯỜI THU
                 </Typography>
 
-                <Box sx={{ height: 90 }} />
+                <Box className='previewCard__signature-space' sx={{ height: 90 }} />
 
                 <Divider />
 
@@ -320,10 +302,8 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
               </Box>
             </Box>
           </Grid>
+
           <Grid size={{ xs: 12 }}>
-            {/*<Typography variant='body2' color='text.secondary' textAlign='center'>*/}
-            {/*  Biên lai này là chứng từ hợp lệ cho khoản thu từ hệ thống quản lý câu lạc bộ.*/}
-            {/*</Typography>*/}
             <Typography variant='body2' color='text.secondary' textAlign='center'>
               Khoản phí đã thanh toán sẽ không được hoàn lại và chỉ được bảo lưu 1 lần.
             </Typography>

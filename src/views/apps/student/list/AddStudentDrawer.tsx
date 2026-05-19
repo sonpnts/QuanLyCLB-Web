@@ -44,6 +44,7 @@ const initialForm = {
   code: '',
   fullName: '',
   phoneNumber: '',
+  personalIdNumber: '',
   address: '',
   dateOfBirth: '',
   educationLevel: '',
@@ -105,6 +106,7 @@ const AddStudentDrawer = ({
         code: formData.code || undefined,
         fullName: formData.fullName,
         phoneNumber: formData.phoneNumber || undefined,
+        personalIdNumber: formData.personalIdNumber || undefined,
         address: formData.address || undefined,
         dateOfBirth: formData.dateOfBirth || undefined,
         educationLevel: formData.educationLevel,
@@ -168,6 +170,7 @@ const AddStudentDrawer = ({
       gender: info.gender !== undefined ? String(info.gender) : prev.gender,
       dateOfBirth: info.dateOfBirth || prev.dateOfBirth,
       phoneNumber: info.phoneNumber || prev.phoneNumber,
+      personalIdNumber: info.personalIdNumber || prev.personalIdNumber,
       address: info.address || prev.address
     }))
     showNotification('Đã áp dụng thông tin từ liên đoàn.', 'info')
@@ -235,6 +238,14 @@ const AddStudentDrawer = ({
                 fullWidth
                 value={formData.phoneNumber}
                 onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label='CCCD / Số định danh cá nhân'
+                fullWidth
+                value={formData.personalIdNumber}
+                onChange={e => setFormData({ ...formData, personalIdNumber: e.target.value })}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

@@ -5,6 +5,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 
 // Next Imports
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -105,6 +106,7 @@ const DebouncedInput = ({
 const columnHelper = createColumnHelper<ClassTypeWithAction>()
 
 const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
+  const router = useRouter()
   // States
   const [addClassOpen, setAddClassOpen] = useState(false)
   const [editClassOpen, setEditClassOpen] = useState(false)
@@ -422,7 +424,7 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
           }
 
           return (
-            <div className='flex items-center'>
+            <div className='flex items-center' onClick={event => event.stopPropagation()}>
               {/* Các thao tác chỉ hiện khi lớp đang hoạt động */}
               {!isInactive && (
                 <>
@@ -470,11 +472,7 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
                   </IconButton>
                 ))}
 
-              <IconButton>
-                <Link href={`/apps/class/view/${row.original.id}`} className='flex' title='Xem chi tiết'>
-                  <i className='ri-eye-line text-textSecondary' />
-                </Link>
-              </IconButton>
+              {/* Row click handles "view" */}
 
               {isAdmin && !isInactive && (
                 <IconButton
@@ -668,7 +666,11 @@ return (
                       <tr
                         key={row.id}
                         className={classnames({ selected: row.getIsSelected() })}
-                        style={isInactive ? { opacity: 0.6, backgroundColor: 'rgba(0,0,0,0.02)' } : undefined}
+                        onClick={() => router.push(`/apps/class/view/${row.original.id}`)}
+                        style={{
+                          cursor: 'pointer',
+                          ...(isInactive ? { opacity: 0.6, backgroundColor: 'rgba(0,0,0,0.02)' } : {})
+                        }}
                       >
                         {row.getVisibleCells().map(cell => (
                           <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>

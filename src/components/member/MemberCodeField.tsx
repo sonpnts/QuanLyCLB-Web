@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 /**
  * MemberCodeField – trường "Mã HV" với:
@@ -34,6 +34,7 @@ export interface MemberInfo {
   gender?: boolean // true = Nam, false = Nữ
   dateOfBirth?: string
   phoneNumber?: string
+  personalIdNumber?: string
   address?: string
   email?: string
 }
@@ -134,9 +135,10 @@ const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = fals
           ? lookupResult.dateOfBirth.split('T')[0]
           : lookupResult.dateOfBirth
         : undefined,
-      // phoneNumber: lookupResult.phoneNumber || undefined,
-      // address: lookupResult.address || undefined,
-      // email: lookupResult.email || undefined,
+      phoneNumber: lookupResult.phoneNumber || undefined,
+      personalIdNumber: lookupResult.idCard || undefined,
+      address: lookupResult.address || undefined,
+      email: lookupResult.email || undefined,
     })
   }
 
@@ -149,13 +151,13 @@ const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = fals
       ['Mã hội viên', m.memberCode],
       ['Giới tính', m.gender || '—'],
       ['Ngày sinh', m.dateOfBirth || '—'],
-      // ['Số điện thoại', m.phoneNumber || '—'],
-      // ['CMND/CCCD', m.idCard || '—'],
-      // ['Địa chỉ', m.address || '—'],
-      // ['Email', m.email || '—'],
+      ['Số điện thoại', m.phoneNumber || '—'],
+      ['CMND/CCCD', m.idCard || '—'],
+      ['Địa chỉ', m.address || '—'],
+      ['Email', m.email || '—'],
       ['Cấp đai', m.beltRank || '—'],
-      // ['Câu lạc bộ', m.clubName || '—'],
-      // ['Hiệu lực', m.isEffective === 'x' ? 'Còn hiệu lực ✓' : (m.isEffective || '—')]
+      ['Câu lạc bộ', m.clubName || '—'],
+      ['Hiệu lực', m.isEffective === 'x' ? 'Còn hiệu lực ✓' : (m.isEffective || '—')]
     ]
 
     return (

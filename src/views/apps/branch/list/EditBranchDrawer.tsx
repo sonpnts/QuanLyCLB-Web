@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -21,6 +21,7 @@ import type { BranchType, UpdateBranchRequest } from '@/services/branchService'
 
 // Service Imports
 import branchService from '@/services/branchService'
+import oneTimeFeeService from '@/services/oneTimeFeeService'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
@@ -41,6 +42,7 @@ type FormValidateType = {
   allowedRadiusMeters: number
   googleMapsEmbedUrl?: string
   tuitionFee: number | string
+  csvcFee: number | string
 }
 
 const parseNum = (val: any) => {
@@ -63,7 +65,8 @@ const EditBranchDrawer = (props: Props) => {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    setValue
   } = useForm<FormValidateType>({
     defaultValues: {
       name: '',
@@ -72,6 +75,7 @@ const EditBranchDrawer = (props: Props) => {
       longitude: 0,
       allowedRadiusMeters: 100,
       tuitionFee: 0,
+      csvcFee: 0,
       googleMapsEmbedUrl: ''
     }
   })
@@ -85,12 +89,24 @@ const EditBranchDrawer = (props: Props) => {
         longitude: selectedBranch.longitude,
         allowedRadiusMeters: selectedBranch.allowedRadiusMeters,
         tuitionFee: selectedBranch.tuitionFee || 0,
+        csvcFee: 0,
         googleMapsEmbedUrl: selectedBranch.googleMapsEmbedUrl || ''
       })
+
+      oneTimeFeeService
+        .getPrices()
+        .then(res => {
+          if (!res.success) return
+          const activeBranchPrice = (res.data || [])
+            .filter(p => p.feeCode === 'CSVC' && p.scopeType === 'Branch' && p.scopeId === selectedBranch.id && p.isActive)
+            .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0]
+          if (activeBranchPrice) setValue('csvcFee', activeBranchPrice.amount)
+        })
+        .catch(() => {})
     } else {
       reset()
     }
-  }, [selectedBranch, reset, open])
+  }, [selectedBranch, reset, setValue, open])
 
   // Handle close
   const handleCloseDrawer = () => {
@@ -119,6 +135,16 @@ const EditBranchDrawer = (props: Props) => {
       const response = await branchService.updateBranch(selectedBranch.id, updateData)
 
       if (response.success && response.data) {
+        const csvcAmount = parseNum(data.csvcFee)
+        if (csvcAmount >= 0) {
+          oneTimeFeeService
+            .upsertPrice({ feeCode: 'CSVC', scopeType: 'Branch', scopeId: selectedBranch.id, amount: csvcAmount })
+            .then(res => {
+              if (!res.success) showNotification(res.message || 'Không thể cập nhật phí CSVC.', 'error')
+            })
+            .catch(() => showNotification('Đã có lỗi khi cập nhật phí CSVC.', 'error'))
+        }
+
         setData(prev => prev.map(b => (b.id === selectedBranch.id ? response.data! : b)))
         setFilteredData(prev => prev.map(b => (b.id === selectedBranch.id ? response.data! : b)))
         showNotification(response.message || 'Cập nhật chi nhánh thành công.', 'success')
@@ -238,6 +264,22 @@ const EditBranchDrawer = (props: Props) => {
               })}
               error={!!errors.tuitionFee}
               helperText={errors.tuitionFee?.message}
+            />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              fullWidth
+              label='Phí CSVC (thu 1 lần)'
+              type='number'
+              slotProps={{ inputLabel: { shrink: true } }}
+              {...register('csvcFee', {
+                validate: {
+                  isNumber: (v) => !isNaN(parseNum(v)) || 'Vui lòng nhập một số hợp lệ',
+                  min: (v) => parseNum(v) >= 0 || 'Phí CSVC không được âm',
+                }
+              })}
+              error={!!errors.csvcFee}
+              helperText={errors.csvcFee?.message || '0đ sẽ tự động ẩn khi thu tiền.'}
             />
           </Grid>
           <Grid size={{ xs: 12 }}>

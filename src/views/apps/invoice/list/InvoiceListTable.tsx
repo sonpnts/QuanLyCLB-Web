@@ -5,13 +5,13 @@ import { useMemo, useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 // MUI Imports
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
 import TextField from '@mui/material/TextField'
 import TablePagination from '@mui/material/TablePagination'
 import Chip from '@mui/material/Chip'
@@ -58,14 +58,17 @@ const formatCurrency = (amount: number) =>
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
-const typeColorMap: Record<number, 'primary' | 'info' | 'success' | 'secondary'> = {
+const typeColorMap: Record<number, 'primary' | 'info' | 'success' | 'secondary' | 'warning'> = {
   0: 'primary',
   1: 'info',
   2: 'success',
-  3: 'secondary'
+  3: 'secondary',
+  4: 'warning',
+  5: 'info'
 }
 
 const InvoiceListTable = ({ payments, loading, dateFrom, dateTo, onDateFromChange, onDateToChange }: Props) => {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [methodFilter, setMethodFilter] = useState<string>('')
   const [page, setPage] = useState(0)
@@ -238,13 +241,12 @@ const InvoiceListTable = ({ payments, loading, dateFrom, dateTo, onDateFromChang
                 <th>Phương thức</th>
                 <th>Loại thu</th>
                 <th>Tổng tiền</th>
-                <th>Thao tác</th>
               </tr>
             </thead>
             {paged.length === 0 ? (
               <tbody>
                 <tr>
-                  <td colSpan={7} className='text-center'>
+                  <td colSpan={6} className='text-center'>
                     Không có biên lai nào
                   </td>
                 </tr>
@@ -252,7 +254,11 @@ const InvoiceListTable = ({ payments, loading, dateFrom, dateTo, onDateFromChang
             ) : (
               <tbody>
                 {paged.map(row => (
-                  <tr key={row.receiptNumber}>
+                  <tr
+                    key={row.receiptNumber}
+                    onClick={() => router.push(`/apps/invoice/preview/${encodeURIComponent(row.receiptNumber)}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <td>
                       <Typography
                         component={Link}
@@ -289,16 +295,6 @@ const InvoiceListTable = ({ payments, loading, dateFrom, dateTo, onDateFromChang
                       <Typography color='text.primary' className='font-medium'>
                         {formatCurrency(row.totalAmount)}
                       </Typography>
-                    </td>
-                    <td>
-                      <IconButton
-                        size='small'
-                        component={Link}
-                        href={`/apps/invoice/preview/${encodeURIComponent(row.receiptNumber)}`}
-                        title='Xem biên lai'
-                      >
-                        <i className='ri-eye-line text-textSecondary' />
-                      </IconButton>
                     </td>
                   </tr>
                 ))}

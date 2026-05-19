@@ -14,7 +14,6 @@ import InputLabel from '@mui/material/InputLabel'
 import Box from '@mui/material/Box'
 
 import type { StudentType } from '@/types/apps/studentTypes'
-import type { ClassType } from '@/types/apps/classTypes'
 import classService from '@/services/classService'
 import classTransferService from '@/services/classTransferService'
 import { useNotification } from '@/contexts/notificationContext'
@@ -31,7 +30,7 @@ const TransferStudentDialog = ({ open, onClose, student, onTransferred }: Props)
   const [transferToClassId, setTransferToClassId] = useState('')
   const [transferReason, setTransferReason] = useState('')
   const [transferLoading, setTransferLoading] = useState(false)
-  const [availableClasses, setAvailableClasses] = useState<ClassType[]>([])
+  const [availableClasses, setAvailableClasses] = useState<Array<{ id: string; name: string; code?: string }>>([])
 
   const { showNotification } = useNotification()
 
@@ -47,9 +46,15 @@ const TransferStudentDialog = ({ open, onClose, student, onTransferred }: Props)
       setTransferReason('')
 
       const loadClasses = async () => {
-        const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
+        const response = await classService.getClassLookup({ isActive: true, pageSize: 5000 })
         if (response.success && response.data) {
-          setAvailableClasses(response.data)
+          setAvailableClasses(
+            response.data.map(item => ({
+              id: item.id,
+              name: item.name,
+              code: item.code
+            }))
+          )
         }
       }
       loadClasses()
@@ -96,7 +101,7 @@ const TransferStudentDialog = ({ open, onClose, student, onTransferred }: Props)
                   ))
                 : availableClasses.map(c => (
                     <MenuItem key={c.id} value={c.id}>
-                      {c.name}
+                      {c.code ? `${c.code} - ${c.name}` : c.name}
                     </MenuItem>
                   ))}
             </Select>
@@ -109,7 +114,7 @@ const TransferStudentDialog = ({ open, onClose, student, onTransferred }: Props)
                 .filter(c => !currentClassIds.includes(c.id))
                 .map(c => (
                   <MenuItem key={c.id} value={c.id}>
-                    {c.name}
+                    {c.code ? `${c.code} - ${c.name}` : c.name}
                   </MenuItem>
                 ))}
             </Select>

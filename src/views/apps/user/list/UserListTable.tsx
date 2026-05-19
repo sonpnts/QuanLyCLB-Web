@@ -4,7 +4,7 @@
 import { useEffect, useState, useMemo } from 'react'
 
 // Next Imports
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -117,6 +117,7 @@ const userStatusObj: UserStatusType = {
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
 const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
+  const router = useRouter()
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
@@ -223,14 +224,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       columnHelper.accessor('action', {
         header: 'Thao tác',
         cell: ({ row }) => (
-          <div className='flex items-center'>
+          <div className='flex items-center' onClick={event => event.stopPropagation()}>
             <IconButton onClick={() => setData(data?.filter(product => product.id !== row.original.id))}>
               <i className='ri-delete-bin-7-line text-textSecondary' />
-            </IconButton>
-            <IconButton>
-              <Link href={'/apps/user/view'} className='flex'>
-                <i className='ri-eye-line text-textSecondary' />
-              </Link>
             </IconButton>
             <OptionMenu
               iconButtonProps={{ size: 'medium' }}
@@ -370,7 +366,12 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                   .rows.slice(0, table.getState().pagination.pageSize)
                   .map(row => {
                     return (
-                      <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                      <tr
+                        key={row.id}
+                        className={classnames({ selected: row.getIsSelected() })}
+                        onClick={() => router.push('/apps/user/view')}
+                        style={{ cursor: 'pointer' }}
+                      >
                         {row.getVisibleCells().map(cell => (
                           <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                         ))}

@@ -134,6 +134,25 @@ class MenuService {
     return this.inFlightGetMenu
   }
 
+  async getMenuByUser(userId: string): Promise<ResponseResult<VerticalMenuDataType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.menu.byUser(userId))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: [], message: apiResponse.message || 'Failed to fetch menu' }
+      }
+
+      const menuData: MenuResponse = apiResponse.data
+      const menuItems = menuData.menuItems || []
+      const transformedMenu = menuItems.map(item => this.transformMenuItem(item))
+      return { success: true, data: transformedMenu }
+    } catch (error: any) {
+      logger.error('MenuService', 'getMenuByUser', error)
+      return { success: false, data: [], message: error?.response?.data?.message || error?.message || 'Failed to fetch menu' }
+    }
+  }
+
   /** Clear the local menu cache so the next call re-fetches from the server. */
   invalidateCache(): void {
     this.menuCache = null

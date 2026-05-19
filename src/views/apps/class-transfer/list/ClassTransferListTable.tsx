@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
@@ -233,7 +233,26 @@ const ClassTransferListTable = () => {
       }),
       columnHelper.accessor('requestDate', {
         header: 'Ngày yêu cầu',
-        cell: ({ row }) => <Typography>{new Date(row.original.requestDate).toLocaleDateString('vi-VN')}</Typography>
+        cell: ({ row }) => (
+          <Typography>
+            {new Date(row.original.requestDate).toLocaleString('vi-VN', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            })}
+          </Typography>
+        )
+      }),
+      columnHelper.accessor('createdByUserName', {
+        header: 'Người gửi',
+        cell: ({ row }) => <Typography>{row.original.createdByUserName || '-'}</Typography>
+      }),
+      columnHelper.accessor('approvedByUserName', {
+        header: 'Người duyệt',
+        cell: ({ row }) => <Typography>{row.original.approvedByUserName || '-'}</Typography>
       }),
       columnHelper.accessor('status', {
         header: 'Trạng thái',
@@ -282,9 +301,9 @@ const ClassTransferListTable = () => {
                   <i className='ri-forbid-line' />
                 </IconButton>
               )}
-              <IconButton title='Xem chi tiết'>
-                <i className='ri-eye-line text-textSecondary' />
-              </IconButton>
+              {/*<IconButton title='Xem chi tiết'>*/}
+              {/*  <i className='ri-eye-line text-textSecondary' />*/}
+              {/*</IconButton>*/}
             </div>
           )
         }

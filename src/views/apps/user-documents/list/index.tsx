@@ -362,12 +362,7 @@ const UserDocumentListTable = () => {
       cell: ({ row }) => {
         const doc = row.original.latest
         return (
-          <Box className='flex items-center gap-0.5'>
-            <Tooltip title='Xem trước'>
-              <IconButton size='small' onClick={() => setPreviewDoc(doc)}>
-                <i className='ri-eye-line' />
-              </IconButton>
-            </Tooltip>
+          <Box className='flex items-center gap-0.5' onClick={event => event.stopPropagation()}>
             <Tooltip title='Tải xuống'>
               <IconButton size='small' component='a' href={doc.fileUrl} download={doc.fileName} target='_blank'>
                 <i className='ri-download-line' />
@@ -534,7 +529,7 @@ const UserDocumentListTable = () => {
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
+                  <tr key={row.id} onClick={() => setPreviewDoc(row.original.latest)} style={{ cursor: 'pointer' }}>
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                     ))}

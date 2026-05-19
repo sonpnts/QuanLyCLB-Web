@@ -297,18 +297,7 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
         cell: ({ row }) => {
           const isBankTransfer = isBankTransferMethod(row.original.method)
           return (
-            <div className='flex items-center'>
-              {row.original.receiptNumber && (
-                <Tooltip title='Xem biên lai'>
-                  <IconButton
-                    size='small'
-                    color='info'
-                    onClick={() => handleViewReceipt(row.original.receiptNumber!)}
-                  >
-                    <i className='ri-eye-line text-lg' />
-                  </IconButton>
-                </Tooltip>
-              )}
+            <div className='flex items-center' onClick={event => event.stopPropagation()}>
               {isBankTransfer && row.original.transferProofImageUrl && (
                 <Tooltip title='Xem ảnh chuyển khoản'>
                   <IconButton
@@ -436,7 +425,14 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
+                  <tr
+                    key={row.id}
+                    onClick={() => {
+                      if (row.original.receiptNumber) handleViewReceipt(row.original.receiptNumber)
+                      else if (row.original.transferProofImageUrl) handleViewProof(row.original.transferProofImageUrl)
+                    }}
+                    style={{ cursor: row.original.receiptNumber || row.original.transferProofImageUrl ? 'pointer' : 'default' }}
+                  >
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                     ))}

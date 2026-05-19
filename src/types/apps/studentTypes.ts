@@ -14,6 +14,7 @@ export type StudentType = {
   code?: string
   fullName: string
   phoneNumber?: string
+  personalIdNumber?: string | null
   address?: string
   dateOfBirth?: string
   educationLevel?: string

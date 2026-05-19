@@ -1,8 +1,8 @@
-// Type Imports
+﻿// Type Imports
 import type { ThemeColor } from '@core/types'
 
-// Payment type: 0=Tuition, 1=ExamFee, 2=Registration, 3=Other
-export type PaymentType = 0 | 1 | 2 | 3
+// Payment type: 0=Tuition, 1=ExamFee, 2=Registration, 3=Other, 4=FacilityFee, 5=CodeChangeFee
+export type PaymentType = 0 | 1 | 2 | 3 | 4 | 5
 
 // Payment method: 0=Cash, 1=BankTransfer, 2=Card
 export type PaymentMethod = 0 | 1 | 2
@@ -58,18 +58,23 @@ export type MonthlyReportType = {
   totalRegistrationFees: number
   paymentCount: number
 }
+
 export const PaymentTypeColors: { [key: number]: ThemeColor } = {
-  0: 'primary', // Tuition
-  1: 'info', // ExamFee
-  2: 'success', // Registration
-  3: 'secondary' // Other
+  0: 'primary',
+  1: 'info',
+  2: 'success',
+  3: 'secondary',
+  4: 'warning',
+  5: 'info'
 }
 
 export const paymentTypeLabels: { [key: number]: string } = {
   0: 'Học phí',
-  1: 'Lệ phí thi cấp',
+  1: 'Lệ phí thi',
   2: 'Phí đăng ký',
-  3: 'Khác / Mua sản phẩm'
+  3: 'Khác / Mua sản phẩm',
+  4: 'Phí CSVC',
+  5: 'Phí chuyển mã / import'
 }
 
 export const paymentMethodLabels: { [key: number]: string } = {
@@ -77,5 +82,3 @@ export const paymentMethodLabels: { [key: number]: string } = {
   1: 'Chuyển khoản',
   2: 'Khác'
 }
-
-

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -21,7 +21,6 @@ import type { StudentAbsenceType } from '@/services/studentAttendanceService'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import { hasAdminRole } from '@/utils/roleUtils'
-import { hasPermission } from '@/utils/permissionUtils'
 
 type ClassOption = {
   id: string
@@ -43,7 +42,7 @@ type Props = {
 
 const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
   const { auth } = useAuth()
-  const isAdmin = hasPermission(auth?.permissions, 'LeaveRequest.ManageAll') || hasAdminRole(auth?.roles)
+  const isAdmin = hasAdminRole(auth?.roles)
   const { showNotification } = useNotification()
 
   const [classes, setClasses] = useState<ClassOption[]>([])
@@ -135,7 +134,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
       })
 
       if (!response.success) {
-        showNotification(response.message || 'Không thể tạo nghỉ phép cho học viên.', 'error')
+        showNotification(response.message || 'Không thể tạo xin nghỉ phép cho học viên.', 'error')
         return
       }
 
@@ -147,10 +146,10 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
         })
       }
 
-      showNotification('Đã ghi nhận nghỉ phép cho học viên.', 'success')
+      showNotification('Đã ghi nhận xin nghỉ phép cho học viên.', 'success')
       handleReset()
     } catch {
-      showNotification('Đã có lỗi khi tạo nghỉ phép.', 'error')
+      showNotification('Đã có lỗi khi tạo xin nghỉ phép.', 'error')
     } finally {
       setLoading(false)
     }
@@ -166,7 +165,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 340, sm: 480 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Thêm nghỉ phép học viên</Typography>
+        <Typography variant='h5'>Xin nghỉ phép</Typography>
         <IconButton size='small' onClick={handleReset}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -230,7 +229,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
 
           <TextField
             fullWidth
-            label='Lý do nghỉ phép *'
+            label='Lý do xin nghỉ phép *'
             multiline
             rows={4}
             value={reason}
@@ -239,7 +238,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
 
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
-              {loading ? 'Đang lưu...' : 'Lưu nghỉ phép'}
+              {loading ? 'Đang lưu...' : 'Lưu xin nghỉ phép'}
             </Button>
             <Button variant='outlined' color='error' onClick={handleReset}>
               Hủy
@@ -252,4 +251,3 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
 }
 
 export default AddLeaveRequestDrawer
-

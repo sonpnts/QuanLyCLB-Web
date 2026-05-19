@@ -15,6 +15,7 @@ export type ClassTransferType = {
   status: ClassTransferStatus
   requestDate: string
   approvedDate?: string
+  createdByUserName?: string
   approvedByUserName?: string
   approvalNotes?: string
   rejectionReason?: string

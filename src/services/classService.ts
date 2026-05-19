@@ -496,6 +496,22 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
     }
   }
 
+  async getClassPermissionsForUser(classId: string, userId: string): Promise<ResponseResult<string[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.permissionsUser(classId, userId))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data || [] }
+    } catch (error: any) {
+      logger.error('ClassService', 'getClassPermissionsForUser', error)
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
   async getClassPermissionCatalog(): Promise<ResponseResult<ClassPermissionCatalogItem[]>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.classes.permissionsCatalog)

@@ -56,6 +56,7 @@ export type ExamRegistrationType = {
   registeredByUserName: string
   paymentRecordId?: string
   paidAt?: string
+  oneTimeFeesCompleted?: boolean
   createdAt?: string
   updatedAt?: string
 }

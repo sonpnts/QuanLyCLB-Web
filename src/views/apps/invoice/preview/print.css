@@ -1,34 +1,140 @@
 @media print {
-  /* Let browser/user choose paper size (A4/A5/Letter...) and keep safe margins */
   @page {
-    size: auto;
-    margin: 10mm;
+    size: A5 portrait;
+    margin: 8mm;
   }
 
   html,
   body {
     margin: 0 !important;
     padding: 0 !important;
+    background: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     height: auto !important;
     overflow: visible !important;
   }
 
-  /* Hide the app chrome entirely so it doesn't reserve layout space */
   body * {
+    visibility: hidden !important;
+  }
+
+  .preview-layout,
+  .preview-layout * {
+    visibility: visible !important;
+  }
+
+  .preview-layout {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+
+  .preview-layout__actions {
     display: none !important;
   }
 
-  /* Next.js root should not constrain height/overflow when printing */
-  #__next {
+  .preview-layout__content {
     display: block !important;
-    height: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .previewCard {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    margin: 0 !important;
     overflow: visible !important;
+    background: #fff !important;
   }
-  #__next :is(.sm\:\!p-12) {
-    padding: 0rem !important;
+
+  .previewCard :is(.sm\:\!p-12) {
+    padding: 0 !important;
   }
+
+  .previewCard,
+  .previewCard .MuiTypography-root,
+  .previewCard table,
+  .previewCard th,
+  .previewCard td,
+  .previewCard span,
+  .previewCard strong {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  .previewCard .MuiTypography-h5 {
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+  }
+
+  .previewCard .MuiTypography-h6 {
+    font-size: 14px !important;
+    line-height: 1.25 !important;
+  }
+
+  .previewCard .MuiTypography-body2,
+  .previewCard .MuiTypography-caption {
+    font-size: 10px !important;
+  }
+
+  .previewCard .p-6 {
+    padding: 12px !important;
+  }
+
+  .previewCard .gap-6 {
+    gap: 12px !important;
+  }
+
+  .previewCard .gap-4 {
+    gap: 8px !important;
+  }
+
+  .previewCard .gap-3 {
+    gap: 6px !important;
+  }
+
+  .previewCard .gap-2 {
+    gap: 4px !important;
+  }
+
+  .previewCard .mt-4 {
+    margin-top: 12px !important;
+  }
+
+  .previewCard .mb-2 {
+    margin-bottom: 6px !important;
+  }
+
+  .previewCard th,
+  .previewCard td {
+    padding: 6px 8px !important;
+    vertical-align: top !important;
+  }
+
+  .previewCard img,
+  .previewCard svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .previewCard img[alt='Minh chứng chuyển khoản'] {
+    max-width: 180px !important;
+    max-height: 180px !important;
+  }
+
+  .previewCard .MuiBox-root[style*='height: 90px'] {
+    height: 56px !important;
+  }
+
   [data-dark] {
     --mui-palette-text-primary: rgba(46, 38, 61, 0.9);
     --mui-palette-action-hover: rgba(46, 38, 61, 0.04);
@@ -36,36 +142,20 @@
     --mui-palette-divider: rgba(46, 38, 61, 0.12);
   }
 
-  /* Only show the receipt preview when printing */
-  .previewCard,
-  .previewCard * {
-    display: revert !important;
-    visibility: visible !important;
-  }
-  .previewCard {
-    position: relative !important;
+  table {
     width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box;
-    box-shadow: none !important;
-    border: 0 !important;
-    height: auto !important;
-    overflow: visible !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto;
   }
 
-  /* Help tables/images behave nicely across A5/A4 */
-  table {
-    page-break-inside: auto;
-    width: 100% !important;
-  }
   tr,
   td,
   th {
     break-inside: avoid;
     page-break-inside: avoid;
   }
-  img {
-    max-width: 100% !important;
-    height: auto !important;
+
+  .previewCard .rounded {
+    border-radius: 8px !important;
   }
 }

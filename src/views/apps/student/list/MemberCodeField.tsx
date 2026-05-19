@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 /**
  * MemberCodeField – trường "Mã HV" với:
@@ -34,6 +34,7 @@ export interface MemberInfo {
   gender?: boolean // true = Nam, false = Nữ
   dateOfBirth?: string
   phoneNumber?: string
+  personalIdNumber?: string
   address?: string
   email?: string
 }
@@ -135,6 +136,7 @@ const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = fals
           : lookupResult.dateOfBirth
         : undefined,
       phoneNumber: lookupResult.phoneNumber || undefined,
+      personalIdNumber: lookupResult.idCard || undefined,
       address: lookupResult.address || undefined,
       email: lookupResult.email || undefined
     })

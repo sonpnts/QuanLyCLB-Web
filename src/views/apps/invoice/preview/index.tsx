@@ -40,7 +40,7 @@ const Preview = ({ id }: Props) => {
           setItems(Array.isArray(data) ? data : [])
         }
       } catch {
-        // silent — PreviewCard will show empty state
+        // silent - PreviewCard will show empty state
       } finally {
         setLoading(false)
       }
@@ -52,11 +52,11 @@ const Preview = ({ id }: Props) => {
   const handlePrint = () => window.print()
 
   return (
-    <Grid container spacing={6}>
-      <Grid size={{ xs: 12, md: 9 }}>
+    <Grid container spacing={6} className='preview-layout'>
+      <Grid size={{ xs: 12, md: 9 }} className='preview-layout__content'>
         <PreviewCard items={items} receiptNumber={id} loading={loading} />
       </Grid>
-      <Grid size={{ xs: 12, md: 3 }}>
+      <Grid size={{ xs: 12, md: 3 }} className='preview-layout__actions'>
         <PreviewActions onPrint={handlePrint} />
       </Grid>
     </Grid>
