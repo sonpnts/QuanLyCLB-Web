@@ -21,7 +21,8 @@ export const API_ENDPOINTS = {
     root: '/audit-logs',
     byId: (id: string) => `/audit-logs/${id}`,
     byUser: (userId: string) => `/audit-logs/user/${userId}`,
-    byEntity: (entityType: string, entityId: string) => `/audit-logs/entity/${entityType}/${entityId}`
+    byEntity: (entityType: string, entityId: string) => `/audit-logs/entity/${entityType}/${entityId}`,
+    cronJobs: '/audit-logs/cron-jobs'
   },
   beltExams: {
     sessions: '/belt-exams/sessions',
@@ -162,6 +163,7 @@ export const API_ENDPOINTS = {
   },
   products: {
     root: '/products',
+    saleOptions: '/products/sale-options',
     byId: (id: string) => `/products/${id}`,
     restore: (id: string) => `/products/${id}/restore`
   },

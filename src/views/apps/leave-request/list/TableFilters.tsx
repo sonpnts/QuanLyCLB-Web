@@ -56,7 +56,7 @@ const TableFilters = memo(({ classes, onFilterChange }: TableFiltersProps) => {
               <MenuItem value=''>Tất cả</MenuItem>
               {classes.map(item => (
                 <MenuItem key={item.id} value={item.id}>
-                  {item.code ? `${item.code} - ${item.name}` : item.name}
+                  {item.code }
                 </MenuItem>
               ))}
             </Select>

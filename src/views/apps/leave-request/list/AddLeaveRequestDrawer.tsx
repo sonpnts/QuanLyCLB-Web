@@ -34,6 +34,68 @@ type StudentOption = {
   phoneNumber?: string
 }
 
+const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
+
+const ATTENDANCE_PAST_DAY_LIMIT = 30
+const ATTENDANCE_FUTURE_DAY_LIMIT = 30
+
+const parseDateString = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number)
+
+  return new Date(year, month - 1, day)
+}
+
+const formatDateString = (date: Date) => {
+  const year = date.getFullYear()
+  const month = `${date.getMonth() + 1}`.padStart(2, '0')
+  const day = `${date.getDate()}`.padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+const getTodayDateString = () => formatDateString(new Date())
+
+const buildAttendanceDateOptions = (scheduleDays: number[]) => {
+  const allowedDays = new Set(scheduleDays.filter(day => day >= 0 && day <= 6))
+
+  if (allowedDays.size === 0) return []
+
+  const startDate = parseDateString(getTodayDateString())
+  const options: string[] = []
+
+  startDate.setDate(startDate.getDate() - ATTENDANCE_PAST_DAY_LIMIT)
+
+  for (let offset = 0; offset <= ATTENDANCE_PAST_DAY_LIMIT + ATTENDANCE_FUTURE_DAY_LIMIT; offset++) {
+    const currentDate = new Date(startDate)
+
+    currentDate.setDate(startDate.getDate() + offset)
+
+    if (allowedDays.has(currentDate.getDay())) {
+      options.push(formatDateString(currentDate))
+    }
+  }
+
+  return options.sort((left, right) => right.localeCompare(left))
+}
+
+const formatAttendanceDateLabel = (value: string) => {
+  const date = parseDateString(value)
+
+  return `${WEEKDAY_LABELS[date.getDay()]}, ${date.toLocaleDateString('vi-VN')}`
+}
+
+const pickPreferredDate = (dates: string[]) => {
+  const today = getTodayDateString()
+  const nearestPreviousDate = dates.find(date => date < today)
+  const nearestNextDate = [...dates].reverse().find(date => date > today)
+
+  if (dates.includes(today)) return today
+  if (nearestPreviousDate) return nearestPreviousDate
+  if (nearestNextDate) return nearestNextDate
+
+  return dates[0] ?? ''
+}
+
 type Props = {
   open: boolean
   handleClose: () => void
@@ -47,6 +109,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
 
   const [classes, setClasses] = useState<ClassOption[]>([])
   const [students, setStudents] = useState<StudentOption[]>([])
+  const [availableDates, setAvailableDates] = useState<string[]>([])
   const [classId, setClassId] = useState('')
   const [student, setStudent] = useState<StudentOption | null>(null)
   const [dateInput, setDateInput] = useState('')
@@ -78,31 +141,58 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
   }, [open, isAdmin])
 
   useEffect(() => {
-    const loadStudents = async () => {
+    const loadStudentsAndDates = async () => {
       if (!classId) {
         setStudents([])
+        setAvailableDates([])
+        setDateInput('')
         return
       }
 
-      const response = await classService.getClassStudents(classId, { pageNumber: 1, pageSize: 5000 })
-      if (response.success && response.data) {
+      const [studentsResponse, schedulesResponse] = await Promise.all([
+        classService.getClassStudents(classId, { pageNumber: 1, pageSize: 5000 }),
+        classService.getClassSchedules(classId)
+      ])
+
+      if (studentsResponse.success && studentsResponse.data) {
         setStudents(
-          (response.data.records || []).map((item: any) => ({
+          (studentsResponse.data.records || []).map((item: any) => ({
             id: item.studentId || item.id,
             fullName: item.studentName || item.fullName || item.name,
             phoneNumber: item.phoneNumber || item.studentPhone
           }))
         )
+      } else {
+        setStudents([])
+      }
+
+      const scheduleDays = Array.from(
+        new Set(
+          (schedulesResponse.data || [])
+            .map((schedule: any) => Number(schedule?.dayOfWeek))
+            .filter((day: number) => Number.isInteger(day) && day >= 0 && day <= 6)
+        )
+      ).sort((left, right) => left - right)
+
+      const nextAvailableDates = buildAttendanceDateOptions(scheduleDays)
+      const preferredDate = pickPreferredDate(nextAvailableDates)
+
+      setAvailableDates(nextAvailableDates)
+      setDateInput(preferredDate)
+
+      if (scheduleDays.length === 0) {
+        showNotification('Lớp này chưa có lịch học để chọn buổi nghỉ phép.', 'warning')
       }
     }
 
     setStudent(null)
-    loadStudents()
-  }, [classId])
+    setSelectedDates([])
+    loadStudentsAndDates()
+  }, [classId, showNotification])
 
   const handleAddDate = () => {
     if (!dateInput) return
-    setSelectedDates(prev => Array.from(new Set([...prev, dateInput])).sort())
+    setSelectedDates(prev => Array.from(new Set([...prev, dateInput])).sort((left, right) => right.localeCompare(left)))
     setDateInput('')
   }
 
@@ -110,6 +200,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
     setClassId('')
     setStudent(null)
     setDateInput('')
+    setAvailableDates([])
     setSelectedDates([])
     setReason('')
     setStudents([])
@@ -146,7 +237,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
         })
       }
 
-      showNotification('Đã ghi nhận xin nghỉ phép cho học viên.', 'success')
+      showNotification('Đã ghi nhận nghỉ phép cho học viên.', 'success')
       handleReset()
     } catch {
       showNotification('Đã có lỗi khi tạo xin nghỉ phép.', 'error')
@@ -165,7 +256,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 340, sm: 480 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Xin nghỉ phép</Typography>
+        <Typography variant='h5'>Thêm nghỉ phép</Typography>
         <IconButton size='small' onClick={handleReset}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -195,15 +286,26 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
             )}
           />
 
-          <div className='flex gap-2'>
-            <TextField
-              fullWidth
-              type='date'
-              label='Buổi nghỉ'
-              value={dateInput}
-              onChange={event => setDateInput(event.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
+          <div className='flex gap-2 items-start'>
+            <FormControl fullWidth disabled={!classId || availableDates.length === 0}>
+              <InputLabel>Buổi nghỉ</InputLabel>
+              <Select label='Buổi nghỉ' value={dateInput} onChange={event => setDateInput(String(event.target.value))}>
+                {availableDates.length > 0 ? (
+                  availableDates.map(date => (
+                    <MenuItem key={date} value={date}>
+                      {formatAttendanceDateLabel(date)}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem value='' disabled>
+                    Không có buổi học khả dụng
+                  </MenuItem>
+                )}
+              </Select>
+              <Typography variant='caption' color='text.secondary' sx={{ mt: 1 }}>
+                Chỉ hiển thị các ngày học trong phạm vi 30 ngày quá khứ và 30 ngày tương lai.
+              </Typography>
+            </FormControl>
             <Button variant='outlined' onClick={handleAddDate} disabled={!dateInput}>
               Thêm
             </Button>
@@ -238,7 +340,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
 
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
-              {loading ? 'Đang lưu...' : 'Lưu xin nghỉ phép'}
+              {loading ? 'Đang lưu...' : 'Lưu nghỉ phép'}
             </Button>
             <Button variant='outlined' color='error' onClick={handleReset}>
               Hủy

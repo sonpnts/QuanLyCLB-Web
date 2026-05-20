@@ -175,11 +175,19 @@ class FinanceService {
             className: item.className,
             tuitionCollectedToDate: Number(item.tuitionCollectedToDate || 0),
             examFeeCollectedToDate: Number(item.examFeeCollectedToDate || 0),
+            otherPaymentsCollectedToDate: Number(item.otherPaymentsCollectedToDate || 0),
             productSalesCollectedToDate: Number(item.productSalesCollectedToDate || 0),
             totalCollectedToDate: Number(item.totalCollectedToDate || 0),
             totalHandedOver: Number(item.totalHandedOver || 0),
             availableToHandover: Number(item.availableToHandover || 0),
-            asOf: item.asOf
+            asOf: item.asOf,
+            breakdown: Array.isArray(item.breakdown)
+              ? item.breakdown.map((detail: any) => ({
+                  key: String(detail.key || ''),
+                  label: String(detail.label || ''),
+                  amount: Number(detail.amount || 0)
+                }))
+              : []
         }))
       }
     } catch (error) {
@@ -208,11 +216,19 @@ class FinanceService {
             className: item.className,
             tuitionCollectedToDate: Number(item.tuitionCollectedToDate || 0),
             examFeeCollectedToDate: Number(item.examFeeCollectedToDate || 0),
+            otherPaymentsCollectedToDate: Number(item.otherPaymentsCollectedToDate || 0),
             productSalesCollectedToDate: Number(item.productSalesCollectedToDate || 0),
             totalCollectedToDate: Number(item.totalCollectedToDate || 0),
             totalHandedOver: Number(item.totalHandedOver || 0),
             availableToHandover: Number(item.availableToHandover || 0),
-            asOf: item.asOf
+            asOf: item.asOf,
+            breakdown: Array.isArray(item.breakdown)
+              ? item.breakdown.map((detail: any) => ({
+                  key: String(detail.key || ''),
+                  label: String(detail.label || ''),
+                  amount: Number(detail.amount || 0)
+                }))
+              : []
           }))
         }
     } catch (error) {

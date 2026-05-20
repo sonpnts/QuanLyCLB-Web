@@ -44,6 +44,13 @@ const toProduct = (value: any): ProductType => ({
 })
 
 class ProductService {
+  async getSaleOptions(): Promise<ResponseResult<ProductType[]>> {
+    return apiList(
+      () => apiClient.get<any>(API_ENDPOINTS.products.saleOptions),
+      data => extractList<any>(data).map(toProduct)
+    )
+  }
+
   async getProducts(params?: GetProductsParams): Promise<ResponseResult<ProductType[]>> {
     return apiList(
       () => apiClient.get<any>(API_ENDPOINTS.products.root, { params }),

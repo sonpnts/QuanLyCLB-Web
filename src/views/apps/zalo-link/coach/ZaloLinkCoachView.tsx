@@ -96,6 +96,25 @@ export default function ZaloLinkCoachView() {
 
   const safeOverview = useMemo(() => overview ?? emptyOverview, [overview])
   const classes = useMemo(() => safeOverview.classes ?? [], [safeOverview])
+  const selectedClassStats = useMemo(
+    () => (classId ? classes.find(item => item.classId === classId) ?? null : null),
+    [classId, classes]
+  )
+  const displayOverview = useMemo(
+    () =>
+      selectedClassStats
+        ? {
+            totalStudents: selectedClassStats.totalStudents,
+            linkedStudents: selectedClassStats.linkedStudents,
+            unlinkedStudents: selectedClassStats.unlinkedStudents,
+            linkedRate: selectedClassStats.linkedRate
+          }
+        : safeOverview,
+    [safeOverview, selectedClassStats]
+  )
+  const overviewTitle = selectedClassStats
+    ? `Thống kê lớp ${selectedClassStats.classCode}${selectedClassStats.className ? ` - ${selectedClassStats.className}` : ''}`
+    : 'Thống kê tất cả lớp'
 
   const openVerify = (r: ZaloLinkCoachStudentRowType) => {
     setSelectedRow(r)
@@ -153,11 +172,16 @@ export default function ZaloLinkCoachView() {
               Không có dữ liệu.
             </Typography>
           ) : (
-            <Box className='flex flex-wrap gap-3 items-center'>
-              <Chip label={`Tổng: ${safeOverview.totalStudents}`} variant='outlined' />
-              <Chip label={`Đã LK: ${safeOverview.linkedStudents}`} color='success' variant='outlined' />
-              <Chip label={`Chưa LK: ${safeOverview.unlinkedStudents}`} color='warning' variant='outlined' />
-              {getRateChip(safeOverview.linkedRate)}
+            <Box className='space-y-3'>
+              <Typography variant='body2' color='text.secondary'>
+                {overviewTitle}
+              </Typography>
+              <Box className='flex flex-wrap gap-3 items-center'>
+                <Chip label={`Tổng: ${displayOverview.totalStudents}`} variant='outlined' />
+                <Chip label={`Đã LK: ${displayOverview.linkedStudents}`} color='success' variant='outlined' />
+                <Chip label={`Chưa LK: ${displayOverview.unlinkedStudents}`} color='warning' variant='outlined' />
+                {getRateChip(displayOverview.linkedRate)}
+              </Box>
             </Box>
           )}
         </CardContent>

@@ -38,6 +38,7 @@ export interface CreatePaymentRequest {
   forYear?: number
   description?: string
   collectedByUserId?: string
+  sendZaloConfirmation?: boolean
 }
 
 export interface BulkPaymentItemRequest {
@@ -60,6 +61,7 @@ export interface CreateBulkPaymentRequest {
   transactionRef?: string
   transferProofImageUrl?: string
   collectedByUserId?: string
+  sendZaloConfirmation?: boolean
   items: BulkPaymentItemRequest[]
 }
 
@@ -114,6 +116,56 @@ const unwrapList = (payload: any): any[] => {
   return []
 }
 
+const normalizeNumber = (value: unknown) => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+
+    if (Number.isFinite(parsed)) return parsed
+  }
+
+  return null
+}
+
+const normalizeTuitionQuote = (payload: any): TuitionQuoteType | null => {
+  if (!payload || typeof payload !== 'object') return null
+
+  const classId = payload.classId ?? payload.ClassId
+  const studentId = payload.studentId ?? payload.StudentId
+  const forMonth = normalizeNumber(payload.forMonth ?? payload.ForMonth)
+  const forYear = normalizeNumber(payload.forYear ?? payload.ForYear)
+  const monthlyFee = normalizeNumber(payload.monthlyFee ?? payload.MonthlyFee)
+  const suggestedDiscountAmount = normalizeNumber(payload.suggestedDiscountAmount ?? payload.SuggestedDiscountAmount)
+  const alreadyPaid = payload.alreadyPaid ?? payload.AlreadyPaid
+  const finalAmount = normalizeNumber(payload.finalAmount ?? payload.FinalAmount)
+  const message = payload.message ?? payload.Message
+
+  if (
+    typeof classId !== 'string' ||
+    typeof studentId !== 'string' ||
+    forMonth === null ||
+    forYear === null ||
+    monthlyFee === null ||
+    suggestedDiscountAmount === null ||
+    finalAmount === null ||
+    typeof alreadyPaid !== 'boolean'
+  ) {
+    return null
+  }
+
+  return {
+    classId,
+    studentId,
+    forMonth,
+    forYear,
+    monthlyFee,
+    suggestedDiscountAmount,
+    alreadyPaid,
+    finalAmount,
+    message: typeof message === 'string' ? message : undefined
+  }
+}
+
 class PaymentService {
   async getPayments(params?: GetPaymentsParams): Promise<ResponseResult<PaymentRecordType[]>> {
     try {
@@ -151,7 +203,13 @@ class PaymentService {
         return { success: false, message: apiResponse.message }
       }
 
-      return { success: true, data: apiResponse.data }
+      const normalizedQuote = apiResponse.data
+
+      if (!normalizedQuote) {
+        return { success: false, message: apiResponse.message || 'Dữ liệu kiểm tra học phí không hợp lệ.' }
+      }
+
+      return { success: true, data: normalizedQuote }
     } catch (error: any) {
       logger.error('PaymentService', 'getPaymentById', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
@@ -281,7 +339,13 @@ class PaymentService {
         return { success: false, message: apiResponse.message }
       }
 
-      return { success: true, data: apiResponse.data }
+      const normalizedQuote = apiResponse.data
+
+      if (!normalizedQuote) {
+        return { success: false, message: apiResponse.message || 'Dữ liệu kiểm tra học phí không hợp lệ.' }
+      }
+
+      return { success: true, data: normalizedQuote }
     } catch (error: any) {
       logger.error('PaymentService', 'getClassSummary', error)
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
@@ -355,9 +419,15 @@ class PaymentService {
         return { success: false, message: apiResponse.message }
       }
 
-      return { success: true, data: apiResponse.data }
+      const normalizedQuote = normalizeTuitionQuote(apiResponse.data)
+
+      if (!normalizedQuote) {
+        return { success: false, message: apiResponse.message || 'Du lieu kiem tra hoc phi khong hop le.' }
+      }
+
+      return { success: true, data: normalizedQuote }
     } catch (error: any) {
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      return { success: false, message: error?.response?.data?.message || 'L???i k???t n???i m??y ch???' }
     }
   }
 

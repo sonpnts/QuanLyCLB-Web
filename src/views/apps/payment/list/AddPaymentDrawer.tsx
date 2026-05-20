@@ -180,7 +180,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
       try {
         const [classRes, productRes] = await Promise.all([
           classService.getClasses({ isActive: true, pageSize: 1000 }),
-          productService.getProducts({ pageSize: 300, isActive: true })
+          productService.getSaleOptions()
         ])
 
         if (classRes.success && classRes.data) {

@@ -31,6 +31,7 @@ export const RBAC_MODULE_META: Record<string, ModulePermissionMeta> = {
   Permission: { label: 'Quyen han', actions: ['View', 'Approve'] },
   Schedule: { label: 'Lich day', actions: ['View', 'Create', 'Update', 'Delete'] },
   Attendance: { label: 'Diem danh', actions: ['View', 'Create', 'Update', 'Approve'] },
+  AttendanceTicket: { label: 'Cham cong bu', actions: ['View', 'Create', 'Approve'] },
   LeaveRequest: { label: 'Xin nghi phep', actions: ['View', 'Create', 'Update', 'Delete', 'Approve'] },
   Payment: { label: 'Thanh toan', actions: ['View', 'Create', 'Update', 'Delete'] },
   'Payment.Collect': { label: 'Thu tien lop', actions: ['View', 'Create', 'Update', 'Delete'] },

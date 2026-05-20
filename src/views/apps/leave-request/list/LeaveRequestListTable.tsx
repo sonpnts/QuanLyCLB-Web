@@ -225,8 +225,8 @@ const LeaveRequestListTable = () => {
     <>
       <Card>
         <CardHeader
-          title='Quản lý xin nghỉ phép'
-          subheader='Danh sách này lấy trực tiếp từ dữ liệu điểm danh: chỉ lưu các buổi vắng có phép hoặc không phép.'
+          title='Quản lý nghỉ phép'
+          subheader='Dữ liệu màn này dùng chung với điểm danh: nghỉ phép tạo tại đây sẽ hiện sẵn ở trang điểm danh, và các buổi vắng do coach điểm danh cũng hiển thị lại tại đây.'
         />
         <TableFilters classes={classes} onFilterChange={handleFilterChange} />
         <Divider />
@@ -239,7 +239,7 @@ const LeaveRequestListTable = () => {
           />
           {leaveRequestPermissions.canCreate && (
             <Button variant='contained' onClick={() => setAddRequestOpen(true)}>
-              Xin nghỉ phép
+              Thêm nghỉ phép
             </Button>
           )}
         </div>

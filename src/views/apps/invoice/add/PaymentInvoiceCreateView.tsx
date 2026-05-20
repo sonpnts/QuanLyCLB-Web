@@ -32,6 +32,7 @@ import oneTimeFeeService from '@/services/oneTimeFeeService'
 import paymentService, { type ExamFeeOptionType, type TuitionQuoteType } from '@/services/paymentService'
 import productService from '@/services/productService'
 import studentService from '@/services/studentService'
+import StudentZaloLinkPromptDialog from '@/components/student/StudentZaloLinkPromptDialog'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { OneTimeFeeOptionType } from '@/types/apps/oneTimeFeeTypes'
 import type { ProductType } from '@/types/apps/productTypes'
@@ -43,9 +44,10 @@ import type { ClassUserAssignment } from '@/types/apps/classTypes'
 
 const PAYMENT_TYPE_TUITION = 0
 const PAYMENT_TYPE_EXAM_FEE = 1
-const PAYMENT_TYPE_OTHER = 3
+const PAYMENT_TYPE_BUY_PRODUCT = 3
 const PAYMENT_TYPE_FACILITY_FEE = 4
 const PAYMENT_TYPE_CODE_CHANGE_FEE = 5
+const PAYMENT_TYPE_OTHER = 6
 const SUPPORTED_ONE_TIME_FEE_CODES = new Set(['CSVC', 'CODE_CHANGE'])
 
 const PAYMENT_METHOD_CASH = 0
@@ -103,6 +105,7 @@ const PaymentInvoiceCreateView = () => {
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [proofPreview, setProofPreview] = useState<string | null>(null)
   const [draftInfo, setDraftInfo] = useState<ReturnType<typeof readPaymentInvoiceDraft>>(null)
+  const [zaloPromptOpen, setZaloPromptOpen] = useState(false)
   const initializedDraftRef = useRef(false)
   const tuitionTouchedRef = useRef(false)
   const examTouchedRef = useRef(false)
@@ -192,6 +195,18 @@ const PaymentInvoiceCreateView = () => {
 
     loadStudents()
   }, [form.classId, form.studentId])
+
+  useEffect(() => {
+    tuitionTouchedRef.current = false
+    setTuitionQuote(null)
+    setForm(prev => ({
+      ...prev,
+      tuitionEnabled: false,
+      discountAmount: '',
+      discountReason: ''
+    }))
+  }, [form.classId, form.studentId])
+
   useEffect(() => {
     examTouchedRef.current = false
     setForm(prev => ({
@@ -230,6 +245,14 @@ const PaymentInvoiceCreateView = () => {
           }
         } else {
           setTuitionQuote(null)
+          if (!tuitionTouchedRef.current) {
+            setForm(prev => ({ ...prev, tuitionEnabled: false }))
+          }
+        }
+      } catch {
+        setTuitionQuote(null)
+        if (!tuitionTouchedRef.current) {
+          setForm(prev => ({ ...prev, tuitionEnabled: false }))
         }
       } finally {
         setLoadingQuote(false)
@@ -380,6 +403,8 @@ const PaymentInvoiceCreateView = () => {
   const discountAmount = Number(form.discountAmount || 0)
   const tuitionNetAmount = Math.max(0, tuitionOriginalAmount - discountAmount)
   const examFeeAmount = Number(selectedExamOption?.feeAmount || 0)
+  const studentHasZalo = Boolean(selectedStudent?.userIdZalo?.trim())
+  const shouldSendZaloConfirmation = form.tuitionEnabled && tuitionNetAmount > 0
 
   const grandTotal =
     (form.tuitionEnabled ? tuitionNetAmount : 0) +
@@ -483,10 +508,10 @@ const PaymentInvoiceCreateView = () => {
 
       for (let index = 0; index < quantity; index += 1) {
         items.push({
-          type: PAYMENT_TYPE_OTHER,
+          type: PAYMENT_TYPE_BUY_PRODUCT,
           classId: form.classId,
           productId: row.productId,
-          description: `Mua sản phẩm: ${product.name}`
+          description: product.name
         })
       }
     }
@@ -505,7 +530,83 @@ const PaymentInvoiceCreateView = () => {
     return items
   }
 
-  const handleSubmit = async () => {
+  const submitPayment = async (items: ReturnType<typeof buildItems>, effectiveCollectorId: string, sendZaloConfirmation: boolean) => {
+    try {
+      setSubmitting(true)
+
+      let transferProofImageUrl: string | undefined
+
+      if (form.method === PAYMENT_METHOD_BANK_TRANSFER && proofFile) {
+        setUploading(true)
+        const uploadResponse = await paymentService.uploadTransferProof(proofFile)
+        setUploading(false)
+
+        if (!uploadResponse.success || !uploadResponse.data?.imageUrl) {
+          showNotification(uploadResponse.message || 'Upload ảnh chuyển khoản thất bại.', 'error')
+          return
+        }
+
+        transferProofImageUrl = uploadResponse.data.imageUrl
+      }
+
+      if (items.length === 1) {
+        const single = items[0]
+        const response = await paymentService.createPayment({
+          studentId: form.studentId,
+          classId: single.classId,
+          type: single.type,
+          amount: single.amount,
+          description: single.description,
+          forMonth: single.forMonth,
+          forYear: single.forYear,
+          examRegistrationId: single.examRegistrationId,
+          productId: single.productId,
+          discountAmount: single.discountAmount,
+          discountReason: single.discountReason,
+          paymentDate: new Date().toISOString(),
+          method: form.method,
+          transferProofImageUrl,
+          collectedByUserId: effectiveCollectorId,
+          sendZaloConfirmation
+        })
+
+        if (!response.success || !response.data?.receiptNumber) {
+          showNotification(response.message || 'Tạo phiếu thu thất bại.', 'error')
+          return
+        }
+
+        clearPaymentInvoiceDraft(draftKey)
+        router.push(`/apps/invoice/preview/${encodeURIComponent(response.data.receiptNumber)}`)
+        return
+      }
+
+      const bulkResponse = await paymentService.createBulkPayment({
+        studentId: form.studentId,
+        paymentDate: new Date().toISOString(),
+        method: form.method,
+        transferProofImageUrl,
+        collectedByUserId: effectiveCollectorId,
+        sendZaloConfirmation,
+        items
+      })
+
+      const createdRows = Array.isArray(bulkResponse.data) ? bulkResponse.data : []
+      const receiptNumber = createdRows[0]?.receiptNumber
+
+      if (!bulkResponse.success || !receiptNumber) {
+        showNotification(bulkResponse.message || 'Tạo phiếu thu thất bại.', 'error')
+        return
+      }
+
+      clearPaymentInvoiceDraft(draftKey)
+      router.push(`/apps/invoice/preview/${encodeURIComponent(receiptNumber)}`)
+    } finally {
+      setSubmitting(false)
+      setUploading(false)
+    }
+  }
+
+  const handleSubmit = async (sendZaloOverride?: boolean) => {
     const effectiveCollectorId = isAdmin ? form.collectedByUserId || auth?.user?.id : auth?.user?.id
 
     if (!effectiveCollectorId) {
@@ -581,77 +682,12 @@ const PaymentInvoiceCreateView = () => {
       return
     }
 
-    try {
-      setSubmitting(true)
-
-      let transferProofImageUrl: string | undefined
-
-      if (form.method === PAYMENT_METHOD_BANK_TRANSFER && proofFile) {
-        setUploading(true)
-        const uploadResponse = await paymentService.uploadTransferProof(proofFile)
-        setUploading(false)
-
-        if (!uploadResponse.success || !uploadResponse.data?.imageUrl) {
-          showNotification(uploadResponse.message || 'Upload ảnh chuyển khoản thất bại.', 'error')
-          return
-        }
-
-        transferProofImageUrl = uploadResponse.data.imageUrl
-      }
-
-      if (items.length === 1) {
-        const single = items[0]
-        const response = await paymentService.createPayment({
-          studentId: form.studentId,
-          classId: single.classId,
-          type: single.type,
-          amount: single.amount,
-          description: single.description,
-          forMonth: single.forMonth,
-          forYear: single.forYear,
-          examRegistrationId: single.examRegistrationId,
-          productId: single.productId,
-          discountAmount: single.discountAmount,
-          discountReason: single.discountReason,
-          paymentDate: new Date().toISOString(),
-          method: form.method,
-          transferProofImageUrl,
-          collectedByUserId: effectiveCollectorId
-        })
-
-        if (!response.success || !response.data?.receiptNumber) {
-          showNotification(response.message || 'Tạo phiếu thu thất bại.', 'error')
-          return
-        }
-
-        clearPaymentInvoiceDraft(draftKey)
-        router.push(`/apps/invoice/preview/${encodeURIComponent(response.data.receiptNumber)}`)
-        return
-      }
-
-      const bulkResponse = await paymentService.createBulkPayment({
-        studentId: form.studentId,
-        paymentDate: new Date().toISOString(),
-        method: form.method,
-        transferProofImageUrl,
-        collectedByUserId: effectiveCollectorId,
-        items
-      })
-
-      const createdRows = Array.isArray(bulkResponse.data) ? bulkResponse.data : []
-      const receiptNumber = createdRows[0]?.receiptNumber
-
-      if (!bulkResponse.success || !receiptNumber) {
-        showNotification(bulkResponse.message || 'Tạo phiếu thu thất bại.', 'error')
-        return
-      }
-
-      clearPaymentInvoiceDraft(draftKey)
-      router.push(`/apps/invoice/preview/${encodeURIComponent(receiptNumber)}`)
-    } finally {
-      setSubmitting(false)
-      setUploading(false)
+    if (sendZaloOverride === undefined && shouldSendZaloConfirmation && !studentHasZalo) {
+      setZaloPromptOpen(true)
+      return
     }
+
+    await submitPayment(items, effectiveCollectorId, sendZaloOverride ?? (shouldSendZaloConfirmation && studentHasZalo))
   }
 
   return (
@@ -1071,8 +1107,8 @@ const PaymentInvoiceCreateView = () => {
                     fullWidth
                     variant='contained'
                     size='large'
-                    disabled={submitting || grandTotal <= 0}
-                    onClick={handleSubmit}
+                    disabled={submitting || buildItems().length === 0}
+                    onClick={() => void handleSubmit()}
                     startIcon={submitting ? <CircularProgress size={18} color='inherit' /> : <i className='ri-secure-payment-line' />}
                   >
                     Tạo biên lai
@@ -1083,6 +1119,24 @@ const PaymentInvoiceCreateView = () => {
           </Grid>
         </Grid>
       )}
+
+      <StudentZaloLinkPromptDialog
+        open={zaloPromptOpen}
+        student={selectedStudent}
+        skipLabel='Không gửi'
+        message='Hãy thêm liên kết Zalo để thông báo xác nhận. Chọn không sẽ không gửi thông báo xác nhận cho phiếu thu này.'
+        onClose={() => setZaloPromptOpen(false)}
+        onSkip={() => {
+          setZaloPromptOpen(false)
+          void handleSubmit(false)
+        }}
+        onLinked={updatedStudent => {
+          setStudents(prev => prev.map(item => (item.id === updatedStudent.id ? updatedStudent : item)))
+          setSelectedStudent(updatedStudent)
+          setZaloPromptOpen(false)
+          void handleSubmit(true)
+        }}
+      />
     </Stack>
   )
 }

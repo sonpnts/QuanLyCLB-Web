@@ -1,13 +1,13 @@
-﻿'use client'
+'use client'
 
 import type { ReactNode } from 'react'
 
+import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
 import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
-import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import Grid from '@mui/material/Grid'
 import Table from '@mui/material/Table'
@@ -50,28 +50,27 @@ const DetailRow = ({ label, value }: { label: string; value: string | ReactNode 
 const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth='md'>
-      <DialogTitle>Chi tiáº¿t phiáº¿u bÃ n giao tiá»n</DialogTitle>
+      <DialogTitle>Chi tiết phiếu bàn giao tiền</DialogTitle>
       <DialogContent>
         {!data ? (
           <Typography>Không có dữ liệu.</Typography>
         ) : (
           <div className='flex flex-col gap-4'>
             <Grid container spacing={3}>
-              <DetailRow label='Lá»›p' value={data.className || data.classId} />
+              <DetailRow label='Lớp' value={data.className || data.classId} />
               <DetailRow label='Huấn luyện viên' value={data.instructorName || data.instructorId} />
               <DetailRow
-                label='Thá»i gian bÃ n giao'
+                label='Thời gian bàn giao'
                 value={data.handoverAt ? new Date(data.handoverAt).toLocaleString('vi-VN') : '-'}
               />
-              <DetailRow label='NgÆ°á»i táº¡o phiáº¿u' value={data.createdByUserName || data.createdByUserId || '-'} />
-              <DetailRow label='Há»c phÃ­ Ä‘Ã£ thu' value={formatCurrency(data.snapshotTuitionAmount)} />
-              <DetailRow label='Lệ phí thi đã thu' value={formatCurrency(data.snapshotExamFeeAmount)} />
+              <DetailRow label='Người tạo phiếu' value={data.createdByUserName || data.createdByUserId || '-'} />
+              <DetailRow label='Học phí đã ghi nhận' value={formatCurrency(data.snapshotTuitionAmount)} />
+              <DetailRow label='Lệ phí thi đã ghi nhận' value={formatCurrency(data.snapshotExamFeeAmount)} />
               <DetailRow label='Bán sản phẩm' value={formatCurrency(data.snapshotProductSalesAmount)} />
-              <DetailRow label='Phí 1 lần / khác' value={formatCurrency(getOtherFeeAmount(data))} />
-              <DetailRow label='Tổng đã thu' value={formatCurrency(data.snapshotTotalAmount)} />
-              <DetailRow label='ÄÃ£ bÃ n giao trÆ°á»›c' value={formatCurrency(data.previousHandedOverAmount)} />
+              <DetailRow label='Các khoản phí khác' value={formatCurrency(getOtherFeeAmount(data))} />
+              <DetailRow label='Tổng ghi nhận' value={formatCurrency(data.snapshotTotalAmount)} />
               <DetailRow label='Tổng khoản trừ' value={formatCurrency(data.totalDeductionAmount)} />
-              <DetailRow label='Sá»‘ tiá»n bÃ n giao' value={formatCurrency(data.amountHandedOver)} />
+              <DetailRow label='Số tiền bàn giao' value={formatCurrency(data.amountHandedOver)} />
               <DetailRow label='Còn lại sau bàn giao' value={formatCurrency(data.remainingAmountAfterHandover)} />
               <DetailRow
                 label='Trạng thái'
@@ -88,7 +87,7 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
                 <>
                   <DetailRow label='Xác nhận bởi' value={data.confirmedByUserName || data.confirmedByUserId || '-'} />
                   <DetailRow
-                    label='Thá»i gian xÃ¡c nháº­n'
+                    label='Thời gian xác nhận'
                     value={data.confirmedAt ? new Date(data.confirmedAt).toLocaleString('vi-VN') : '-'}
                   />
                 </>
@@ -107,7 +106,7 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
                     <TableHead>
                       <TableRow>
                         <TableCell>Mô tả</TableCell>
-                        <TableCell align='right'>Sá»‘ tiá»n</TableCell>
+                        <TableCell align='right'>Số tiền</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -132,7 +131,7 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>ÄÃ³ng</Button>
+        <Button onClick={onClose}>Đóng</Button>
       </DialogActions>
     </Dialog>
   )

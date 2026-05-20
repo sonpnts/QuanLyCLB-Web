@@ -1,19 +1,16 @@
 'use client'
 
-// MUI Imports
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import Grid from '@mui/material/Grid2'
+import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
+import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import useMediaQuery from '@mui/material/useMediaQuery'
-import CircularProgress from '@mui/material/CircularProgress'
 import type { Theme } from '@mui/material/styles'
 
-// Third-party Imports
 import classnames from 'classnames'
 
-// Component Imports
 import CustomAvatar from '@/@core/components/mui/Avatar'
 
 const formatCurrency = (amount: number) =>
@@ -26,19 +23,27 @@ type InvoiceSummary = {
   totalExamFees: number
 }
 
+type InvoiceStat = {
+  title: string
+  subtitle: string
+  icon: string
+}
+
 type Props = {
   loading: boolean
   summary: InvoiceSummary
   dateFrom?: string
   dateTo?: string
+  rangeLabel?: string
+  stats?: InvoiceStat[]
 }
 
-const InvoiceCard = ({ loading, summary, dateFrom, dateTo }: Props) => {
+const InvoiceCard = ({ loading, summary, dateFrom, dateTo, rangeLabel: customRangeLabel, stats: customStats }: Props) => {
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'), { noSsr: true })
   const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'), { noSsr: true })
-  const rangeLabel = dateFrom || dateTo ? `${dateFrom || '...'} - ${dateTo || '...'}` : 'Mới nhất'
+  const rangeLabel = customRangeLabel || (dateFrom || dateTo ? `${dateFrom || '...'} - ${dateTo || '...'}` : 'Mới nhất')
 
-  const stats = [
+  const defaultStats: InvoiceStat[] = [
     {
       title: loading ? '...' : String(summary.paymentCount),
       subtitle: dateFrom || dateTo ? 'Giao dịch trong khoảng' : 'Giao dịch mới nhất',
@@ -60,6 +65,8 @@ const InvoiceCard = ({ loading, summary, dateFrom, dateTo }: Props) => {
       icon: 'ri-shield-star-line'
     }
   ]
+
+  const stats = customStats || defaultStats
 
   return (
     <Card>

@@ -1,5 +1,8 @@
 export type ProductSaleType = {
   id: string
+  source?: 'product-sale' | 'payment'
+  receiptNumber?: string
+  studentName?: string
   productId: string
   productName?: string
   classId?: string

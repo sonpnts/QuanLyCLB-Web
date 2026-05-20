@@ -62,7 +62,7 @@ const AddProductSaleDrawer = ({ open, handleClose, setData, sale }: Props) => {
     const loadData = async () => {
       try {
         const [productsRes, classesRes, coachesRes] = await Promise.all([
-          productService.getProducts({ isActive: true }),
+          productService.getSaleOptions(),
           classService.getClasses({ isActive: true, pageSize: 1000 }),
           isAdmin ? userService.getCoaches() : Promise.resolve({ success: true, data: [] })
         ])

@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -31,6 +34,7 @@ import type { ProductSaleType } from '@/types/apps/productSaleTypes'
 import type { ProductType } from '@/types/apps/productTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
+import paymentService from '@/services/paymentService'
 import productSaleService from '@/services/productSaleService'
 import type { GetProductSalesParams } from '@/services/productSaleService'
 import productService from '@/services/productService'
@@ -48,6 +52,30 @@ import tableStyles from '@core/styles/table.module.css'
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+
+const PRODUCT_PAYMENT_TYPE = 3
+
+const mapPaymentProductRecord = (payment: any): ProductSaleType => ({
+  id: payment.id,
+  source: 'payment',
+  receiptNumber: payment.receiptNumber,
+  studentName: payment.studentName,
+  productId: payment.productId,
+  productName: payment.productName || payment.description || 'Sản phẩm',
+  classId: payment.classId,
+  className: payment.className,
+  soldByUserId: payment.collectedByUserId,
+  soldByUserName: payment.collectedByUserName,
+  quantity: 1,
+  unitPrice: Number(payment.originalAmount ?? payment.amount ?? 0),
+  totalAmount: Number(payment.amount ?? 0),
+  saleDate: payment.paymentDate || payment.createdAt,
+  buyerName: payment.studentName,
+  notes: payment.description,
+  isActive: payment.isActive ?? true,
+  createdAt: payment.createdAt,
+  updatedAt: payment.updatedAt
+})
 
 const DebouncedInput = ({
   value: initialValue,
@@ -77,6 +105,7 @@ const DebouncedInput = ({
 const columnHelper = createColumnHelper<ProductSaleType>()
 
 const ProductSaleListTable = () => {
+  const router = useRouter()
   const { showNotification } = useNotification()
   const { auth } = useAuth()
   const isAdmin = hasAdminRole(auth?.roles)
@@ -108,7 +137,7 @@ const ProductSaleListTable = () => {
     const loadReferences = async () => {
       try {
         const [productsRes, classesRes, coachesRes] = await Promise.all([
-          productService.getProducts({}),
+          productService.getSaleOptions(),
           classService.getClasses({ isActive: true, pageSize: 1000 }),
           isAdmin ? userService.getCoaches().catch(() => ({ success: true, data: [] })) : Promise.resolve({ success: true, data: [] })
         ])
@@ -127,14 +156,35 @@ const ProductSaleListTable = () => {
   const loadSales = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await productSaleService.getProductSales(filterParams)
+      const [legacyResponse, paymentResponse] = await Promise.all([
+        productSaleService.getProductSales(filterParams),
+        paymentService.getPayments({
+          pageSize: 1000,
+          classId: filterParams.classId,
+          collectedByUserId: filterParams.soldByUserId,
+          paymentDateFrom: filterParams.saleDateFrom,
+          paymentDateTo: filterParams.saleDateTo,
+          type: PRODUCT_PAYMENT_TYPE
+        })
+      ])
 
-      if (!response.success || !response.data) {
-        setData([])
-        return
-      }
+      const legacyRows =
+        legacyResponse.success && legacyResponse.data
+          ? legacyResponse.data.map(item => ({ ...item, source: 'product-sale' as const }))
+          : []
+      const paymentRows =
+        paymentResponse.success && paymentResponse.data
+          ? paymentResponse.data
+              .filter(item => !!item.productId)
+              .filter(item => !filterParams.productId || item.productId === filterParams.productId)
+              .map(mapPaymentProductRecord)
+          : []
 
-      setData(response.data)
+      setData(
+        [...paymentRows, ...legacyRows].sort(
+          (a, b) => new Date(b.saleDate || b.createdAt || 0).getTime() - new Date(a.saleDate || a.createdAt || 0).getTime()
+        )
+      )
     } catch (error) {
       setData([])
     } finally {
@@ -185,6 +235,26 @@ const ProductSaleListTable = () => {
 
   const columns = useMemo<ColumnDef<ProductSaleType, any>[]>(() => {
     const nextColumns: ColumnDef<ProductSaleType, any>[] = [
+      columnHelper.accessor('receiptNumber', {
+        header: 'Biên lai',
+        cell: ({ row }) =>
+          row.original.receiptNumber ? (
+            <Typography
+              component={Link}
+              href={`/apps/invoice/preview/${encodeURIComponent(row.original.receiptNumber)}`}
+              color='primary.main'
+              className='font-mono text-sm'
+            >
+              {row.original.receiptNumber}
+            </Typography>
+          ) : (
+            <Typography color='text.secondary'>-</Typography>
+          )
+      }),
+      columnHelper.accessor('studentName', {
+        header: 'Học viên',
+        cell: ({ row }) => <Typography>{row.original.studentName || row.original.buyerName || '-'}</Typography>
+      }),
       columnHelper.accessor('productName', {
         header: 'Sản phẩm',
         cell: ({ row }) => <Typography className='font-medium'>{row.original.productName || '-'}</Typography>
@@ -230,34 +300,42 @@ const ProductSaleListTable = () => {
       })
     ]
 
-    if (productSalePermissions.canUpdate || productSalePermissions.canDelete) {
-      nextColumns.push({
-        id: 'actions',
-        header: 'Thao tác',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-2'>
-            {productSalePermissions.canUpdate && row.original.isActive !== false && (
-              <IconButton color='primary' title='Chỉnh sửa' onClick={() => handleEdit(row.original)}>
-                <i className='ri-edit-box-line' />
+    nextColumns.push({
+      id: 'actions',
+      header: 'Thao tác',
+      cell: ({ row }) => (
+        <div className='flex items-center gap-2'>
+          {row.original.source === 'payment' && row.original.receiptNumber && (
+            <IconButton
+              color='primary'
+              title='Xem biên lai'
+              onClick={() => router.push(`/apps/invoice/preview/${encodeURIComponent(row.original.receiptNumber!)}`)}
+            >
+              <i className='ri-eye-line' />
+            </IconButton>
+          )}
+          {productSalePermissions.canUpdate && row.original.source !== 'payment' && row.original.isActive !== false && (
+            <IconButton color='primary' title='Chỉnh sửa' onClick={() => handleEdit(row.original)}>
+              <i className='ri-edit-box-line' />
+            </IconButton>
+          )}
+          {productSalePermissions.canDelete &&
+            row.original.source !== 'payment' &&
+            (row.original.isActive !== false ? (
+              <IconButton color='error' title='Xóa mềm' onClick={() => handleDelete(row.original.id)}>
+                <i className='ri-delete-bin-6-line' />
               </IconButton>
-            )}
-            {productSalePermissions.canDelete &&
-              (row.original.isActive !== false ? (
-                <IconButton color='error' title='Xóa mềm' onClick={() => handleDelete(row.original.id)}>
-                  <i className='ri-delete-bin-6-line' />
-                </IconButton>
-              ) : (
-                <IconButton color='success' title='Khôi phục' onClick={() => handleRestore(row.original.id)}>
-                  <i className='ri-loop-left-line' />
-                </IconButton>
-              ))}
-          </div>
-        )
-      })
-    }
+            ) : (
+              <IconButton color='success' title='Khôi phục' onClick={() => handleRestore(row.original.id)}>
+                <i className='ri-loop-left-line' />
+              </IconButton>
+            ))}
+        </div>
+      )
+    })
 
     return nextColumns
-  }, [productSalePermissions.canDelete, productSalePermissions.canUpdate])
+  }, [productSalePermissions.canDelete, productSalePermissions.canUpdate, router])
 
   const table = useReactTable({
     data,

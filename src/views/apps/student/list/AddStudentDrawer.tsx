@@ -30,6 +30,7 @@ import { useNotification } from '@/contexts/notificationContext'
 // Components
 import MemberCodeField from '@/components/member/MemberCodeField'
 import type { MemberInfo } from '@/components/member/MemberCodeField'
+import StudentZaloLinkPromptDialog from '@/components/student/StudentZaloLinkPromptDialog'
 
 type Props = {
   open: boolean
@@ -63,6 +64,8 @@ const AddStudentDrawer = ({
   const [formData, setFormData] = useState(initialForm)
   const [selectedClassId, setSelectedClassId] = useState('')
   const [loading, setLoading] = useState(false)
+  const [zaloPromptOpen, setZaloPromptOpen] = useState(false)
+  const [zaloPromptStudent, setZaloPromptStudent] = useState<StudentType | null>(null)
 
   const { showNotification } = useNotification()
 
@@ -151,6 +154,11 @@ const AddStudentDrawer = ({
         showNotification('Thêm học viên thành công!', 'success')
         onStudentCreated?.()
         handleReset()
+
+        if (!createdStudent.userIdZalo?.trim()) {
+          setZaloPromptStudent(createdStudent)
+          setZaloPromptOpen(true)
+        }
       } else {
         showNotification(response.message || 'Không thể thêm học viên.', 'error')
       }
@@ -180,7 +188,8 @@ const AddStudentDrawer = ({
   // Trường hợp khoá áp dụng cho EditStudentDrawer
 
   return (
-    <Drawer
+    <>
+      <Drawer
       open={open}
       anchor='right'
       variant='temporary'
@@ -216,7 +225,7 @@ const AddStudentDrawer = ({
                 {!requireClassEnrollment && <MenuItem value=''>Chưa ghi danh lớp</MenuItem>}
                 {classOptions.map(cls => (
                   <MenuItem key={cls.id} value={cls.id}>
-                    {cls.name} ({cls.code})
+                     ({cls.code})
                   </MenuItem>
                 ))}
               </Select>
@@ -232,14 +241,14 @@ const AddStudentDrawer = ({
                 onChange={e => setFormData({ ...formData, fullName: e.target.value })}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label='Số điện thoại'
-                fullWidth
-                value={formData.phoneNumber}
-                onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
-              />
-            </Grid>
+            {/*<Grid size={{ xs: 12, sm: 6 }}>*/}
+            {/*  <TextField*/}
+            {/*    label='Số điện thoại'*/}
+            {/*    fullWidth*/}
+            {/*    value={formData.phoneNumber}*/}
+            {/*    onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}*/}
+            {/*  />*/}
+            {/*</Grid>*/}
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label='CCCD / Số định danh cá nhân'
@@ -323,7 +332,23 @@ const AddStudentDrawer = ({
           </div>
         </form>
       </div>
-    </Drawer>
+      </Drawer>
+
+      <StudentZaloLinkPromptDialog
+        open={zaloPromptOpen}
+        student={zaloPromptStudent}
+        skipLabel='Để sau'
+        message='Hãy thêm liên kết Zalo cho học viên để gửi xác nhận thanh toán và các thông báo sau này. Chọn để sau nếu bạn chưa muốn liên kết ngay.'
+        onClose={() => {
+          setZaloPromptOpen(false)
+          setZaloPromptStudent(null)
+        }}
+        onLinked={updatedStudent => {
+          setData(prev => prev.map(item => (item.id === updatedStudent.id ? updatedStudent : item)))
+          setZaloPromptStudent(updatedStudent)
+        }}
+      />
+    </>
   )
 }
 
