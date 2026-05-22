@@ -25,6 +25,7 @@ export interface CreatePaymentRequest {
   studentId: string
   classId?: string
   productId?: string
+  productVariantId?: string
   examRegistrationId?: string
   type: number
   amount?: number
@@ -47,6 +48,7 @@ export interface BulkPaymentItemRequest {
   description?: string
   classId?: string
   productId?: string
+  productVariantId?: string
   forMonth?: number
   forYear?: number
   examRegistrationId?: string
@@ -76,6 +78,7 @@ export interface UpdatePaymentRequest {
   receiptNumber?: string
   classId?: string
   productId?: string
+  productVariantId?: string
   forMonth?: number
   forYear?: number
   transferProofImageUrl?: string

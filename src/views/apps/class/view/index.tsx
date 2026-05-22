@@ -1,4 +1,4 @@
-'use client'
+﻿﻿'use client'
 
 import { useEffect, useState, useRef } from 'react'
 
@@ -521,6 +521,10 @@ const ClassViewPage = ({ classId }: Props) => {
           setSelectedStudent(null)
         }}
         student={selectedStudent}
+        onEdit={student => {
+          setViewStudentOpen(false)
+          handleEditStudent(student)
+        }}
         onSuspend={handleSuspendStudent}
         onResume={handleResumeStudent}
       />
@@ -538,3 +542,4 @@ const ClassViewPage = ({ classId }: Props) => {
 }
 
 export default ClassViewPage
+

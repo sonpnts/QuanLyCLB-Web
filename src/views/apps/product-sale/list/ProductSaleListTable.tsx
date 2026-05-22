@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -34,13 +34,11 @@ import type { ProductSaleType } from '@/types/apps/productSaleTypes'
 import type { ProductType } from '@/types/apps/productTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
-import paymentService from '@/services/paymentService'
 import productSaleService from '@/services/productSaleService'
 import type { GetProductSalesParams } from '@/services/productSaleService'
 import productService from '@/services/productService'
 import classService from '@/services/classService'
 import userService from '@/services/userService'
-import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { buildModulePermissionMap } from '@/utils/rbac'
@@ -52,30 +50,6 @@ import tableStyles from '@core/styles/table.module.css'
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
-
-const PRODUCT_PAYMENT_TYPE = 3
-
-const mapPaymentProductRecord = (payment: any): ProductSaleType => ({
-  id: payment.id,
-  source: 'payment',
-  receiptNumber: payment.receiptNumber,
-  studentName: payment.studentName,
-  productId: payment.productId,
-  productName: payment.productName || payment.description || 'Sản phẩm',
-  classId: payment.classId,
-  className: payment.className,
-  soldByUserId: payment.collectedByUserId,
-  soldByUserName: payment.collectedByUserName,
-  quantity: 1,
-  unitPrice: Number(payment.originalAmount ?? payment.amount ?? 0),
-  totalAmount: Number(payment.amount ?? 0),
-  saleDate: payment.paymentDate || payment.createdAt,
-  buyerName: payment.studentName,
-  notes: payment.description,
-  isActive: payment.isActive ?? true,
-  createdAt: payment.createdAt,
-  updatedAt: payment.updatedAt
-})
 
 const DebouncedInput = ({
   value: initialValue,
@@ -106,7 +80,6 @@ const columnHelper = createColumnHelper<ProductSaleType>()
 
 const ProductSaleListTable = () => {
   const router = useRouter()
-  const { showNotification } = useNotification()
   const { auth } = useAuth()
   const isAdmin = hasAdminRole(auth?.roles)
   const productSalePermissions = useMemo(
@@ -114,7 +87,6 @@ const ProductSaleListTable = () => {
     [auth?.permissions, auth?.roles]
   )
 
-  const [addDrawerOpen, setAddDrawerOpen] = useState(false)
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
   const [selectedSale, setSelectedSale] = useState<ProductSaleType | null>(null)
   const [data, setData] = useState<ProductSaleType[]>([])
@@ -125,9 +97,6 @@ const ProductSaleListTable = () => {
   const [products, setProducts] = useState<ProductType[]>([])
   const [classes, setClasses] = useState<ClassType[]>([])
   const [collectors, setCollectors] = useState<UsersType[]>([])
-
-  const showNotificationRef = useRef(showNotification)
-  showNotificationRef.current = showNotification
 
   const handleFilterChange = useCallback((params: GetProductSalesParams) => {
     setFilterParams(params)
@@ -145,47 +114,25 @@ const ProductSaleListTable = () => {
         if (productsRes.success && productsRes.data) setProducts(productsRes.data)
         if (classesRes.success && classesRes.data) setClasses(classesRes.data)
         if (coachesRes.success && coachesRes.data) setCollectors(coachesRes.data)
-      } catch (error) {
-        // silently ignore reference data load errors
+      } catch {
+        // ignore reference load errors
       }
     }
 
-    loadReferences()
+    void loadReferences()
   }, [isAdmin])
 
   const loadSales = useCallback(async () => {
     try {
       setLoading(true)
-      const [legacyResponse, paymentResponse] = await Promise.all([
-        productSaleService.getProductSales(filterParams),
-        paymentService.getPayments({
-          pageSize: 1000,
-          classId: filterParams.classId,
-          collectedByUserId: filterParams.soldByUserId,
-          paymentDateFrom: filterParams.saleDateFrom,
-          paymentDateTo: filterParams.saleDateTo,
-          type: PRODUCT_PAYMENT_TYPE
-        })
-      ])
+      const response = await productSaleService.getProductSales({ pageSize: 1000, ...filterParams })
 
-      const legacyRows =
-        legacyResponse.success && legacyResponse.data
-          ? legacyResponse.data.map(item => ({ ...item, source: 'product-sale' as const }))
-          : []
-      const paymentRows =
-        paymentResponse.success && paymentResponse.data
-          ? paymentResponse.data
-              .filter(item => !!item.productId)
-              .filter(item => !filterParams.productId || item.productId === filterParams.productId)
-              .map(mapPaymentProductRecord)
-          : []
+      const rows = response.success && response.data ? response.data : []
 
       setData(
-        [...paymentRows, ...legacyRows].sort(
-          (a, b) => new Date(b.saleDate || b.createdAt || 0).getTime() - new Date(a.saleDate || a.createdAt || 0).getTime()
-        )
+        [...rows].sort((a, b) => new Date(b.saleDate || b.createdAt || 0).getTime() - new Date(a.saleDate || a.createdAt || 0).getTime())
       )
-    } catch (error) {
+    } catch {
       setData([])
     } finally {
       setLoading(false)
@@ -193,40 +140,8 @@ const ProductSaleListTable = () => {
   }, [filterParams])
 
   useEffect(() => {
-    loadSales()
+    void loadSales()
   }, [loadSales])
-
-  const handleDelete = async (id: string) => {
-    try {
-      const response = await productSaleService.deleteProductSale(id)
-
-      if (!response.success) {
-        showNotificationRef.current(response.message || 'Không thể xóa giao dịch.', 'error')
-        return
-      }
-
-      setData(prev => prev.map(item => (item.id === id ? { ...item, isActive: false } : item)))
-      showNotificationRef.current('Đã xóa mềm giao dịch.', 'success')
-    } catch (error) {
-      showNotificationRef.current('Đã có lỗi khi xóa giao dịch.', 'error')
-    }
-  }
-
-  const handleRestore = async (id: string) => {
-    try {
-      const response = await productSaleService.restoreProductSale(id)
-
-      if (!response.success) {
-        showNotificationRef.current(response.message || 'Không thể khôi phục giao dịch.', 'error')
-        return
-      }
-
-      setData(prev => prev.map(item => (item.id === id ? { ...item, isActive: true } : item)))
-      showNotificationRef.current('Khôi phục giao dịch thành công.', 'success')
-    } catch (error) {
-      showNotificationRef.current('Đã có lỗi khi khôi phục giao dịch.', 'error')
-    }
-  }
 
   const handleEdit = (sale: ProductSaleType) => {
     setSelectedSale(sale)
@@ -257,7 +172,16 @@ const ProductSaleListTable = () => {
       }),
       columnHelper.accessor('productName', {
         header: 'Sản phẩm',
-        cell: ({ row }) => <Typography className='font-medium'>{row.original.productName || '-'}</Typography>
+        cell: ({ row }) => (
+          <div>
+            <Typography className='font-medium'>{row.original.productName || '-'}</Typography>
+            {row.original.productVariantLabel ? (
+              <Typography variant='caption' color='text.secondary'>
+                {row.original.productVariantLabel}
+              </Typography>
+            ) : null}
+          </div>
+        )
       }),
       columnHelper.accessor('className', {
         header: 'Lớp',
@@ -285,19 +209,33 @@ const ProductSaleListTable = () => {
       }),
       columnHelper.accessor('saleDate', {
         header: 'Ngày bán',
-        cell: ({ row }) => <Typography>{row.original.saleDate ? new Date(row.original.saleDate).toLocaleDateString('vi-VN') : '-'}</Typography>
-      }),
-      columnHelper.accessor('isActive', {
-        header: 'Trạng thái',
         cell: ({ row }) => (
-          <Chip
-            size='small'
-            variant='tonal'
-            color={row.original.isActive !== false ? 'success' : 'secondary'}
-            label={row.original.isActive !== false ? 'Đang hoạt động' : 'Ngừng hoạt động'}
-          />
+          <Typography>
+            {row.original.saleDate
+              ? new Date(row.original.saleDate).toLocaleString('vi-VN', {
+                  timeZone: 'Asia/Ho_Chi_Minh',
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })
+              : '-'}
+          </Typography>
         )
-      })
+      }),
+      // columnHelper.accessor('isActive', {
+      //   header: 'Trạng thái',
+      //   cell: ({ row }) => (
+      //     <Chip
+      //       size='small'
+      //       variant='tonal'
+      //       color={row.original.isActive !== false ? 'success' : 'secondary'}
+      //       label={row.original.isActive !== false ? 'Đang hoạt động' : 'Ngừng hoạt động'}
+      //     />
+      //   )
+      // })
     ]
 
     nextColumns.push({
@@ -305,37 +243,24 @@ const ProductSaleListTable = () => {
       header: 'Thao tác',
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
-          {row.original.source === 'payment' && row.original.receiptNumber && (
+          {productSalePermissions.canUpdate && row.original.isActive !== false && !row.original.paymentRecordId ? (
             <IconButton
               color='primary'
-              title='Xem biên lai'
-              onClick={() => router.push(`/apps/invoice/preview/${encodeURIComponent(row.original.receiptNumber!)}`)}
+              title='Chỉnh sửa giao dịch cũ'
+              onClick={event => {
+                event.stopPropagation()
+                handleEdit(row.original)
+              }}
             >
-              <i className='ri-eye-line' />
-            </IconButton>
-          )}
-          {productSalePermissions.canUpdate && row.original.source !== 'payment' && row.original.isActive !== false && (
-            <IconButton color='primary' title='Chỉnh sửa' onClick={() => handleEdit(row.original)}>
               <i className='ri-edit-box-line' />
             </IconButton>
-          )}
-          {productSalePermissions.canDelete &&
-            row.original.source !== 'payment' &&
-            (row.original.isActive !== false ? (
-              <IconButton color='error' title='Xóa mềm' onClick={() => handleDelete(row.original.id)}>
-                <i className='ri-delete-bin-6-line' />
-              </IconButton>
-            ) : (
-              <IconButton color='success' title='Khôi phục' onClick={() => handleRestore(row.original.id)}>
-                <i className='ri-loop-left-line' />
-              </IconButton>
-            ))}
+          ) : null}
         </div>
       )
     })
 
     return nextColumns
-  }, [productSalePermissions.canDelete, productSalePermissions.canUpdate, router])
+  }, [productSalePermissions.canUpdate])
 
   const table = useReactTable({
     data,
@@ -364,11 +289,16 @@ const ProductSaleListTable = () => {
             placeholder='Tìm kiếm giao dịch...'
             className='max-sm:is-full'
           />
-          {productSalePermissions.canCreate && (
-            <Button variant='contained' onClick={() => setAddDrawerOpen(true)}>
-              Tạo giao dịch
-            </Button>
-          )}
+          <div className='flex items-center gap-2 max-sm:is-full max-sm:flex-col max-sm:items-stretch'>
+            {/*<Typography variant='body2' color='text.secondary'>*/}
+            {/*  Giao dịch bán mới được tạo từ màn phiếu thu để đồng bộ biên lai và thanh toán.*/}
+            {/*</Typography>*/}
+            {productSalePermissions.canCreate ? (
+              <Button variant='contained' onClick={() => router.push('/apps/invoice/add')}>
+                Tạo phiếu thu
+              </Button>
+            ) : null}
+          </div>
         </div>
         <div className='overflow-x-auto'>
           <table className={tableStyles.table}>
@@ -402,7 +332,15 @@ const ProductSaleListTable = () => {
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
+                  <tr
+                    key={row.id}
+                    className={row.original.receiptNumber ? 'cursor-pointer hover:bg-actionHover' : undefined}
+                    onClick={() => {
+                      if (row.original.receiptNumber) {
+                        router.push(`/apps/invoice/preview/${encodeURIComponent(row.original.receiptNumber)}`)
+                      }
+                    }}
+                  >
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                     ))}
@@ -424,10 +362,7 @@ const ProductSaleListTable = () => {
         />
       </Card>
 
-      {productSalePermissions.canCreate && (
-        <AddProductSaleDrawer open={addDrawerOpen} handleClose={() => setAddDrawerOpen(false)} setData={setData} />
-      )}
-      {productSalePermissions.canUpdate && (
+      {productSalePermissions.canUpdate ? (
         <AddProductSaleDrawer
           open={editDrawerOpen}
           handleClose={() => {
@@ -437,7 +372,7 @@ const ProductSaleListTable = () => {
           setData={setData}
           sale={selectedSale}
         />
-      )}
+      ) : null}
     </>
   )
 }

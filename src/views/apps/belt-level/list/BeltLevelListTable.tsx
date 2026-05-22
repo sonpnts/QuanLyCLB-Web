@@ -1,10 +1,8 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
-// React Imports
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 
-// MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import Button from '@mui/material/Button'
@@ -15,7 +13,6 @@ import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
 import TablePagination from '@mui/material/TablePagination'
 
-// Third-party Imports
 import {
   createColumnHelper,
   flexRender,
@@ -25,24 +22,19 @@ import {
 } from '@tanstack/react-table'
 import type { FilterFn } from '@tanstack/react-table'
 
-// Type Imports
 import type { BeltLevelType } from '@/types/apps/beltExamTypes'
 
-// Component Imports
 import AddBeltLevelDrawer from './AddBeltLevelDrawer'
 import EditBeltLevelDrawer from './EditBeltLevelDrawer'
 
-// Service Imports
 import beltLevelService from '@/services/beltLevelService'
 
-// Context Imports
 import { useNotification } from '@/contexts/notificationContext'
+import useConfirmAction from '@/hooks/useConfirmAction'
 
-// Column Helper
 const columnHelper = createColumnHelper<BeltLevelType>()
 
 const BeltLevelListTable = () => {
-  // States
   const [addDrawerOpen, setAddDrawerOpen] = useState(false)
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
   const [selectedBeltLevel, setSelectedBeltLevel] = useState<BeltLevelType | null>(null)
@@ -50,18 +42,15 @@ const BeltLevelListTable = () => {
   const [loading, setLoading] = useState(false)
   const [keyword, setKeyword] = useState('')
 
-  // Notification Hook
   const { showNotification } = useNotification()
+  const { confirm, confirmDialog } = useConfirmAction()
 
-  // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
   const currentKeywordRef = useRef<string>('')
 
-  // Load belt levels
   useEffect(() => {
-    // Tránh load lại nếu keyword không đổi
     if (dataLoadedRef.current && currentKeywordRef.current === keyword) {
       return
     }
@@ -73,7 +62,6 @@ const BeltLevelListTable = () => {
         dataLoadedRef.current = true
 
         const response = await beltLevelService.getBeltLevels({ keyword: keyword || undefined })
-
         const sorted = [...(response.data || [])].sort((a, b) => (a.order || 0) - (b.order || 0))
         setData(sorted)
       } catch {
@@ -86,9 +74,14 @@ const BeltLevelListTable = () => {
     loadBeltLevels()
   }, [keyword])
 
-  // Handle delete
   const handleDelete = useCallback(async (id: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa cấp đai này?')) return
+    const confirmed = await confirm({
+      title: 'Xác nhận xóa cấp đai',
+      description: 'Bạn có chắc chắn muốn xóa cấp đai này?',
+      confirmText: 'Xóa'
+    })
+
+    if (!confirmed) return
 
     try {
       setLoading(true)
@@ -106,40 +99,33 @@ const BeltLevelListTable = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [confirm])
 
-  // Handle edit
   const handleEdit = useCallback((beltLevel: BeltLevelType) => {
     setSelectedBeltLevel(beltLevel)
     setEditDrawerOpen(true)
   }, [])
 
-  // Handle belt level updated
   const handleBeltLevelUpdated = useCallback((updated: BeltLevelType) => {
     setData(prev => {
       const newData = prev.map(item => (item.id === updated.id ? updated : item))
-
       return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
     })
   }, [])
 
-  // Handle belt level added
   const handleBeltLevelAdded = useCallback((newBeltLevel: BeltLevelType) => {
     setData(prev => {
       const newData = [...prev, newBeltLevel]
-
       return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
     })
   }, [])
 
-  // Columns
   const columns = useMemo(
     () => [
       columnHelper.accessor('order', {
         header: 'Thứ tự',
         cell: ({ row }) => {
           const order = row.original.order || 0
-          // Order > 10 = Đẳng; Order <= 10 = Cấp kup
           if (order > 10) {
             return <Chip label={`${order - 10} Đẳng`} size='small' color='warning' variant='tonal' />
           }
@@ -176,7 +162,6 @@ const BeltLevelListTable = () => {
 
   const fuzzyFilter: FilterFn<any> = () => true
 
-  // Table
   const table = useReactTable({
     data,
     columns,
@@ -238,7 +223,7 @@ const BeltLevelListTable = () => {
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className='border-t'>
+                  <tr key={row.id}>
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id} className='p-4'>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -251,13 +236,13 @@ const BeltLevelListTable = () => {
           </table>
         </div>
         <TablePagination
-          rowsPerPageOptions={[10, 25, 50]}
           component='div'
-          count={data.length}
-          rowsPerPage={table.getState().pagination.pageSize}
+          count={table.getRowModel().rows.length}
           page={table.getState().pagination.pageIndex}
           onPageChange={(_, page) => table.setPageIndex(page)}
-          onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+          rowsPerPage={table.getState().pagination.pageSize}
+          onRowsPerPageChange={event => table.setPageSize(Number(event.target.value))}
+          rowsPerPageOptions={[10, 25, 50]}
         />
       </Card>
       <AddBeltLevelDrawer open={addDrawerOpen} onClose={() => setAddDrawerOpen(false)} onAdded={handleBeltLevelAdded} />
@@ -270,6 +255,7 @@ const BeltLevelListTable = () => {
         beltLevel={selectedBeltLevel}
         onSaved={handleBeltLevelUpdated}
       />
+      {confirmDialog}
     </>
   )
 }

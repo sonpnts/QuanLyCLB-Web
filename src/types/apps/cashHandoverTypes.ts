@@ -1,4 +1,4 @@
-﻿export type HandoverStatus = 'Pending' | 'Confirmed' | 'Rejected'
+export type HandoverStatus = 'Pending' | 'Confirmed' | 'Rejected'
 
 export const HandoverStatusLabel: Record<HandoverStatus, string> = {
   Pending: 'Chờ xác nhận',
@@ -12,9 +12,23 @@ export type CashHandoverDeductionType = {
   amount: number
 }
 
+export type CashHandoverClassDetailType = {
+  classId: string
+  className: string
+  snapshotTuitionAmount: number
+  snapshotExamFeeAmount: number
+  snapshotProductSalesAmount: number
+  snapshotTotalAmount: number
+  previousHandedOverAmount: number
+  totalDeductionAmount: number
+  amountHandedOver: number
+  remainingAmountAfterHandover: number
+}
+
 export type CashHandoverType = {
   id: string
-  classId: string
+  batchCode?: string | null
+  classId?: string | null
   className?: string
   instructorId: string
   instructorName?: string
@@ -32,9 +46,13 @@ export type CashHandoverType = {
   confirmedByUserName?: string
   confirmedAt?: string
   deductions: CashHandoverDeductionType[]
+  details: CashHandoverClassDetailType[]
+  classCount: number
   notes?: string
   createdByUserId?: string
   createdByUserName?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type LateTuitionStudentType = {

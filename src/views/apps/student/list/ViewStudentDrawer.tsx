@@ -1,10 +1,9 @@
 'use client'
-import { logger } from '@/utils/logger'
 
-// React Imports
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-// MUI Imports
+import { useRouter } from 'next/navigation'
+
 import Drawer from '@mui/material/Drawer'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
@@ -40,22 +39,20 @@ import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 
-// Types
 import type { StudentType, EnrollmentType, ExamHistoryType } from '@/types/apps/studentTypes'
 import type { ClassType } from '@/types/apps/classTypes'
-import type { StudentOneTimeFeeStatusType } from '@/types/apps/oneTimeFeeTypes'
+import type { OneTimeFeeOptionType, StudentOneTimeFeeStatusType } from '@/types/apps/oneTimeFeeTypes'
 
-// Services
 import studentService from '@/services/studentService'
 import classService from '@/services/classService'
 import classTransferService from '@/services/classTransferService'
 import oneTimeFeeService from '@/services/oneTimeFeeService'
-
-// Context
 import { useNotification } from '@/contexts/notificationContext'
+import { savePaymentInvoiceDraft } from '@/utils/paymentDraft'
+import { logger } from '@/utils/logger'
 
-// Components
 import CustomAvatar from '@core/components/mui/Avatar'
+import ZaloVerifyModal from './ZaloVerifyModal'
 
 type Props = {
   open: boolean
@@ -72,6 +69,7 @@ type PaymentHistoryType = {
   paymentDate: string
   type: number
   method: number
+  receiptNumber?: string
   forMonth?: number
   forYear?: number
   description?: string
@@ -88,42 +86,54 @@ type AttendanceHistoryType = {
   notes?: string
 }
 
-const getInitials = (name: string) => {
-  return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
-
-const paymentTypeLabels: { [key: number]: string } = {
+const paymentTypeLabels: Record<number, string> = {
   0: 'Học phí',
-  1: 'Phí thi',
+  1: 'Lệ phí thi',
   2: 'Phí đăng ký',
-  3: 'Khác'
+  3: 'Khác',
+  4: 'Phí CSVC',
+  5: 'Phí chuyển mã / import'
 }
 
-const paymentMethodLabels: { [key: number]: string } = {
+const paymentMethodLabels: Record<number, string> = {
   0: 'Tiền mặt',
   1: 'Chuyển khoản',
   2: 'Thẻ'
 }
 
+const getInitials = (name: string) =>
+  name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+
+const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateString('vi-VN') : '-')
+const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString('vi-VN') : '-')
+const formatCurrency = (value?: number) => `${Number(value || 0).toLocaleString('vi-VN')}đ`
+
 const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume }: Props) => {
+  const router = useRouter()
+  const { showNotification } = useNotification()
+
   const [activeTab, setActiveTab] = useState('1')
+  const [detailStudent, setDetailStudent] = useState<StudentType | null>(student)
+  const [loadingStudent, setLoadingStudent] = useState(false)
   const [enrollments, setEnrollments] = useState<EnrollmentType[]>([])
   const [payments, setPayments] = useState<PaymentHistoryType[]>([])
   const [attendance, setAttendance] = useState<AttendanceHistoryType[]>([])
   const [examHistory, setExamHistory] = useState<ExamHistoryType[]>([])
   const [oneTimeFeeStatuses, setOneTimeFeeStatuses] = useState<StudentOneTimeFeeStatusType[]>([])
+  const [pendingOneTimeFees, setPendingOneTimeFees] = useState<OneTimeFeeOptionType[]>([])
   const [loadingEnrollments, setLoadingEnrollments] = useState(false)
   const [loadingPayments, setLoadingPayments] = useState(false)
   const [loadingAttendance, setLoadingAttendance] = useState(false)
   const [loadingExamHistory, setLoadingExamHistory] = useState(false)
   const [loadingOneTimeFees, setLoadingOneTimeFees] = useState(false)
+  const [loadingPendingOneTimeFees, setLoadingPendingOneTimeFees] = useState(false)
+  const [zaloModalOpen, setZaloModalOpen] = useState(false)
 
-  // Transfer dialog state
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
   const [transferFromClassId, setTransferFromClassId] = useState('')
   const [transferToClassId, setTransferToClassId] = useState('')
@@ -131,18 +141,9 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
   const [transferLoading, setTransferLoading] = useState(false)
   const [availableClasses, setAvailableClasses] = useState<ClassType[]>([])
 
-  const { showNotification } = useNotification()
-
-  // Track đã load data cho student nào để tránh load lại
-  const loadedDataRef = useRef<{
-    studentId: string | null
-    enrollments: boolean
-    payments: boolean
-    attendance: boolean
-    examHistory: boolean
-    oneTimeFees: boolean
-  }>({
-    studentId: null,
+  const loadedDataRef = useRef({
+    studentId: null as string | null,
+    studentDetail: false,
     enrollments: false,
     payments: false,
     attendance: false,
@@ -150,40 +151,64 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     oneTimeFees: false
   })
 
-  // Reset cache khi student thay đổi
+  const activeStudent = detailStudent || student
+
   useEffect(() => {
-    if (student?.id !== loadedDataRef.current.studentId) {
+    setDetailStudent(student)
+  }, [student])
+
+  useEffect(() => {
+    if (activeStudent?.id !== loadedDataRef.current.studentId) {
       loadedDataRef.current = {
-        studentId: student?.id || null,
+        studentId: activeStudent?.id || null,
+        studentDetail: false,
         enrollments: false,
         payments: false,
         attendance: false,
         examHistory: false,
         oneTimeFees: false
       }
-      // Reset data
+
       setEnrollments([])
       setPayments([])
       setAttendance([])
       setExamHistory([])
       setOneTimeFeeStatuses([])
+      setPendingOneTimeFees([])
     }
-  }, [student?.id])
+  }, [activeStudent?.id])
 
-  // Load enrollments khi drawer mở (chỉ load 1 lần cho mỗi student)
+  useEffect(() => {
+    const loadStudentDetail = async () => {
+      if (!student?.id || !open || loadedDataRef.current.studentDetail) return
+
+      try {
+        setLoadingStudent(true)
+        const response = await studentService.getStudentById(student.id)
+
+        if (response.success && response.data) {
+          setDetailStudent(response.data)
+        }
+
+        loadedDataRef.current.studentDetail = true
+      } catch (error) {
+        logger.error('ViewStudentDrawer', 'Error loading student detail', error)
+      } finally {
+        setLoadingStudent(false)
+      }
+    }
+
+    loadStudentDetail()
+  }, [open, student?.id])
+
   useEffect(() => {
     const loadEnrollments = async () => {
-      if (!student?.id || !open || loadedDataRef.current.enrollments) return
+      if (!activeStudent?.id || !open || loadedDataRef.current.enrollments) return
 
       try {
         setLoadingEnrollments(true)
-        const response = await studentService.getStudentEnrollments(student.id)
-
-        if (response.success && Array.isArray(response.data)) {
-          setEnrollments(response.data)
-        } else {
-          setEnrollments([])
-        }
+        const response = await studentService.getStudentEnrollments(activeStudent.id)
+        setEnrollments(response.success && Array.isArray(response.data) ? response.data : [])
         loadedDataRef.current.enrollments = true
       } catch (error) {
         logger.error('ViewStudentDrawer', 'Error loading enrollments', error)
@@ -194,21 +219,15 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     }
 
     loadEnrollments()
-  }, [student?.id, open])
+  }, [activeStudent?.id, open])
 
-  // Load payments khi chuyển sang tab payments (lazy load)
   const loadPayments = useCallback(async () => {
-    if (!student?.id || loadedDataRef.current.payments) return
+    if (!activeStudent?.id || loadedDataRef.current.payments) return
 
     try {
       setLoadingPayments(true)
-      const response = await studentService.getStudentPayments(student.id)
-
-      if (response.success && Array.isArray(response.data)) {
-        setPayments(response.data)
-      } else {
-        setPayments([])
-      }
+      const response = await studentService.getStudentPayments(activeStudent.id)
+      setPayments(response.success && Array.isArray(response.data) ? response.data : [])
       loadedDataRef.current.payments = true
     } catch (error) {
       logger.error('ViewStudentDrawer', 'Error loading payments', error)
@@ -216,21 +235,15 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     } finally {
       setLoadingPayments(false)
     }
-  }, [student?.id])
+  }, [activeStudent?.id])
 
-  // Load attendance khi chuyển sang tab attendance (lazy load)
   const loadAttendance = useCallback(async () => {
-    if (!student?.id || loadedDataRef.current.attendance) return
+    if (!activeStudent?.id || loadedDataRef.current.attendance) return
 
     try {
       setLoadingAttendance(true)
-      const response = await studentService.getStudentAttendance(student.id)
-
-      if (response.success && Array.isArray(response.data)) {
-        setAttendance(response.data)
-      } else {
-        setAttendance([])
-      }
+      const response = await studentService.getStudentAttendance(activeStudent.id)
+      setAttendance(response.success && Array.isArray(response.data) ? response.data : [])
       loadedDataRef.current.attendance = true
     } catch (error) {
       logger.error('ViewStudentDrawer', 'Error loading attendance', error)
@@ -238,21 +251,15 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     } finally {
       setLoadingAttendance(false)
     }
-  }, [student?.id])
+  }, [activeStudent?.id])
 
-  // Load exam history khi chuyển sang tab exam (lazy load)
   const loadExamHistory = useCallback(async () => {
-    if (!student?.id || loadedDataRef.current.examHistory) return
+    if (!activeStudent?.id || loadedDataRef.current.examHistory) return
 
     try {
       setLoadingExamHistory(true)
-      const response = await studentService.getExamHistory(student.id)
-
-      if (response.success && Array.isArray(response.data)) {
-        setExamHistory(response.data)
-      } else {
-        setExamHistory([])
-      }
+      const response = await studentService.getExamHistory(activeStudent.id)
+      setExamHistory(response.success && Array.isArray(response.data) ? response.data : [])
       loadedDataRef.current.examHistory = true
     } catch (error) {
       logger.error('ViewStudentDrawer', 'Error loading exam history', error)
@@ -260,20 +267,15 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     } finally {
       setLoadingExamHistory(false)
     }
-  }, [student?.id])
+  }, [activeStudent?.id])
 
   const loadOneTimeFees = useCallback(async () => {
-    if (!student?.id || loadedDataRef.current.oneTimeFees) return
+    if (!activeStudent?.id || loadedDataRef.current.oneTimeFees) return
 
     try {
       setLoadingOneTimeFees(true)
-      const response = await oneTimeFeeService.getStudentStatuses(student.id)
-
-      if (response.success && Array.isArray(response.data)) {
-        setOneTimeFeeStatuses(response.data)
-      } else {
-        setOneTimeFeeStatuses([])
-      }
+      const response = await oneTimeFeeService.getStudentStatuses(activeStudent.id)
+      setOneTimeFeeStatuses(response.success && Array.isArray(response.data) ? response.data : [])
       loadedDataRef.current.oneTimeFees = true
     } catch (error) {
       logger.error('ViewStudentDrawer', 'Error loading one-time fees', error)
@@ -281,41 +283,72 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     } finally {
       setLoadingOneTimeFees(false)
     }
-  }, [student?.id])
+  }, [activeStudent?.id])
 
-  // Reset tab khi drawer đóng
   useEffect(() => {
     if (!open) {
       setActiveTab('1')
     }
   }, [open])
 
-  useEffect(() => {
-    if (!open || !student?.id || loadedDataRef.current.oneTimeFees) return
-    loadOneTimeFees()
-  }, [loadOneTimeFees, open, student?.id])
-
-  if (!student) return null
-
-  // Derive current active class IDs from student data
-  const studentClasses: any[] = (student as any).classes || []
-  const activeStudentClasses = studentClasses.filter(
-    (c: any) => c.status === 0 || c.status === 'Active'
+  const studentClasses = useMemo(() => activeStudent?.classes || [], [activeStudent?.classes])
+  const activeStudentClasses = useMemo(
+    () => studentClasses.filter(item => item.status === 'Active' || item.status === '0'),
+    [studentClasses]
   )
-  const currentClassIds = activeStudentClasses.map((c: any) => c.classId || c.id)
+  const currentClassIds = useMemo(() => activeStudentClasses.map(item => item.classId), [activeStudentClasses])
+  const effectiveClassId = useMemo(() => {
+    if (activeStudentClasses[0]?.classId) return activeStudentClasses[0].classId
+
+    const activeEnrollment = enrollments.find(item => item.status === 'Active')
+
+    return activeEnrollment?.classId || enrollments[0]?.classId || ''
+  }, [activeStudentClasses, enrollments])
+
+  useEffect(() => {
+    const loadPendingOneTimeFees = async () => {
+      if (!open || !activeStudent?.id || !effectiveClassId) {
+        setPendingOneTimeFees([])
+        return
+      }
+
+      try {
+        setLoadingPendingOneTimeFees(true)
+        const response = await oneTimeFeeService.getOptions(activeStudent.id, effectiveClassId)
+
+        setPendingOneTimeFees(response.success && Array.isArray(response.data) ? response.data : [])
+      } catch (error) {
+        logger.error('ViewStudentDrawer', 'Error loading pending one-time fees', error)
+        setPendingOneTimeFees([])
+      } finally {
+        setLoadingPendingOneTimeFees(false)
+      }
+    }
+
+    loadPendingOneTimeFees()
+  }, [activeStudent?.id, effectiveClassId, open])
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
+    setActiveTab(newValue)
+
+    if (newValue === '2') loadPayments()
+    if (newValue === '3') loadAttendance()
+    if (newValue === '4') loadExamHistory()
+  }
 
   const handleOpenTransferDialog = async () => {
-    // Pre-fill fromClassId with first active class
     const firstActiveClass = activeStudentClasses[0]
-    setTransferFromClassId(firstActiveClass?.classId || firstActiveClass?.id || '')
+
+    setTransferFromClassId(firstActiveClass?.classId || '')
     setTransferToClassId('')
     setTransferReason('')
 
-    // Load all classes
     const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
+
     if (response.success && response.data) {
       setAvailableClasses(response.data)
     }
+
     setTransferDialogOpen(true)
   }
 
@@ -327,15 +360,17 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
   }
 
   const handleSubmitTransfer = async () => {
-    if (!student?.id || !transferFromClassId || !transferToClassId || !transferReason.trim()) return
+    if (!activeStudent?.id || !transferFromClassId || !transferToClassId || !transferReason.trim()) return
+
     try {
       setTransferLoading(true)
       const response = await classTransferService.createClassTransfer({
-        studentId: student.id,
+        studentId: activeStudent.id,
         fromClassId: transferFromClassId,
         toClassId: transferToClassId,
         reason: transferReason.trim()
       })
+
       if (response.success) {
         showNotification('Yêu cầu chuyển lớp đã được gửi thành công.', 'success')
         handleCloseTransferDialog()
@@ -349,18 +384,56 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     }
   }
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
-    setActiveTab(newValue)
+  const handleOpenInvoice = () => {
+    if (!activeStudent?.id) return
 
-    // Lazy load data khi chuyển tab
-    if (newValue === '2' && !loadedDataRef.current.payments) {
-      loadPayments()
-    } else if (newValue === '3' && !loadedDataRef.current.attendance) {
-      loadAttendance()
-    } else if (newValue === '4' && !loadedDataRef.current.examHistory) {
-      loadExamHistory()
-    }
+    const firstClass = activeStudentClasses[0] || studentClasses[0]
+    const draftKey = savePaymentInvoiceDraft({
+      classId: firstClass?.classId,
+      className: firstClass?.className,
+      studentId: activeStudent.id,
+      studentName: activeStudent.fullName,
+      initialMode: 'blank'
+    })
+
+    onClose()
+    router.push(`/apps/invoice/add?draft=${draftKey}`)
   }
+
+  const handleOpenOneTimeFeeInvoice = () => {
+    if (!activeStudent?.id) return
+
+    const firstClass = activeStudentClasses[0] || studentClasses[0] || enrollments[0]
+    const classId = firstClass?.classId
+    const className = firstClass?.className
+
+    const draftKey = savePaymentInvoiceDraft({
+      classId,
+      className,
+      studentId: activeStudent.id,
+      studentName: activeStudent.fullName,
+      initialMode: 'one-time'
+    })
+
+    onClose()
+    router.push(`/apps/invoice/add?draft=${draftKey}`)
+  }
+
+  const handleConfirmZalo = async (userIdZalo: string, phoneNumber: string) => {
+    if (!activeStudent?.id) return
+
+    const response = await studentService.updateStudentZalo(activeStudent.id, userIdZalo, phoneNumber)
+
+    if (!response.success || !response.data) {
+      showNotification(response.message || 'Không thể cập nhật liên kết Zalo.', 'error')
+      return
+    }
+
+    setDetailStudent(response.data)
+    showNotification(response.message || 'Đã cập nhật liên kết Zalo.', 'success')
+  }
+
+  if (!activeStudent) return null
 
   return (
     <Drawer
@@ -369,91 +442,81 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
       variant='temporary'
       onClose={onClose}
       ModalProps={{ keepMounted: true }}
-      sx={{ '& .MuiDrawer-paper': { width: { xs: 360, sm: 500, md: 600 } } }}
+      sx={{ '& .MuiDrawer-paper': { width: { xs: 360, sm: 520, md: 680 } } }}
     >
-      <div className='flex items-center justify-between pli-5 plb-4'>
+      <Box className='flex items-center justify-between pli-5 plb-4'>
         <Typography variant='h5'>Chi tiết học viên</Typography>
         <IconButton size='small' onClick={onClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
-      </div>
+      </Box>
       <Divider />
 
       <Box className='p-5'>
-        {/* Header với Avatar */}
         <Box className='flex items-center gap-4 mb-4'>
-          <CustomAvatar skin='light' size={64} color={student.isSuspended ? 'secondary' : 'primary'}>
-            {getInitials(student.fullName)}
+          <CustomAvatar skin='light' size={64} color={activeStudent.isSuspended ? 'secondary' : 'primary'}>
+            {getInitials(activeStudent.fullName)}
           </CustomAvatar>
+
           <Box className='flex-1'>
-            <div className='flex items-center gap-2 flex-wrap'>
-              <Typography variant='h6'>{student.fullName}</Typography>
-              {student.isSuspended && <Chip label='Tạm nghỉ' size='small' color='warning' variant='tonal' />}
-            </div>
+            <Box className='flex items-center gap-2 flex-wrap'>
+              <Typography variant='h6'>{activeStudent.fullName}</Typography>
+              {activeStudent.isSuspended && <Chip label='Tạm nghỉ' size='small' color='warning' variant='tonal' />}
+              {activeStudent.code && <Chip label={`Mã HV: ${activeStudent.code}`} size='small' color='secondary' variant='tonal' />}
+            </Box>
+
             <Typography variant='body2' color='text.secondary'>
-              {student.phoneNumber || 'Chưa có số điện thoại'}
+              {activeStudent.phoneNumber || 'Chưa có số điện thoại'}
             </Typography>
-            <div className='flex gap-2 mt-1 flex-wrap items-center'>
-              {student.beltLevelName && (
-                <Chip label={student.beltLevelName} size='small' color='warning' variant='tonal' />
+
+            <Box className='flex gap-2 mt-1 flex-wrap items-center'>
+              {activeStudent.beltLevelName && <Chip label={activeStudent.beltLevelName} size='small' color='warning' variant='tonal' />}
+              {activeStudent.userIdZalo ? (
+                <Chip label='Đã liên kết Zalo' size='small' color='success' variant='tonal' />
+              ) : (
+                <Chip label='Chưa liên kết Zalo' size='small' color='default' variant='tonal' />
               )}
-              {student.isSuspended && student.suspendReason && (
-                <Typography variant='caption' color='text.secondary'>
-                  Lý do: {student.suspendReason}
-                </Typography>
-              )}
-            </div>
-            <div className='flex gap-2 mt-2 flex-wrap'>
+            </Box>
+
+            <Box className='flex gap-2 mt-2 flex-wrap'>
               {onEdit && (
-                <Button
-                  size='small'
-                  variant='contained'
-                  color='primary'
-                  startIcon={<i className='ri-edit-box-line' />}
-                  onClick={() => onEdit(student)}
-                >
+                <Button size='small' variant='contained' startIcon={<i className='ri-edit-box-line' />} onClick={() => onEdit(activeStudent)}>
                   Chỉnh sửa
                 </Button>
               )}
-              {student.isSuspended ? (
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='success'
-                  startIcon={<i className='ri-play-circle-line' />}
-                  onClick={() => onResume?.(student)}
-                >
+
+              {activeStudent.isSuspended ? (
+                <Button size='small' variant='outlined' color='success' startIcon={<i className='ri-play-circle-line' />} onClick={() => onResume?.(activeStudent)}>
                   Khôi phục
                 </Button>
               ) : (
-                <Button
-                  size='small'
-                  variant='outlined'
-                  color='warning'
-                  startIcon={<i className='ri-pause-circle-line' />}
-                  onClick={() => onSuspend?.(student)}
-                >
+                <Button size='small' variant='outlined' color='warning' startIcon={<i className='ri-pause-circle-line' />} onClick={() => onSuspend?.(activeStudent)}>
                   Tạm nghỉ
                 </Button>
               )}
-            </div>
+            </Box>
           </Box>
         </Box>
 
-        {student.tuitionDiscountAmount && student.tuitionDiscountAmount > 0 && (
-          <Alert severity='info' sx={{ mb: 3, py: 1 }}>
+        {loadingStudent && (
+          <Alert severity='info' sx={{ mb: 3 }}>
+            Đang tải thêm thông tin chi tiết học viên...
+          </Alert>
+        )}
+
+        {activeStudent.tuitionDiscountAmount && activeStudent.tuitionDiscountAmount > 0 && (
+          <Alert severity='info' sx={{ mb: 3 }}>
             <Typography variant='body2' sx={{ fontWeight: 600 }}>
-              Giảm trừ học phí: -{Number(student.tuitionDiscountAmount).toLocaleString('vi-VN')}đ
+              Giảm trừ học phí: -{Number(activeStudent.tuitionDiscountAmount).toLocaleString('vi-VN')}đ
             </Typography>
-            {student.tuitionDiscountReason && (
+            {activeStudent.tuitionDiscountReason && (
               <Typography variant='caption' color='text.secondary'>
-                Lý do: {student.tuitionDiscountReason}
+                Lý do: {activeStudent.tuitionDiscountReason}
               </Typography>
             )}
           </Alert>
         )}
 
-        {/* Tabs */}
         <TabContext value={activeTab}>
           <TabList onChange={handleTabChange} variant='scrollable' scrollButtons='auto'>
             <Tab label='Thông tin' value='1' />
@@ -462,7 +525,6 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
             <Tab label='Lịch sử thi' value='4' />
           </TabList>
 
-          {/* Tab 1: Thông tin cơ bản */}
           <TabPanel value='1' className='px-0'>
             <Card variant='outlined' className='mb-4'>
               <CardContent>
@@ -471,57 +533,67 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      CCCD / Số định danh
-                    </Typography>
-                    <Typography variant='body1'>{student.personalIdNumber || '-'}</Typography>
+                    <Typography variant='body2' color='text.secondary'>Mã học viên</Typography>
+                    <Typography variant='body1'>{activeStudent.code || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      Giới tính
-                    </Typography>
-                    <Typography variant='body1'>
-                      {student.gender === true ? 'Nam' : student.gender === false ? 'Nữ' : '-'}
-                    </Typography>
+                    <Typography variant='body2' color='text.secondary'>CCCD / Số định danh</Typography>
+                    <Typography variant='body1'>{activeStudent.personalIdNumber || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      Ngày sinh
-                    </Typography>
-                    <Typography variant='body1'>
-                      {student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : '-'}
-                    </Typography>
+                    <Typography variant='body2' color='text.secondary'>Giới tính</Typography>
+                    <Typography variant='body1'>{activeStudent.gender === true ? 'Nam' : activeStudent.gender === false ? 'Nữ' : '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      Cấp đai liên đoàn
-                    </Typography>
-                    {student.beltLevelName ? (
-                      <Chip label={student.beltLevelName} size='small' color='warning' variant='tonal' />
-                    ) : (
-                      <Typography variant='body1' color='text.disabled'>
-                        Chưa có / chưa đồng bộ
-                      </Typography>
-                    )}
+                    <Typography variant='body2' color='text.secondary'>Ngày sinh</Typography>
+                    <Typography variant='body1'>{formatDate(activeStudent.dateOfBirth)}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      Số điện thoại
-                    </Typography>
-                    <Typography variant='body1'>{student.phoneNumber || '-'}</Typography>
+                    <Typography variant='body2' color='text.secondary'>Số điện thoại</Typography>
+                    <Typography variant='body1'>{activeStudent.phoneNumber || '-'}</Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Typography variant='body2' color='text.secondary'>Cấp đai liên đoàn</Typography>
+                    <Typography variant='body1'>{activeStudent.beltLevelName || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 12 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      Địa chỉ
-                    </Typography>
-                    <Typography variant='body1'>{student.address || '-'}</Typography>
+                    <Typography variant='body2' color='text.secondary'>Địa chỉ</Typography>
+                    <Typography variant='body1'>{activeStudent.address || '-'}</Typography>
                   </Grid>
-                  {student.notes && (
+                  {activeStudent.notes && (
                     <Grid size={{ xs: 12 }}>
-                      <Typography variant='body2' color='text.secondary'>
-                        Ghi chú
-                      </Typography>
-                      <Typography variant='body1'>{student.notes}</Typography>
+                      <Typography variant='body2' color='text.secondary'>Ghi chú</Typography>
+                      <Typography variant='body1'>{activeStudent.notes}</Typography>
+                    </Grid>
+                  )}
+                </Grid>
+              </CardContent>
+            </Card>
+
+            <Card variant='outlined' className='mb-4'>
+              <CardContent>
+                <Box className='flex items-center justify-between gap-3 flex-wrap mb-3'>
+                  <Typography variant='subtitle1' className='font-medium'>
+                    Liên kết Zalo
+                  </Typography>
+                  <Button variant='outlined' size='small' startIcon={<i className='ri-links-line' />} onClick={() => setZaloModalOpen(true)}>
+                    Cập nhật Zalo
+                  </Button>
+                </Box>
+
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 6 }}>
+                    <Typography variant='body2' color='text.secondary'>SĐT liên kết</Typography>
+                    <Typography variant='body1'>{activeStudent.phoneNumber || '-'}</Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Typography variant='body2' color='text.secondary'>Trạng thái</Typography>
+                    <Typography variant='body1'>{activeStudent.userIdZalo ? 'Đã liên kết' : 'Chưa liên kết'}</Typography>
+                  </Grid>
+                  {activeStudent.userIdZalo && (
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant='body2' color='text.secondary'>Zalo User ID</Typography>
+                      <Typography variant='body1'>{activeStudent.userIdZalo}</Typography>
                     </Grid>
                   )}
                 </Grid>
@@ -533,14 +605,11 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
                 <Typography variant='subtitle1' className='font-medium mb-3'>
                   Phí 1 lần
                 </Typography>
+
                 {loadingOneTimeFees ? (
-                  <Box className='flex justify-center py-4'>
-                    <CircularProgress size={24} />
-                  </Box>
+                  <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
                 ) : oneTimeFeeStatuses.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>
-                    Chưa có khoản phí 1 lần nào được ghi nhận.
-                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>Chưa có khoản phí 1 lần nào được ghi nhận.</Typography>
                 ) : (
                   <List dense disablePadding>
                     {oneTimeFeeStatuses.map(item => (
@@ -549,27 +618,14 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
                           primary={
                             <Box className='flex items-center justify-between gap-2 flex-wrap'>
                               <Typography variant='body1'>{item.feeName}</Typography>
-                              <Chip
-                                label={`${Number(item.amount || 0).toLocaleString('vi-VN')}đ`}
-                                size='small'
-                                color='secondary'
-                                variant='tonal'
-                              />
+                              <Chip label={formatCurrency(item.amount)} size='small' color='secondary' variant='tonal' />
                             </Box>
                           }
                           secondary={
                             <Box className='flex flex-col gap-1 mt-1'>
-                              <Typography variant='caption' color='text.secondary'>
-                                Đã thu: {item.paidAt ? new Date(item.paidAt).toLocaleString('vi-VN') : '-'}
-                              </Typography>
-                              <Typography variant='caption' color='text.secondary'>
-                                Người thu: {item.recordedByUserName || '-'}
-                              </Typography>
-                              {item.note && (
-                                <Typography variant='caption' color='text.secondary'>
-                                  Ghi chú: {item.note}
-                                </Typography>
-                              )}
+                              <Typography variant='caption' color='text.secondary'>Đã thu: {formatDateTime(item.paidAt)}</Typography>
+                              <Typography variant='caption' color='text.secondary'>Người thu: {item.recordedByUserName || '-'}</Typography>
+                              {item.note && <Typography variant='caption' color='text.secondary'>Ghi chú: {item.note}</Typography>}
                             </Box>
                           }
                         />
@@ -580,73 +636,43 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
               </CardContent>
             </Card>
 
-            {/* Danh sách lớp đang học */}
             <Card variant='outlined'>
               <CardContent>
                 <Typography variant='subtitle1' className='font-medium mb-3'>
                   Lớp đang học
                 </Typography>
+
                 {loadingEnrollments ? (
-                  <Box className='flex justify-center py-4'>
-                    <CircularProgress size={24} />
-                  </Box>
+                  <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
+                ) : studentClasses.length === 0 && enrollments.length === 0 ? (
+                  <Typography variant='body2' color='text.secondary'>Chưa đăng ký lớp nào.</Typography>
                 ) : (
-                  (() => {
-                    // Ưu tiên dùng classes từ student response (API mới)
-                    const studentClasses = (student as any).classes || []
-                    const displayData = studentClasses.length > 0 ? studentClasses : enrollments
-
-                    if (displayData.length === 0) {
-                      return (
-                        <Typography variant='body2' color='text.secondary'>
-                          Chưa đăng ký lớp nào
-                        </Typography>
-                      )
-                    }
-
-                    return (
-                      <List dense disablePadding>
-                        {displayData.map((item: any) => (
-                          <ListItem key={item.enrollmentId || item.id || item.classId} disablePadding className='mb-2'>
-                            <ListItemText
-                              primary={item.className || 'Lớp không xác định'}
-                              secondary={
-                                <Box className='flex items-center gap-2 mt-1'>
-                                  <Chip
-                                    label={
-                                      item.status === 0 || item.status === 'Active'
-                                        ? 'Đang học'
-                                        : item.status === 1 || item.status === 'Inactive'
-                                          ? 'Tạm nghỉ'
-                                          : 'Hoàn thành'
-                                    }
-                                    size='small'
-                                    color={
-                                      item.status === 0 || item.status === 'Active'
-                                        ? 'success'
-                                        : item.status === 1 || item.status === 'Inactive'
-                                          ? 'warning'
-                                          : 'info'
-                                    }
-                                    variant='tonal'
-                                  />
-                                  {(item.enrollmentDate || item.enrollmentDate) && (
-                                    <Typography variant='caption' color='text.secondary'>
-                                      Từ {new Date(item.enrollmentDate).toLocaleDateString('vi-VN')}
-                                    </Typography>
-                                  )}
-                                </Box>
-                              }
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                    )
-                  })()
+                  <List dense disablePadding>
+                    {(studentClasses.length > 0 ? studentClasses : enrollments).map((item: any) => (
+                      <ListItem key={item.enrollmentId || item.id || item.classId} disablePadding className='mb-2'>
+                        <ListItemText
+                          primary={item.className || 'Lớp không xác định'}
+                          secondary={
+                            <Box className='flex items-center gap-2 mt-1 flex-wrap'>
+                              <Chip
+                                label={item.status === 'Active' || item.status === 0 ? 'Đang học' : item.status === 'Inactive' || item.status === 1 ? 'Tạm nghỉ' : 'Hoàn thành'}
+                                size='small'
+                                color={item.status === 'Active' || item.status === 0 ? 'success' : item.status === 'Inactive' || item.status === 1 ? 'warning' : 'info'}
+                                variant='tonal'
+                              />
+                              <Typography variant='caption' color='text.secondary'>
+                                Từ {formatDate(item.enrollmentDate)}
+                              </Typography>
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
                 )}
               </CardContent>
             </Card>
-            {/* Chuyển lớp button */}
+
             <Box className='mt-3'>
               <Button
                 variant='outlined'
@@ -660,21 +686,73 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
             </Box>
           </TabPanel>
 
-          {/* Tab 2: Lịch sử thanh toán */}
           <TabPanel value='2' className='px-0'>
             <Card variant='outlined'>
               <CardContent>
-                <Typography variant='subtitle1' className='font-medium mb-3'>
-                  Lịch sử thanh toán
-                </Typography>
-                {loadingPayments ? (
-                  <Box className='flex justify-center py-4'>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : payments.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>
-                    Chưa có lịch sử thanh toán
+                <Box className='flex items-center justify-between gap-3 flex-wrap mb-3'>
+                  <Typography variant='subtitle1' className='font-medium'>
+                    Lịch sử thanh toán
                   </Typography>
+                  <Button variant='contained' size='small' startIcon={<i className='ri-bank-card-line' />} onClick={handleOpenInvoice}>
+                    Thêm thanh toán
+                  </Button>
+                </Box>
+
+                <Card variant='outlined' className='mb-4'>
+                  <CardContent>
+                    <Box className='flex items-center justify-between gap-3 flex-wrap mb-3'>
+                      <Typography variant='subtitle2' className='font-medium'>
+                        Phí 1 lần chưa thu
+                      </Typography>
+                      <Button
+                        variant='outlined'
+                        size='small'
+                        startIcon={<i className='ri-price-tag-3-line' />}
+                        onClick={handleOpenOneTimeFeeInvoice}
+                        disabled={!effectiveClassId || pendingOneTimeFees.length === 0}
+                      >
+                        Thu phí 1 lần
+                      </Button>
+                    </Box>
+
+                    {!effectiveClassId ? (
+                      <Alert severity='info'>Học viên chưa có lớp hiện tại để kiểm tra phí 1 lần cần thu.</Alert>
+                    ) : loadingPendingOneTimeFees ? (
+                      <Box className='flex justify-center py-4'>
+                        <CircularProgress size={24} />
+                      </Box>
+                    ) : pendingOneTimeFees.length === 0 ? (
+                      <Typography variant='body2' color='text.secondary'>
+                        Không còn khoản phí 1 lần nào cần thu.
+                      </Typography>
+                    ) : (
+                      <List dense disablePadding>
+                        {pendingOneTimeFees.map(item => (
+                          <ListItem key={item.feeCode} disablePadding className='mb-2'>
+                            <ListItemText
+                              primary={
+                                <Box className='flex items-center justify-between gap-2 flex-wrap'>
+                                  <Typography variant='body1'>{item.feeName}</Typography>
+                                  <Chip label={formatCurrency(item.amount)} size='small' color='warning' variant='tonal' />
+                                </Box>
+                              }
+                              secondary={
+                                <Typography variant='caption' color='text.secondary'>
+                                  {item.isRequiredForExam ? 'Khoản phí bắt buộc trước khi thi.' : 'Khoản phí 1 lần đang chờ thu.'}
+                                </Typography>
+                              }
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {loadingPayments ? (
+                  <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
+                ) : payments.length === 0 ? (
+                  <Typography variant='body2' color='text.secondary'>Chưa có lịch sử thanh toán.</Typography>
                 ) : (
                   <TableContainer>
                     <Table size='small'>
@@ -682,6 +760,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
                         <TableRow>
                           <TableCell>Ngày</TableCell>
                           <TableCell>Loại</TableCell>
+                          <TableCell>Mô tả</TableCell>
                           <TableCell align='right'>Số tiền</TableCell>
                           <TableCell>Phương thức</TableCell>
                         </TableRow>
@@ -689,16 +768,12 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
                       <TableBody>
                         {payments.map(payment => (
                           <TableRow key={payment.id}>
-                            <TableCell>{new Date(payment.paymentDate).toLocaleDateString('vi-VN')}</TableCell>
+                            <TableCell>{formatDate(payment.paymentDate)}</TableCell>
                             <TableCell>
-                              <Chip
-                                label={paymentTypeLabels[payment.type] || 'Khác'}
-                                size='small'
-                                color={payment.type === 0 ? 'primary' : 'default'}
-                                variant='tonal'
-                              />
+                              <Chip label={paymentTypeLabels[payment.type] || 'Khác'} size='small' variant='tonal' />
                             </TableCell>
-                            <TableCell align='right'>{payment.amount.toLocaleString('vi-VN')}đ</TableCell>
+                            <TableCell>{payment.description || payment.className || '-'}</TableCell>
+                            <TableCell align='right'>{formatCurrency(payment.amount)}</TableCell>
                             <TableCell>{paymentMethodLabels[payment.method] || '-'}</TableCell>
                           </TableRow>
                         ))}
@@ -710,21 +785,17 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
             </Card>
           </TabPanel>
 
-          {/* Tab 3: Lịch sử điểm danh */}
           <TabPanel value='3' className='px-0'>
             <Card variant='outlined'>
               <CardContent>
                 <Typography variant='subtitle1' className='font-medium mb-3'>
                   Lịch sử điểm danh
                 </Typography>
+
                 {loadingAttendance ? (
-                  <Box className='flex justify-center py-4'>
-                    <CircularProgress size={24} />
-                  </Box>
+                  <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
                 ) : attendance.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>
-                    Chưa có lịch sử điểm danh
-                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>Chưa có lịch sử điểm danh.</Typography>
                 ) : (
                   <TableContainer>
                     <Table size='small'>
@@ -739,34 +810,9 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
                       <TableBody>
                         {attendance.map(record => (
                           <TableRow key={record.id}>
-                            <TableCell>{new Date(record.date).toLocaleDateString('vi-VN')}</TableCell>
+                            <TableCell>{formatDate(record.date)}</TableCell>
                             <TableCell>{record.className || '-'}</TableCell>
-                            <TableCell>
-                              <Chip
-                                label={
-                                  record.status === 'Present'
-                                    ? 'Có mặt'
-                                    : record.status === 'Absent'
-                                      ? 'Vắng'
-                                      : record.status === 'Late'
-                                        ? 'Trễ'
-                                        : record.status === 'Excused'
-                                          ? 'Có phép'
-                                          : record.status
-                                }
-                                size='small'
-                                color={
-                                  record.status === 'Present'
-                                    ? 'success'
-                                    : record.status === 'Absent'
-                                      ? 'error'
-                                      : record.status === 'Late'
-                                        ? 'warning'
-                                        : 'info'
-                                }
-                                variant='tonal'
-                              />
-                            </TableCell>
+                            <TableCell>{record.status || '-'}</TableCell>
                             <TableCell>{record.notes || '-'}</TableCell>
                           </TableRow>
                         ))}
@@ -778,21 +824,17 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
             </Card>
           </TabPanel>
 
-          {/* Tab 4: Lịch sử thi cấp */}
           <TabPanel value='4' className='px-0'>
             <Card variant='outlined'>
               <CardContent>
                 <Typography variant='subtitle1' className='font-medium mb-3'>
                   Lịch sử thi cấp
                 </Typography>
+
                 {loadingExamHistory ? (
-                  <Box className='flex justify-center py-4'>
-                    <CircularProgress size={24} />
-                  </Box>
+                  <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
                 ) : examHistory.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>
-                    Chưa có lịch sử thi cấp
-                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>Chưa có lịch sử thi cấp.</Typography>
                 ) : (
                   <TableContainer>
                     <Table size='small'>
@@ -801,25 +843,14 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
                           <TableCell>Ngày thi</TableCell>
                           <TableCell>Kỳ thi</TableCell>
                           <TableCell>Cấp đai</TableCell>
-                          {/*<TableCell>Kết quả</TableCell>*/}
-                          {/*<TableCell align='right'>Điểm</TableCell>*/}
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {examHistory.map(exam => (
                           <TableRow key={exam.id}>
-                            <TableCell>{new Date(exam.examDate).toLocaleDateString('vi-VN')}</TableCell>
+                            <TableCell>{formatDate(exam.examDate)}</TableCell>
                             <TableCell>{exam.examName}</TableCell>
                             <TableCell>{exam.beltLevelName}</TableCell>
-                            {/*<TableCell>*/}
-                            {/*  <Chip*/}
-                            {/*    label={exam.result === 1 ? 'Đạt' : exam.result === 2 ? 'Không đạt' : 'Chờ kết quả'}*/}
-                            {/*    size='small'*/}
-                            {/*    color={exam.result === 1 ? 'success' : exam.result === 2 ? 'error' : 'warning'}*/}
-                            {/*    variant='tonal'*/}
-                            {/*  />*/}
-                            {/*</TableCell>*/}
-                            {/*<TableCell align='right'>{exam.score ?? '-'}</TableCell>*/}
                           </TableRow>
                         ))}
                       </TableBody>
@@ -831,35 +862,33 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
           </TabPanel>
         </TabContext>
 
-        {/* Thông tin hệ thống */}
-        {(student.createdAt || student.updatedAt) && (
+        {(activeStudent.createdAt || activeStudent.updatedAt) && (
           <Box className='mt-4'>
             <Typography variant='caption' color='text.secondary'>
-              {student.createdAt && `Tạo: ${new Date(student.createdAt).toLocaleString('vi-VN')}`}
-              {student.createdAt && student.updatedAt && ' | '}
-              {student.updatedAt && `Cập nhật: ${new Date(student.updatedAt).toLocaleString('vi-VN')}`}
+              {activeStudent.createdAt && `Tạo: ${formatDateTime(activeStudent.createdAt)}`}
+              {activeStudent.createdAt && activeStudent.updatedAt && ' | '}
+              {activeStudent.updatedAt && `Cập nhật: ${formatDateTime(activeStudent.updatedAt)}`}
             </Typography>
           </Box>
         )}
       </Box>
 
-      {/* Transfer Class Dialog */}
       <Dialog open={transferDialogOpen} onClose={handleCloseTransferDialog} maxWidth='sm' fullWidth>
         <DialogTitle>Chuyển lớp học viên</DialogTitle>
         <DialogContent>
           <Box className='flex flex-col gap-4 pt-2'>
             <FormControl fullWidth>
               <InputLabel>Từ lớp</InputLabel>
-              <Select label='Từ lớp' value={transferFromClassId} onChange={e => setTransferFromClassId(e.target.value)}>
+              <Select label='Từ lớp' value={transferFromClassId} onChange={event => setTransferFromClassId(String(event.target.value))}>
                 {activeStudentClasses.length > 0
-                  ? activeStudentClasses.map((c: any) => (
-                      <MenuItem key={c.classId || c.id} value={c.classId || c.id}>
-                        {c.className || 'Lớp không xác định'}
+                  ? activeStudentClasses.map(item => (
+                      <MenuItem key={item.classId} value={item.classId}>
+                        {item.className}
                       </MenuItem>
                     ))
-                  : availableClasses.map(c => (
-                      <MenuItem key={c.id} value={c.id}>
-                        {c.name}
+                  : availableClasses.map(item => (
+                      <MenuItem key={item.id} value={item.id}>
+                        {item.name}
                       </MenuItem>
                     ))}
               </Select>
@@ -867,12 +896,12 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
 
             <FormControl fullWidth>
               <InputLabel>Đến lớp</InputLabel>
-              <Select label='Đến lớp' value={transferToClassId} onChange={e => setTransferToClassId(e.target.value)}>
+              <Select label='Đến lớp' value={transferToClassId} onChange={event => setTransferToClassId(String(event.target.value))}>
                 {availableClasses
-                  .filter(c => !currentClassIds.includes(c.id))
-                  .map(c => (
-                    <MenuItem key={c.id} value={c.id}>
-                      {c.name}
+                  .filter(item => !currentClassIds.includes(item.id))
+                  .map(item => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.name}
                     </MenuItem>
                   ))}
               </Select>
@@ -882,7 +911,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
               fullWidth
               label='Lý do'
               value={transferReason}
-              onChange={e => setTransferReason(e.target.value)}
+              onChange={event => setTransferReason(event.target.value)}
               multiline
               rows={3}
               required
@@ -891,9 +920,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseTransferDialog} disabled={transferLoading}>
-            Hủy
-          </Button>
+          <Button onClick={handleCloseTransferDialog} disabled={transferLoading}>Hủy</Button>
           <Button
             onClick={handleSubmitTransfer}
             variant='contained'
@@ -903,6 +930,13 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ZaloVerifyModal
+        open={zaloModalOpen}
+        onClose={() => setZaloModalOpen(false)}
+        defaultPhone={activeStudent.phoneNumber || ''}
+        onConfirm={handleConfirmZalo}
+      />
     </Drawer>
   )
 }

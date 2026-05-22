@@ -27,7 +27,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getFilteredRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFacetedMinMaxValues,
@@ -127,7 +126,7 @@ const StudentListTable = () => {
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<StudentType[]>([])
   const [assignedClasses, setAssignedClasses] = useState<ClassType[]>([])
-  const [globalFilter, setGlobalFilter] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState('')
   const [loading, setLoading] = useState(false)
   const [filterParams, setFilterParams] = useState<GetStudentsParams>({})
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
@@ -161,8 +160,10 @@ const StudentListTable = () => {
     if (statusFilter === 'suspended') p.isSuspended = true
     else if (statusFilter === 'active') p.isSuspended = false
     else delete p.isSuspended
+    if (searchKeyword.trim()) p.keyword = searchKeyword.trim()
+    else delete p.keyword
     return p
-  }, [filterParams, statusFilter])
+  }, [filterParams, searchKeyword, statusFilter])
 
   useEffect(() => {
     const filterKey = JSON.stringify(effectiveParams) + `|${userId}|${isInstructor}|${isAdmin}`
@@ -190,7 +191,16 @@ const StudentListTable = () => {
           }
 
           const results = await Promise.all(
-            targetClassIds.map(classId => studentService.getStudents({ classId, pageSize: 1000 }))
+            targetClassIds.map(classId =>
+              studentService.getStudents({
+                classId,
+                pageSize: 1000,
+                keyword: effectiveParams.keyword,
+                gender: effectiveParams.gender,
+                enrollmentStatus: effectiveParams.enrollmentStatus,
+                isSuspended: effectiveParams.isSuspended
+              })
+            )
           )
 
           const studentMap = new Map<string, StudentType>()
@@ -551,14 +561,11 @@ const StudentListTable = () => {
     data: displayData,
     columns,
     filterFns: { fuzzy: fuzzyFilter },
-    state: { rowSelection, globalFilter },
+    state: { rowSelection },
     initialState: { pagination: { pageSize: 10 } },
     enableRowSelection: true,
-    globalFilterFn: fuzzyFilter,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
@@ -606,8 +613,8 @@ const StudentListTable = () => {
 
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
-              value={globalFilter ?? ''}
-              onChange={value => setGlobalFilter(String(value))}
+              value={searchKeyword}
+              onChange={value => setSearchKeyword(String(value))}
           placeholder='Tìm kiếm học viên'
               className='max-sm:is-full'
             />
@@ -705,7 +712,7 @@ const StudentListTable = () => {
               ))}
             </thead>
             <tbody>
-              {table.getFilteredRowModel().rows.length === 0 ? (
+              {table.getRowModel().rows.length === 0 ? (
                 <tr>
                   <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
                 {loading ? 'Đang tải...' : 'Không có dữ liệu'}
@@ -738,7 +745,7 @@ const StudentListTable = () => {
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
-          count={table.getFilteredRowModel().rows.length}
+          count={table.getRowModel().rows.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
           onPageChange={(_, page) => table.setPageIndex(page)}

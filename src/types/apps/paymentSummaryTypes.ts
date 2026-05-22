@@ -47,8 +47,13 @@ export type CoachPaymentSummaryType = {
 export type AdminPaymentSummaryType = {
   month: number
   year: number
+  classes: ClassPaymentSummary[]
   overallTuition: TuitionSummary
   overallExamFees: ExamFeeSummary[]
+  totalExpectedAmount: number
+  totalCollectedByCoaches: number
+  totalHandedOver: number
+  unpaidTuitionStudentCount: number
   totalCollectedThisMonth: number
   totalUnpaid: number
 }

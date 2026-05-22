@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { logger } from '@/utils/logger'
 
 // React Imports
@@ -72,6 +72,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
   // ── All active classes ────────────────────────────────────────────────────
   const [classes, setClasses] = useState<any[]>([])
   const [myClasses, setMyClasses] = useState<any[]>([])
+  const [classesLoaded, setClassesLoaded] = useState(false)
 
   const { showNotification } = useNotification()
 
@@ -93,30 +94,60 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
         }
       } catch (err) {
         logger.error('AddTransferDrawer', 'Error loading classes', err)
+      } finally {
+        setClassesLoaded(true)
       }
-    }
+      }
     load()
   }, [open, isAdmin, currentUserId])
 
   // ── Load initial students when drawer opens ───────────────────────────────
-  useEffect(() => {
-    if (!open) return
-    searchStudents('')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
-
-  // ── Debounced student search ──────────────────────────────────────────────
+  // Debounced student search
   const searchStudents = useCallback(async (keyword: string) => {
     setStudentLoading(true)
     try {
-      const res = await studentService.getStudents({ keyword, pageSize: 50 })
-      if (res.success && res.data) setStudentOptions(res.data)
+      if (isAdmin) {
+        const res = await studentService.getStudents({ keyword, pageSize: 50 })
+        setStudentOptions(res.success && res.data ? res.data : [])
+
+        return
+      }
+
+      if (!classesLoaded) {
+        setStudentOptions([])
+
+        return
+      }
+
+      const classIds = myClasses.map(cls => cls.id).filter(Boolean)
+      if (classIds.length === 0) {
+        setStudentOptions([])
+
+        return
+      }
+
+      const responses = await Promise.all(
+        classIds.map(classId => studentService.getStudents({ classId, keyword, pageSize: 100 }))
+      )
+
+      const merged = responses
+        .filter(response => response.success && Array.isArray(response.data))
+        .flatMap(response => response.data || [])
+
+      const uniqueStudents = Array.from(new Map(merged.map(student => [student.id, student])).values())
+      setStudentOptions(uniqueStudents)
     } catch (err) {
       logger.error('AddTransferDrawer', 'Error searching students', err)
+      setStudentOptions([])
     } finally {
       setStudentLoading(false)
     }
-  }, [])
+  }, [classesLoaded, isAdmin, myClasses])
+
+  useEffect(() => {
+    if (!open || (!isAdmin && !classesLoaded)) return
+    searchStudents('')
+  }, [open, isAdmin, classesLoaded, searchStudents])
 
   const handleStudentInputChange = (_: React.SyntheticEvent, value: string) => {
     setStudentInput(value)

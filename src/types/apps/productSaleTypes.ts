@@ -5,6 +5,9 @@ export type ProductSaleType = {
   studentName?: string
   productId: string
   productName?: string
+  productVariantId?: string
+  productVariantLabel?: string
+  paymentRecordId?: string
   classId?: string
   className?: string
   soldByUserId?: string

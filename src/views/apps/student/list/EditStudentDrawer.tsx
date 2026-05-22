@@ -121,7 +121,12 @@ const EditStudentDrawer = (props: Props) => {
 
   /** Áp dụng thông tin từ liên đoàn vào form (chỉ khi chưa khóa) */
   const handleMemberInfoConfirmed = (info: MemberInfo) => {
-    if (isLocked) return
+    if (isLocked) {
+      if (info.personalIdNumber) setValue('personalIdNumber', info.personalIdNumber)
+      // if (info.address) setValue('address', info.address)
+      showNotification('Đã áp dụng CCCD từ liên đoàn cho học viên đã có mã HV.', 'info')
+      return
+    }
 
     setValue('fullName', info.fullName || defaultValues.fullName)
     if (info.gender !== undefined) setValue('gender', String(info.gender))
@@ -204,7 +209,7 @@ const EditStudentDrawer = (props: Props) => {
         {isLocked && (
           <Alert severity='info' icon={<i className='ri-lock-line' />}>
             Học viên đã có mã HV nên thông tin định danh (tên, giới tính, ngày sinh, ...) bị khóa. Vẫn có thể chỉnh sửa{' '}
-            <strong>địa chỉ</strong> và <strong>ghi chú</strong>. Để mở khóa toàn bộ, xóa mã HV trước rồi lưu lại.
+            <strong>CCCD</strong>, <strong>địa chỉ</strong> và <strong>ghi chú</strong>. Để mở khóa toàn bộ, xóa mã HV trước rồi lưu lại.
           </Alert>
         )}
 
@@ -217,8 +222,9 @@ const EditStudentDrawer = (props: Props) => {
           }}
           onMemberInfoConfirmed={handleMemberInfoConfirmed}
           locked={false} // mã HV luôn có thể cập nhật (chỉ khóa các trường còn lại)
+          active={open}
           helperText={
-            isLocked ? 'Xóa mã và lưu để mở khóa toàn bộ thông tin' : 'Nhấn Enter/Tab để tra cứu thông tin từ liên đoàn'
+            isLocked ? 'Xóa mã và lưu để mở khóa toàn bộ thông tin' : 'Chọn từ bảng tra cứu để xem và áp dụng thông tin từ liên đoàn'
           }
         />
 

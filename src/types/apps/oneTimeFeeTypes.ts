@@ -9,6 +9,14 @@ export type FeeDefinitionType = {
   isActive: boolean
 }
 
+export type CreateFeeDefinitionRequest = {
+  feeCode: string
+  name: string
+  description?: string | null
+  isRequiredForExam: boolean
+  isActive: boolean
+}
+
 export type FeePriceType = {
   id: string
   feeCode: string
@@ -34,6 +42,7 @@ export type OneTimeFeeOptionType = {
   scopeType: FeePriceScopeType
   scopeId?: string | null
   isPaid: boolean
+  isRequiredForExam: boolean
 }
 
 export type StudentOneTimeFeeStatusType = {
@@ -47,4 +56,19 @@ export type StudentOneTimeFeeStatusType = {
   recordedByUserId?: string | null
   recordedByUserName?: string | null
   note?: string | null
+}
+
+export type OneTimeFeeImportRowResultType = {
+  rowNumber: number
+  studentCode?: string | null
+  studentName?: string | null
+  status: string
+  message: string
+}
+
+export type OneTimeFeeImportResultType = {
+  totalRows: number
+  importedRows: number
+  skippedRows: number
+  rows: OneTimeFeeImportRowResultType[]
 }

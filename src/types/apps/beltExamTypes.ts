@@ -149,13 +149,20 @@ export type AdminExamStudentRowType = {
   registrationId: string
   studentId: string
   studentName: string
+  studentCode?: string
   dateOfBirth?: string
+  gender?: boolean
   phoneNumber?: string
+  personalIdNumber?: string
+  educationLevel?: string
   currentBeltLevelName?: string
+  currentBeltLevelOrder?: number
   targetBeltLevelName: string
+  targetBeltLevelOrder?: number
   className: string
   coachName: string
   hasPaid: boolean
+  oneTimeFeesCompleted: boolean
   paidAt?: string
   paymentRecordId?: string
 }
@@ -225,7 +232,7 @@ export const examSessionStatusLabels: Record<string, string> = {
 }
 
 export const registrationListStatusLabels: Record<RegistrationListStatus, string> = {
-  Draft: 'Đang soạn',
+  Draft: 'Nháp',
   Submitted: 'Đã nộp'
 }
 

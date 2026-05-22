@@ -164,6 +164,10 @@ export const API_ENDPOINTS = {
   products: {
     root: '/products',
     saleOptions: '/products/sale-options',
+    inventory: '/products/inventory',
+    inventoryTransactions: '/products/inventory/transactions',
+    inventoryEntries: '/products/inventory/entries',
+    reportSummary: '/products/reports/summary',
     byId: (id: string) => `/products/${id}`,
     restore: (id: string) => `/products/${id}/restore`
   },
@@ -269,9 +273,11 @@ export const API_ENDPOINTS = {
     options: '/one-time-fees/options',
     studentStatuses: (studentId: string) => `/one-time-fees/students/${studentId}`,
     definitions: '/one-time-fees/definitions',
+    createDefinition: '/one-time-fees/definitions',
     updateDefinition: (feeCode: string) => `/one-time-fees/definitions/${encodeURIComponent(feeCode)}`,
     prices: '/one-time-fees/prices',
-    upsertPrice: '/one-time-fees/prices'
+    upsertPrice: '/one-time-fees/prices',
+    importPaid: '/one-time-fees/import-paid'
   }
 } as const
 

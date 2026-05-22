@@ -15,6 +15,8 @@ export type PaymentRecordType = {
   className?: string
   productId?: string
   productName?: string
+  productVariantId?: string
+  productVariantLabel?: string
   examRegistrationId?: string
   type: PaymentType
   amount: number

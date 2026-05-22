@@ -31,6 +31,7 @@ import studentAttendanceService from '@/services/studentAttendanceService'
 import type { GetStudentAbsencesParams, StudentAbsenceType } from '@/services/studentAttendanceService'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
+import useConfirmAction from '@/hooks/useConfirmAction'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { buildModulePermissionMap } from '@/utils/rbac'
 
@@ -80,6 +81,7 @@ const LeaveRequestListTable = () => {
     [auth?.permissions, auth?.roles]
   )
   const { showNotification } = useNotification()
+  const { confirm, confirmDialog } = useConfirmAction()
   const showNotificationRef = useRef(showNotification)
   showNotificationRef.current = showNotification
 
@@ -135,6 +137,14 @@ const LeaveRequestListTable = () => {
   }, [loadAbsences])
 
   const handleDelete = async (id: string) => {
+    const confirmed = await confirm({
+      title: 'Xác nhận xóa nghỉ phép',
+      description: 'Bạn có chắc chắn muốn xóa dòng xin nghỉ phép này?',
+      confirmText: 'Xóa'
+    })
+
+    if (!confirmed) return
+
     const response = await studentAttendanceService.deleteAttendance(id)
 
     if (!response.success) {
@@ -300,6 +310,7 @@ const LeaveRequestListTable = () => {
       {leaveRequestPermissions.canCreate && (
         <AddLeaveRequestDrawer open={addRequestOpen} handleClose={() => setAddRequestOpen(false)} setData={setData} />
       )}
+      {confirmDialog}
     </>
   )
 }

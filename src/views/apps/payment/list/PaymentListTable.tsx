@@ -104,7 +104,7 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
   const [proofImageOpen, setProofImageOpen] = useState(false)
   const [proofImageUrl, setProofImageUrl] = useState<string | null>(null)
-  
+
   const [data, setData] = useState<PaymentRecordType[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(false)
@@ -195,6 +195,10 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
         header: 'Lớp học',
         cell: ({ row }) => <Typography>{row.original.className || '-'}</Typography>
       }),
+      columnHelper.accessor('collectedByUserName', {
+        header: 'Nguời thu',
+        cell: ({ row }) => <Typography>{row.original.collectedByUserName || '-'}</Typography>
+      }),
       columnHelper.accessor('type', {
         header: 'Loại thanh toán',
         cell: ({ row }) => {
@@ -244,9 +248,7 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
       columnHelper.accessor('paymentDate', {
         header: 'Ngày TT',
         cell: ({ row }) => (
-          <Typography variant='body2'>
-            {new Date(row.original.paymentDate).toLocaleDateString('vi-VN')}
-          </Typography>
+          <Typography variant='body2'>{new Date(row.original.paymentDate).toLocaleDateString('vi-VN')}</Typography>
         )
       }),
       columnHelper.accessor('method', {
@@ -269,9 +271,7 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
         header: 'Kỳ',
         cell: ({ row }) => (
           <Typography variant='body2'>
-            {row.original.forMonth && row.original.forYear
-              ? `${row.original.forMonth}/${row.original.forYear}`
-              : '-'}
+            {row.original.forMonth && row.original.forYear ? `${row.original.forMonth}/${row.original.forYear}` : '-'}
           </Typography>
         )
       },

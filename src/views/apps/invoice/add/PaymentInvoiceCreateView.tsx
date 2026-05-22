@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -35,7 +35,7 @@ import studentService from '@/services/studentService'
 import StudentZaloLinkPromptDialog from '@/components/student/StudentZaloLinkPromptDialog'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { OneTimeFeeOptionType } from '@/types/apps/oneTimeFeeTypes'
-import type { ProductType } from '@/types/apps/productTypes'
+import type { ProductType, ProductVariantType } from '@/types/apps/productTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { clearPaymentInvoiceDraft, readPaymentInvoiceDraft } from '@/utils/paymentDraft'
 import { hasPermission } from '@/utils/permissionUtils'
@@ -58,6 +58,7 @@ const YEARS = Array.from({ length: 4 }, (_, index) => new Date().getFullYear() -
 type ProductRow = {
   id: string
   productId: string
+  productVariantId: string
   quantity: number
 }
 
@@ -71,6 +72,36 @@ const createRowId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+
+const getActiveProductVariants = (product?: ProductType | null) =>
+  (product?.variants || []).filter(variant => variant.isActive !== false)
+
+const getProductVariant = (product?: ProductType | null, variantId?: string): ProductVariantType | null =>
+  getActiveProductVariants(product).find(variant => variant.id === variantId) || null
+
+const getAvailableProductStock = (product?: ProductType | null, variantId?: string) => {
+  if (!product) return 0
+
+  if (product.hasVariants) {
+    return Number(getProductVariant(product, variantId)?.stockQuantity || 0)
+  }
+
+  return Number(product.totalStockQuantity || 0)
+}
+
+const getProductUnitPrice = (product?: ProductType | null, variantId?: string) => {
+  if (!product) return 0
+
+  return Number(product.unitPrice || 0) + Number(getProductVariant(product, variantId)?.additionalPrice || 0)
+}
+
+const getProductDisplayName = (product?: ProductType | null, variantId?: string) => {
+  if (!product) return ''
+
+  const variant = getProductVariant(product, variantId)
+
+  return variant ? `${product.name} - ${variant.label}` : product.name
+}
 
 const PaymentInvoiceCreateView = () => {
   const router = useRouter()
@@ -345,6 +376,24 @@ const PaymentInvoiceCreateView = () => {
     [examFeeOptions, form.selectedExamRegistrationId]
   )
 
+  useEffect(() => {
+    if (!form.examEnabled || oneTimeFeeOptions.length === 0) return
+
+    setSelectedOneTimeFees(prev => {
+      let hasChanges = false
+      const next = { ...prev }
+
+      for (const option of oneTimeFeeOptions) {
+        if (option.isRequiredForExam && !next[option.feeCode]) {
+          next[option.feeCode] = true
+          hasChanges = true
+        }
+      }
+
+      return hasChanges ? next : prev
+    })
+  }, [form.examEnabled, oneTimeFeeOptions])
+
   const selectedClass = useMemo(
     () => classes.find(item => item.id === form.classId) || null,
     [classes, form.classId]
@@ -384,7 +433,7 @@ const PaymentInvoiceCreateView = () => {
         const product = products.find(item => item.id === row.productId)
         if (!product) return sum
 
-        return sum + Number(product.unitPrice || 0) * Number(row.quantity || 0)
+        return sum + getProductUnitPrice(product, row.productVariantId) * Number(row.quantity || 0)
       }, 0),
     [productRows, products]
   )
@@ -414,11 +463,26 @@ const PaymentInvoiceCreateView = () => {
     otherFeeTotal
 
   const addProductRow = () => {
-    setProductRows(prev => [...prev, { id: createRowId(), productId: '', quantity: 1 }])
+    setProductRows(prev => [...prev, { id: createRowId(), productId: '', productVariantId: '', quantity: 1 }])
   }
 
   const updateProductRow = (id: string, payload: Partial<ProductRow>) => {
     setProductRows(prev => prev.map(row => (row.id === id ? { ...row, ...payload } : row)))
+  }
+
+  const handleProductChange = (id: string, productId: string) => {
+    const selectedProduct = products.find(item => item.id === productId)
+    const variants = getActiveProductVariants(selectedProduct)
+
+    updateProductRow(id, {
+      productId,
+      productVariantId: selectedProduct?.hasVariants ? '' : '',
+      quantity: 1
+    })
+
+    if (selectedProduct && selectedProduct.hasVariants && variants.length === 1 && Number(variants[0].stockQuantity || 0) > 0) {
+      updateProductRow(id, { productId, productVariantId: variants[0].id, quantity: 1 })
+    }
   }
 
   const removeProductRow = (id: string) => {
@@ -435,6 +499,19 @@ const PaymentInvoiceCreateView = () => {
 
   const removeOtherFeeRow = (id: string) => {
     setOtherFeeRows(prev => prev.filter(row => row.id !== id))
+  }
+
+  const handleToggleOneTimeFee = (option: OneTimeFeeOptionType, checked: boolean) => {
+    if (!checked && form.examEnabled && option.isRequiredForExam) {
+      const examName = selectedExamOption?.examSessionName || 'kỳ thi đã đăng ký'
+      showNotification(`Do tồn tại đăng ký "${examName}" nên không thể loại bỏ các khoản phí bắt buộc.`, 'error')
+      return
+    }
+
+    setSelectedOneTimeFees(prev => ({
+      ...prev,
+      [option.feeCode]: checked
+    }))
   }
 
   const handleProofFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -464,6 +541,7 @@ const PaymentInvoiceCreateView = () => {
       forYear?: number
       examRegistrationId?: string
       productId?: string
+      productVariantId?: string
       discountAmount?: number
       discountReason?: string
     }> = []
@@ -503,15 +581,18 @@ const PaymentInvoiceCreateView = () => {
     for (const row of productRows) {
       const quantity = Math.max(1, Number(row.quantity || 1))
       const product = products.find(item => item.id === row.productId)
+      const variant = getProductVariant(product, row.productVariantId)
 
       if (!product) continue
+      if (product.hasVariants && !variant) continue
 
       for (let index = 0; index < quantity; index += 1) {
         items.push({
           type: PAYMENT_TYPE_BUY_PRODUCT,
           classId: form.classId,
           productId: row.productId,
-          description: product.name
+          productVariantId: variant?.id,
+          description: getProductDisplayName(product, variant?.id)
         })
       }
     }
@@ -561,6 +642,7 @@ const PaymentInvoiceCreateView = () => {
           forYear: single.forYear,
           examRegistrationId: single.examRegistrationId,
           productId: single.productId,
+          productVariantId: single.productVariantId,
           discountAmount: single.discountAmount,
           discountReason: single.discountReason,
           paymentDate: new Date().toISOString(),
@@ -657,8 +739,31 @@ const PaymentInvoiceCreateView = () => {
         return
       }
 
+      const product = products.find(item => item.id === row.productId)
+      if (!product) {
+        showNotification('Sản phẩm không còn tồn tại trong hệ thống.', 'error')
+        return
+      }
+
+      if (product.hasVariants && !row.productVariantId) {
+        showNotification('Vui lòng chọn biến thể sản phẩm.', 'error')
+        return
+      }
+
+      const availableStock = getAvailableProductStock(product, row.productVariantId)
+
+      if (availableStock <= 0) {
+        showNotification('Sản phẩm đã hết hàng. Vui lòng thông báo tới admin.', 'error')
+        return
+      }
+
       if (Number(row.quantity || 0) < 1) {
         showNotification('Số lượng sản phẩm phải lớn hơn hoặc bằng 1.', 'error')
+        return
+      }
+
+      if (Number(row.quantity || 0) > availableStock) {
+        showNotification(`Số lượng vượt quá tồn kho hiện có (${availableStock}).`, 'error')
         return
       }
     }
@@ -732,7 +837,8 @@ const PaymentInvoiceCreateView = () => {
                         >
                           {classes.map(item => (
                             <MenuItem key={item.id} value={item.id}>
-                              {item.code ? `${item.code} - ${item.name}` : item.name}
+                              {item.code}
+                              {/*{item.code ? `${item.code} - ${item.name}` : item.name}*/}
                             </MenuItem>
                           ))}
                         </Select>
@@ -938,21 +1044,22 @@ const PaymentInvoiceCreateView = () => {
                     <Alert severity='success'>Học viên hiện không còn phí 1 lần nào chưa đóng.</Alert>
                   ) : (
                     <Stack spacing={2}>
+                      {form.examEnabled && oneTimeFeeOptions.some(option => option.isRequiredForExam) ? (
+                        <Alert severity='warning'>
+                          Học viên đang có đăng ký thi cấp{selectedExamOption ? ` "${selectedExamOption.examSessionName}"` : ''}.
+                          Các khoản phí bắt buộc trước khi thi sẽ luôn được tích.
+                        </Alert>
+                      ) : null}
                       {oneTimeFeeOptions.map(option => (
                         <Paper key={option.feeCode} variant='outlined' className='p-3'>
                           <FormControlLabel
                             control={
                               <Checkbox
                                 checked={Boolean(selectedOneTimeFees[option.feeCode])}
-                                onChange={event =>
-                                  setSelectedOneTimeFees(prev => ({
-                                    ...prev,
-                                    [option.feeCode]: event.target.checked
-                                  }))
-                                }
+                                onChange={event => handleToggleOneTimeFee(option, event.target.checked)}
                               />
                             }
-                            label={`${option.feeName} - ${formatCurrency(Number(option.amount || 0))}`}
+                            label={`${option.feeName} - ${formatCurrency(Number(option.amount || 0))}${option.isRequiredForExam ? ' - Bắt buộc trước khi thi' : ''}`}
                           />
                         </Paper>
                       ))}
@@ -977,36 +1084,106 @@ const PaymentInvoiceCreateView = () => {
                     <Stack spacing={3}>
                       {productRows.map(row => {
                         const product = products.find(item => item.id === row.productId)
-                        const rowTotal = Number(product?.unitPrice || 0) * Number(row.quantity || 0)
+                        const variants = getActiveProductVariants(product)
+                        const selectedVariant = getProductVariant(product, row.productVariantId)
+                        const availableStock = getAvailableProductStock(product, row.productVariantId)
+                        const unitPrice = getProductUnitPrice(product, row.productVariantId)
+                        const rowTotal = unitPrice * Number(row.quantity || 0)
+                        const isOutOfStock = Boolean(product) && availableStock <= 0
+                        const productHasAvailableStock = product?.hasVariants
+                          ? variants.some(variant => Number(variant.stockQuantity || 0) > 0)
+                          : Number(product?.totalStockQuantity || 0) > 0
 
                         return (
-                          <Grid container spacing={3} key={row.id} alignItems='center'>
-                            <Grid size={{ xs: 12, md: 6 }}>
-                              <FormControl fullWidth>
-                                <InputLabel>Sản phẩm</InputLabel>
-                                <Select label='Sản phẩm' value={row.productId} onChange={event => updateProductRow(row.id, { productId: String(event.target.value) })}>
-                                  {products.map(item => (
-                                    <MenuItem key={item.id} value={item.id}>
-                                      {item.name} - {formatCurrency(Number(item.unitPrice || 0))}
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </FormControl>
+                          <Stack spacing={2} key={row.id}>
+                            <Grid container spacing={3} alignItems='flex-start'>
+                              <Grid size={{ xs: 12, md: product?.hasVariants ? 4 : 6 }}>
+                                <FormControl fullWidth>
+                                  <InputLabel>Sản phẩm</InputLabel>
+                                  <Select label='Sản phẩm' value={row.productId} onChange={event => handleProductChange(row.id, String(event.target.value))}>
+                                    {products.map(item => {
+                                      const canSelect = item.hasVariants
+                                        ? getActiveProductVariants(item).some(variant => Number(variant.stockQuantity || 0) > 0)
+                                        : Number(item.totalStockQuantity || 0) > 0
+
+                                      return (
+                                        <MenuItem key={item.id} value={item.id} disabled={!canSelect}>
+                                          {item.name} - {formatCurrency(Number(item.unitPrice || 0))}
+                                          {item.hasVariants ? ` - ${getActiveProductVariants(item).length} biến thể` : ` - còn ${Number(item.totalStockQuantity || 0)}`}
+                                          {!canSelect ? ' - Hết hàng' : ''}
+                                        </MenuItem>
+                                      )
+                                    })}
+                                  </Select>
+                                </FormControl>
+                              </Grid>
+                              {product?.hasVariants ? (
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <FormControl fullWidth>
+                                    <InputLabel>Biến thể</InputLabel>
+                                    <Select
+                                      label='Biến thể'
+                                      value={row.productVariantId}
+                                      onChange={event => updateProductRow(row.id, { productVariantId: String(event.target.value), quantity: 1 })}
+                                    >
+                                      {variants.length === 0 ? (
+                                        <MenuItem value=''>Chưa có biến thể</MenuItem>
+                                      ) : (
+                                        variants.map(variant => {
+                                          const canSelect = Number(variant.stockQuantity || 0) > 0
+
+                                          return (
+                                            <MenuItem key={variant.id} value={variant.id} disabled={!canSelect}>
+                                              {variant.label} - {formatCurrency(Number(product.unitPrice || 0) + Number(variant.additionalPrice || 0))} - còn {Number(variant.stockQuantity || 0)}
+                                              {!canSelect ? ' - Hết hàng' : ''}
+                                            </MenuItem>
+                                          )
+                                        })
+                                      )}
+                                    </Select>
+                                  </FormControl>
+                                </Grid>
+                              ) : null}
+                              <Grid size={{ xs: 12, md: 2 }}>
+                                <TextField
+                                  fullWidth
+                                  label='Số lượng'
+                                  type='number'
+                                  value={row.quantity}
+                                  onChange={event => updateProductRow(row.id, { quantity: Number(event.target.value) })}
+                                  inputProps={{ min: 1, max: availableStock > 0 ? availableStock : undefined }}
+                                  helperText={
+                                    row.productId
+                                      ? isOutOfStock
+                                        ? 'Vui lòng thông báo tới admin'
+                                        : `Tồn kho còn lại: ${availableStock}`
+                                      : 'Chọn sản phẩm để xem tồn kho'
+                                  }
+                                />
+                              </Grid>
+                              <Grid size={{ xs: 10, md: product?.hasVariants ? 1 : 2 }}>
+                                <Typography color='primary.main' fontWeight={600} sx={{ pt: { md: 2 } }}>
+                                  {formatCurrency(rowTotal)}
+                                </Typography>
+                              </Grid>
+                              <Grid size={{ xs: 2, md: 1 }}>
+                                <IconButton color='error' onClick={() => removeProductRow(row.id)}>
+                                  <i className='ri-delete-bin-line' />
+                                </IconButton>
+                              </Grid>
                             </Grid>
-                            <Grid size={{ xs: 12, md: 3 }}>
-                              <TextField fullWidth label='Số lượng' type='number' value={row.quantity} onChange={event => updateProductRow(row.id, { quantity: Number(event.target.value) })} />
-                            </Grid>
-                            <Grid size={{ xs: 10, md: 2 }}>
-                              <Typography color='primary.main' fontWeight={600}>
-                                {formatCurrency(rowTotal)}
+                            {selectedVariant ? (
+                              <Typography variant='body2' color='text.secondary'>
+                                Biến thể đã chọn: {selectedVariant.label}
                               </Typography>
-                            </Grid>
-                            <Grid size={{ xs: 2, md: 1 }}>
-                              <IconButton color='error' onClick={() => removeProductRow(row.id)}>
-                                <i className='ri-delete-bin-line' />
-                              </IconButton>
-                            </Grid>
-                          </Grid>
+                            ) : null}
+                            {row.productId && !productHasAvailableStock ? (
+                              <Alert severity='warning'>Sản phẩm đã hết hàng. Vui lòng thông báo tới admin.</Alert>
+                            ) : null}
+                            {product?.hasVariants && row.productId && !row.productVariantId ? (
+                              <Alert severity='info'>Sản phẩm này có biến thể, vui lòng chọn đúng biến thể trước khi tạo biên lai.</Alert>
+                            ) : null}
+                          </Stack>
                         )
                       })}
                     </Stack>
@@ -1142,6 +1319,3 @@ const PaymentInvoiceCreateView = () => {
 }
 
 export default PaymentInvoiceCreateView
-
-
-

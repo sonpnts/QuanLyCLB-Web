@@ -1,9 +1,10 @@
-"use client"
+'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
@@ -13,7 +14,6 @@ import FormControl from '@mui/material/FormControl'
 import Grid from '@mui/material/Grid2'
 import InputAdornment from '@mui/material/InputAdornment'
 import InputLabel from '@mui/material/InputLabel'
-import Button from '@mui/material/Button'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import Table from '@mui/material/Table'
@@ -27,6 +27,8 @@ import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 
+import { useAuth } from '@/contexts/authContext'
+import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import classService from '@/services/classService'
 import studentAttendanceService from '@/services/studentAttendanceService'
@@ -34,37 +36,43 @@ import studentService from '@/services/studentService'
 import type { ExamRegistrationType, ExamSessionType } from '@/types/apps/beltExamTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
-import { useNotification } from '@/contexts/notificationContext'
-import { useAuth } from '@/contexts/authContext'
-import { hasAdminRole } from '@/utils/roleUtils'
+import { exportToExcel } from '@/utils/exportToExcel'
 import { hasPermission } from '@/utils/permissionUtils'
+import { buildModulePermissionMap } from '@/utils/rbac'
+import { hasAdminRole } from '@/utils/roleUtils'
+import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
 import ViewStudentDrawer from '@/views/apps/student/list/ViewStudentDrawer'
 
 const text = {
-  title: '\u0051u\u1ea3n l\u00fd \u0111\u0103ng k\u00fd thi c\u1ea5p',
-  subtitle: 'Theo d\u00f5i tr\u1ea1ng th\u00e1i \u0111\u0103ng k\u00fd, l\u1ec7 ph\u00ed thi, c\u1ea5p \u0111ai hi\u1ec7n t\u1ea1i v\u00e0 c\u1ea5p \u0111ai d\u1ef1 thi c\u1ee7a h\u1ecdc vi\u00ean',
-  examSession: 'K\u1ef3 thi',
-  allSessions: 'T\u1ea5t c\u1ea3 k\u1ef3 thi',
-  class: 'L\u1edbp',
-  allClasses: 'T\u1ea5t c\u1ea3 l\u1edbp',
-  status: 'Tr\u1ea1ng th\u00e1i',
-  all: 'T\u1ea5t c\u1ea3',
-  pending: 'Ch\u1edd duy\u1ec7t',
-  approved: '\u0110\u00e3 duy\u1ec7t',
-  rejected: 'T\u1eeb ch\u1ed1i',
-  fee: 'L\u1ec7 ph\u00ed',
-  paid: '\u0110\u00e3 \u0111\u00f3ng',
-  unpaid: 'Ch\u01b0a \u0111\u00f3ng',
-  search: 'T\u00ecm h\u1ecdc vi\u00ean...',
-  empty: 'Ch\u01b0a c\u00f3 \u0111\u0103ng k\u00fd thi c\u1ea5p ph\u00f9 h\u1ee3p v\u1edbi b\u1ed9 l\u1ecdc.',
-  loadError: 'Kh\u00f4ng th\u1ec3 t\u1ea3i danh s\u00e1ch \u0111\u0103ng k\u00fd thi c\u1ea5p',
-  student: 'H\u1ecdc vi\u00ean',
-  registerStatus: 'Tr\u1ea1ng th\u00e1i \u0111\u0103ng k\u00fd',
-  feePaid: '\u0110\u00e3 \u0111\u00f3ng ti\u1ec1n',
-  currentBelt: 'C\u1ea5p \u0111ai hi\u1ec7n t\u1ea1i',
-  targetBelt: 'C\u1ea5p \u0111ai d\u1ef1 thi',
-  registeredBy: 'Ng\u01b0\u1eddi \u0111\u0103ng k\u00fd',
-  noBelt: 'Ch\u01b0a c\u00f3'
+  title: 'Quản lý đăng ký thi cấp',
+  subtitle: 'Theo dõi trạng thái đăng ký, lệ phí thi, cấp đai hiện tại và cấp đai dự thi của học viên',
+  examSession: 'Kỳ thi',
+  selectSession: 'Chọn kỳ thi để xem danh sách',
+  class: 'Lớp',
+  allClasses: 'Tất cả lớp',
+  status: 'Trạng thái',
+  all: 'Tất cả',
+  pending: 'Chờ duyệt',
+  approved: 'Đã duyệt',
+  rejected: 'Từ chối',
+  fee: 'Lệ phí',
+  paid: 'Đã đóng',
+  unpaid: 'Chưa đóng',
+  search: 'Tìm học viên...',
+  empty: 'Chưa có đăng ký thi cấp phù hợp với bộ lọc.',
+  loadError: 'Không thể tải danh sách đăng ký thi cấp',
+  student: 'Học viên',
+  registerStatus: 'Trạng thái đăng ký',
+  feePaid: 'Lệ phí thi',
+  requiredFees: 'Phí bắt buộc',
+  currentBelt: 'Cấp đai hiện tại',
+  targetBelt: 'Cấp đai dự thi',
+  registeredBy: 'Người đăng ký',
+  noBelt: 'Chưa có',
+  export: 'Xuất Excel',
+  exportSuccess: 'Đã xuất danh sách đăng ký thi cấp.',
+  selectPrompt: 'Không còn kỳ đăng ký nào đang mở. Vui lòng chọn kỳ thi trong danh sách để xem đăng ký.',
+  latestOpen: 'Đang mặc định kỳ mới nhất còn nhận đăng ký'
 }
 
 const statusLabels: Record<string, string> = {
@@ -79,6 +87,8 @@ const statusColors: Record<string, 'warning' | 'success' | 'error' | 'secondary'
   Rejected: 'error'
 }
 
+const hiddenDefaultStatuses = new Set(['Cancelled', 'Closed', 'Completed', 'Locked', 'Rejected'])
+
 const formatDateTime = (value?: string | null) => {
   if (!value) return ''
 
@@ -91,14 +101,30 @@ const formatDateTime = (value?: string | null) => {
   })
 }
 
+const getSessionSortTime = (session: ExamSessionType) =>
+  new Date(session.registrationDeadline || session.examDate || session.createdAt).getTime()
+
+const isSessionAvailableForDefault = (session: ExamSessionType) => {
+  if (hiddenDefaultStatuses.has(session.status)) return false
+  if (!session.registrationDeadline) return true
+
+  return new Date(session.registrationDeadline).getTime() >= Date.now()
+}
+
 const BeltExamRegistrationsView = () => {
   const { showNotification } = useNotification()
   const { auth } = useAuth()
   const isAdmin = hasPermission(auth?.permissions, 'BeltExam.ManageAll') || hasAdminRole(auth?.roles)
+  const studentPermissions = useMemo(
+    () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'Student'),
+    [auth?.permissions, auth?.roles]
+  )
+
   const [registrations, setRegistrations] = useState<ExamRegistrationType[]>([])
   const [sessions, setSessions] = useState<ExamSessionType[]>([])
   const [classes, setClasses] = useState<ClassType[]>([])
   const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
 
   const [examSessionId, setExamSessionId] = useState('')
   const [classId, setClassId] = useState('')
@@ -109,6 +135,7 @@ const BeltExamRegistrationsView = () => {
   const [rowsPerPage, setRowsPerPage] = useState(25)
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
   const [viewStudentOpen, setViewStudentOpen] = useState(false)
+  const [editStudentOpen, setEditStudentOpen] = useState(false)
   const [loadingStudent, setLoadingStudent] = useState(false)
 
   const openStudentDrawer = async (studentId: string) => {
@@ -135,12 +162,17 @@ const BeltExamRegistrationsView = () => {
         : studentAttendanceService.getCoachClasses()
     ])
 
-    if (sessionRes.success && sessionRes.data) setSessions(sessionRes.data)
+    if (sessionRes.success && sessionRes.data) {
+      const sortedSessions = [...sessionRes.data].sort((a, b) => getSessionSortTime(b) - getSessionSortTime(a))
+      setSessions(sortedSessions)
+    }
+
     if (classRes.success && classRes.data) {
       const normalized = (classRes.data as any[]).map(item => ({
         id: item.id || item.classId,
         name: item.name || item.className
       }))
+
       setClasses(normalized as ClassType[])
     }
   }
@@ -148,9 +180,17 @@ const BeltExamRegistrationsView = () => {
   const loadRegistrations = async () => {
     try {
       setLoading(true)
-      const params: Record<string, any> = { pageSize: 1000 }
 
-      if (examSessionId) params.examSessionId = examSessionId
+      if (!examSessionId) {
+        setRegistrations([])
+        return
+      }
+
+      const params: Record<string, any> = {
+        pageSize: 1000,
+        examSessionId
+      }
+
       if (classId) params.classId = classId
       if (status) params.status = status
       if (feePaid) params.isFeePaid = feePaid === 'paid'
@@ -169,9 +209,22 @@ const BeltExamRegistrationsView = () => {
     }
   }
 
+  const handleStudentUpdated = (updated: StudentType) => {
+    setSelectedStudent(updated)
+  }
+
   useEffect(() => {
     loadFilters()
   }, [])
+
+  useEffect(() => {
+    if (sessions.length === 0 || examSessionId) return
+
+    const latestOpenSession = sessions.find(isSessionAvailableForDefault)
+    if (latestOpenSession) {
+      setExamSessionId(latestOpenSession.id)
+    }
+  }, [sessions, examSessionId])
 
   useEffect(() => {
     loadRegistrations()
@@ -185,7 +238,7 @@ const BeltExamRegistrationsView = () => {
     return [...registrations].sort((a, b) => {
       const ao = a.currentBeltLevelOrder ?? -1
       const bo = b.currentBeltLevelOrder ?? -1
-      if (bo !== ao) return bo - ao // desc by current belt order
+      if (bo !== ao) return bo - ao
 
       const at = new Date(a.createdAt || 0).getTime()
       const bt = new Date(b.createdAt || 0).getTime()
@@ -198,17 +251,82 @@ const BeltExamRegistrationsView = () => {
     [sortedRegistrations, page, rowsPerPage]
   )
 
+  const latestOpenSession = useMemo(() => sessions.find(isSessionAvailableForDefault) || null, [sessions])
+  const selectedSession = useMemo(
+    () => sessions.find(session => session.id === examSessionId) || null,
+    [sessions, examSessionId]
+  )
+
+  const handleExport = async () => {
+    try {
+      setExporting(true)
+
+      exportToExcel({
+        filename: `Dang-ky-thi-cap-${selectedSession?.name || 'Danh-sach'}`,
+        sheetName: 'DangKyThiCap',
+        columns: [
+          { header: 'STT', accessor: 'stt', width: 8 },
+          { header: 'Học viên', accessor: 'studentName', width: 28 },
+          { header: 'Kỳ thi', accessor: 'examSessionName', width: 24 },
+          { header: 'Lớp', accessor: 'className', width: 18 },
+          { header: 'Trạng thái đăng ký', accessor: 'status', width: 18 },
+          { header: 'Lệ phí thi', accessor: 'feePaid', width: 14 },
+          { header: 'Phí bắt buộc', accessor: 'requiredFees', width: 18 },
+          { header: 'Cấp đai hiện tại', accessor: 'currentBelt', width: 18 },
+          { header: 'Cấp đai dự thi', accessor: 'targetBelt', width: 18 },
+          { header: 'Người đăng ký', accessor: 'registeredBy', width: 22 },
+          { header: 'Thời gian đăng ký', accessor: 'createdAt', width: 20 }
+        ],
+        rows: sortedRegistrations.map((row, index) => ({
+          stt: index + 1,
+          studentName: row.studentName,
+          examSessionName: row.examSessionName,
+          className: row.className,
+          status: statusLabels[row.status] || row.status,
+          feePaid: row.isFeePaid ? text.paid : text.unpaid,
+          requiredFees: row.oneTimeFeesCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành',
+          currentBelt: row.currentBeltLevelName || text.noBelt,
+          targetBelt: row.targetBeltLevelName,
+          registeredBy: row.registeredByUserName || '-',
+          createdAt: formatDateTime(row.createdAt)
+        }))
+      })
+
+      showNotification(text.exportSuccess, 'success')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <Card>
-      <CardHeader title={text.title} subheader={text.subtitle} />
+      <CardHeader
+        title={text.title}
+        subheader={text.subtitle}
+        action={
+          <Button
+            variant='outlined'
+            size='small'
+            startIcon={<i className='ri-file-excel-line' />}
+            onClick={handleExport}
+            disabled={!sortedRegistrations.length || exporting || !examSessionId}
+          >
+            {text.export}
+          </Button>
+        }
+      />
       <CardContent>
         <Grid container spacing={4}>
           <Grid size={{ xs: 12, md: 3 }}>
             <FormControl fullWidth size='small'>
               <InputLabel>{text.examSession}</InputLabel>
               <Select value={examSessionId} label={text.examSession} onChange={e => setExamSessionId(e.target.value)}>
-                <MenuItem value=''>{text.allSessions}</MenuItem>
-                {sessions.map(session => <MenuItem key={session.id} value={session.id}>{session.name}</MenuItem>)}
+                <MenuItem value=''>{text.selectSession}</MenuItem>
+                {sessions.map(session => (
+                  <MenuItem key={session.id} value={session.id}>
+                    {session.name}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
@@ -217,7 +335,11 @@ const BeltExamRegistrationsView = () => {
               <InputLabel>{text.class}</InputLabel>
               <Select value={classId} label={text.class} onChange={e => setClassId(e.target.value)}>
                 <MenuItem value=''>{text.allClasses}</MenuItem>
-                {classes.map(item => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
+                {classes.map(item => (
+                  <MenuItem key={item.id} value={item.id}>
+                    {item.name}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
@@ -243,15 +365,47 @@ const BeltExamRegistrationsView = () => {
             </FormControl>
           </Grid>
           <Grid size={{ xs: 12, md: 2 }}>
-            <TextField fullWidth size='small' value={keyword} onChange={e => setKeyword(e.target.value)} placeholder={text.search} InputProps={{ startAdornment: <InputAdornment position='start'><i className='ri-search-line' /></InputAdornment> }} />
+            <TextField
+              fullWidth
+              size='small'
+              value={keyword}
+              onChange={e => setKeyword(e.target.value)}
+              placeholder={text.search}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <i className='ri-search-line' />
+                  </InputAdornment>
+                )
+              }}
+            />
           </Grid>
         </Grid>
+
+        {!latestOpenSession && !examSessionId && (
+          <Alert severity='info' sx={{ mt: 4 }}>
+            {text.selectPrompt}
+          </Alert>
+        )}
+        {latestOpenSession && examSessionId === latestOpenSession.id && (
+          <Alert severity='success' sx={{ mt: 4 }}>
+            {text.latestOpen}: <strong>{latestOpenSession.name}</strong>
+          </Alert>
+        )}
       </CardContent>
 
       {loading ? (
-        <Box className='flex justify-center p-8'><CircularProgress /></Box>
+        <Box className='flex justify-center p-8'>
+          <CircularProgress />
+        </Box>
+      ) : !examSessionId ? (
+        <CardContent>
+          <Alert severity='info'>{text.selectPrompt}</Alert>
+        </CardContent>
       ) : sortedRegistrations.length === 0 ? (
-        <CardContent><Alert severity='info'>{text.empty}</Alert></CardContent>
+        <CardContent>
+          <Alert severity='info'>{text.empty}</Alert>
+        </CardContent>
       ) : (
         <>
           <TableContainer>
@@ -263,7 +417,7 @@ const BeltExamRegistrationsView = () => {
                   <TableCell>{text.class}</TableCell>
                   <TableCell>{text.registerStatus}</TableCell>
                   <TableCell>{text.feePaid}</TableCell>
-                  <TableCell>Phí bắt buộc</TableCell>
+                  <TableCell>{text.requiredFees}</TableCell>
                   <TableCell>{text.currentBelt}</TableCell>
                   <TableCell>{text.targetBelt}</TableCell>
                   <TableCell>{text.registeredBy}</TableCell>
@@ -272,37 +426,76 @@ const BeltExamRegistrationsView = () => {
               <TableBody>
                 {pagedRows.map(row => (
                   <TableRow key={row.id} hover onClick={() => openStudentDrawer(row.studentId)} sx={{ cursor: 'pointer' }}>
-                    <TableCell><Typography color='text.primary' fontWeight={600}>{row.studentName}</Typography><Typography variant='caption' color='text.secondary'>{formatDateTime(row.createdAt)}</Typography></TableCell>
+                    <TableCell>
+                      <Typography color='text.primary' fontWeight={600}>
+                        {row.studentName}
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary'>
+                        {formatDateTime(row.createdAt)}
+                      </Typography>
+                    </TableCell>
                     <TableCell>{row.examSessionName}</TableCell>
                     <TableCell>{row.className}</TableCell>
-                    <TableCell><Tooltip title={row.rejectionReason || ''}><Chip label={statusLabels[row.status] || row.status} color={statusColors[row.status] || 'secondary'} size='small' variant='tonal' /></Tooltip></TableCell>
                     <TableCell>
-                      <Box className='flex flex-col items-start gap-1'>
-                        <Chip label={row.isFeePaid ? text.paid : text.unpaid} color={row.isFeePaid ? 'success' : 'warning'} size='small' variant='tonal' />
-                        {row.isFeePaid && row.paidAt && <Typography variant='caption' color='text.secondary'>{formatDateTime(row.paidAt)}</Typography>}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box className='flex items-center gap-1'>
+                      <Tooltip title={row.rejectionReason || ''}>
                         <Chip
-                          label={row.oneTimeFeesCompleted ? 'Hoàn thành' : 'Chưa'}
-                          color={row.oneTimeFeesCompleted ? 'success' : 'warning'}
+                          label={statusLabels[row.status] || row.status}
+                          color={statusColors[row.status] || 'secondary'}
                           size='small'
                           variant='tonal'
                         />
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Box className='flex flex-col items-start gap-1'>
+                        <Chip
+                          label={row.isFeePaid ? text.paid : text.unpaid}
+                          color={row.isFeePaid ? 'success' : 'warning'}
+                          size='small'
+                          variant='tonal'
+                        />
+                        {row.isFeePaid && row.paidAt && (
+                          <Typography variant='caption' color='text.secondary'>
+                            {formatDateTime(row.paidAt)}
+                          </Typography>
+                        )}
                       </Box>
                     </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={row.oneTimeFeesCompleted ? 'Hoàn thành' : 'Chưa'}
+                        color={row.oneTimeFeesCompleted ? 'success' : 'warning'}
+                        size='small'
+                        variant='tonal'
+                      />
+                    </TableCell>
                     <TableCell>{row.currentBeltLevelName || text.noBelt}</TableCell>
-                    <TableCell><Typography color='primary.main' fontWeight={600}>{row.targetBeltLevelName}</Typography></TableCell>
+                    <TableCell>
+                      <Typography color='primary.main' fontWeight={600}>
+                        {row.targetBeltLevelName}
+                      </Typography>
+                    </TableCell>
                     <TableCell>{row.registeredByUserName || '-'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </TableContainer>
-          <TablePagination component='div' count={sortedRegistrations.length} page={page} rowsPerPage={rowsPerPage} rowsPerPageOptions={[10, 25, 50, 100]} onPageChange={(_, nextPage) => setPage(nextPage)} onRowsPerPageChange={event => { setRowsPerPage(Number(event.target.value)); setPage(0) }} />
+          <TablePagination
+            component='div'
+            count={sortedRegistrations.length}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            onPageChange={(_, nextPage) => setPage(nextPage)}
+            onRowsPerPageChange={event => {
+              setRowsPerPage(Number(event.target.value))
+              setPage(0)
+            }}
+          />
         </>
       )}
+
       {loadingStudent && (
         <Box
           sx={{
@@ -326,10 +519,26 @@ const BeltExamRegistrationsView = () => {
           setSelectedStudent(null)
         }}
         student={selectedStudent}
+        onEdit={
+          studentPermissions.canUpdate
+            ? student => {
+                setViewStudentOpen(false)
+                setSelectedStudent(student)
+                setEditStudentOpen(true)
+              }
+            : undefined
+        }
+      />
+      <EditStudentDrawer
+        open={editStudentOpen}
+        onClose={() => {
+          setEditStudentOpen(false)
+        }}
+        student={selectedStudent}
+        onSaved={handleStudentUpdated}
       />
     </Card>
   )
 }
 
 export default BeltExamRegistrationsView
-

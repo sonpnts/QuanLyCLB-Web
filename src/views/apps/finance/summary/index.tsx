@@ -1,7 +1,9 @@
-'use client'
+﻿'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import Alert from '@mui/material/Alert'
+import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -17,41 +19,105 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
-import type { ClassType } from '@/types/apps/classTypes'
-import type { BranchType } from '@/types/apps/branchTypes'
-import type { UsersType } from '@/types/apps/userTypes'
-import type { ClassInstructorSummaryType, InstructorClassCollectionType } from '@/types/apps/financeTypes'
-import classService from '@/services/classService'
-import branchService from '@/services/branchService'
-import userService from '@/services/userService'
-import financeService from '@/services/financeService'
-import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
+import { useNotification } from '@/contexts/notificationContext'
+import branchService from '@/services/branchService'
+import cashHandoverService from '@/services/cashHandoverService'
+import classService from '@/services/classService'
+import financeService from '@/services/financeService'
+import paymentService from '@/services/paymentService'
+import productSaleService from '@/services/productSaleService'
+import userService from '@/services/userService'
+import type { BranchType } from '@/types/apps/branchTypes'
+import type { ClassType } from '@/types/apps/classTypes'
+import type { InstructorClassCollectionType } from '@/types/apps/financeTypes'
+import type { UsersType } from '@/types/apps/userTypes'
+import { exportToExcel, formatVnCurrency, formatVnDate } from '@/utils/exportToExcel'
+import { hasPermission } from '@/utils/permissionUtils'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 import tableStyles from '@core/styles/table.module.css'
-import { exportToExcel, formatVnCurrency, formatVnDate } from '@/utils/exportToExcel'
+
+type StatisticsMode = 'all' | 'class' | 'branch' | 'instructor'
+type TimePreset = 'thisMonth' | 'lastMonth' | 'custom'
+
+type SummaryCardProps = {
+  title: string
+  amount: number
+  color?: string
+  subtitle?: string
+}
+
+type SummaryTotals = {
+  tuitionTotal: number
+  productSalesTotal: number
+  coachCollectedTotal: number
+  handedOverTotal: number
+}
+
+const ALL_PAGE_SIZE = 10000
+
+const pad2 = (value: number) => String(value).padStart(2, '0')
+
+const toDateInputValue = (date: Date) =>
+  `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+
+const getPresetRange = (preset: TimePreset) => {
+  const now = new Date()
+
+  if (preset === 'lastMonth') {
+    const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+
+    return {
+      fromDate: toDateInputValue(firstDayLastMonth),
+      toDate: toDateInputValue(lastDayLastMonth),
+      asOfDate: toDateInputValue(lastDayLastMonth)
+    }
+  }
+
+  const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  return {
+    fromDate: toDateInputValue(firstDayThisMonth),
+    toDate: toDateInputValue(now),
+    asOfDate: toDateInputValue(now)
+  }
+}
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 
-type SummaryCardProps = { title: string; amount: number; color?: string }
-
-const SummaryCard = ({ title, amount, color = 'success.main' }: SummaryCardProps) => (
+const SummaryCard = ({ title, amount, color = 'success.main', subtitle }: SummaryCardProps) => (
   <Card variant='outlined' sx={{ height: '100%' }}>
     <CardContent>
       <Typography variant='body2' color='text.secondary' gutterBottom>
         {title}
       </Typography>
-      <Typography variant='h5' color={color} sx={{ mt: 1 }}>
+      <Typography variant='h5' color={color} sx={{ mt: 1, fontWeight: 700 }}>
         {formatCurrency(amount)}
       </Typography>
+      {subtitle ? (
+        <Typography variant='caption' color='text.secondary'>
+          {subtitle}
+        </Typography>
+      ) : null}
     </CardContent>
   </Card>
 )
 
+const emptyTotals = (): SummaryTotals => ({
+  tuitionTotal: 0,
+  productSalesTotal: 0,
+  coachCollectedTotal: 0,
+  handedOverTotal: 0
+})
+
 const FinanceSummaryView = () => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
+
+  const isAdmin = hasPermission(auth?.permissions, 'Finance.View') || hasAdminRole(auth?.roles)
 
   const [classes, setClasses] = useState<ClassType[]>([])
   const [branches, setBranches] = useState<BranchType[]>([])
@@ -59,243 +125,503 @@ const FinanceSummaryView = () => {
   const [loading, setLoading] = useState(false)
 
   const [filters, setFilters] = useState({
+    statisticsMode: (isAdmin ? 'all' : 'instructor') as StatisticsMode,
+    timePreset: 'thisMonth' as TimePreset,
     classId: '',
     branchId: '',
     instructorId: '',
-    fromDate: '',
-    toDate: '',
-    asOfDate: new Date().toISOString().split('T')[0]
+    ...getPresetRange('thisMonth')
   })
 
-  const [classTuitionAmount, setClassTuitionAmount] = useState(0)
-  const [productSalesAmount, setProductSalesAmount] = useState(0)
-  const [branchAmount, setBranchAmount] = useState(0)
-  const [instructorSummary, setInstructorSummary] = useState<ClassInstructorSummaryType | null>(null)
+  const [totals, setTotals] = useState<SummaryTotals>(emptyTotals)
   const [collections, setCollections] = useState<InstructorClassCollectionType[]>([])
 
-  const mountedRef = useRef(true)
   useEffect(() => {
-    mountedRef.current = true
-    return () => { mountedRef.current = false }
-  }, [])
+    setFilters(prev => ({
+      ...prev,
+      statisticsMode: isAdmin ? prev.statisticsMode : 'instructor'
+    }))
+  }, [isAdmin])
+
+  useEffect(() => {
+    if (filters.timePreset === 'custom') return
+
+    const nextRange = getPresetRange(filters.timePreset)
+    setFilters(prev => ({
+      ...prev,
+      ...nextRange
+    }))
+  }, [filters.timePreset])
 
   useEffect(() => {
     let mounted = true
+
     const loadReferences = async () => {
       try {
         const [classRes, branchRes, instructorRes] = await Promise.all([
-          classService.getClasses({ isActive: true, pageSize: 1000 }), // Chỉ hiển thị lớp đang hoạt động trong thống kê
-          branchService.getBranches({}),
+          classService.getClasses({ isActive: true, pageSize: 1000 }),
+          branchService.getBranches({ IsActive: true, PageSize: 1000 }),
           userService.getCoaches()
         ])
+
+        if (!mounted) return
 
         const nextClasses = classRes.success && classRes.data ? classRes.data : []
         const nextBranches = branchRes.success && branchRes.data ? branchRes.data : []
         const nextInstructors = instructorRes.success && instructorRes.data ? instructorRes.data : []
+        const currentUserInstructorId = nextInstructors.find(item => item.id === auth?.user?.id)?.id || auth?.user?.id || ''
 
+        setClasses(nextClasses)
+        setBranches(nextBranches)
+        setInstructors(nextInstructors)
+        setFilters(prev => ({
+          ...prev,
+          instructorId: prev.instructorId || currentUserInstructorId
+        }))
+      } catch {
         if (mounted) {
-          setClasses(nextClasses)
-          setBranches(nextBranches)
-          setInstructors(nextInstructors)
-
-          const defaultInstructorId =
-            nextInstructors.find(item => item.id === auth?.user.id)?.id || nextInstructors[0]?.id || ''
-
-          setFilters(prev => ({
-            ...prev,
-            classId: prev.classId || nextClasses[0]?.id || '',
-            branchId: prev.branchId || nextBranches[0]?.id || '',
-            instructorId: prev.instructorId || defaultInstructorId
-          }))
+          showNotification('Không thể tải dữ liệu danh mục thống kê.', 'error')
         }
-      } catch (error) {
-        if (mounted) showNotification('Không thể tải dữ liệu danh mục thống kê.', 'error')
       }
     }
 
     loadReferences()
-    return () => { mounted = false }
-  }, [auth?.user.id, showNotification])
+
+    return () => {
+      mounted = false
+    }
+  }, [auth?.user?.id, showNotification])
+
+  const classIdsByBranch = useMemo(() => {
+    return classes.reduce<Record<string, string[]>>((accumulator, item) => {
+      const branchId = item.branchId || item.branch?.id
+      if (!branchId) return accumulator
+
+      if (!accumulator[branchId]) {
+        accumulator[branchId] = []
+      }
+
+      accumulator[branchId].push(item.id)
+      return accumulator
+    }, {})
+  }, [classes])
+
+  const selectedBranchClassIds = useMemo(() => {
+    if (!filters.branchId) return []
+    return classIdsByBranch[filters.branchId] || []
+  }, [classIdsByBranch, filters.branchId])
+
+  const modeRequiresSelection = useMemo(() => {
+    if (filters.statisticsMode === 'class') return Boolean(filters.classId)
+    if (filters.statisticsMode === 'branch') return Boolean(filters.branchId)
+    if (filters.statisticsMode === 'instructor') return Boolean(filters.instructorId)
+    return true
+  }, [filters.branchId, filters.classId, filters.instructorId, filters.statisticsMode])
+
+  const getModeLabel = (mode: StatisticsMode) => {
+    switch (mode) {
+      case 'all':
+        return 'Tất cả'
+      case 'class':
+        return 'Theo lớp'
+      case 'branch':
+        return 'Theo chi nhánh'
+      case 'instructor':
+        return 'Theo HLV'
+      default:
+        return 'Tất cả'
+    }
+  }
+
+  const getTimePresetLabel = (preset: TimePreset) => {
+    switch (preset) {
+      case 'thisMonth':
+        return 'tháng này'
+      case 'lastMonth':
+        return 'tháng trước'
+      case 'custom':
+        return 'thời gian tùy chỉnh'
+      default:
+        return 'tháng này'
+    }
+  }
+
+  const loadCollectionsForMode = useCallback(async (): Promise<InstructorClassCollectionType[]> => {
+    if (filters.statisticsMode === 'instructor') {
+      if (!filters.instructorId) return []
+      const response = await financeService.getClassCollectionsByInstructor(filters.instructorId, filters.asOfDate || undefined)
+      return response.success && response.data ? response.data : []
+    }
+
+    const instructorIds = instructors.map(item => item.id).filter(Boolean)
+    if (instructorIds.length === 0) return []
+
+    const responses = await Promise.all(
+      instructorIds.map(instructorId => financeService.getClassCollectionsByInstructor(instructorId, filters.asOfDate || undefined))
+    )
+
+    let rows = responses.flatMap(response => (response.success && response.data ? response.data : []))
+
+    if (filters.statisticsMode === 'class' && filters.classId) {
+      rows = rows.filter(item => item.classId === filters.classId)
+    }
+
+    if (filters.statisticsMode === 'branch' && filters.branchId) {
+      const classIds = new Set(selectedBranchClassIds)
+      rows = rows.filter(item => classIds.has(item.classId))
+    }
+
+    return rows
+  }, [filters.asOfDate, filters.branchId, filters.classId, filters.instructorId, filters.statisticsMode, instructors, selectedBranchClassIds])
 
   const loadSummary = useCallback(async () => {
+    if (!modeRequiresSelection) {
+      setTotals(emptyTotals())
+      setCollections([])
+      return
+    }
+
     try {
-      if (mountedRef.current) setLoading(true)
+      setLoading(true)
 
-      if (filters.classId) {
-        const tuitionRes = await financeService.getClassTuitionSummary(filters.classId, {
-          fromDate: filters.fromDate || undefined,
-          toDate: filters.toDate || undefined
-        })
-
-        if (mountedRef.current && tuitionRes.success && tuitionRes.data) {
-          setClassTuitionAmount(tuitionRes.data.amount)
-        }
+      const paymentParams = {
+        pageSize: ALL_PAGE_SIZE,
+        paymentDateFrom: filters.fromDate || undefined,
+        paymentDateTo: filters.toDate || undefined
       }
 
-      const productSalesRes = await financeService.getProductSalesSummary({
-        classId: filters.classId || undefined,
-        branchId: filters.branchId || undefined,
-        instructorId: filters.instructorId || undefined,
-        fromDate: filters.fromDate || undefined,
-        toDate: filters.toDate || undefined
+      const [paymentRes, productSaleRes, cashHandoverRes, collectionRows] = await Promise.all([
+        paymentService.getPayments(paymentParams),
+        productSaleService.getProductSales({
+          pageSize: ALL_PAGE_SIZE,
+          saleDateFrom: filters.fromDate || undefined,
+          saleDateTo: filters.toDate || undefined,
+          isActive: true
+        }),
+        cashHandoverService.getCashHandovers({
+          handoverFrom: filters.fromDate || undefined,
+          handoverTo: filters.toDate || undefined
+        }),
+        loadCollectionsForMode()
+      ])
+
+      const payments = paymentRes.success && paymentRes.data ? paymentRes.data : []
+      const productSales = productSaleRes.success && productSaleRes.data ? productSaleRes.data : []
+      const cashHandovers = cashHandoverRes.success && cashHandoverRes.data ? cashHandoverRes.data : []
+      const branchClassIdSet = new Set(selectedBranchClassIds)
+
+      const filteredPayments = payments.filter(item => {
+        if (filters.statisticsMode === 'class') {
+          return item.classId === filters.classId
+        }
+
+        if (filters.statisticsMode === 'branch') {
+          return Boolean(item.classId && branchClassIdSet.has(item.classId))
+        }
+
+        if (filters.statisticsMode === 'instructor') {
+          return item.collectedByUserId === filters.instructorId
+        }
+
+        return true
       })
 
-      if (mountedRef.current && productSalesRes.success && productSalesRes.data) {
-        setProductSalesAmount(productSalesRes.data.amount)
-      }
-
-      if (filters.classId && filters.instructorId) {
-        const instructorRes = await financeService.getClassInstructorSummary(
-          filters.classId,
-          filters.instructorId,
-          {
-            fromDate: filters.fromDate || undefined,
-            toDate: filters.toDate || undefined
-          }
-        )
-
-        if (mountedRef.current && instructorRes.success && instructorRes.data) {
-          setInstructorSummary(instructorRes.data)
+      const filteredProductSales = productSales.filter(item => {
+        if (filters.statisticsMode === 'class') {
+          return item.classId === filters.classId
         }
-      } else {
-        if (mountedRef.current) setInstructorSummary(null)
-      }
 
-      if (filters.branchId) {
-        const branchRes = await financeService.getBranchSummary(filters.branchId, {
-          fromDate: filters.fromDate || undefined,
-          toDate: filters.toDate || undefined
-        })
-
-        if (mountedRef.current && branchRes.success && branchRes.data) {
-          setBranchAmount(branchRes.data.amount)
+        if (filters.statisticsMode === 'branch') {
+          return Boolean(item.classId && branchClassIdSet.has(item.classId))
         }
-      }
 
-      const classCollectionsRes = filters.instructorId
-        ? await financeService.getClassCollectionsByInstructor(filters.instructorId, filters.asOfDate || undefined)
-        : await financeService.getMyClassCollections(filters.asOfDate || undefined)
-
-      if (mountedRef.current) {
-        if (classCollectionsRes.success && classCollectionsRes.data) {
-          setCollections(classCollectionsRes.data)
-        } else {
-          setCollections([])
+        if (filters.statisticsMode === 'instructor') {
+          return item.soldByUserId === filters.instructorId
         }
-      }
-    } catch (error) {
-      if (mountedRef.current) showNotification('Không thể tải dữ liệu thống kê tài chính.', 'error')
+
+        return true
+      })
+
+      const filteredCashHandovers = cashHandovers.filter(item => {
+        if (item.status === 'Rejected') return false
+
+        if (filters.statisticsMode === 'class') {
+          return item.classId === filters.classId
+        }
+
+        if (filters.statisticsMode === 'branch') {
+          return !!item.classId && branchClassIdSet.has(item.classId)
+        }
+
+        if (filters.statisticsMode === 'instructor') {
+          return item.instructorId === filters.instructorId
+        }
+
+        return true
+      })
+
+      const tuitionTotal = filteredPayments
+        .filter(item => Number(item.type) === 0)
+        .reduce((sum, item) => sum + Number(item.amount || 0), 0)
+
+      const productSalesTotal = filteredProductSales.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0)
+      const coachCollectedTotal = filteredPayments.reduce((sum, item) => sum + Number(item.amount || 0), 0) + productSalesTotal
+      const handedOverTotal = filteredCashHandovers.reduce((sum, item) => sum + Number(item.amountHandedOver || 0), 0)
+
+      setTotals({
+        tuitionTotal,
+        productSalesTotal,
+        coachCollectedTotal,
+        handedOverTotal
+      })
+
+      setCollections(collectionRows)
+    } catch {
+      showNotification('Không thể tải dữ liệu thống kê tài chính.', 'error')
+      setTotals(emptyTotals())
+      setCollections([])
     } finally {
-      if (mountedRef.current) setLoading(false)
+      setLoading(false)
     }
-  }, [
-    filters.classId,
-    filters.branchId,
-    filters.instructorId,
-    filters.fromDate,
-    filters.toDate,
-    filters.asOfDate,
-    showNotification
-  ])
+  }, [filters.branchId, filters.classId, filters.fromDate, filters.instructorId, filters.statisticsMode, filters.toDate, loadCollectionsForMode, modeRequiresSelection, selectedBranchClassIds, showNotification])
 
   useEffect(() => {
-    if (!filters.classId && !filters.branchId && !filters.instructorId) return
     loadSummary()
-  }, [loadSummary, filters.classId, filters.branchId, filters.instructorId])
+  }, [loadSummary])
 
-  const instructorTotal = useMemo(() => instructorSummary?.totalCollected || 0, [instructorSummary])
+  const modeDescription = useMemo(() => {
+    switch (filters.statisticsMode) {
+      case 'class': {
+        const className = classes.find(item => item.id === filters.classId)?.name
+        return className
+          ? `Đang thống kê theo lớp ${className}, theo ${getTimePresetLabel(filters.timePreset)}.`
+          : 'Vui lòng chọn lớp để xem thống kê.'
+      }
+      case 'branch': {
+        const branchName = branches.find(item => item.id === filters.branchId)?.name
+        return branchName
+          ? `Đang thống kê theo chi nhánh ${branchName}, theo ${getTimePresetLabel(filters.timePreset)}.`
+          : 'Vui lòng chọn chi nhánh để xem thống kê.'
+      }
+      case 'instructor': {
+        const instructorName = instructors.find(item => item.id === filters.instructorId)?.fullName
+        return instructorName
+          ? `Đang thống kê theo HLV ${instructorName}, theo ${getTimePresetLabel(filters.timePreset)}.`
+          : 'Vui lòng chọn HLV để xem thống kê.'
+      }
+      case 'all':
+      default:
+        return `Đang thống kê toàn bộ dữ liệu trong phạm vi bạn được phép xem, theo ${getTimePresetLabel(filters.timePreset)}.`
+    }
+  }, [branches, classes, filters.branchId, filters.classId, filters.instructorId, filters.statisticsMode, filters.timePreset, instructors])
+
+  const handleModeChange = (mode: StatisticsMode) => {
+    setFilters(prev => ({
+      ...prev,
+      statisticsMode: mode,
+      classId: mode === 'class' ? prev.classId : '',
+      branchId: mode === 'branch' ? prev.branchId : '',
+      instructorId: mode === 'instructor' ? (prev.instructorId || auth?.user?.id || '') : prev.instructorId
+    }))
+  }
+
+  const handleTimePresetChange = (preset: TimePreset) => {
+    if (preset === 'custom') {
+      setFilters(prev => ({
+        ...prev,
+        timePreset: preset
+      }))
+      return
+    }
+
+    setFilters(prev => ({
+      ...prev,
+      timePreset: preset,
+      ...getPresetRange(preset)
+    }))
+  }
+
+  const exportReport = () => {
+    const summaryRows = [
+      { ten: 'Tổng học phí đã thu', soTien: totals.tuitionTotal },
+      { ten: 'Tổng doanh thu bán sản phẩm', soTien: totals.productSalesTotal },
+      { ten: 'Tổng tiền HLV đã thu', soTien: totals.coachCollectedTotal },
+      { ten: 'Tổng tiền đã bàn giao', soTien: totals.handedOverTotal }
+    ]
+
+    exportToExcel({
+      filename: `thong-ke-tai-chinh_${filters.statisticsMode}`,
+      rows: summaryRows,
+      columns: [
+        { header: 'Chỉ số', accessor: 'ten' },
+        { header: 'Số tiền (VNĐ)', accessor: 'soTien', formatter: formatVnCurrency }
+      ]
+    })
+
+    if (collections.length > 0) {
+      exportToExcel({
+        filename: `thong-ke-tai-chinh_chi-tiet_${filters.statisticsMode}`,
+        rows: collections,
+        columns: [
+          { header: 'HLV', accessor: row => row.instructorName || row.instructorId },
+          { header: 'Lớp', accessor: row => row.className || row.classId },
+          { header: 'Học phí thu', accessor: 'tuitionCollectedToDate', formatter: formatVnCurrency },
+          { header: 'Lệ phí thi', accessor: 'examFeeCollectedToDate', formatter: formatVnCurrency },
+          { header: 'Khoản thu khác', accessor: 'otherPaymentsCollectedToDate', formatter: formatVnCurrency },
+          { header: 'Bán sản phẩm', accessor: 'productSalesCollectedToDate', formatter: formatVnCurrency },
+          { header: 'Tổng thu', accessor: 'totalCollectedToDate', formatter: formatVnCurrency },
+          { header: 'Đã bàn giao', accessor: 'totalHandedOver', formatter: formatVnCurrency },
+          { header: 'Còn lại', accessor: 'availableToHandover', formatter: formatVnCurrency },
+          { header: 'Tính đến ngày', accessor: 'asOf', formatter: formatVnDate }
+        ]
+      })
+    }
+
+    showNotification('Đã xuất báo cáo tài chính ra file Excel.', 'success')
+  }
 
   return (
     <Stack spacing={5}>
       <Card>
-        <CardHeader title='Thống kê tài chính' />
+        <CardHeader title='Thống kê tài chính' subheader='Chọn phạm vi thống kê và mốc thời gian cần xem.' />
         <Divider />
         <CardContent>
           <Grid container spacing={4}>
             <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth>
-                <InputLabel>Lớp</InputLabel>
+                <InputLabel>Kiểu thống kê</InputLabel>
                 <Select
-                  label='Lớp'
-                  value={filters.classId}
-                  onChange={event => setFilters(prev => ({ ...prev, classId: event.target.value }))}
+                  label='Kiểu thống kê'
+                  value={filters.statisticsMode}
+                  onChange={event => handleModeChange(event.target.value as StatisticsMode)}
                 >
-                  <MenuItem value=''>-- Tất cả --</MenuItem>
-                  {classes.map(item => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.name}
-                    </MenuItem>
-                  ))}
+                  {isAdmin ? <MenuItem value='all'>Tất cả</MenuItem> : null}
+                  {isAdmin ? <MenuItem value='class'>Theo lớp</MenuItem> : null}
+                  {isAdmin ? <MenuItem value='branch'>Theo chi nhánh</MenuItem> : null}
+                  <MenuItem value='instructor'>Theo HLV</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
+
             <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth>
-                <InputLabel>Chi nhánh</InputLabel>
+                <InputLabel>Thời gian thống kê</InputLabel>
                 <Select
-                  label='Chi nhánh'
-                  value={filters.branchId}
-                  onChange={event => setFilters(prev => ({ ...prev, branchId: event.target.value }))}
+                  label='Thời gian thống kê'
+                  value={filters.timePreset}
+                  onChange={event => handleTimePresetChange(event.target.value as TimePreset)}
                 >
-                  <MenuItem value=''>-- Tất cả --</MenuItem>
-                  {branches.map(item => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.name}
-                    </MenuItem>
-                  ))}
+                  <MenuItem value='thisMonth'>Tháng này</MenuItem>
+                  <MenuItem value='lastMonth'>Tháng trước</MenuItem>
+                  <MenuItem value='custom'>Tùy chỉnh</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FormControl fullWidth>
-                <InputLabel>Huấn luyện viên</InputLabel>
-                <Select
-                  label='Huấn luyện viên'
-                  value={filters.instructorId}
-                  onChange={event => setFilters(prev => ({ ...prev, instructorId: event.target.value }))}
-                >
-                  <MenuItem value=''>Của tôi</MenuItem>
-                  {instructors.map(item => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.fullName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                fullWidth
-                type='date'
-                label='Từ ngày'
-                slotProps={{ inputLabel: { shrink: true } }}
-                value={filters.fromDate}
-                onChange={event => setFilters(prev => ({ ...prev, fromDate: event.target.value }))}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                fullWidth
-                type='date'
-                label='Đến ngày'
-                slotProps={{ inputLabel: { shrink: true } }}
-                value={filters.toDate}
-                onChange={event => setFilters(prev => ({ ...prev, toDate: event.target.value }))}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                fullWidth
-                type='date'
-                label='Tính đến ngày (bàn giao)'
-                slotProps={{ inputLabel: { shrink: true } }}
-                value={filters.asOfDate}
-                onChange={event => setFilters(prev => ({ ...prev, asOfDate: event.target.value }))}
-              />
-            </Grid>
+
+            {filters.statisticsMode === 'class' ? (
+              <Grid size={{ xs: 12, md: 4 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Lớp</InputLabel>
+                  <Select
+                    label='Lớp'
+                    value={filters.classId}
+                    onChange={event => setFilters(prev => ({ ...prev, classId: String(event.target.value) }))}
+                  >
+                    {classes.map(item => (
+                      <MenuItem key={item.id} value={item.id}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            ) : null}
+
+            {filters.statisticsMode === 'branch' ? (
+              <Grid size={{ xs: 12, md: 4 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Chi nhánh</InputLabel>
+                  <Select
+                    label='Chi nhánh'
+                    value={filters.branchId}
+                    onChange={event => setFilters(prev => ({ ...prev, branchId: String(event.target.value) }))}
+                  >
+                    {branches.map(item => (
+                      <MenuItem key={item.id} value={item.id}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            ) : null}
+
+            {filters.statisticsMode === 'instructor' ? (
+              <Grid size={{ xs: 12, md: 4 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Huấn luyện viên</InputLabel>
+                  <Select
+                    label='Huấn luyện viên'
+                    value={filters.instructorId}
+                    onChange={event => setFilters(prev => ({ ...prev, instructorId: String(event.target.value) }))}
+                  >
+                    {instructors.map(item => (
+                      <MenuItem key={item.id} value={item.id}>
+                        {item.fullName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            ) : null}
+
+            {filters.timePreset === 'custom' ? (
+              <>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <TextField
+                    fullWidth
+                    type='date'
+                    label='Từ ngày'
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    value={filters.fromDate}
+                    onChange={event =>
+                      setFilters(prev => ({
+                        ...prev,
+                        fromDate: event.target.value
+                      }))
+                    }
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <TextField
+                    fullWidth
+                    type='date'
+                    label='Đến ngày'
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    value={filters.toDate}
+                    onChange={event =>
+                      setFilters(prev => ({
+                        ...prev,
+                        toDate: event.target.value,
+                        asOfDate: event.target.value || prev.asOfDate
+                      }))
+                    }
+                  />
+                </Grid>
+              </>
+            ) : (
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  fullWidth
+                  label='Khoảng thời gian áp dụng'
+                  value={`${filters.fromDate || '--'} đến ${filters.toDate || '--'}`}
+                  slotProps={{ input: { readOnly: true } }}
+                />
+              </Grid>
+            )}
           </Grid>
 
-          <div className='mt-4 flex gap-2 flex-wrap'>
+          <Box className='mt-4 flex gap-2 flex-wrap'>
             <Button variant='contained' onClick={loadSummary} startIcon={<i className='ri-refresh-line' />}>
               Làm mới thống kê
             </Button>
@@ -304,46 +630,15 @@ const FinanceSummaryView = () => {
               color='success'
               startIcon={<i className='ri-file-excel-2-line' />}
               disabled={loading}
-              onClick={() => {
-                // 1. Xuất các chỉ số tổng quan
-                const summaryRows = [
-                  { ten: 'Tổng học phí (lớp đã chọn)', soTien: classTuitionAmount },
-                  { ten: 'Tổng doanh thu bán sản phẩm', soTien: productSalesAmount },
-                  { ten: 'Tổng tiền HLV đã thu (lớp)', soTien: instructorTotal },
-                  { ten: 'Tổng doanh thu chi nhánh', soTien: branchAmount }
-                ]
-                exportToExcel({
-                  filename: 'thong-ke-tai-chinh_tong-quan',
-                  rows: summaryRows,
-                  columns: [
-                    { header: 'Chỉ số', accessor: 'ten' },
-                    { header: 'Số tiền (VNĐ)', accessor: 'soTien', formatter: formatVnCurrency }
-                  ]
-                })
-
-                // 2. Xuất chi tiết thu theo lớp nếu có
-                if (collections.length > 0) {
-                  exportToExcel({
-                    filename: 'thong-ke-tai-chinh_chi-tiet-theo-lop',
-                    rows: collections,
-                    columns: [
-                      { header: 'Lớp', accessor: r => r.className || r.classId },
-                      { header: 'Học phí thu', accessor: 'tuitionCollectedToDate', formatter: formatVnCurrency },
-                      { header: 'Bán sản phẩm', accessor: 'productSalesCollectedToDate', formatter: formatVnCurrency },
-                      { header: 'Tổng thu', accessor: 'totalCollectedToDate', formatter: formatVnCurrency },
-                      { header: 'Đã bàn giao', accessor: 'totalHandedOver', formatter: formatVnCurrency },
-                      { header: 'Còn lại', accessor: 'availableToHandover', formatter: formatVnCurrency },
-                      { header: 'Tính đến ngày', accessor: 'asOf', formatter: formatVnDate }
-                    ]
-                  })
-                }
-
-                showNotification('Đã xuất báo cáo tài chính ra file Excel.', 'success')
-              }}
+              onClick={exportReport}
             >
               Xuất báo cáo Excel
             </Button>
-          </div>
+          </Box>
+
+          <Box className='mt-4'>
+            <Alert severity={modeRequiresSelection ? 'info' : 'warning'}>{modeDescription}</Alert>
+          </Box>
         </CardContent>
       </Card>
 
@@ -353,33 +648,38 @@ const FinanceSummaryView = () => {
             <CircularProgress />
           </CardContent>
         </Card>
+      ) : !modeRequiresSelection ? (
+        <Alert severity='warning'>Vui lòng chọn đủ thông tin cho kiểu thống kê {getModeLabel(filters.statisticsMode).toLowerCase()}.</Alert>
       ) : (
         <>
           <Grid container spacing={4}>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <SummaryCard title='Tổng học phí (lớp đã chọn)' amount={classTuitionAmount} />
+              <SummaryCard title='Tổng học phí đã thu' amount={totals.tuitionTotal} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <SummaryCard title='Tổng doanh thu bán sản phẩm' amount={productSalesAmount} color='info.main' />
+              <SummaryCard title='Tổng doanh thu bán sản phẩm' amount={totals.productSalesTotal} color='info.main' />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <SummaryCard title='Tổng tiền HLV đã thu (lớp)' amount={instructorTotal} color='warning.main' />
+              <SummaryCard title='Tổng tiền HLV đã thu' amount={totals.coachCollectedTotal} color='warning.main' />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <SummaryCard title='Tổng doanh thu chi nhánh' amount={branchAmount} color='secondary.main' />
+              <SummaryCard title='Tổng tiền đã bàn giao' amount={totals.handedOverTotal} color='secondary.main' />
             </Grid>
           </Grid>
 
           <Card>
-            <CardHeader title='Chi tiết thu theo lớp của huấn luyện viên' />
+            <CardHeader title={`Chi tiết thống kê ${getModeLabel(filters.statisticsMode).toLowerCase()}`} />
             <Divider />
             <CardContent>
               <div className='overflow-x-auto'>
                 <table className={tableStyles.table}>
                   <thead>
                     <tr>
+                      <th>HLV</th>
                       <th>Lớp</th>
                       <th>Học phí thu được</th>
+                      <th>Lệ phí thi</th>
+                      <th>Các khoản thu khác</th>
                       <th>Bán sản phẩm</th>
                       <th>Tổng thu</th>
                       <th>Đã bàn giao</th>
@@ -390,19 +690,22 @@ const FinanceSummaryView = () => {
                   <tbody>
                     {collections.length === 0 ? (
                       <tr>
-                        <td className='text-center' colSpan={7}>
+                        <td className='text-center' colSpan={10}>
                           Không có dữ liệu
                         </td>
                       </tr>
                     ) : (
                       collections.map(item => (
                         <tr key={`${item.instructorId}-${item.classId}`}>
+                          <td>{item.instructorName || item.instructorId}</td>
                           <td>
                             <Typography variant='body2' className='font-medium'>
                               {item.className || item.classId}
                             </Typography>
                           </td>
                           <td>{formatCurrency(item.tuitionCollectedToDate)}</td>
+                          <td>{formatCurrency(item.examFeeCollectedToDate)}</td>
+                          <td>{formatCurrency(item.otherPaymentsCollectedToDate)}</td>
                           <td>{formatCurrency(item.productSalesCollectedToDate)}</td>
                           <td>
                             <Typography variant='body2' color='success.main' className='font-medium'>

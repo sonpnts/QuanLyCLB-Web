@@ -212,6 +212,7 @@ const AddStudentDrawer = ({
             onChange={code => setFormData(prev => ({ ...prev, code }))}
             onMemberInfoConfirmed={handleMemberInfoConfirmed}
             locked={false}
+            active={open}
           />
 
           {classOptions.length > 0 && (

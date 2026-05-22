@@ -14,6 +14,7 @@ import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
 import Collapse from '@mui/material/Collapse'
 import FormControl from '@mui/material/FormControl'
+import Grid from '@mui/material/Grid2'
 import InputAdornment from '@mui/material/InputAdornment'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
@@ -33,7 +34,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import oneTimeFeeService from '@/services/oneTimeFeeService'
 import paymentService from '@/services/paymentService'
 import studentService from '@/services/studentService'
-import type { ClassPaymentSummary, CoachPaymentSummaryType } from '@/types/apps/paymentSummaryTypes'
+import type { AdminPaymentSummaryType, ClassPaymentSummary, CoachPaymentSummaryType } from '@/types/apps/paymentSummaryTypes'
 import type { OneTimeFeeOptionType } from '@/types/apps/oneTimeFeeTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { hasPermission } from '@/utils/permissionUtils'
@@ -50,13 +51,41 @@ const toSafeNumber = (value: unknown): number => {
   return Number.isFinite(num) ? num : 0
 }
 
+const SummaryStatCard = ({
+  title,
+  value,
+  subtitle,
+  color = 'primary.main'
+}: {
+  title: string
+  value: string
+  subtitle?: string
+  color?: string
+}) => (
+  <Card variant='outlined' sx={{ height: '100%' }}>
+    <CardContent>
+      <Typography variant='body2' color='text.secondary' gutterBottom>
+        {title}
+      </Typography>
+      <Typography variant='h5' sx={{ color, fontWeight: 700 }}>
+        {value}
+      </Typography>
+      {subtitle ? (
+        <Typography variant='caption' color='text.secondary'>
+          {subtitle}
+        </Typography>
+      ) : null}
+    </CardContent>
+  </Card>
+)
+
 const PaymentCollectView = () => {
   const router = useRouter()
   const { auth } = useAuth()
   const { showNotification } = useNotification()
   const [month, setMonth] = useState(new Date().getMonth() + 1)
   const [year, setYear] = useState(new Date().getFullYear())
-  const [summary, setSummary] = useState<CoachPaymentSummaryType | null>(null)
+  const [summary, setSummary] = useState<CoachPaymentSummaryType | AdminPaymentSummaryType | null>(null)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const [classStudents, setClassStudents] = useState<Record<string, ClassStudentOption[]>>({})
@@ -92,6 +121,9 @@ const PaymentCollectView = () => {
       setLoading(false)
     }
   }
+
+  const isAdminSummary = (value: CoachPaymentSummaryType | AdminPaymentSummaryType | null): value is AdminPaymentSummaryType =>
+    Boolean(value && 'overallTuition' in value && 'totalExpectedAmount' in value)
 
   const toggle = (key: string) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))
 
@@ -183,6 +215,11 @@ const PaymentCollectView = () => {
       return true
     })
   }, [summary, searchQuery, branchFilter, unpaidOnlyFilter, classOneTimeOutstandingAmountMap])
+
+  const totalUnpaidAmount = useMemo(() => {
+    if (!summary) return 0
+    return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumber(summary.grandTotalUnpaid)
+  }, [summary])
 
   // Pagination (pageSize=0 -> hiển thị tất cả)
   const effectivePageSize = pageSize === 0 ? filteredClasses.length || 1 : pageSize
@@ -276,13 +313,50 @@ const PaymentCollectView = () => {
         </Box>
       ) : (
         <>
+          {summary && isAdmin && isAdminSummary(summary) ? (
+            <Grid container spacing={4} className='mb-4'>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <SummaryStatCard
+                  title='Tổng tiền dự kiến'
+                  value={`${toSafeNumber(summary.totalExpectedAmount).toLocaleString('vi-VN')}đ`}
+                  subtitle={`Học phí dự kiến tháng ${month}/${year}`}
+                  color='primary.main'
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <SummaryStatCard
+                  title='Tổng tiền HLV đã thu'
+                  value={`${toSafeNumber(summary.totalCollectedByCoaches).toLocaleString('vi-VN')}đ`}
+                  subtitle='Bao gồm thu học phí, lệ phí và bán sản phẩm'
+                  color='success.main'
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <SummaryStatCard
+                  title='Tổng tiền đã bàn giao'
+                  value={`${toSafeNumber(summary.totalHandedOver).toLocaleString('vi-VN')}đ`}
+                  subtitle={`Phiếu bàn giao trong tháng ${month}/${year}`}
+                  color='info.main'
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+                <SummaryStatCard
+                  title='Số học viên chưa nộp học phí'
+                  value={toSafeNumber(summary.unpaidTuitionStudentCount).toLocaleString('vi-VN')}
+                  subtitle='Đếm theo công nợ học phí tháng'
+                  color='warning.main'
+                />
+              </Grid>
+            </Grid>
+          ) : null}
+
           {/* Tổng tiền cần thu */}
           {summary && (
             <Card className='mb-4' sx={{ bgcolor: 'primary.main' }}>
               <CardContent className='flex justify-between items-center'>
                 <Box>
                   <Typography variant='h4' color='white'>
-                    {toSafeNumber(summary.grandTotalUnpaid).toLocaleString('vi-VN')}đ
+                    {totalUnpaidAmount.toLocaleString('vi-VN')}đ
                   </Typography>
                   <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.8)' }}>
                     Tổng tiền còn phải thu - Tháng {month}/{year}

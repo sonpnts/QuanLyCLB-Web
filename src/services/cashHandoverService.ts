@@ -1,6 +1,11 @@
 import { apiClient } from '@/utils/apiClient'
 import { logger } from '@/utils/logger'
-import type { CashHandoverType, CashHandoverDeductionType, LateTuitionStudentType } from '@/types/apps/cashHandoverTypes'
+import type {
+  CashHandoverClassDetailType,
+  CashHandoverDeductionType,
+  CashHandoverType,
+  LateTuitionStudentType
+} from '@/types/apps/cashHandoverTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
@@ -18,8 +23,8 @@ export interface CreateDeductionRequest {
 }
 
 export interface CreateCashHandoverRequest {
-  classId: string
   instructorId?: string
+  classId?: string
   amountHandedOver?: number
   notes?: string
   deductions?: CreateDeductionRequest[]
@@ -31,8 +36,22 @@ const toDeduction = (value: any): CashHandoverDeductionType => ({
   amount: Number(value.amount || 0)
 })
 
+const toClassDetail = (value: any): CashHandoverClassDetailType => ({
+  classId: value.classId,
+  className: value.className,
+  snapshotTuitionAmount: Number(value.snapshotTuitionAmount || 0),
+  snapshotExamFeeAmount: Number(value.snapshotExamFeeAmount || 0),
+  snapshotProductSalesAmount: Number(value.snapshotProductSalesAmount || 0),
+  snapshotTotalAmount: Number(value.snapshotTotalAmount || 0),
+  previousHandedOverAmount: Number(value.previousHandedOverAmount || 0),
+  totalDeductionAmount: Number(value.totalDeductionAmount || 0),
+  amountHandedOver: Number(value.amountHandedOver || 0),
+  remainingAmountAfterHandover: Number(value.remainingAmountAfterHandover || 0)
+})
+
 const toCashHandover = (value: any): CashHandoverType => ({
   id: value.id,
+  batchCode: value.batchCode,
   classId: value.classId,
   className: value.className,
   instructorId: value.instructorId,
@@ -51,9 +70,13 @@ const toCashHandover = (value: any): CashHandoverType => ({
   confirmedByUserName: value.confirmedByUserName,
   confirmedAt: value.confirmedAt,
   deductions: Array.isArray(value.deductions) ? value.deductions.map(toDeduction) : [],
+  details: Array.isArray(value.details) ? value.details.map(toClassDetail) : [],
+  classCount: Number(value.classCount || 0),
   notes: value.notes,
   createdByUserId: value.createdByUserId,
-  createdByUserName: value.createdByUserName
+  createdByUserName: value.createdByUserName,
+  createdAt: value.createdAt,
+  updatedAt: value.updatedAt
 })
 
 const toLateTuitionStudent = (value: any): LateTuitionStudentType => ({
@@ -152,7 +175,10 @@ class CashHandoverService {
     }
   }
 
-  async getLateTuitionStudents(params?: { classId?: string; instructorId?: string }): Promise<ResponseResult<LateTuitionStudentType[]>> {
+  async getLateTuitionStudents(params?: {
+    classId?: string
+    instructorId?: string
+  }): Promise<ResponseResult<LateTuitionStudentType[]>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.cashHandovers.lateTuitionStudents, { params })
       const apiResponse = response.data

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -29,6 +29,7 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
 import { useNotification } from '@/contexts/notificationContext'
+import { useAuth } from '@/contexts/authContext'
 import classService from '@/services/classService'
 import studentAttendanceService, {
   type AttendanceSheetType,
@@ -37,7 +38,6 @@ import studentAttendanceService, {
 } from '@/services/studentAttendanceService'
 
 const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
-
 const parseDateString = (value: string) => {
   const [year, month, day] = value.split('-').map(Number)
 
@@ -99,6 +99,7 @@ const pickPreferredDate = (dates: string[]) => {
 }
 
 const AttendanceListTable = () => {
+  const { auth } = useAuth()
   const { showNotification } = useNotification()
 
   const [coachClasses, setCoachClasses] = useState<CoachClassOption[]>([])
@@ -186,7 +187,8 @@ const AttendanceListTable = () => {
     const initialize = async () => {
       const today = getTodayDateString()
       const classesRes = await studentAttendanceService.getCoachClasses()
-      const classes = classesRes.success && classesRes.data ? classesRes.data : []
+      const rawClasses = classesRes.success && classesRes.data ? classesRes.data : []
+      const classes = rawClasses
 
       setCoachClasses(classes)
 
@@ -214,8 +216,10 @@ const AttendanceListTable = () => {
       await loadClassAttendanceContext(initialClassId)
     }
 
-    initialize()
-  }, [loadClassAttendanceContext])
+    if (auth?.user?.id) {
+      initialize()
+    }
+  }, [auth?.user?.id, loadClassAttendanceContext])
 
   const absentCount = useMemo(() => (sheet ? sheet.students.filter(student => student.isAbsent).length : 0), [sheet])
   const excusedCount = useMemo(
@@ -430,6 +434,10 @@ const AttendanceListTable = () => {
 
           {!loading && !loadingDates && !selectedClassId ? (
             <Typography color='text.secondary'>Vui lòng chọn lớp để bắt đầu điểm danh.</Typography>
+          ) : null}
+
+          {!loading && !loadingDates && coachClasses.length === 0 ? (
+            <Typography color='text.secondary'>Hiện bạn chưa được phân công lớp nào để điểm danh.</Typography>
           ) : null}
 
           {!loading && !loadingDates && selectedClassId && availableDates.length === 0 ? (

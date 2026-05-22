@@ -1,4 +1,4 @@
-import { apiClient } from '@/utils/apiClient'
+﻿import { apiClient } from '@/utils/apiClient'
 import { logger } from '@/utils/logger'
 import type { ProductSaleType } from '@/types/apps/productSaleTypes'
 import type { ResponseResult } from '@/types/common'
@@ -20,6 +20,7 @@ export interface GetProductSalesParams {
 
 export interface CreateProductSaleRequest {
   productId: string
+  productVariantId?: string
   classId: string
   quantity: number
   unitPrice?: number
@@ -30,6 +31,7 @@ export interface CreateProductSaleRequest {
 }
 
 export interface UpdateProductSaleRequest {
+  productVariantId?: string
   quantity: number
   unitPrice: number
   saleDate: string
@@ -46,8 +48,13 @@ const toProductSale = (value: any): ProductSaleType => {
 
   return {
     id: value.id,
+    source: 'product-sale',
+    receiptNumber: value.receiptNumber || undefined,
     productId: value.productId,
     productName: value.productName,
+    productVariantId: value.productVariantId || undefined,
+    productVariantLabel: value.productVariantLabel || undefined,
+    paymentRecordId: value.paymentRecordId || undefined,
     classId: value.classId,
     className: value.className,
     soldByUserId: value.soldByUserId,

@@ -40,6 +40,7 @@ type ReceiptRow = {
   method: number
   types: number[]
   totalAmount: number
+  collectedByUserName: string
   items: PaymentRecordType[]
 }
 
@@ -92,6 +93,7 @@ const InvoiceListTable = ({ payments, loading, dateFrom, dateTo, onDateFromChang
         studentName: first.studentName || '-',
         paymentDate: first.paymentDate,
         method: first.method,
+        collectedByUserName: first.collectedByUserName || '-',
         types: [...new Set(items.map(item => item.type))],
         totalAmount: items.reduce((sum, item) => sum + Number(item.amount || 0), 0),
         items
@@ -207,7 +209,10 @@ const InvoiceListTable = ({ payments, loading, dateFrom, dateTo, onDateFromChang
                     accessor: 'types',
                     formatter: value =>
                       Array.isArray(value)
-                        ? value.map((type: number) => paymentTypeLabels[type] || '').filter(Boolean).join(', ')
+                        ? value
+                            .map((type: number) => paymentTypeLabels[type] || '')
+                            .filter(Boolean)
+                            .join(', ')
                         : ''
                   },
                   {
@@ -238,6 +243,7 @@ const InvoiceListTable = ({ payments, loading, dateFrom, dateTo, onDateFromChang
                 <th>Số biên lai</th>
                 <th>Học viên</th>
                 <th>Ngày thu</th>
+                <th>Người thu</th>
                 <th>Phương thức</th>
                 <th>Loại thu</th>
                 <th>Tổng tiền</th>
@@ -274,6 +280,9 @@ const InvoiceListTable = ({ payments, loading, dateFrom, dateTo, onDateFromChang
                     </td>
                     <td>
                       <Typography>{formatDate(row.paymentDate)}</Typography>
+                    </td>
+                    <td>
+                      <Typography>{row.collectedByUserName}</Typography>
                     </td>
                     <td>
                       <Typography>{paymentMethodLabels[row.method] ?? '-'}</Typography>

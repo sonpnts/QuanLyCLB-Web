@@ -1,15 +1,15 @@
-﻿// Type Imports
+// Type Imports
 import type { VerticalMenuDataType } from '@/types/menuTypes'
 
 // This is the FALLBACK menu used only when the API is unavailable.
-// Keep it minimal â€” the backend returns the real role-filtered menu via menuService.getMenuByRole().
+// Keep it minimal — the backend returns the real role-filtered menu via menuService.getMenuByRole().
 const verticalMenuData = (): VerticalMenuDataType[] => [
   {
-    label: 'Trang chá»§',
+    label: 'Trang chủ',
     isSection: true,
     children: [
       {
-        label: 'Trang chá»§',
+        label: 'Trang chủ',
         icon: 'ri-dashboard-line',
         href: '/dashboards/home'
       }
@@ -17,180 +17,180 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
   }
 ]
 
-// Full menu kept here for reference only â€” not used at runtime.
+// Full menu kept here for reference only — not used at runtime.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _fullMenuData = (): VerticalMenuDataType[] => [
   {
-    label: 'Trang chá»§',
+    label: 'Trang chủ',
     isSection: true,
     children: [
       {
-        label: 'Trang chá»§',
+        label: 'Trang chủ',
         icon: 'ri-dashboard-line',
         href: '/dashboards/home'
       }
     ]
   },
   {
-    label: 'Quáº£n lÃ½ cÆ¡ báº£n',
+    label: 'Quản lý cơ bản',
     isSection: true,
     children: [
       {
-        label: 'Chi nhÃ¡nh',
+        label: 'Chi nhánh',
         icon: 'ri-building-line',
         href: '/apps/branch/list'
       },
       {
-        label: 'Lá»›p há»c',
+        label: 'Lớp học',
         icon: 'ri-group-line',
         href: '/apps/class/list'
       },
       {
-        label: 'Huáº¥n luyá»‡n viÃªn',
+        label: 'Huấn luyện viên',
         icon: 'ri-user-star-line',
         href: '/apps/instructor/list'
       },
       {
-        label: 'Há»c viÃªn',
+        label: 'Học viên',
         icon: 'ri-graduation-cap-line',
         href: '/apps/student/list'
       },
       {
-        label: 'NgÆ°á»i dÃ¹ng',
+        label: 'Người dùng',
         icon: 'ri-user-settings-line',
         href: '/apps/user/list'
       },
       {
-        label: 'Chuyá»ƒn lá»›p',
+        label: 'Chuyển lớp',
         icon: 'ri-arrow-left-right-line',
         href: '/apps/class-transfer/list'
       }
     ]
   },
   {
-    label: 'Lá»‹ch & Äiá»ƒm danh',
+    label: 'Lịch & Điểm danh',
     isSection: true,
     children: [
       {
-        label: 'Lá»‹ch dáº¡y',
+        label: 'Lịch dạy',
         icon: 'ri-calendar-schedule-line',
         href: '/apps/schedule/list'
       },
       {
-        label: 'Lá»‹ch tá»•ng quan',
+        label: 'Lịch tổng quan',
         icon: 'ri-calendar-line',
         href: '/apps/calendar'
       },
       {
-        label: 'Äiá»ƒm danh',
+        label: 'Điểm danh',
         icon: 'ri-checkbox-circle-line',
         href: '/apps/attendance/list'
       },
       {
-        label: 'Phiáº¿u Ä‘iá»ƒm danh',
+        label: 'Phiếu điểm danh',
         icon: 'ri-file-list-3-line',
         href: '/apps/attendance/tickets'
       },
       {
-        label: 'Thá»‘ng kÃª cháº¥m cÃ´ng',
+        label: 'Thống kê chấm công',
         icon: 'ri-bar-chart-box-line',
         href: '/apps/attendance/admin-stats'
       },
       // {
-      //   label: 'Xin nghá»‰ phÃ©p',
+      //   label: 'Xin nghỉ phép',
       //   icon: 'ri-calendar-close-line',
       //   href: '/apps/leave-request/list'
       // }
     ]
   },
   {
-    label: 'TÃ i chÃ­nh & LÆ°Æ¡ng',
+    label: 'Tài chính & Lương',
     isSection: true,
     children: [
       {
-        label: 'Thu tiá»n lá»›p',
+        label: 'Thu tiền lớp',
         icon: 'ri-money-cny-circle-line',
         href: '/apps/payment/collect'
       },
       {
-        label: 'Thanh toÃ¡n',
+        label: 'Thanh toán',
         icon: 'ri-wallet-line',
         href: '/apps/payment/list'
       },
       {
-        label: 'Sáº£n pháº©m',
+        label: 'Sản phẩm',
         icon: 'ri-price-tag-3-line',
         href: '/apps/product/list'
       },
       {
-        label: 'BÃ¡n sáº£n pháº©m',
+        label: 'Bán sản phẩm',
         icon: 'ri-shopping-bag-3-line',
         href: '/apps/product-sale/list'
       },
       {
-        label: 'Thá»‘ng kÃª tÃ i chÃ­nh',
+        label: 'Thống kê tài chính',
         icon: 'ri-bar-chart-grouped-line',
         href: '/apps/finance/summary'
       },
       {
-        label: 'BÃ n giao tiá»n',
+        label: 'Bàn giao tiền',
         icon: 'ri-hand-coin-line',
         href: '/apps/cash-handover/list'
       },
       {
-        label: 'Báº£ng lÆ°Æ¡ng',
+        label: 'Bảng lương',
         icon: 'ri-money-dollar-circle-line',
         href: '/apps/payroll/list'
       },
       {
-        label: 'Cáº¥u hÃ¬nh lÆ°Æ¡ng',
+        label: 'Cấu hình lương',
         icon: 'ri-money-dollar-circle-line',
         href: '/apps/payroll/salary-config'
       },
     ]
   },
   {
-    label: 'Cáº¥p Ä‘ai & Thi',
+    label: 'Cấp đai & Thi',
     isSection: true,
     children: [
       {
-        label: 'Cáº¥p Ä‘ai',
+        label: 'Cấp đai',
         icon: 'ri-award-line',
         href: '/apps/belt-level/list'
       },
       {
-        label: 'Thi cáº¥p Ä‘ai',
+        label: 'Thi cấp đai',
         icon: 'ri-medal-line',
         href: '/apps/belt-exam/list'
       },
       {
-        label: 'ÄÄƒng kÃ½ thi cáº¥p',
+        label: 'Đăng ký thi cấp',
         icon: 'ri-trophy-line',
         href: '/apps/belt-exam/register'
       },
       {
-        label: 'DS Ä‘Äƒng kÃ½ thi',
+        label: 'DS đăng ký thi',
         icon: 'ri-list-check-3',
         href: '/apps/belt-exam/registrations'
       }
     ]
   },
   {
-    label: 'PhÃ¢n quyá»n',
+    label: 'Phân quyền',
     isSection: true,
     children: [
       {
-        label: 'Vai trÃ²',
+        label: 'Vai trò',
         icon: 'ri-shield-user-line',
         href: '/apps/roles'
       },
       {
-        label: 'Quyá»n háº¡n',
+        label: 'Quyền hạn',
         icon: 'ri-lock-line',
         href: '/apps/permissions'
       },
       {
-        label: 'Nháº­t kÃ½ há»‡ thá»‘ng',
+        label: 'Nhật ký hệ thống',
         icon: 'ri-file-history-line',
         href: '/apps/audit-log/list'
       },
@@ -202,11 +202,11 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
     ]
   },
   {
-    label: 'CÃ i Ä‘áº·t',
+    label: 'Cài đặt',
     isSection: true,
     children: [
       {
-        label: 'CÃ i Ä‘áº·t há»‡ thá»‘ng',
+        label: 'Cài đặt hệ thống',
         icon: 'ri-settings-3-line',
         href: '/settings/system-config'
       }
@@ -215,4 +215,3 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
 ]
 
 export default verticalMenuData
-

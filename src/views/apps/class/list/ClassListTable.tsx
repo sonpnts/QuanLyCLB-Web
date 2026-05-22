@@ -143,7 +143,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
     if (tableData && tableData.length > 0) {
       setData(tableData)
       setFilteredData(tableData)
-      
+
 return
     }
 
@@ -238,7 +238,7 @@ return
         cell: ({ row }) => {
           const isInactive = row.original.isActive === false
 
-          
+
 return (
             <div className='flex items-center gap-2'>
               <div className='flex flex-col'>
@@ -288,7 +288,7 @@ return (
               ? (row.original.coachIds ?? []).map(id => {
                   const u = users.find(x => x.id === id)
 
-                  
+
 return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
                 })
               : coaches
@@ -426,40 +426,41 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
           return (
             <div className='flex items-center' onClick={event => event.stopPropagation()}>
               {/* Các thao tác chỉ hiện khi lớp đang hoạt động */}
-              {!isInactive && (
-                <>
-                  <IconButton
-                    onClick={() => {
-                      setSelectedClass(row.original)
-                      setAddStudentsOpen(true)
-                    }}
-                    title='Thêm học viên'
-                    color='success'
-                  >
-                    <i className='ri-user-add-line' />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => {
-                      setSelectedClass(row.original)
-                      setAddScheduleOpen(true)
-                    }}
-                    title='Thêm lịch học'
-                    color='info'
-                  >
-                    <i className='ri-calendar-line' />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => {
-                      setSelectedClass(row.original)
-                      setViewScheduleOpen(true)
-                    }}
-                    title='Xem lịch học'
-                    color='primary'
-                  >
-                    <i className='ri-calendar-check-line' />
-                  </IconButton>
-                </>
-              )}
+              {!isInactive &&
+                isAdmin &&(
+                  <>
+                    <IconButton
+                      onClick={() => {
+                        setSelectedClass(row.original)
+                        setAddStudentsOpen(true)
+                      }}
+                      title='Thêm học viên'
+                      color='success'
+                    >
+                      <i className='ri-user-add-line' />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => {
+                        setSelectedClass(row.original)
+                        setAddScheduleOpen(true)
+                      }}
+                      title='Thêm lịch học'
+                      color='info'
+                    >
+                      <i className='ri-calendar-line' />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => {
+                        setSelectedClass(row.original)
+                        setViewScheduleOpen(true)
+                      }}
+                      title='Xem lịch học'
+                      color='primary'
+                    >
+                      <i className='ri-calendar-check-line' />
+                    </IconButton>
+                  </>
+                )}
 
               {isAdmin &&
                 (isInactive ? (
@@ -661,7 +662,7 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
                   .rows.map(row => {
                     const isInactive = row.original.isActive === false
 
-                    
+
 return (
                       <tr
                         key={row.id}

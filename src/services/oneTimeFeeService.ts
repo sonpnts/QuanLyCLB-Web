@@ -3,7 +3,9 @@ import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 import { apiList, apiMutate } from '@/utils/serviceHelper'
 import type {
+  CreateFeeDefinitionRequest,
   FeeDefinitionType,
+  OneTimeFeeImportResultType,
   FeePriceType,
   OneTimeFeeOptionType,
   StudentOneTimeFeeStatusType,
@@ -21,7 +23,8 @@ class OneTimeFeeService {
           amount: Number(item.amount ?? item.Amount ?? 0),
           scopeType: item.scopeType ?? item.ScopeType ?? 'Global',
           scopeId: item.scopeId ?? item.ScopeId ?? null,
-          isPaid: Boolean(item.isPaid ?? item.IsPaid)
+          isPaid: Boolean(item.isPaid ?? item.IsPaid),
+          isRequiredForExam: Boolean(item.isRequiredForExam ?? item.IsRequiredForExam)
         }))
     )
   }
@@ -37,6 +40,13 @@ class OneTimeFeeService {
     return apiList(
       () => apiClient.get<any>(API_ENDPOINTS.oneTimeFees.definitions),
       data => (Array.isArray(data) ? data : [])
+    )
+  }
+
+  async createDefinition(payload: CreateFeeDefinitionRequest) {
+    return apiMutate(
+      () => apiClient.post<any>(API_ENDPOINTS.oneTimeFees.createDefinition, payload),
+      data => data as FeeDefinitionType
     )
   }
 
@@ -58,6 +68,23 @@ class OneTimeFeeService {
     return apiMutate(
       () => apiClient.post<any>(API_ENDPOINTS.oneTimeFees.upsertPrice, req),
       data => data as FeePriceType
+    )
+  }
+
+  async importPaidStatuses(feeCode: string, file: File): Promise<ResponseResult<OneTimeFeeImportResultType>> {
+    const formData = new FormData()
+
+    formData.append('feeCode', feeCode)
+    formData.append('file', file)
+
+    return apiMutate(
+      () =>
+        apiClient.post<any>(API_ENDPOINTS.oneTimeFees.importPaid, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }),
+      data => data as OneTimeFeeImportResultType
     )
   }
 }

@@ -3,7 +3,7 @@
 /**
  * MemberCodeField – trường "Mã HV" với:
  * - Kính lúp bên phải để mở modal tìm kiếm theo tên
- * - Tự động tra cứu thông tin hội viên liên đoàn khi nhập mã và nhấn Enter/Tab
+ * - Chỉ hiển thị preview khi chọn hội viên từ modal tra cứu
  * - Hiển thị bảng thông tin dự kiến để xác nhận trước khi áp dụng
  * - Sau khi HV có mã, khoá toàn bộ các trường cá nhân liên quan
  */
@@ -13,7 +13,6 @@ import { useEffect, useRef, useState } from 'react'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
@@ -25,7 +24,6 @@ import TableRow from '@mui/material/TableRow'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
-import federationMemberService from '@/services/federationMemberService'
 import type { FederationMemberDto } from '@/services/federationMemberService'
 import MemberCodeSearchDialog from './MemberCodeSearchDialog'
 
@@ -51,6 +49,8 @@ interface Props {
   onMemberInfoConfirmed: (info: MemberInfo) => void
   /** Nếu true → trường chỉ đọc (không cho sửa gì) */
   locked?: boolean
+  /** Trạng thái mở của form cha để reset preview khi đóng */
+  active?: boolean
   /** Helper text bên dưới trường mã */
   helperText?: string
 }
@@ -63,63 +63,33 @@ const genderToBool = (g?: string | null): boolean | undefined => {
   return undefined
 }
 
-const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = false, helperText }: Props) => {
+const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = false, active = true, helperText }: Props) => {
   const [searchOpen, setSearchOpen] = useState(false)
-  const [lookupLoading, setLookupLoading] = useState(false)
   const [lookupResult, setLookupResult] = useState<FederationMemberDto | null>(null)
-  const [lookupError, setLookupError] = useState<string | null>(null)
   const [lastLookedUpCode, setLastLookedUpCode] = useState<string>('')
 
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Reset preview khi mã bị xoá hoặc thay đổi
+  // Reset preview khi form cha đóng hoặc khi mã bị xoá
+  useEffect(() => {
+    if (!active) {
+      setSearchOpen(false)
+      setLookupResult(null)
+      setLastLookedUpCode('')
+    }
+  }, [active])
+
   useEffect(() => {
     if (!value) {
       setLookupResult(null)
-      setLookupError(null)
       setLastLookedUpCode('')
     }
   }, [value])
-
-  const lookupByCode = async (code: string) => {
-    const trimmed = code.trim()
-    if (!trimmed || trimmed === lastLookedUpCode) return
-
-    setLookupLoading(true)
-    setLookupError(null)
-    setLookupResult(null)
-
-    try {
-      const res = await federationMemberService.getByCode(trimmed)
-      if (res.success && res.data) {
-        setLookupResult(res.data)
-        setLastLookedUpCode(trimmed)
-      } else {
-        setLookupError(res.message || `Không tìm thấy hội viên với mã '${trimmed}'`)
-        setLastLookedUpCode(trimmed)
-      }
-    } finally {
-      setLookupLoading(false)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === 'Tab') {
-      lookupByCode(value)
-    }
-  }
-
-  const handleBlur = () => {
-    if (value && value.trim() !== lastLookedUpCode) {
-      lookupByCode(value)
-    }
-  }
 
   // Khi chọn từ modal tìm kiếm
   const handleSelectFromSearch = (member: FederationMemberDto) => {
     onChange(member.memberCode)
     setLookupResult(member)
-    setLookupError(null)
     setLastLookedUpCode(member.memberCode)
     setSearchOpen(false)
   }
@@ -151,13 +121,13 @@ const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = fals
       ['Mã hội viên', m.memberCode],
       ['Giới tính', m.gender || '—'],
       ['Ngày sinh', m.dateOfBirth || '—'],
-      ['Số điện thoại', m.phoneNumber || '—'],
+      // ['Số điện thoại', m.phoneNumber || '—'],
       ['CMND/CCCD', m.idCard || '—'],
-      ['Địa chỉ', m.address || '—'],
-      ['Email', m.email || '—'],
+      // ['Địa chỉ', m.address || '—'],
+      // ['Email', m.email || '—'],
       ['Cấp đai', m.beltRank || '—'],
-      ['Câu lạc bộ', m.clubName || '—'],
-      ['Hiệu lực', m.isEffective === 'x' ? 'Còn hiệu lực ✓' : (m.isEffective || '—')]
+      // ['Câu lạc bộ', m.clubName || '—'],
+      // ['Hiệu lực', m.isEffective === 'x' ? 'Còn hiệu lực ✓' : (m.isEffective || '—')]
     ]
 
     return (
@@ -206,47 +176,34 @@ const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = fals
         value={value}
         onChange={e => {
           onChange(e.target.value)
-          // Reset preview nếu mã thay đổi so với lần lookup cuối
+          // Chỉ giữ preview khi vừa chọn từ modal, còn gõ tay thì ẩn preview
           if (e.target.value.trim() !== lastLookedUpCode) {
             setLookupResult(null)
-            setLookupError(null)
           }
         }}
-        onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
         disabled={locked}
-        placeholder={locked ? 'Đã khoá' : 'Nhập mã hoặc dùng kính lúp tìm theo tên...'}
+        placeholder={locked ? 'Đã khoá' : 'Dùng kính lúp để tra cứu theo tên hoặc nhập mã thủ công...'}
         helperText={
           locked
             ? 'Đã có mã HV – thông tin được khoá'
-            : (helperText ?? 'Nhấn Enter/Tab để tra cứu thông tin từ liên đoàn')
+            : (helperText ?? 'Chỉ khi chọn từ bảng tra cứu mới hiện thông tin dự kiến từ liên đoàn')
         }
         inputRef={inputRef}
         InputProps={{
           endAdornment: (
             <InputAdornment position='end'>
-              {lookupLoading ? (
-                <CircularProgress size={16} />
-              ) : (
-                <IconButton
-                  size='small'
-                  onClick={() => setSearchOpen(true)}
-                  disabled={locked}
-                  title='Tìm kiếm theo tên'
-                >
-                  <i className='ri-search-line' />
-                </IconButton>
-              )}
+              <IconButton
+                size='small'
+                onClick={() => setSearchOpen(true)}
+                disabled={locked}
+                title='Tìm kiếm theo tên'
+              >
+                <i className='ri-search-line' />
+              </IconButton>
             </InputAdornment>
           )
         }}
       />
-
-      {lookupError && !locked && (
-        <Alert severity='warning' sx={{ mt: 0.5 }} icon={<i className='ri-alert-line' />}>
-          {lookupError}
-        </Alert>
-      )}
 
       {lookupResult && !locked && renderPreviewTable()}
 

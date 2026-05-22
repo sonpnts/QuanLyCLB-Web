@@ -63,9 +63,9 @@ const TableFilters = memo(
           {showInstructorFilter && (
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
-                <InputLabel>Huấn luyện viên</InputLabel>
+                <InputLabel>Người bàn giao</InputLabel>
                 <Select
-                  label='Huấn luyện viên'
+                  label='Người bàn giao'
                   value={instructorId}
                   onChange={(event: SelectChangeEvent) => setInstructorId(event.target.value)}
                 >

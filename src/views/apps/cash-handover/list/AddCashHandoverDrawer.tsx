@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -23,12 +23,10 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
 import type { CashHandoverType, LateTuitionStudentType } from '@/types/apps/cashHandoverTypes'
-import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
 import type { InstructorClassCollectionType } from '@/types/apps/financeTypes'
 import cashHandoverService from '@/services/cashHandoverService'
 import type { CreateDeductionRequest } from '@/services/cashHandoverService'
-import classService from '@/services/classService'
 import userService from '@/services/userService'
 import financeService from '@/services/financeService'
 import { useNotification } from '@/contexts/notificationContext'
@@ -41,7 +39,6 @@ type Props = {
   handleClose: () => void
   setData: React.Dispatch<React.SetStateAction<CashHandoverType[]>>
   presetInstructorId?: string
-  presetClassId?: string
 }
 
 type DeductionRow = {
@@ -53,13 +50,12 @@ type DeductionRow = {
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 
-const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId, presetClassId }: Props) => {
+const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId }: Props) => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
   const isAdmin = hasPermission(auth?.permissions, 'CashHandover.ManageAll') || hasAdminRole(auth?.roles)
 
   const [loading, setLoading] = useState(false)
-  const [classes, setClasses] = useState<ClassType[]>([])
   const [instructors, setInstructors] = useState<UsersType[]>([])
   const [collections, setCollections] = useState<InstructorClassCollectionType[]>([])
   const [lateStudents, setLateStudents] = useState<LateTuitionStudentType[]>([])
@@ -68,7 +64,6 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
   const [deductions, setDeductions] = useState<DeductionRow[]>([])
 
   const [formData, setFormData] = useState({
-    classId: '',
     instructorId: presetInstructorId || auth?.user.id || '',
     notes: ''
   })
@@ -78,10 +73,9 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
 
     setFormData(prev => ({
       ...prev,
-      instructorId: presetInstructorId || prev.instructorId || auth?.user.id || '',
-      classId: presetClassId || prev.classId
+      instructorId: presetInstructorId || prev.instructorId || auth?.user.id || ''
     }))
-  }, [open, presetInstructorId, presetClassId, auth?.user.id])
+  }, [open, presetInstructorId, auth?.user.id])
 
   useEffect(() => {
     let mounted = true
@@ -89,12 +83,8 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
     const loadReferences = async () => {
       try {
         if (isAdmin) {
-          const [classRes, instructorRes] = await Promise.all([
-            classService.getClasses({ isActive: true, pageSize: 1000 }),
-            userService.getCoaches()
-          ])
+          const instructorRes = await userService.getCoaches()
 
-          if (mounted && classRes.success && classRes.data) setClasses(classRes.data)
           if (mounted && instructorRes.success && instructorRes.data) {
             setInstructors(instructorRes.data)
             setFormData(prev => ({
@@ -102,15 +92,12 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
               instructorId: prev.instructorId || auth?.user.id || instructorRes.data?.[0]?.id || ''
             }))
           }
-        } else {
-          const classRes = await classService.getClassesByUserId(auth?.user.id || '')
-
-          if (mounted && classRes.success && classRes.data) setClasses(classRes.data)
-          if (mounted) setInstructors([])
+        } else if (mounted) {
+          setInstructors([])
           setFormData(prev => ({ ...prev, instructorId: auth?.user.id || '' }))
         }
       } catch {
-        if (mounted) showNotification('KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u ban Ä‘áº§u.', 'error')
+        if (mounted) showNotification('Không thể tải dữ liệu ban đầu.', 'error')
       }
     }
 
@@ -133,11 +120,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
           : await financeService.getMyClassCollections()
 
         if (mounted && response.success && response.data) {
-          setCollections(response.data)
-          setFormData(prev => ({
-            ...prev,
-            classId: presetClassId || prev.classId || response.data?.[0]?.classId || ''
-          }))
+          setCollections(response.data.filter(item => item.availableToHandover > 0))
         } else if (mounted) {
           setCollections([])
         }
@@ -151,7 +134,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
     return () => {
       mounted = false
     }
-  }, [open, formData.instructorId, presetClassId])
+  }, [open, formData.instructorId])
 
   useEffect(() => {
     let mounted = true
@@ -161,8 +144,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
 
       try {
         const response = await cashHandoverService.getLateTuitionStudents({
-          instructorId: formData.instructorId,
-          classId: formData.classId || undefined
+          instructorId: formData.instructorId
         })
 
         if (mounted && response.success && response.data) {
@@ -180,35 +162,44 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
     return () => {
       mounted = false
     }
-  }, [open, formData.instructorId, formData.classId])
-
-  const classOptions = useMemo(() => {
-    if (collections.length > 0) {
-      return collections.map(item => ({ id: item.classId, name: item.className || item.classId }))
-    }
-
-    return classes.map(item => ({ id: item.id, name: item.name }))
-  }, [collections, classes])
-
-  const selectedCollection = useMemo(
-    () => collections.find(item => item.classId === formData.classId) || null,
-    [collections, formData.classId]
-  )
-
-  const collectionsWithMoney = useMemo(
-    () => collections.filter(item => item.availableToHandover > 0),
-    [collections]
-  )
+  }, [open, formData.instructorId])
 
   const totalDeductionAmount = useMemo(
     () => deductions.reduce((sum, item) => sum + (Number(item.amount) || 0), 0),
     [deductions]
   )
 
-  const lateInClass = useMemo(
-    () => (formData.classId ? lateStudents.filter(item => item.classId === formData.classId) : lateStudents),
-    [lateStudents, formData.classId]
+  const totalAvailableToHandover = useMemo(
+    () => collections.reduce((sum, item) => sum + Number(item.availableToHandover || 0), 0),
+    [collections]
   )
+
+  const totalAfterDeduction = useMemo(
+    () => Math.max(0, totalAvailableToHandover - totalDeductionAmount),
+    [totalAvailableToHandover, totalDeductionAmount]
+  )
+
+  const aggregatedBreakdown = useMemo(() => {
+    const map = new Map<string, { key: string; label: string; amount: number }>()
+
+    collections.forEach(item => {
+      item.breakdown.forEach(detail => {
+        const current = map.get(detail.key)
+
+        if (current) {
+          current.amount += Number(detail.amount || 0)
+        } else {
+          map.set(detail.key, {
+            key: detail.key,
+            label: detail.label,
+            amount: Number(detail.amount || 0)
+          })
+        }
+      })
+    })
+
+    return Array.from(map.values())
+  }, [collections])
 
   const addDeductionRow = () => {
     setDeductions(prev => [...prev, { tempId: crypto.randomUUID(), description: '', amount: '' }])
@@ -229,7 +220,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
   }
 
   const resetAndClose = () => {
-    setFormData({ classId: '', instructorId: auth?.user.id || '', notes: '' })
+    setFormData({ instructorId: auth?.user.id || '', notes: '' })
     setCollections([])
     setLateStudents([])
     setExpandedClassIds([])
@@ -245,7 +236,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
       const amount = Number(item.amount)
 
       if (!item.description.trim() || amount <= 0) {
-        showNotification('Khoáº£n trá»« pháº£i cÃ³ mÃ´ táº£ vÃ  sá»‘ tiá»n há»£p lá»‡.', 'error')
+        showNotification('Khoản trừ phải có mô tả và số tiền hợp lệ.', 'error')
         return null
       }
 
@@ -255,96 +246,41 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
     return validRows
   }
 
-  const createSingleHandover = async (classId: string, appliedDeductions?: CreateDeductionRequest[]) => {
-    return cashHandoverService.createCashHandover({
-      classId,
-      instructorId: formData.instructorId,
-      notes: formData.notes.trim() || undefined,
-      deductions: appliedDeductions && appliedDeductions.length > 0 ? appliedDeductions : undefined
-    })
-  }
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
-    if (!formData.classId || !formData.instructorId) {
-      showNotification('Vui lÃ²ng chá»n lá»›p vÃ  huáº¥n luyá»‡n viÃªn.', 'error')
+    if (!formData.instructorId) {
+      showNotification('Vui lòng chọn người bàn giao.', 'error')
+      return
+    }
+
+    if (collections.length === 0 || totalAvailableToHandover <= 0) {
+      showNotification('Hiện không có lớp nào còn tiền để bàn giao.', 'warning')
       return
     }
 
     const validDeductions = getValidDeductions()
-
     if (validDeductions === null) return
 
     try {
       setLoading(true)
 
-      const response = await createSingleHandover(formData.classId, validDeductions)
+      const response = await cashHandoverService.createCashHandover({
+        instructorId: formData.instructorId,
+        notes: formData.notes.trim() || undefined,
+        deductions: validDeductions.length > 0 ? validDeductions : undefined
+      })
 
       if (!response.success || !response.data) {
-        showNotification(response.message || 'KhÃ´ng thá»ƒ táº¡o phiáº¿u bÃ n giao.', 'error')
+        showNotification(response.message || 'Không thể tạo phiếu bàn giao.', 'error')
         return
       }
 
       setData(prev => [response.data!, ...prev])
-      showNotification('Táº¡o phiáº¿u bÃ n giao tiá»n thÃ nh cÃ´ng.', 'success')
+      showNotification('Tạo phiếu bàn giao tiền thành công.', 'success')
       resetAndClose()
     } catch {
-      showNotification('ÄÃ£ cÃ³ lá»—i khi táº¡o phiáº¿u bÃ n giao.', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCreateAllHandovers = async () => {
-    if (!formData.instructorId) {
-      showNotification('Vui lÃ²ng chá»n huáº¥n luyá»‡n viÃªn.', 'error')
-      return
-    }
-
-    if (deductions.length > 0) {
-      showNotification('BÃ n giao toÃ n bá»™ khÃ´ng Ã¡p dá»¥ng khi Ä‘ang cÃ³ khoáº£n trá»«. HÃ£y táº¡o theo tá»«ng lá»›p.', 'warning')
-      return
-    }
-
-    if (collectionsWithMoney.length === 0) {
-      showNotification('Hiá»‡n khÃ´ng cÃ³ lá»›p nÃ o cÃ²n tiá»n Ä‘á»ƒ bÃ n giao.', 'warning')
-      return
-    }
-
-    try {
-      setLoading(true)
-
-      const createdRows: CashHandoverType[] = []
-      const failedClasses: string[] = []
-
-      for (const item of collectionsWithMoney) {
-        const response = await createSingleHandover(item.classId)
-
-        if (response.success && response.data) {
-          createdRows.push(response.data)
-        } else {
-          failedClasses.push(item.className || item.classId)
-        }
-      }
-
-      if (createdRows.length > 0) {
-        setData(prev => [...createdRows, ...prev])
-      }
-
-      if (failedClasses.length === 0) {
-        showNotification(`ÄÃ£ táº¡o ${createdRows.length} phiáº¿u bÃ n giao Ä‘áº¿n thá»i Ä‘iá»ƒm hiá»‡n táº¡i.`, 'success')
-        resetAndClose()
-        return
-      }
-
-      showNotification(
-        `ÄÃ£ táº¡o ${createdRows.length}/${collectionsWithMoney.length} phiáº¿u. ChÆ°a táº¡o Ä‘Æ°á»£c: ${failedClasses.join(', ')}`,
-        'warning'
-      )
-      resetAndClose()
-    } catch {
-      showNotification('ÄÃ£ cÃ³ lá»—i khi bÃ n giao toÃ n bá»™.', 'error')
+      showNotification('Đã có lỗi khi tạo phiếu bàn giao.', 'error')
     } finally {
       setLoading(false)
     }
@@ -357,10 +293,10 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
       variant='temporary'
       onClose={resetAndClose}
       ModalProps={{ keepMounted: true }}
-      sx={{ '& .MuiDrawer-paper': { width: { xs: 360, sm: 560 } } }}
+      sx={{ '& .MuiDrawer-paper': { width: { xs: 360, sm: 620 } } }}
     >
       <div className='flex items-center justify-between pli-5 plb-4'>
-        <Typography variant='h5'>Táº¡o phiáº¿u bÃ n giao tiá»n</Typography>
+        <Typography variant='h5'>Tạo phiếu bàn giao tiền</Typography>
         <IconButton size='small' onClick={resetAndClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -369,92 +305,84 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
 
       <div className='p-5 overflow-y-auto'>
         <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
-          <Alert severity='info' sx={{ py: 0.5 }}>
-            Khi táº¡o phiáº¿u, há»‡ thá»‘ng máº·c Ä‘á»‹nh bÃ n giao toÃ n bá»™ sá»‘ tiá»n kháº£ dá»¥ng cá»§a lá»›p tá»›i thá»i Ä‘iá»ƒm hiá»‡n táº¡i.
-          </Alert>
+          {/*<Alert severity='info' sx={{ py: 0.5 }}>*/}
+          {/*  Phiếu bàn giao được tạo theo người bàn giao. Màn hình này chỉ hiển thị số tiền cần bàn giao tới thời điểm*/}
+          {/*  hiện tại, còn số tiền đã bàn giao trước đó sẽ xem trong lịch sử bàn giao.*/}
+          {/*</Alert>*/}
 
-          <FormControl fullWidth>
-            <InputLabel>Huáº¥n luyá»‡n viÃªn</InputLabel>
-            <Select
-              label='Huáº¥n luyá»‡n viÃªn'
-              value={formData.instructorId}
-              disabled={!isAdmin}
-              onChange={event => setFormData(prev => ({ ...prev, instructorId: event.target.value, classId: '' }))}
-            >
-              {!isAdmin && <MenuItem value={auth?.user.id || ''}>{auth?.user?.fullName || 'TÃ´i'}</MenuItem>}
-              {instructors.map(item => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.fullName}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {isAdmin && (
+            <FormControl fullWidth>
+              <InputLabel>Người bàn giao</InputLabel>
 
-          <FormControl fullWidth>
-            <InputLabel>Lá»›p</InputLabel>
-            <Select
-              label='Lá»›p'
-              value={formData.classId}
-              onChange={event => setFormData(prev => ({ ...prev, classId: event.target.value }))}
-            >
-              {classOptions.map(item => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <Select
+                label='Người bàn giao'
+                value={formData.instructorId}
+                onChange={event =>
+                  setFormData(prev => ({
+                    ...prev,
+                    instructorId: event.target.value
+                  }))
+                }
+              >
+                {instructors.map(item => (
+                  <MenuItem key={item.id} value={item.id}>
+                    {item.fullName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
-          {selectedCollection && (
-            <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2, bgcolor: 'action.hover' }}>
-              <Typography variant='subtitle2' className='mb-2 font-semibold'>
-                Khoản cần bàn giao của lớp đang chọn
-              </Typography>
+          <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2, bgcolor: 'action.hover' }}>
+            <Typography variant='subtitle2' className='mb-3 font-semibold'>
+              Số tiền cần bàn giao tới thời điểm hiện tại
+            </Typography>
 
-              {selectedCollection.breakdown.map(item => (
-                <div key={item.key} className='flex justify-between'>
-                  <Typography variant='body2' color='text.secondary'>
-                    {item.label}:
-                  </Typography>
-                  <Typography variant='body2' className='font-medium'>
-                    {formatCurrency(item.amount)}
-                  </Typography>
-                </div>
-              ))}
-
-              <Divider sx={{ my: 1 }} />
-
-              <div className='flex justify-between'>
+            {aggregatedBreakdown.map(item => (
+              <div key={item.key} className='flex justify-between mb-1'>
                 <Typography variant='body2' color='text.secondary'>
-                  Tổng ghi nhận:
+                  {item.label}:
                 </Typography>
                 <Typography variant='body2' className='font-medium'>
-                  {formatCurrency(selectedCollection.totalCollectedToDate)}
+                  {formatCurrency(item.amount)}
                 </Typography>
               </div>
+            ))}
 
+            <Divider sx={{ my: 1.5 }} />
+
+            <div className='flex justify-between mb-1'>
+              <Typography variant='body2' color='text.secondary'>
+                Tổng cần bàn giao:
+              </Typography>
+              <Typography variant='body2' className='font-semibold' color='success.main'>
+                {formatCurrency(totalAvailableToHandover)}
+              </Typography>
+            </div>
+
+            {totalDeductionAmount > 0 && (
               <div className='flex justify-between'>
                 <Typography variant='body2' color='text.secondary'>
-                  Cần bàn giao:
+                  Cần bàn giao sau khoản trừ:
                 </Typography>
-                <Typography variant='body2' className='font-semibold' color='success.main'>
-                  {formatCurrency(selectedCollection.availableToHandover)}
+                <Typography variant='body2' className='font-semibold' color='warning.main'>
+                  {formatCurrency(totalAfterDeduction)}
                 </Typography>
               </div>
-            </Box>
-          )}
+            )}
+          </Box>
 
           <Box>
             <div className='flex items-center justify-between mb-2'>
               <Typography variant='subtitle2' className='font-semibold'>
-                Sá»‘ tiá»n theo tá»«ng lá»›p
+                Chi tiết số tiền cần bàn giao theo lớp
               </Typography>
-              <Chip label={`${collectionsWithMoney.length} lá»›p cÃ²n tiá»n`} size='small' color='primary' />
+              <Chip label={`${collections.length} lớp còn tiền`} size='small' color='primary' />
             </div>
 
             {collections.length === 0 ? (
               <Typography variant='body2' color='text.secondary'>
-                ChÆ°a cÃ³ dá»¯ liá»‡u thu tiá»n theo lá»›p.
+                Hiện chưa có dữ liệu cần bàn giao.
               </Typography>
             ) : (
               <div className='flex flex-col gap-2'>
@@ -466,27 +394,19 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
                       <div className='flex items-start justify-between gap-3'>
                         <div>
                           <Typography className='font-medium'>{item.className || item.classId}</Typography>
-                          <Typography variant='body2' color='text.secondary'>
-                            Tổng ghi nhận {formatCurrency(item.totalCollectedToDate)}
-                          </Typography>
-                          <Typography variant='body2' color={item.availableToHandover > 0 ? 'success.main' : 'text.secondary'}>
+                          <Typography variant='body2' color='success.main'>
                             Cần bàn giao: {formatCurrency(item.availableToHandover)}
                           </Typography>
                         </div>
 
-                        <div className='flex items-center gap-2'>
-                          <Button type='button' size='small' variant='text' onClick={() => toggleExpandedClass(item.classId)}>
-                            {expanded ? 'áº¨n' : 'Xem'}
-                          </Button>
-                          <Button
-                            type='button'
-                            size='small'
-                            variant={formData.classId === item.classId ? 'contained' : 'outlined'}
-                            onClick={() => setFormData(prev => ({ ...prev, classId: item.classId }))}
-                          >
-                            Chá»n lá»›p
-                          </Button>
-                        </div>
+                        <Button
+                          type='button'
+                          size='small'
+                          variant='text'
+                          onClick={() => toggleExpandedClass(item.classId)}
+                        >
+                          {expanded ? 'Ẩn' : 'Xem'}
+                        </Button>
                       </div>
 
                       <Collapse in={expanded}>
@@ -494,8 +414,8 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
                           <Table size='small'>
                             <TableHead>
                               <TableRow>
-                                <TableCell>Khoản chưa bàn giao</TableCell>
-                                <TableCell align='right'>Sá»‘ tiá»n</TableCell>
+                                <TableCell>Khoản mục cần bàn giao</TableCell>
+                                <TableCell align='right'>Số tiền</TableCell>
                               </TableRow>
                             </TableHead>
                             <TableBody>
@@ -506,13 +426,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
                                 </TableRow>
                               ))}
                               <TableRow>
-                                <TableCell sx={{ fontWeight: 600 }}>Tổng ghi nhận</TableCell>
-                                <TableCell align='right' sx={{ fontWeight: 600 }}>
-                                  {formatCurrency(item.totalCollectedToDate)}
-                                </TableCell>
-                              </TableRow>
-                              <TableRow>
-                                <TableCell sx={{ fontWeight: 600, color: 'success.main' }}>Cần bàn giao</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Tổng cần bàn giao</TableCell>
                                 <TableCell align='right' sx={{ fontWeight: 600, color: 'success.main' }}>
                                   {formatCurrency(item.availableToHandover)}
                                 </TableCell>
@@ -532,41 +446,43 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
                 <Typography variant='subtitle2' className='font-semibold'>
-                  Há»c viÃªn cháº­m há»c phÃ­
+                  Học viên chậm học phí
                 </Typography>
-                {lateInClass.length > 0 && <Chip label={lateInClass.length} size='small' color='warning' />}
+                {lateStudents.length > 0 && <Chip label={lateStudents.length} size='small' color='warning' />}
               </div>
-              {lateInClass.length > 0 && (
+              {lateStudents.length > 0 && (
                 <Button type='button' size='small' onClick={() => setShowLateStudents(prev => !prev)} variant='text'>
-                  {showLateStudents ? 'áº¨n' : 'Xem'}
+                  {showLateStudents ? 'Ẩn' : 'Xem'}
                 </Button>
               )}
             </div>
 
-            {lateInClass.length === 0 && (
+            {lateStudents.length === 0 && (
               <Typography variant='body2' color='success.main' sx={{ mt: 0.5 }}>
-                KhÃ´ng cÃ³ há»c viÃªn cháº­m Ä‘Ã³ng há»c phÃ­
+                Không có học viên chậm đóng học phí.
               </Typography>
             )}
 
             <Collapse in={showLateStudents}>
-              <Box sx={{ mt: 1, border: '1px solid', borderColor: 'warning.light', borderRadius: 1, overflow: 'hidden' }}>
+              <Box
+                sx={{ mt: 1, border: '1px solid', borderColor: 'warning.light', borderRadius: 1, overflow: 'hidden' }}
+              >
                 <Table size='small'>
                   <TableHead>
-                    <TableRow sx={{ bgcolor: 'warning.lighter' }}>
-                      <TableCell>Há»c viÃªn</TableCell>
-                      <TableCell>Lá»›p</TableCell>
-                      <TableCell align='right'>Sá»‘ ngÃ y</TableCell>
+                    <TableRow>
+                      <TableCell>Học viên</TableCell>
+                      <TableCell>Lớp</TableCell>
+                      <TableCell align='right'>Số ngày</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {lateInClass.map(item => (
+                    {lateStudents.map(item => (
                       <TableRow key={`${item.studentId}-${item.classId}`}>
                         <TableCell>{item.studentName}</TableCell>
                         <TableCell>{item.className}</TableCell>
                         <TableCell align='right'>
                           <Chip
-                            label={`${item.daysSinceLastPayment} ngÃ y`}
+                            label={`${item.daysSinceLastPayment} ngày`}
                             size='small'
                             color={item.daysSinceLastPayment > 60 ? 'error' : 'warning'}
                           />
@@ -582,16 +498,16 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
           <Box>
             <div className='flex items-center justify-between mb-2'>
               <Typography variant='subtitle2' className='font-semibold'>
-                Khoáº£n trá»«
+                Khoản trừ
               </Typography>
               <Button type='button' size='small' startIcon={<i className='ri-add-line' />} onClick={addDeductionRow}>
-                ThÃªm
+                Thêm
               </Button>
             </div>
 
             {deductions.length === 0 && (
               <Typography variant='body2' color='text.secondary'>
-                ChÆ°a cÃ³ khoáº£n trá»« nÃ o
+                Chưa có khoản trừ nào.
               </Typography>
             )}
 
@@ -599,14 +515,14 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
               <div key={item.tempId} className='flex gap-2 mb-2 items-center'>
                 <TextField
                   size='small'
-                  label='MÃ´ táº£'
+                  label='Mô tả'
                   value={item.description}
                   onChange={event => updateDeductionRow(item.tempId, 'description', event.target.value)}
                   sx={{ flex: 2 }}
                 />
                 <TextField
                   size='small'
-                  label='Sá»‘ tiá»n'
+                  label='Số tiền'
                   type='number'
                   value={item.amount}
                   onChange={event => updateDeductionRow(item.tempId, 'amount', event.target.value)}
@@ -617,36 +533,10 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
                 </IconButton>
               </div>
             ))}
-
-            {deductions.length > 0 && (
-              <div className='flex justify-end mt-1'>
-                <Typography variant='body2' color='error.main' className='font-medium'>
-                  Tá»•ng khoáº£n trá»«: {formatCurrency(totalDeductionAmount)}
-                </Typography>
-              </div>
-            )}
           </Box>
 
-          {selectedCollection && (
-            <Alert severity='info' sx={{ py: 0.5 }}>
-              <Typography variant='body2'>
-                Sá»‘ tiá»n bÃ n giao lá»›p Ä‘ang chá»n = <strong>{formatCurrency(selectedCollection.totalCollectedToDate)}</strong>
-                {selectedCollection.totalHandedOver > 0 && (
-                  <> âˆ’ Ä‘Ã£ bÃ n giao <strong>{formatCurrency(selectedCollection.totalHandedOver)}</strong></>
-                )}
-                {totalDeductionAmount > 0 && (
-                  <> âˆ’ khoáº£n trá»« <strong>{formatCurrency(totalDeductionAmount)}</strong></>
-                )}
-                {' = '}
-                <strong style={{ color: 'var(--mui-palette-success-main)' }}>
-                  {formatCurrency(Math.max(0, selectedCollection.availableToHandover - totalDeductionAmount))}
-                </strong>
-              </Typography>
-            </Alert>
-          )}
-
           <TextField
-            label='Ghi chÃº'
+            label='Ghi chú'
             multiline
             rows={2}
             value={formData.notes}
@@ -654,20 +544,11 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId,
           />
 
           <div className='flex items-center gap-3 flex-wrap'>
-            <Button type='submit' variant='contained' disabled={loading || !formData.classId}>
-              {loading ? 'Äang xá»­ lÃ½...' : 'Táº¡o phiáº¿u lá»›p Ä‘Ã£ chá»n'}
-            </Button>
-            <Button
-              type='button'
-              variant='outlined'
-              color='success'
-              disabled={loading || collectionsWithMoney.length === 0}
-              onClick={handleCreateAllHandovers}
-            >
-              BÃ n giao toÃ n bá»™ tá»›i hiá»‡n táº¡i
+            <Button type='submit' variant='contained' disabled={loading || totalAvailableToHandover <= 0}>
+              {loading ? 'Đang xử lý...' : 'Tạo phiếu bàn giao'}
             </Button>
             <Button type='button' variant='outlined' color='error' onClick={resetAndClose}>
-              Há»§y
+              Hủy
             </Button>
           </div>
         </form>

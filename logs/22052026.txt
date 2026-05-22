@@ -1,0 +1,317 @@
+==22/05/2026 08:37:16==
+- Level: ERROR
+- ClassName: StudentService
+- Method: getStudents
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async StudentService.getStudents (http://localhost:3000/_next/static/chunks/src_62a270._.js:28:30)
+    at async StudentTuitionDiscountPage.useEffect.run (http://localhost:3000/_next/static/chunks/src_62a270._.js:664:33)
+==END==
+
+==22/05/2026 08:37:16==
+- Level: ERROR
+- ClassName: StudentService
+- Method: getStudents
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async StudentService.getStudents (http://localhost:3000/_next/static/chunks/src_62a270._.js:28:30)
+    at async StudentTuitionDiscountPage.useEffect.run (http://localhost:3000/_next/static/chunks/src_62a270._.js:664:33)
+==END==
+
+==22/05/2026 08:50:52==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:5009:34
+    at async VerticalMenu.useEffect.fetchMenu (http://localhost:3000/_next/static/chunks/src_components_0deea8._.js:642:42)
+==END==
+
+==22/05/2026 08:50:52==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getStatistics
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getStatistics (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:20:30)
+    at async Promise.all (index 0)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:50:53==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getRevenue
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getRevenue (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:42:30)
+    at async Promise.all (index 1)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:50:53==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getSystemNotifications
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getSystemNotifications (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:124:30)
+    at async Promise.all (index 4)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:50:53==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getStudentStats
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getStudentStats (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:64:30)
+    at async Promise.all (index 2)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:50:53==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getAttendanceStats
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getAttendanceStats (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:104:30)
+    at async Promise.all (index 3)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:51:00==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:5009:34
+    at async VerticalMenu.useEffect.fetchMenu (http://localhost:3000/_next/static/chunks/src_components_0deea8._.js:642:42)
+==END==
+
+==22/05/2026 08:51:01==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getStatistics
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getStatistics (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:20:30)
+    at async Promise.all (index 0)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:51:01==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getRevenue
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getRevenue (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:42:30)
+    at async Promise.all (index 1)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:51:01==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getStudentStats
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getStudentStats (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:64:30)
+    at async Promise.all (index 2)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:51:01==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getSystemNotifications
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getSystemNotifications (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:124:30)
+    at async Promise.all (index 4)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:51:01==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getAttendanceStats
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getAttendanceStats (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:104:30)
+    at async Promise.all (index 3)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:51:07==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:5009:34
+    at async VerticalMenu.useEffect.fetchMenu (http://localhost:3000/_next/static/chunks/src_components_0deea8._.js:642:42)
+==END==
+
+==22/05/2026 08:51:07==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getStatistics
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getStatistics (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:20:30)
+    at async Promise.all (index 0)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:51:08==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getRevenue
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getRevenue (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:42:30)
+    at async Promise.all (index 1)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:51:08==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getAttendanceStats
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getAttendanceStats (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:104:30)
+    at async Promise.all (index 3)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:51:08==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getSystemNotifications
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getSystemNotifications (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:124:30)
+    at async Promise.all (index 4)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 08:51:08==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getStudentStats
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getStudentStats (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:64:30)
+    at async Promise.all (index 2)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_dc12f9._.js:529:104)
+==END==
+
+==22/05/2026 09:23:16==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:5013:34
+    at async VerticalMenu.useEffect.fetchMenu (http://localhost:3000/_next/static/chunks/src_components_0deea8._.js:642:42)
+==END==
+
+==22/05/2026 09:23:16==
+- Level: ERROR
+- ClassName: BeltExamService
+- Method: getAdminView
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async BeltExamService.getAdminView (http://localhost:3000/_next/static/chunks/src_bc8af8._.js:523:30)
+    at async BeltExamAdminView.useEffect.loadData (http://localhost:3000/_next/static/chunks/src_bc8af8._.js:875:40)
+==END==
+
+==22/05/2026 09:23:26==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:5013:34
+    at async VerticalMenu.useEffect.fetchMenu (http://localhost:3000/_next/static/chunks/src_components_0deea8._.js:642:42)
+==END==
+
+==22/05/2026 09:23:26==
+- Level: ERROR
+- ClassName: BeltExamService
+- Method: getExamSessions
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async BeltExamService.getExamSessions (http://localhost:3000/_next/static/chunks/src_0cd581._.js:27:30)
+    at async Promise.all (index 0)
+    at async loadFilters (http://localhost:3000/_next/static/chunks/src_0cd581._.js:8002:40)
+==END==
+
+==22/05/2026 09:23:26==
+- Level: ERROR
+- ClassName: StudentAttendanceService
+- Method: getCoachClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async StudentAttendanceService.getCoachClasses (http://localhost:3000/_next/static/chunks/src_0cd581._.js:1163:30)
+    at async Promise.all (index 1)
+    at async loadFilters (http://localhost:3000/_next/static/chunks/src_0cd581._.js:8002:40)
+==END==
+

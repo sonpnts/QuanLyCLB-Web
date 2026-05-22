@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react'
 
 // Third-party Imports
 import type { AxiosError } from 'axios'
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: ChildrenType) => {
   const [auth, setAuth] = useState<AuthSnapshot | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const stored = authStorage.get()
 
     if (stored) {

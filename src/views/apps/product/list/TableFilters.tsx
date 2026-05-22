@@ -25,8 +25,8 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
   useEffect(() => {
     const params: GetProductsParams = {}
 
-    if (category) params.category = category
-    if (code) params.code = code
+    if (category.trim()) params.category = category.trim()
+    if (code.trim()) params.code = code.trim()
     if (isActive) params.isActive = isActive === 'true'
 
     onFilterChange(params)
@@ -36,15 +36,10 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
     <CardContent>
       <Grid container spacing={4}>
         <Grid item xs={12} md={4}>
-          <TextField fullWidth label='Lọc theo mã' value={code} onChange={event => setCode(event.target.value)} />
+          <TextField fullWidth label='Lọc theo mã sản phẩm' value={code} onChange={event => setCode(event.target.value)} />
         </Grid>
         <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            label='Lọc theo danh mục'
-            value={category}
-            onChange={event => setCategory(event.target.value)}
-          />
+          <TextField fullWidth label='Lọc theo danh mục' value={category} onChange={event => setCategory(event.target.value)} />
         </Grid>
         <Grid item xs={12} md={4}>
           <FormControl fullWidth>
