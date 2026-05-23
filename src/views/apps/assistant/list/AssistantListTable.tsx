@@ -184,7 +184,7 @@ const AssistantListTable = () => {
       (u.fullName || '').toLowerCase().includes(q) ||
       (u.email || '').toLowerCase().includes(q) ||
       (u.phoneNumber || '').toLowerCase().includes(q) ||
-      (u.skillLevel || '').toLowerCase().includes(q)
+      (u.beltLevelName || '').toLowerCase().includes(q)
     )
   }, [data, search])
 
@@ -220,7 +220,7 @@ const AssistantListTable = () => {
                       { header: 'Họ và tên', accessor: 'fullName' },
                       { header: 'Email', accessor: 'email' },
                       { header: 'Số điện thoại', accessor: 'phoneNumber' as any },
-                      { header: 'Cấp đai', accessor: 'skillLevel' as any },
+                      { header: 'Cấp đai', accessor: 'beltLevelName' as any },
                       { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }
                     ]
                   })
@@ -314,7 +314,7 @@ const AssistantListTable = () => {
                       </Typography>
                     </td>
                     <td className='p-3'>
-                      <Typography variant='body2'>{user.skillLevel || '-'}</Typography>
+                      <Typography variant='body2'>{user.beltLevelName || '-'}</Typography>
                     </td>
                     <td className='p-3 text-center'>
                       <Chip
