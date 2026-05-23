@@ -2,34 +2,71 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import Typography from '@mui/material/Typography'
-import Box from '@mui/material/Box'
-import TextField from '@mui/material/TextField'
-import Button from '@mui/material/Button'
+import Chip from '@mui/material/Chip'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
 import Divider from '@mui/material/Divider'
+import Tab from '@mui/material/Tab'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
+import TablePagination from '@mui/material/TablePagination'
 import TableRow from '@mui/material/TableRow'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogContent from '@mui/material/DialogContent'
-import DialogActions from '@mui/material/DialogActions'
+import Tabs from '@mui/material/Tabs'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
 
-import studentService, { type TuitionDiscountRequestRow } from '@/services/studentService'
 import { useNotification } from '@/contexts/notificationContext'
+import studentService, { type PaginatedResult, type TuitionDiscountRequestRow } from '@/services/studentService'
 
 const formatVnd = (n: number) => `${Math.round(n).toLocaleString('vi-VN')}đ`
+
+const getStatusChip = (status: TuitionDiscountRequestRow['status']) => {
+  const value = typeof status === 'string' ? status.toLowerCase() : String(status)
+
+  if (value.includes('approved') || value === '2') {
+    return <Chip label='Đã duyệt' color='success' size='small' />
+  }
+
+  if (value.includes('rejected') || value === '3') {
+    return <Chip label='Từ chối' color='error' size='small' />
+  }
+
+  if (value.includes('pending') || value === '1') {
+    return <Chip label='Chờ duyệt' color='warning' size='small' />
+  }
+
+  return <Chip label='—' size='small' variant='outlined' />
+}
+
+const emptyPagedResult = (): PaginatedResult<TuitionDiscountRequestRow> => ({
+  records: [],
+  totalRecords: 0
+})
 
 const StudentTuitionDiscountApprovalsPage = () => {
   const { showNotification } = useNotification()
 
-  const [rows, setRows] = useState<TuitionDiscountRequestRow[]>([])
-  const [loading, setLoading] = useState(false)
+  const [tab, setTab] = useState(0)
+  const [keyword, setKeyword] = useState('')
+
+  const [pendingPage, setPendingPage] = useState(0)
+  const [pendingRowsPerPage, setPendingRowsPerPage] = useState(10)
+  const [pendingData, setPendingData] = useState<PaginatedResult<TuitionDiscountRequestRow>>(emptyPagedResult)
+  const [pendingLoading, setPendingLoading] = useState(false)
+
+  const [historyPage, setHistoryPage] = useState(0)
+  const [historyRowsPerPage, setHistoryRowsPerPage] = useState(10)
+  const [historyData, setHistoryData] = useState<PaginatedResult<TuitionDiscountRequestRow>>(emptyPagedResult)
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   const [decideOpen, setDecideOpen] = useState(false)
   const [decideStudentId, setDecideStudentId] = useState<string | null>(null)
@@ -37,19 +74,54 @@ const StudentTuitionDiscountApprovalsPage = () => {
   const [decideNote, setDecideNote] = useState('')
   const [deciding, setDeciding] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const loadPending = useCallback(async (page = pendingPage, pageSize = pendingRowsPerPage, search = keyword) => {
+    setPendingLoading(true)
+
     try {
-      const res = await studentService.getPendingTuitionDiscountRequests({ pageSize: 100 })
-      setRows(res.data || [])
+      const res = await studentService.getPendingTuitionDiscountRequestsPaged({
+        pageNumber: page + 1,
+        pageSize,
+        keyword: search.trim() || undefined
+      })
+
+      setPendingData(res.data || emptyPagedResult())
     } finally {
-      setLoading(false)
+      setPendingLoading(false)
     }
-  }, [])
+  }, [keyword, pendingPage, pendingRowsPerPage])
+
+  const loadHistory = useCallback(async (page = historyPage, pageSize = historyRowsPerPage, search = keyword) => {
+    setHistoryLoading(true)
+
+    try {
+      const res = await studentService.getHistoryTuitionDiscountRequestsPaged({
+        pageNumber: page + 1,
+        pageSize,
+        keyword: search.trim() || undefined
+      })
+
+      setHistoryData(res.data || emptyPagedResult())
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [historyPage, historyRowsPerPage, keyword])
 
   useEffect(() => {
-    load()
-  }, [load])
+    setPendingPage(0)
+    setHistoryPage(0)
+  }, [keyword])
+
+  useEffect(() => {
+    if (tab === 0) {
+      loadPending(pendingPage, pendingRowsPerPage)
+    }
+  }, [pendingPage, pendingRowsPerPage, tab, loadPending])
+
+  useEffect(() => {
+    if (tab === 1) {
+      loadHistory(historyPage, historyRowsPerPage)
+    }
+  }, [historyPage, historyRowsPerPage, tab, loadHistory])
 
   const openDecide = (studentId: string, approve: boolean) => {
     setDecideStudentId(studentId)
@@ -60,20 +132,39 @@ const StudentTuitionDiscountApprovalsPage = () => {
 
   const submitDecide = async () => {
     if (!decideStudentId) return
+
     setDeciding(true)
+
     try {
-      const res = await studentService.decideTuitionDiscount(decideStudentId, { approve: decideApprove, note: decideNote.trim() || undefined })
+      const res = await studentService.decideTuitionDiscount(decideStudentId, {
+        approve: decideApprove,
+        note: decideNote.trim() || undefined
+      })
+
       if (!res.success) {
         showNotification(res.message || 'Không cập nhật được', 'error')
+
         return
       }
+
       showNotification(res.message || 'Đã cập nhật', 'success')
       setDecideOpen(false)
-      await load()
+      await Promise.all([
+        loadPending(0, pendingRowsPerPage),
+        loadHistory(0, historyRowsPerPage)
+      ])
+      setPendingPage(0)
+      setHistoryPage(0)
     } finally {
       setDeciding(false)
     }
   }
+
+  const activeRows = tab === 0 ? pendingData.records : historyData.records
+  const activeLoading = tab === 0 ? pendingLoading : historyLoading
+  const activeTotal = tab === 0 ? pendingData.totalRecords : historyData.totalRecords
+  const activePage = tab === 0 ? pendingPage : historyPage
+  const activeRowsPerPage = tab === 0 ? pendingRowsPerPage : historyRowsPerPage
 
   return (
     <Box className='flex flex-col gap-6'>
@@ -83,70 +174,144 @@ const StudentTuitionDiscountApprovalsPage = () => {
             Duyệt giảm trừ / miễn học phí
           </Typography>
           <Typography variant='body2' color='text.secondary'>
-            Danh sách các yêu cầu đang chờ duyệt.
+            Quản lý yêu cầu chờ duyệt và xem lại các yêu cầu đã xử lý.
           </Typography>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent>
-          <Typography variant='h6' sx={{ mb: 2 }}>
-            Yêu cầu chờ duyệt
-          </Typography>
+          <Box className='flex items-center justify-between gap-3 flex-wrap' sx={{ mb: 2 }}>
+            <Tabs value={tab} onChange={(_event, value) => setTab(value)}>
+              <Tab label='Chờ duyệt' />
+              <Tab label='Lịch sử' />
+            </Tabs>
+
+            <TextField
+              size='small'
+              label='Tìm kiếm'
+              placeholder='Tên, mã, SĐT, lý do...'
+              value={keyword}
+              onChange={event => setKeyword(event.target.value)}
+              sx={{ minWidth: 280 }}
+            />
+          </Box>
+
           <Divider sx={{ mb: 2 }} />
 
           <TableContainer>
             <Table size='small'>
               <TableHead>
-                <TableRow>
-                  <TableCell>Học viên</TableCell>
-                  <TableCell align='right'>Giảm</TableCell>
-                  <TableCell>Lý do</TableCell>
-                  <TableCell>Người tạo</TableCell>
-                  <TableCell>Thời gian</TableCell>
-                  <TableCell align='right'>Hành động</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {!loading && rows.length === 0 && (
+                {tab === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6}>
+                    <TableCell>Học viên</TableCell>
+                    <TableCell>Lớp</TableCell>
+                    <TableCell align='right'>Giảm</TableCell>
+                    <TableCell>Lý do</TableCell>
+                    <TableCell>Người tạo</TableCell>
+                    <TableCell>Thời gian</TableCell>
+                    <TableCell align='right'>Hành động</TableCell>
+                  </TableRow>
+                ) : (
+                  <TableRow>
+                    <TableCell>Học viên</TableCell>
+                    <TableCell>Lớp</TableCell>
+                    <TableCell align='right'>Giảm</TableCell>
+                    <TableCell>Kết quả</TableCell>
+                    <TableCell>Người tạo</TableCell>
+                    <TableCell>Người duyệt</TableCell>
+                    <TableCell>Ghi chú</TableCell>
+                    <TableCell>Thời gian xử lý</TableCell>
+                  </TableRow>
+                )}
+              </TableHead>
+
+              <TableBody>
+                {!activeLoading && activeRows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={tab === 0 ? 7 : 8}>
                       <Typography variant='body2' color='text.secondary'>
-                        Không có yêu cầu nào.
+                        {tab === 0 ? 'Không có yêu cầu nào đang chờ duyệt.' : 'Chưa có yêu cầu lịch sử nào.'}
                       </Typography>
                     </TableCell>
                   </TableRow>
                 )}
 
-                {rows.map(r => (
-                  <TableRow key={r.studentId}>
+                {activeRows.map(row => (
+                  <TableRow key={row.studentId}>
                     <TableCell>
                       <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                        {r.studentName}
+                        {row.studentName}
                       </Typography>
                       <Typography variant='caption' color='text.secondary'>
-                        {r.studentCode || '—'}
+                        {row.studentCode || '—'}
                       </Typography>
                     </TableCell>
-                    <TableCell align='right'>{formatVnd(r.discountAmount || 0)}</TableCell>
-                    <TableCell>{r.reason}</TableCell>
-                    <TableCell>{r.requestedByName || '—'}</TableCell>
-                    <TableCell>{r.requestedAt ? new Date(r.requestedAt).toLocaleString('vi-VN') : '—'}</TableCell>
-                    <TableCell align='right'>
-                      <Box className='flex items-center justify-end gap-2'>
-                        <Button size='small' variant='contained' color='success' onClick={() => openDecide(r.studentId, true)}>
-                          Duyệt
-                        </Button>
-                        <Button size='small' variant='outlined' color='error' onClick={() => openDecide(r.studentId, false)}>
-                          Từ chối
-                        </Button>
-                      </Box>
-                    </TableCell>
+
+                    <TableCell>{row.className || '—'}</TableCell>
+                    <TableCell align='right'>{formatVnd(row.discountAmount || 0)}</TableCell>
+
+                    {tab === 0 ? (
+                      <>
+                        <TableCell>{row.reason}</TableCell>
+                        <TableCell>{row.requestedByName || '—'}</TableCell>
+                        <TableCell>{row.requestedAt ? new Date(row.requestedAt).toLocaleString('vi-VN') : '—'}</TableCell>
+                        <TableCell align='right'>
+                          <Box className='flex items-center justify-end gap-2'>
+                            <Button size='small' variant='contained' color='success' onClick={() => openDecide(row.studentId, true)}>
+                              Duyệt
+                            </Button>
+                            <Button size='small' variant='outlined' color='error' onClick={() => openDecide(row.studentId, false)}>
+                              Từ chối
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      </>
+                    ) : (
+                      <>
+                        <TableCell>{getStatusChip(row.status)}</TableCell>
+                        <TableCell>{row.requestedByName || '—'}</TableCell>
+                        <TableCell>{row.decidedByName || '—'}</TableCell>
+                        <TableCell>{row.decisionNote || '—'}</TableCell>
+                        <TableCell>{row.decidedAt ? new Date(row.decidedAt).toLocaleString('vi-VN') : '—'}</TableCell>
+                      </>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </TableContainer>
+
+          <TablePagination
+            component='div'
+            count={activeTotal}
+            page={activePage}
+            onPageChange={(_event, newPage) => {
+              if (tab === 0) {
+                setPendingPage(newPage)
+
+                return
+              }
+
+              setHistoryPage(newPage)
+            }}
+            rowsPerPage={activeRowsPerPage}
+            onRowsPerPageChange={event => {
+              const nextValue = Number(event.target.value)
+
+              if (tab === 0) {
+                setPendingRowsPerPage(nextValue)
+                setPendingPage(0)
+
+                return
+              }
+
+              setHistoryRowsPerPage(nextValue)
+              setHistoryPage(0)
+            }}
+            rowsPerPageOptions={[10, 20, 50]}
+            labelRowsPerPage='Số dòng'
+          />
         </CardContent>
       </Card>
 
@@ -155,9 +320,9 @@ const StudentTuitionDiscountApprovalsPage = () => {
         <DialogContent>
           <TextField
             fullWidth
-            label='Ghi chú (tuỳ chọn)'
+            label='Ghi chú (tùy chọn)'
             value={decideNote}
-            onChange={e => setDecideNote(e.target.value)}
+            onChange={event => setDecideNote(event.target.value)}
             multiline
             minRows={3}
             sx={{ mt: 2 }}
@@ -177,4 +342,3 @@ const StudentTuitionDiscountApprovalsPage = () => {
 }
 
 export default StudentTuitionDiscountApprovalsPage
-

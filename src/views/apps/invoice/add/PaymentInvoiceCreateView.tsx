@@ -267,10 +267,6 @@ const PaymentInvoiceCreateView = () => {
         if (response.success && response.data) {
           setTuitionQuote(response.data)
 
-          if (!form.discountAmount && Number(response.data.suggestedDiscountAmount || 0) > 0) {
-            setForm(prev => ({ ...prev, discountAmount: String(response.data!.suggestedDiscountAmount) }))
-          }
-
           if (!tuitionTouchedRef.current && !response.data.alreadyPaid) {
             setForm(prev => ({ ...prev, tuitionEnabled: true }))
           }
@@ -448,9 +444,9 @@ const PaymentInvoiceCreateView = () => {
     [selectedOneTimeItems]
   )
 
-  const tuitionOriginalAmount = Number(tuitionQuote?.monthlyFee || 0)
+  const tuitionPayableAmount = Number(tuitionQuote?.finalAmount || 0)
   const discountAmount = Number(form.discountAmount || 0)
-  const tuitionNetAmount = Math.max(0, tuitionOriginalAmount - discountAmount)
+  const tuitionNetAmount = Math.max(0, tuitionPayableAmount - discountAmount)
   const examFeeAmount = Number(selectedExamOption?.feeAmount || 0)
   const studentHasZalo = Boolean(selectedStudent?.userIdZalo?.trim())
   const shouldSendZaloConfirmation = form.tuitionEnabled && tuitionNetAmount > 0
@@ -973,7 +969,7 @@ const PaymentInvoiceCreateView = () => {
                             <Stack spacing={1}>
                               <Typography>Học phí gốc: {formatCurrency(Number(tuitionQuote.monthlyFee || 0))}</Typography>
                               {Number(tuitionQuote.suggestedDiscountAmount || 0) > 0 && (
-                                <Typography color='warning.main'>Giảm trừ gợi ý: {formatCurrency(Number(tuitionQuote.suggestedDiscountAmount || 0))}</Typography>
+                                <Typography color='warning.main'>Giảm học phí đã duyệt: {formatCurrency(Number(tuitionQuote.suggestedDiscountAmount || 0))}</Typography>
                               )}
                               <Typography color='primary.main' fontWeight={700}>
                                 Số tiền thu: {formatCurrency(tuitionNetAmount)}

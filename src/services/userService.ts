@@ -66,8 +66,6 @@ class UserService {
       fullName: apiUser.fullName,
       phoneNumber: apiUser.phoneNumber,
       avatarUrl: apiUser.avatarUrl,
-      skillLevel: apiUser.skillLevel,
-      certification: apiUser.certification,
       isActive: apiUser.isActive,
       roles: apiUser.roles || [],
       createdAt: (apiUser as any).createdAt,

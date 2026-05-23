@@ -120,8 +120,14 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     return 0
   }, [formData.type, selectedExamOption?.feeAmount, selectedProduct?.unitPrice, tuitionQuote?.monthlyFee])
 
+  const payableAmount = useMemo(() => {
+    if (formData.type === PAYMENT_TYPE_TUITION) return Number(tuitionQuote?.finalAmount || 0)
+
+    return originalAmount
+  }, [formData.type, originalAmount, tuitionQuote?.finalAmount])
+
   const discountAmount = Number(formData.discountAmount || 0)
-  const finalAmount = Math.max(0, originalAmount - discountAmount)
+  const finalAmount = Math.max(0, payableAmount - discountAmount)
   const addOnProductsAmount = useMemo(
     () =>
       addOnProducts.reduce((sum, item) => {
@@ -311,14 +317,6 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
           setTuitionQuote(response.data)
 
           // Tự động điền giảm trừ gợi ý nếu > 0
-          if (response.data.suggestedDiscountAmount > 0) {
-            setFormData(prev => ({
-              ...prev,
-              discountAmount: String(response.data!.suggestedDiscountAmount)
-            }))
-          } else {
-            setFormData(prev => ({ ...prev, discountAmount: '' }))
-          }
         } else {
           setTuitionQuote(null)
           showNotification(response.message || 'Không thể tính học phí.', 'error')
@@ -451,7 +449,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
       return
     }
 
-    if (discountAmount > originalAmount) {
+    if (discountAmount > payableAmount) {
       showNotification('Số tiền giảm không được lớn hơn số tiền gốc.', 'error')
 
       return
@@ -939,8 +937,8 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
                   InputProps={{
                     endAdornment: <InputAdornment position='end'>VND</InputAdornment>
                   }}
-                  error={discountAmount > originalAmount}
-                  helperText={discountAmount > originalAmount ? 'Không được lớn hơn số tiền gốc' : undefined}
+                  error={discountAmount > payableAmount}
+                  helperText={discountAmount > payableAmount ? 'Không được lớn hơn số tiền gốc' : undefined}
                 />
               </Grid>
 

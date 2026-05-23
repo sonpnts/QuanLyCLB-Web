@@ -26,7 +26,7 @@ import Typography from '@mui/material/Typography'
 
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
-import paymentService, { type ExamFeeOptionType } from '@/services/paymentService'
+import paymentService, { type ExamFeeOptionType, type TuitionQuoteType } from '@/services/paymentService'
 import oneTimeFeeService from '@/services/oneTimeFeeService'
 import type { OneTimeFeeOptionType } from '@/types/apps/oneTimeFeeTypes'
 
@@ -93,6 +93,7 @@ const CollectPaymentDialog = ({
 
   const [discountAmount, setDiscountAmount] = useState<number>(0)
   const [discountReason, setDiscountReason] = useState('')
+  const [tuitionQuote, setTuitionQuote] = useState<TuitionQuoteType | null>(null)
   const [includeTuition, setIncludeTuition] = useState(false)
   const [loadingExamOptions, setLoadingExamOptions] = useState(false)
   const [examFeeOptions, setExamFeeOptions] = useState<ExamFeeOptionType[]>([])
@@ -109,6 +110,7 @@ const CollectPaymentDialog = ({
     setPreviewUrl(null)
     setDiscountAmount(0)
     setDiscountReason('')
+    setTuitionQuote(null)
     setExamFeeOptions([])
     setIncludeExamFee(false)
     setSelectedExamRegistrationId('')
@@ -124,6 +126,27 @@ const CollectPaymentDialog = ({
 
   useEffect(() => {
     let ignore = false
+
+    const loadTuitionQuote = async () => {
+      if (!open || paymentType !== 'Tuition' || !classId || !forMonth || !forYear) {
+        if (!ignore) {
+          setTuitionQuote(null)
+        }
+
+        return
+      }
+
+      try {
+        const res = await paymentService.getTuitionQuote(classId, studentId, forMonth, forYear)
+        if (ignore) return
+
+        setTuitionQuote(res.success ? res.data || null : null)
+      } catch {
+        if (!ignore) {
+          setTuitionQuote(null)
+        }
+      }
+    }
 
     const loadExamFeeOptions = async () => {
       if (!open || paymentType !== 'Tuition' || !classId) return
@@ -151,12 +174,13 @@ const CollectPaymentDialog = ({
       }
     }
 
+    loadTuitionQuote()
     loadExamFeeOptions()
 
     return () => {
       ignore = true
     }
-  }, [open, paymentType, classId, studentId])
+  }, [open, paymentType, classId, studentId, forMonth, forYear])
 
   useEffect(() => {
     let ignore = false
@@ -239,9 +263,15 @@ const CollectPaymentDialog = ({
     return sum + (selectedOneTimeFees[option.feeCode] ? Number(option.amount || 0) : 0)
   }, 0)
 
-  const selectedTuitionAmount = paymentType === 'ExamFee' && includeTuition ? Number(tuitionAmount || 0) : 0
+  const baseTuitionAmount =
+    paymentType === 'Tuition'
+      ? Number(tuitionQuote?.finalAmount ?? amount ?? 0)
+      : Number(tuitionAmount || 0)
+
+  const selectedTuitionAmount = paymentType === 'ExamFee' && includeTuition ? baseTuitionAmount : 0
   const isOneTimeFeeOnly = Number(amount || 0) <= 0 && selectedOneTimeFeeAmount > 0
-  const grossAmount = Number(amount || 0) + selectedExamFeeAmount + selectedTuitionAmount + selectedOneTimeFeeAmount
+  const primaryAmount = paymentType === 'Tuition' ? baseTuitionAmount : Number(amount || 0)
+  const grossAmount = primaryAmount + selectedExamFeeAmount + selectedTuitionAmount + selectedOneTimeFeeAmount
   const hasTuitionLine = paymentType === 'Tuition' || (paymentType === 'ExamFee' && includeTuition)
   const netAmount = hasTuitionLine ? Math.max(0, grossAmount - Number(discountAmount || 0)) : grossAmount
 

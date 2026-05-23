@@ -9,8 +9,6 @@ export type UsersType = {
   fullName: string
   phoneNumber?: string
   avatarUrl?: string | null
-  skillLevel?: string
-  certification?: string
   isActive: boolean
   roles: string[]
   createdAt?: string
@@ -33,8 +31,6 @@ export type ApiUserResponse = {
   fullName: string
   phoneNumber?: string
   avatarUrl?: string | null
-  skillLevel?: string
-  certification?: string
   isActive: boolean
   hasPassword?: boolean
   isGoogleAccount?: boolean

@@ -202,6 +202,7 @@ export const API_ENDPOINTS = {
     tuitionDiscountDecide: (studentId: string) => `/Students/${studentId}/tuition-discount/decide`,
     tuitionDiscountMy: '/Students/tuition-discount/requests/my',
     tuitionDiscountPending: '/Students/tuition-discount/requests/pending',
+    tuitionDiscountHistory: '/Students/tuition-discount/requests/history',
     zaloVerifyPhone: '/Students/zalo/verify-phone',
     zaloUpdate: (id: string) => `/Students/${id}/zalo`
   },

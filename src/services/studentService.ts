@@ -21,6 +21,7 @@ export interface TuitionDiscountRequestRow {
   studentId: string
   studentCode: string
   studentName: string
+  className?: string
   phoneNumber?: string
   discountAmount: number
   reason: string
@@ -32,6 +33,11 @@ export interface TuitionDiscountRequestRow {
   decidedByUserId?: string
   decidedByName?: string
   decisionNote?: string
+}
+
+export interface PaginatedResult<T> {
+  records: T[]
+  totalRecords: number
 }
 
 export interface GetStudentsParams {
@@ -119,6 +125,21 @@ const unwrapList = (payload: any): any[] => {
   if (Array.isArray(payload)) return payload
 
   return []
+}
+
+const unwrapPaginatedList = <T>(payload: any): PaginatedResult<T> => {
+  const records = unwrapList(payload) as T[]
+  const totalRecords =
+    payload?.totalRecords ??
+    payload?.TotalRecords ??
+    payload?.totalCount ??
+    payload?.TotalCount ??
+    records.length
+
+  return {
+    records,
+    totalRecords: Number(totalRecords || 0)
+  }
 }
 
 class StudentService {
@@ -416,6 +437,39 @@ class StudentService {
     } catch (error) {
       logger.error('StudentService', 'getPendingTuitionDiscountRequests', error)
       return { success: true, data: [] }
+    }
+  }
+
+  async getPendingTuitionDiscountRequestsPaged(params?: {
+    pageNumber?: number
+    pageSize?: number
+    keyword?: string
+  }): Promise<ResponseResult<PaginatedResult<TuitionDiscountRequestRow>>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionDiscountPending, { params })
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: true, data: { records: [], totalRecords: 0 } }
+      return { success: true, data: unwrapPaginatedList<TuitionDiscountRequestRow>(apiResponse.data) }
+    } catch (error) {
+      logger.error('StudentService', 'getPendingTuitionDiscountRequestsPaged', error)
+      return { success: true, data: { records: [], totalRecords: 0 } }
+    }
+  }
+
+  async getHistoryTuitionDiscountRequestsPaged(params?: {
+    pageNumber?: number
+    pageSize?: number
+    keyword?: string
+    status?: any
+  }): Promise<ResponseResult<PaginatedResult<TuitionDiscountRequestRow>>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionDiscountHistory, { params })
+      const apiResponse = response.data
+      if (!apiResponse.isSuccess) return { success: true, data: { records: [], totalRecords: 0 } }
+      return { success: true, data: unwrapPaginatedList<TuitionDiscountRequestRow>(apiResponse.data) }
+    } catch (error) {
+      logger.error('StudentService', 'getHistoryTuitionDiscountRequestsPaged', error)
+      return { success: true, data: { records: [], totalRecords: 0 } }
     }
   }
 

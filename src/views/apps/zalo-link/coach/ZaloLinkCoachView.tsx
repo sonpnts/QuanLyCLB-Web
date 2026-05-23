@@ -113,7 +113,7 @@ export default function ZaloLinkCoachView() {
     [safeOverview, selectedClassStats]
   )
   const overviewTitle = selectedClassStats
-    ? `Thống kê lớp ${selectedClassStats.classCode}${selectedClassStats.className ? ` - ${selectedClassStats.className}` : ''}`
+    ? `Thống kê lớp ${selectedClassStats.classCode}`
     : 'Thống kê tất cả lớp'
 
   const openVerify = (r: ZaloLinkCoachStudentRowType) => {
@@ -263,7 +263,7 @@ export default function ZaloLinkCoachView() {
                         <TableCell>{r.studentName}</TableCell>
                         <TableCell>{r.phoneNumber || '-'}</TableCell>
                         <TableCell>
-                          {r.className} <span className='text-textSecondary'>({r.classCode})</span>
+                          {r.classCode}
                         </TableCell>
                         <TableCell align='center'>
                           {linked ? (
