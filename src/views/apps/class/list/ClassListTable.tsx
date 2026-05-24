@@ -233,7 +233,7 @@ return
           />
         )
       },
-      columnHelper.accessor('name', {
+      /*columnHelper.accessor('name', {
         header: 'Tên',
         cell: ({ row }) => {
           const isInactive = row.original.isActive === false
@@ -267,7 +267,7 @@ return (
             </div>
           )
         }
-      }),
+      }),*/
       columnHelper.accessor('code', {
         header: 'Mã',
         cell: ({ row }) => (
@@ -361,11 +361,11 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
                   </IconButton>
                 )}
               </Box>
-              {branch?.address && (
+              /*{branch?.address && (
                 <Typography variant='caption' color='text.secondary'>
                   {branch.address}
                 </Typography>
-              )}
+              )}*/
             </Box>
           )
         }
