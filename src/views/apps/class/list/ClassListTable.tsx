@@ -462,7 +462,7 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
                   </>
                 )}
 
-              {isAdmin &&
+              /*{isAdmin &&
                 (isInactive ? (
                   <IconButton onClick={handleRestore} title='Khôi phục lớp học' color='success'>
                     <i className='ri-restart-line' style={{ color: '#2e7d32' }} />
@@ -471,7 +471,7 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
                   <IconButton onClick={handleDelete} title='Xóa lớp học' color='error'>
                     <i className='ri-delete-bin-7-line' />
                   </IconButton>
-                ))}
+                ))}*/
 
               {/* Row click handles "view" */}
 
