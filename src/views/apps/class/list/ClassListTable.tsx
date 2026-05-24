@@ -361,11 +361,11 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
                   </IconButton>
                 )}
               </Box>
-              /*{branch?.address && (
+              {/*branch?.address && (
                 <Typography variant='caption' color='text.secondary'>
                   {branch.address}
                 </Typography>
-              )}*/
+              )*/}
             </Box>
           )
         }
