@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useEffect, useMemo, useState } from 'react'
@@ -412,7 +412,7 @@ const ProductCategoryTable = () => {
           rowsPerPageOptions={[10, 15, 25]}
           component='div'
           className='border-bs'
-          count={table.getFilteredRowModel().rows.length}
+          count={table.getPrePaginationRowModel().rows.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
           onPageChange={(_, page) => {

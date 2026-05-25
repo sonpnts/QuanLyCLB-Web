@@ -42,6 +42,11 @@ export type PaymentRecordType = {
   updatedAt?: string
 }
 
+export type DiscountedReceiptPagedResultType = {
+  totalRecords: number
+  records: PaymentRecordType[]
+}
+
 export type PaymentSummaryType = {
   classId: string
   className?: string

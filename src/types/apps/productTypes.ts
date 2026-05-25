@@ -11,6 +11,36 @@ export type ProductVariantType = {
   isActive: boolean
 }
 
+export type ProductInventoryBatchEntryItemType = {
+  productVariantId?: string
+  quantity: number
+  unitCost?: number
+  notes?: string
+}
+
+export type ProductBundleItemType = {
+  id: string
+  productId: string
+  productCode: string
+  productName: string
+  quantity: number
+  discountAmount: number
+  availableStock: number
+  sortOrder: number
+  isActive: boolean
+}
+
+export type ProductBundleType = {
+  id: string
+  code: string
+  name: string
+  description?: string
+  isActive: boolean
+  items: ProductBundleItemType[]
+  createdAt?: string
+  updatedAt?: string | null
+}
+
 export type ProductType = {
   id: string
   code: string

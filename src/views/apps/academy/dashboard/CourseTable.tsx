@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useState, useEffect, useMemo } from 'react'
@@ -324,7 +324,7 @@ const CourseTable = ({ courseData }: { courseData?: Course[] }) => {
         rowsPerPageOptions={[5, 10, 25]}
         component='div'
         className='border-bs'
-        count={table.getFilteredRowModel().rows.length}
+        count={table.getPrePaginationRowModel().rows.length}
         rowsPerPage={table.getState().pagination.pageSize}
         page={table.getState().pagination.pageIndex}
         onPageChange={(_, page) => {

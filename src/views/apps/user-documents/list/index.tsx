@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -543,7 +543,7 @@ const UserDocumentListTable = () => {
         <TablePagination
           rowsPerPageOptions={[15, 25, 50]}
           component='div' className='border-bs'
-          count={table.getFilteredRowModel().rows.length}
+          count={table.getPrePaginationRowModel().rows.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
           onPageChange={(_, page) => table.setPageIndex(page)}

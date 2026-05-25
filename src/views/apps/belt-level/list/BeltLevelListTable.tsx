@@ -237,7 +237,7 @@ const BeltLevelListTable = () => {
         </div>
         <TablePagination
           component='div'
-          count={table.getRowModel().rows.length}
+          count={table.getPrePaginationRowModel().rows.length}
           page={table.getState().pagination.pageIndex}
           onPageChange={(_, page) => table.setPageIndex(page)}
           rowsPerPage={table.getState().pagination.pageSize}

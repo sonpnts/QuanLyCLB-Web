@@ -35,7 +35,7 @@ import studentService from '@/services/studentService'
 import StudentZaloLinkPromptDialog from '@/components/student/StudentZaloLinkPromptDialog'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { OneTimeFeeOptionType } from '@/types/apps/oneTimeFeeTypes'
-import type { ProductType, ProductVariantType } from '@/types/apps/productTypes'
+import type { ProductBundleType, ProductType, ProductVariantType } from '@/types/apps/productTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { clearPaymentInvoiceDraft, readPaymentInvoiceDraft } from '@/utils/paymentDraft'
 import { hasPermission } from '@/utils/permissionUtils'
@@ -60,6 +60,9 @@ type ProductRow = {
   productId: string
   productVariantId: string
   quantity: number
+  bundleDiscountAmount?: number
+  bundleId?: string
+  bundleName?: string
 }
 
 type OtherFeeRow = {
@@ -83,6 +86,10 @@ const getAvailableProductStock = (product?: ProductType | null, variantId?: stri
   if (!product) return 0
 
   if (product.hasVariants) {
+    if (!variantId) {
+      return Number(product.totalStockQuantity || 0)
+    }
+
     return Number(getProductVariant(product, variantId)?.stockQuantity || 0)
   }
 
@@ -102,6 +109,9 @@ const getProductDisplayName = (product?: ProductType | null, variantId?: string)
 
   return variant ? `${product.name} - ${variant.label}` : product.name
 }
+
+const getProductRowUnitPrice = (product: ProductType | null | undefined, row: ProductRow) =>
+  Math.max(0, getProductUnitPrice(product, row.productVariantId) - Number(row.bundleDiscountAmount || 0))
 
 const PaymentInvoiceCreateView = () => {
   const router = useRouter()
@@ -123,6 +133,7 @@ const PaymentInvoiceCreateView = () => {
   const [classes, setClasses] = useState<ClassType[]>([])
   const [students, setStudents] = useState<StudentType[]>([])
   const [products, setProducts] = useState<ProductType[]>([])
+  const [bundles, setBundles] = useState<ProductBundleType[]>([])
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
   const [tuitionQuote, setTuitionQuote] = useState<TuitionQuoteType | null>(null)
   const [loadingQuote, setLoadingQuote] = useState(false)
@@ -133,6 +144,7 @@ const PaymentInvoiceCreateView = () => {
   const [selectedOneTimeFees, setSelectedOneTimeFees] = useState<Record<string, boolean>>({})
   const [productRows, setProductRows] = useState<ProductRow[]>([])
   const [otherFeeRows, setOtherFeeRows] = useState<OtherFeeRow[]>([])
+  const [selectedBundleId, setSelectedBundleId] = useState('')
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [proofPreview, setProofPreview] = useState<string | null>(null)
   const [draftInfo, setDraftInfo] = useState<ReturnType<typeof readPaymentInvoiceDraft>>(null)
@@ -164,13 +176,15 @@ const PaymentInvoiceCreateView = () => {
     const loadInit = async () => {
       try {
         setLoadingInit(true)
-        const [classRes, productRes] = await Promise.all([
+        const [classRes, productRes, bundleRes] = await Promise.all([
           isAdmin ? classService.getClasses({ isActive: true, pageSize: 1000 }) : classService.getClassesByUserId(auth?.user?.id || ''),
-          productService.getProducts({ pageSize: 300, isActive: true })
+          productService.getProducts({ pageSize: 300, isActive: true }),
+          productService.getBundleSaleOptions()
         ])
 
         setClasses((classRes.data || []).filter(item => item.isActive !== false))
         setProducts((productRes.data || []).filter(item => item.isActive))
+        setBundles((bundleRes.data || []).filter(item => item.isActive !== false))
       } finally {
         setLoadingInit(false)
       }
@@ -429,7 +443,7 @@ const PaymentInvoiceCreateView = () => {
         const product = products.find(item => item.id === row.productId)
         if (!product) return sum
 
-        return sum + getProductUnitPrice(product, row.productVariantId) * Number(row.quantity || 0)
+        return sum + getProductRowUnitPrice(product, row) * Number(row.quantity || 0)
       }, 0),
     [productRows, products]
   )
@@ -462,6 +476,49 @@ const PaymentInvoiceCreateView = () => {
     setProductRows(prev => [...prev, { id: createRowId(), productId: '', productVariantId: '', quantity: 1 }])
   }
 
+  const addBundleRows = () => {
+    const selectedBundle = bundles.find(item => item.id === selectedBundleId)
+
+    if (!selectedBundle) {
+      showNotification('Vui long chon combo truoc khi them vao bien lai.', 'error')
+      return
+    }
+
+    const reservedByProduct = productRows.reduce<Record<string, number>>((accumulator, row) => {
+      accumulator[row.productId] = (accumulator[row.productId] || 0) + Number(row.quantity || 0)
+      return accumulator
+    }, {})
+
+    for (const item of selectedBundle.items) {
+      const product = products.find(row => row.id === item.productId)
+      const availableStock = getAvailableProductStock(product)
+      const remainingStock = availableStock - Number(reservedByProduct[item.productId] || 0)
+
+      if (remainingStock < item.quantity) {
+        showNotification(`Ton kho cua "${item.productName}" khong du de them combo nay.`, 'error')
+        return
+      }
+    }
+
+    setProductRows(prev => [
+      ...prev,
+      ...selectedBundle.items.flatMap(item =>
+        Array.from({ length: Number(item.quantity || 0) }, () => ({
+          id: createRowId(),
+          productId: item.productId,
+          productVariantId: '',
+          quantity: 1,
+          bundleDiscountAmount: Number(item.discountAmount || 0),
+          bundleId: selectedBundle.id,
+          bundleName: selectedBundle.name
+        }))
+      )
+    ])
+
+    setSelectedBundleId('')
+    showNotification(`Da them combo "${selectedBundle.name}" vao bien lai.`, 'success')
+  }
+
   const updateProductRow = (id: string, payload: Partial<ProductRow>) => {
     setProductRows(prev => prev.map(row => (row.id === id ? { ...row, ...payload } : row)))
   }
@@ -473,7 +530,10 @@ const PaymentInvoiceCreateView = () => {
     updateProductRow(id, {
       productId,
       productVariantId: selectedProduct?.hasVariants ? '' : '',
-      quantity: 1
+      quantity: 1,
+      bundleDiscountAmount: undefined,
+      bundleId: undefined,
+      bundleName: undefined
     })
 
     if (selectedProduct && selectedProduct.hasVariants && variants.length === 1 && Number(variants[0].stockQuantity || 0) > 0) {
@@ -582,13 +642,23 @@ const PaymentInvoiceCreateView = () => {
       if (!product) continue
       if (product.hasVariants && !variant) continue
 
+      const retailUnitPrice = getProductUnitPrice(product, variant?.id)
+      const effectiveUnitPrice = getProductRowUnitPrice(product, row)
+      const lineDiscountAmount = row.bundleName ? Math.max(0, Number(row.bundleDiscountAmount || 0)) : Math.max(0, retailUnitPrice - effectiveUnitPrice)
+      const lineDiscountReason =
+        row.bundleName && lineDiscountAmount > 0 ? `Áp dụng giá combo: ${row.bundleName}` : undefined
+
       for (let index = 0; index < quantity; index += 1) {
         items.push({
           type: PAYMENT_TYPE_BUY_PRODUCT,
           classId: form.classId,
           productId: row.productId,
           productVariantId: variant?.id,
-          description: getProductDisplayName(product, variant?.id)
+          description: row.bundleName
+            ? `${getProductDisplayName(product, variant?.id)} - combo ${row.bundleName}`
+            : getProductDisplayName(product, variant?.id),
+          discountAmount: lineDiscountAmount > 0 ? lineDiscountAmount : undefined,
+          discountReason: lineDiscountReason
         })
       }
     }
@@ -1074,6 +1144,37 @@ const PaymentInvoiceCreateView = () => {
                   }
                 />
                 <CardContent>
+                  {bundles.length > 0 ? (
+                    <Stack spacing={2} sx={{ mb: 3 }}>
+                      <Typography variant='subtitle2' color='text.secondary'>
+                        Chọn combo để tự động thêm các dòng sản phẩm với giá combo đã phân bổ sẵn.
+                      </Typography>
+                      <Grid container spacing={3} alignItems='center'>
+                        <Grid size={{ xs: 12, md: 8 }}>
+                          <FormControl fullWidth>
+                            <InputLabel>Combo sản phẩm</InputLabel>
+                            <Select
+                              label='Combo sản phẩm'
+                              value={selectedBundleId}
+                              onChange={event => setSelectedBundleId(String(event.target.value))}
+                            >
+                              <MenuItem value=''>Chọn combo</MenuItem>
+                              {bundles.map(bundle => (
+                                <MenuItem key={bundle.id} value={bundle.id}>
+                                  {bundle.name} - giam {formatCurrency(bundle.items.reduce((sum, item) => sum + Number(item.discountAmount || 0) * Number(item.quantity || 0), 0))}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <Button fullWidth variant='contained' color='secondary' onClick={addBundleRows}>
+                            Thêm combo
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    </Stack>
+                  ) : null}
                   {productRows.length === 0 ? (
                     <Alert severity='info'>Chưa có sản phẩm nào được chọn.</Alert>
                   ) : (
@@ -1083,12 +1184,13 @@ const PaymentInvoiceCreateView = () => {
                         const variants = getActiveProductVariants(product)
                         const selectedVariant = getProductVariant(product, row.productVariantId)
                         const availableStock = getAvailableProductStock(product, row.productVariantId)
-                        const unitPrice = getProductUnitPrice(product, row.productVariantId)
+                        const unitPrice = getProductRowUnitPrice(product, row)
                         const rowTotal = unitPrice * Number(row.quantity || 0)
                         const isOutOfStock = Boolean(product) && availableStock <= 0
                         const productHasAvailableStock = product?.hasVariants
                           ? variants.some(variant => Number(variant.stockQuantity || 0) > 0)
                           : Number(product?.totalStockQuantity || 0) > 0
+                        const isBundleRow = Boolean(row.bundleId)
 
                         return (
                           <Stack spacing={2} key={row.id}>
@@ -1096,7 +1198,12 @@ const PaymentInvoiceCreateView = () => {
                               <Grid size={{ xs: 12, md: product?.hasVariants ? 4 : 6 }}>
                                 <FormControl fullWidth>
                                   <InputLabel>Sản phẩm</InputLabel>
-                                  <Select label='Sản phẩm' value={row.productId} onChange={event => handleProductChange(row.id, String(event.target.value))}>
+                                  <Select
+                                    label='Sản phẩm'
+                                    value={row.productId}
+                                    onChange={event => handleProductChange(row.id, String(event.target.value))}
+                                    disabled={isBundleRow}
+                                  >
                                     {products.map(item => {
                                       const canSelect = item.hasVariants
                                         ? getActiveProductVariants(item).some(variant => Number(variant.stockQuantity || 0) > 0)
@@ -1147,6 +1254,7 @@ const PaymentInvoiceCreateView = () => {
                                   type='number'
                                   value={row.quantity}
                                   onChange={event => updateProductRow(row.id, { quantity: Number(event.target.value) })}
+                                  disabled={isBundleRow}
                                   inputProps={{ min: 1, max: availableStock > 0 ? availableStock : undefined }}
                                   helperText={
                                     row.productId
@@ -1172,6 +1280,9 @@ const PaymentInvoiceCreateView = () => {
                               <Typography variant='body2' color='text.secondary'>
                                 Biến thể đã chọn: {selectedVariant.label}
                               </Typography>
+                            ) : null}
+                            {row.bundleName ? (
+                              <Alert severity='success'>Dòng này đến từ combo {row.bundleName}. Giá áp dụng: {formatCurrency(unitPrice)}.</Alert>
                             ) : null}
                             {row.productId && !productHasAvailableStock ? (
                               <Alert severity='warning'>Sản phẩm đã hết hàng. Vui lòng thông báo tới admin.</Alert>

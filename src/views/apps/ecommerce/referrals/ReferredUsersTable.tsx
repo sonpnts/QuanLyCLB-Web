@@ -252,7 +252,7 @@ const ReferredUsersTable = ({ referralsData }: { referralsData?: ReferralsType[]
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
-          count={table.getExpandedRowModel().rows.length}
+          count={table.getPrePaginationRowModel().rows.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
           onPageChange={(_, page) => {

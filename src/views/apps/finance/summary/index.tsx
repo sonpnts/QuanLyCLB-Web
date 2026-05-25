@@ -18,6 +18,7 @@ import Select from '@mui/material/Select'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
+import { useRouter } from 'next/navigation'
 
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
@@ -116,6 +117,7 @@ const emptyTotals = (): SummaryTotals => ({
 const FinanceSummaryView = () => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
+  const router = useRouter()
 
   const isAdmin = hasPermission(auth?.permissions, 'Finance.View') || hasAdminRole(auth?.roles)
 
@@ -625,6 +627,16 @@ const FinanceSummaryView = () => {
             <Button variant='contained' onClick={loadSummary} startIcon={<i className='ri-refresh-line' />}>
               Làm mới thống kê
             </Button>
+            {isAdmin ? (
+              <Button
+                variant='outlined'
+                color='primary'
+                startIcon={<i className='ri-file-list-3-line' />}
+                onClick={() => router.push('/apps/finance/payments/discounts')}
+              >
+                Biên lai có giảm trừ
+              </Button>
+            ) : null}
             <Button
               variant='outlined'
               color='success'

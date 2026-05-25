@@ -1,5 +1,6 @@
 import { apiClient } from '@/utils/apiClient'
 import type {
+  ProductBundleType,
   ProductInventoryTransactionType,
   ProductReportSummaryType,
   ProductType,
@@ -17,6 +18,14 @@ export interface GetProductsParams {
   category?: string
   minUnitPrice?: number
   maxUnitPrice?: number
+  isActive?: boolean
+}
+
+export interface GetProductBundlesParams {
+  pageNumber?: number
+  pageSize?: number
+  keyword?: string
+  code?: string
   isActive?: boolean
 }
 
@@ -56,6 +65,53 @@ export interface CreateProductInventoryEntryRequest {
   notes?: string
 }
 
+export interface CreateProductInventoryBatchEntryItemRequest {
+  productVariantId?: string
+  quantity: number
+  unitCost?: number
+  notes?: string
+}
+
+export interface CreateProductInventoryBatchEntryRequest {
+  productId: string
+  transactionType: string
+  notes?: string
+  items: CreateProductInventoryBatchEntryItemRequest[]
+}
+
+export interface UpsertProductBundleItemRequest {
+  id?: string
+  productId: string
+  quantity: number
+  discountAmount: number
+  sortOrder?: number
+  isActive?: boolean
+}
+
+export interface CreateProductBundleRequest {
+  code: string
+  name: string
+  description?: string
+  items: UpsertProductBundleItemRequest[]
+}
+
+export interface UpdateProductBundleRequest {
+  name: string
+  description?: string
+  items: UpsertProductBundleItemRequest[]
+  isActive: boolean
+}
+
+const compareVariant = (left: ProductVariantType, right: ProductVariantType) => {
+  const byLabel = (left.label || '').localeCompare(right.label || '', 'vi')
+  if (byLabel !== 0) return byLabel
+
+  const bySize = (left.size || '').localeCompare(right.size || '', 'vi')
+  if (bySize !== 0) return bySize
+
+  return (left.color || '').localeCompare(right.color || '', 'vi')
+}
+
 const toVariant = (value: any): ProductVariantType => ({
   id: value.id,
   sku: value.sku || '',
@@ -76,7 +132,7 @@ const toProduct = (value: any): ProductType => ({
   description: value.description,
   hasVariants: value.hasVariants ?? false,
   totalStockQuantity: Number(value.totalStockQuantity || 0),
-  variants: Array.isArray(value.variants) ? value.variants.map(toVariant) : [],
+  variants: Array.isArray(value.variants) ? value.variants.map(toVariant).sort(compareVariant) : [],
   isActive: value.isActive ?? true,
   createdAt: value.createdAt,
   updatedAt: value.updatedAt
@@ -98,6 +154,29 @@ const toInventoryTransaction = (value: any): ProductInventoryTransactionType => 
   isActive: value.isActive ?? true,
   createdAt: value.createdAt,
   createdByUserId: value.createdByUserId || undefined
+})
+
+const toBundleItem = (value: any) => ({
+  id: value.id,
+  productId: value.productId,
+  productCode: value.productCode || '',
+  productName: value.productName || '',
+  quantity: Number(value.quantity || 0),
+  discountAmount: Number(value.discountAmount || 0),
+  availableStock: Number(value.availableStock || 0),
+  sortOrder: Number(value.sortOrder || 0),
+  isActive: value.isActive ?? true
+})
+
+const toBundle = (value: any): ProductBundleType => ({
+  id: value.id,
+  code: value.code || '',
+  name: value.name || '',
+  description: value.description || undefined,
+  isActive: value.isActive ?? true,
+  items: Array.isArray(value.items) ? value.items.map(toBundleItem) : [],
+  createdAt: value.createdAt,
+  updatedAt: value.updatedAt
 })
 
 const toReportSummary = (value: any): ProductReportSummaryType => ({
@@ -131,6 +210,14 @@ class ProductService {
     return apiList(() => apiClient.get<any>(API_ENDPOINTS.products.inventory, { params }), data => extractList<any>(data).map(toProduct))
   }
 
+  async getBundles(params?: GetProductBundlesParams): Promise<ResponseResult<ProductBundleType[]>> {
+    return apiList(() => apiClient.get<any>(API_ENDPOINTS.products.bundles, { params }), data => extractList<any>(data).map(toBundle))
+  }
+
+  async getBundleSaleOptions(): Promise<ResponseResult<ProductBundleType[]>> {
+    return apiList(() => apiClient.get<any>(API_ENDPOINTS.products.bundleSaleOptions), data => extractList<any>(data).map(toBundle))
+  }
+
   async getInventoryTransactions(productId?: string): Promise<ResponseResult<ProductInventoryTransactionType[]>> {
     return apiList(
       () => apiClient.get<any>(API_ENDPOINTS.products.inventoryTransactions, { params: { productId } }),
@@ -140,6 +227,23 @@ class ProductService {
 
   async createInventoryEntry(data: CreateProductInventoryEntryRequest): Promise<ResponseResult<ProductInventoryTransactionType>> {
     return apiMutate(() => apiClient.post<any>(API_ENDPOINTS.products.inventoryEntries, data), toInventoryTransaction)
+  }
+
+  async createInventoryEntries(
+    data: CreateProductInventoryBatchEntryRequest
+  ): Promise<ResponseResult<ProductInventoryTransactionType[]>> {
+    return apiMutate(
+      () => apiClient.post<any>(API_ENDPOINTS.products.inventoryEntriesBulk, data),
+      payload => extractList<any>(payload).map(toInventoryTransaction)
+    )
+  }
+
+  async createBundle(data: CreateProductBundleRequest): Promise<ResponseResult<ProductBundleType>> {
+    return apiMutate(() => apiClient.post<any>(API_ENDPOINTS.products.bundles, data), toBundle)
+  }
+
+  async updateBundle(id: string, data: UpdateProductBundleRequest): Promise<ResponseResult<ProductBundleType>> {
+    return apiMutate(() => apiClient.put<any>(API_ENDPOINTS.products.bundleById(id), data), toBundle)
   }
 
   async getReportSummary(fromDate?: string, toDate?: string): Promise<ResponseResult<ProductReportSummaryType>> {
