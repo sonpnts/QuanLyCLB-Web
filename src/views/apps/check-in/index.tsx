@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -13,6 +13,7 @@ import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid2'
 import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
+import AlertTitle from '@mui/material/AlertTitle'
 
 // Component Imports
 import { useAuth } from '@/contexts/authContext'
@@ -22,7 +23,9 @@ import { useNotification } from '@/contexts/notificationContext'
 import attendanceService, { type CheckInRequest, type CheckOutRequest } from '@/services/attendanceService'
 import { getVietnamNow, toVietnamISOString } from '@/utils/dateTime'
 
-const MAX_ACCEPTABLE_ACCURACY = 50 // meters; chỉnh theo yêu cầu (ví dụ 20, 50, 100)
+const MAX_ACCEPTABLE_ACCURACY = 50
+
+type LocationPermissionState = 'unknown' | 'prompt' | 'granted' | 'denied' | 'unsupported'
 
 const mapAttendanceError = (code?: number, fallback?: string, type: 'checkin' | 'checkout' = 'checkin') => {
   if (code === 4100) return 'Bạn đang cách xa câu lạc bộ, vui lòng di chuyển lại gần và thử lại.'
@@ -33,12 +36,10 @@ const mapAttendanceError = (code?: number, fallback?: string, type: 'checkin' | 
 }
 
 const CheckInView = () => {
-  // Hooks / Context
   const { auth } = useAuth()
   const { showNotification } = useNotification()
   const userId = auth?.user?.id ?? null
 
-  // States
   const [currentTime, setCurrentTime] = useState<Date>(getVietnamNow())
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationError, setLocationError] = useState<string | null>(null)
@@ -46,9 +47,16 @@ const CheckInView = () => {
   const [isCheckingIn, setIsCheckingIn] = useState(false)
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const [permissionDenied, setPermissionDenied] = useState(false)
-  const [pendingAction, setPendingAction] = useState<'checkin' | 'checkout' | null>(null)
+  const [pendingAction, setPendingAction] = useState<'checkin' | 'checkout' | 'prepare' | null>(null)
+  const [locationPermissionState, setLocationPermissionState] = useState<LocationPermissionState>('unknown')
+  const [isSecureContextReady, setIsSecureContextReady] = useState(true)
+  const locationErrorRef = useRef<string | null>(null)
 
-  // Update current time every second (Vietnam timezone)
+  const updateLocationError = useCallback((message: string | null) => {
+    locationErrorRef.current = message
+    setLocationError(message)
+  }, [])
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(getVietnamNow())
@@ -57,85 +65,160 @@ const CheckInView = () => {
     return () => clearInterval(timer)
   }, [])
 
-  // Request location permission and get position (strict: require accuracy <= MAX_ACCEPTABLE_ACCURACY)
-  const requestLocation = useCallback(
-    async (): Promise<{ latitude: number; longitude: number; accuracy: number } | null> => {
-      setIsRequestingLocation(true)
-      setLocationError(null)
-      setPermissionDenied(false)
+  const refreshLocationPermissionState = useCallback(async () => {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return
+    }
 
-      if (!navigator.geolocation) {
-        const errorMsg = 'Trình duyệt của bạn không hỗ trợ định vị.'
+    const hasSecureContext = window.isSecureContext
 
-        setLocationError(errorMsg)
-        setIsRequestingLocation(false)
+    setIsSecureContextReady(hasSecureContext)
 
-        return null
+    if (!navigator.geolocation) {
+      setLocationPermissionState('unsupported')
+
+      return
+    }
+
+    if (!hasSecureContext) {
+      setLocationPermissionState('unsupported')
+
+      return
+    }
+
+    if (!navigator.permissions?.query) {
+      setLocationPermissionState(previous => (previous === 'denied' || previous === 'granted' ? previous : 'unknown'))
+
+      return
+    }
+
+    try {
+      const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName })
+
+      setLocationPermissionState(status.state as LocationPermissionState)
+    } catch {
+      setLocationPermissionState(previous => (previous === 'denied' || previous === 'granted' ? previous : 'unknown'))
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshLocationPermissionState()
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        void refreshLocationPermissionState()
       }
+    }
 
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0
-          })
+    const handleFocus = () => {
+      void refreshLocationPermissionState()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [refreshLocationPermissionState])
+
+  const requestLocation = useCallback(async (): Promise<{ latitude: number; longitude: number; accuracy: number } | null> => {
+    setIsRequestingLocation(true)
+    updateLocationError(null)
+    setPermissionDenied(false)
+    await refreshLocationPermissionState()
+
+    if (!navigator.geolocation) {
+      updateLocationError('Trình duyệt của bạn không hỗ trợ định vị. Vui lòng mở bằng Chrome hoặc Safari mới nhất.')
+      setLocationPermissionState('unsupported')
+      setIsRequestingLocation(false)
+
+      return null
+    }
+
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      updateLocationError('Trình duyệt đang chặn quyền vị trí vì trang chưa chạy ở chế độ an toàn (HTTPS hoặc localhost).')
+      setLocationPermissionState('unsupported')
+      setIsRequestingLocation(false)
+
+      return null
+    }
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
         })
+      })
 
-        const accuracy = position.coords.accuracy ?? Infinity
+      const accuracy = position.coords.accuracy ?? Infinity
 
-        // Nếu không có thông tin accuracy hoặc accuracy quá lớn thì từ chối
-        if (!isFinite(accuracy) || accuracy > MAX_ACCEPTABLE_ACCURACY) {
-          const errMsg = `Vị trí không đủ chính xác (accuracy: ${
-            isFinite(accuracy) ? Math.round(accuracy) + ' m' : 'không xác định'
-          }). Vui lòng bật GPS / Wi-Fi hoặc di chuyển ra ngoài trời và thử lại.`
-
-          setLocationError(errMsg)
-          setIsRequestingLocation(false)
-
-          return null
-        }
-
-        const locationData = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy
-        }
-
-        setLocation({ latitude: locationData.latitude, longitude: locationData.longitude })
-        setLocationError(null)
-        setPermissionDenied(false)
-        setIsRequestingLocation(false)
-
-        return locationData
-      } catch (err: unknown) {
-        let errorMessage = 'Không thể lấy vị trí.'
-
-        // Narrow unknown error
-        const e = err as { code?: number; name?: string; message?: string } | undefined
-
-        if (e?.code === 1 || e?.name === 'PermissionDenied' || e?.name === 'NotAllowedError') {
-          errorMessage =
-            'Bạn đã từ chối quyền truy cập vị trí. Vui lòng cấp quyền trong cài đặt trình duyệt và thử lại.'
-          setPermissionDenied(true)
-        } else if (e?.code === 2 || e?.name === 'PositionUnavailable') {
-          errorMessage = 'Không thể xác định vị trí. Vui lòng kiểm tra GPS/thiết bị và thử lại.'
-        } else if (e?.code === 3 || e?.name === 'TimeoutError') {
-          errorMessage = 'Hết thời gian chờ khi lấy vị trí. Vui lòng thử lại.'
-        } else if (e?.message) {
-          errorMessage = `Lỗi khi lấy vị trí: ${e.message}`
-        }
-
-        setLocationError(errorMessage)
+      if (!isFinite(accuracy) || accuracy > MAX_ACCEPTABLE_ACCURACY) {
+        updateLocationError(
+          `Vị trí chưa đủ chính xác (${isFinite(accuracy) ? `${Math.round(accuracy)}m` : 'không xác định'}). Vui lòng bật GPS chính xác, Wi-Fi hoặc di chuyển ra nơi thoáng hơn rồi thử lại.`
+        )
         setIsRequestingLocation(false)
 
         return null
       }
-    },
-    [] // stable: no external deps required
-  )
 
-  // Handle check-in
+      const locationData = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy
+      }
+
+      setLocation({ latitude: locationData.latitude, longitude: locationData.longitude })
+      updateLocationError(null)
+      setPermissionDenied(false)
+      setLocationPermissionState('granted')
+      setIsRequestingLocation(false)
+
+      return locationData
+    } catch (err: unknown) {
+      let errorMessage = 'Không thể lấy vị trí hiện tại.'
+      const error = err as { code?: number; name?: string; message?: string } | undefined
+
+      if (error?.code === 1 || error?.name === 'PermissionDenied' || error?.name === 'NotAllowedError') {
+        errorMessage =
+          'Trình duyệt đang chưa được cấp quyền vị trí. Vui lòng bật quyền vị trí của trình duyệt rồi thử lại.'
+        setPermissionDenied(true)
+        setLocationPermissionState('denied')
+      } else if (error?.code === 2 || error?.name === 'PositionUnavailable') {
+        errorMessage = 'Thiết bị chưa xác định được vị trí. Vui lòng kiểm tra GPS, Wi-Fi hoặc mạng di động rồi thử lại.'
+      } else if (error?.code === 3 || error?.name === 'TimeoutError') {
+        errorMessage = 'Hết thời gian chờ lấy vị trí. Vui lòng đứng ở nơi sóng tốt hơn và thử lại.'
+      } else if (error?.message) {
+        errorMessage = `Lỗi khi lấy vị trí: ${error.message}`
+      }
+
+      updateLocationError(errorMessage)
+      setIsRequestingLocation(false)
+
+      return null
+    }
+  }, [refreshLocationPermissionState, updateLocationError])
+
+  const handlePrepareLocation = useCallback(async () => {
+    setPendingAction('prepare')
+
+    const currentLocation = await requestLocation()
+
+    if (currentLocation) {
+      showNotification('Đã lấy vị trí thành công. Bạn có thể chấm công ngay bây giờ.', 'success')
+    } else {
+      showNotification(
+        locationErrorRef.current ?? 'Vui lòng bật quyền vị trí của trình duyệt rồi thử lại.',
+        permissionDenied ? 'warning' : 'error'
+      )
+    }
+
+    setPendingAction(null)
+  }, [permissionDenied, requestLocation, showNotification])
+
   const handleCheckIn = useCallback(async () => {
     if (!userId) {
       showNotification('Bạn chưa đăng nhập.', 'error')
@@ -143,19 +226,16 @@ const CheckInView = () => {
       return
     }
 
-    // Capture the displayed current time immediately (snapshot) - Vietnam timezone
     const timestamp = toVietnamISOString(currentTime)
 
-    // Reset states and mark pending action
     setPermissionDenied(false)
-    setLocationError(null)
+    updateLocationError(null)
     setPendingAction('checkin')
 
-    // Request location (strict)
     const currentLocation = await requestLocation()
 
     if (!currentLocation) {
-      showNotification(locationError ?? 'Không thể lấy vị trí GPS chính xác. Vui lòng thử lại.', 'error')
+      showNotification(locationErrorRef.current ?? 'Không thể lấy vị trí GPS chính xác. Vui lòng thử lại.', 'error')
       setPendingAction(null)
 
       return
@@ -165,8 +245,6 @@ const CheckInView = () => {
 
     try {
       const checkInData: CheckInRequest = {
-        // userId is automatically extracted from JWT token by backend
-        // Use the captured timestamp (value displayed to user) instead of new Date()
         checkedInAt: timestamp,
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude
@@ -176,22 +254,18 @@ const CheckInView = () => {
 
       if (response?.success) {
         showNotification('Chấm công vào thành công!', 'success')
-
-        // Clear stored location after success (optionally)
         setLocation(null)
       } else {
         showNotification(mapAttendanceError(response?.code, response?.message, 'checkin'), 'error')
       }
-    } catch (err: unknown) {
-      // Prefer notifying user instead of console.error (lint)
+    } catch {
       showNotification('Đã có lỗi khi chấm công vào.', 'error')
     } finally {
       setIsCheckingIn(false)
       setPendingAction(null)
     }
-  }, [userId, currentTime, requestLocation, showNotification, locationError])
+  }, [currentTime, requestLocation, showNotification, updateLocationError, userId])
 
-  // Handle check-out
   const handleCheckOut = useCallback(async () => {
     if (!userId) {
       showNotification('Bạn chưa đăng nhập.', 'error')
@@ -199,19 +273,16 @@ const CheckInView = () => {
       return
     }
 
-    // Capture the displayed current time immediately (snapshot) - Vietnam timezone
     const timestamp = toVietnamISOString(currentTime)
 
-    // Reset states and mark pending action
     setPermissionDenied(false)
-    setLocationError(null)
+    updateLocationError(null)
     setPendingAction('checkout')
 
-    // Request location (strict)
     const currentLocation = await requestLocation()
 
     if (!currentLocation) {
-      showNotification(locationError ?? 'Không thể lấy vị trí GPS chính xác. Vui lòng thử lại.', 'error')
+      showNotification(locationErrorRef.current ?? 'Không thể lấy vị trí GPS chính xác. Vui lòng thử lại.', 'error')
       setPendingAction(null)
 
       return
@@ -221,7 +292,6 @@ const CheckInView = () => {
 
     try {
       const checkOutData: CheckOutRequest = {
-        // Use the captured timestamp (value displayed to user) - Vietnam timezone
         checkedOutAt: timestamp,
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude
@@ -235,15 +305,14 @@ const CheckInView = () => {
       } else {
         showNotification(mapAttendanceError(response?.code, response?.message, 'checkout'), 'error')
       }
-    } catch (err: unknown) {
+    } catch {
       showNotification('Đã có lỗi khi chấm công ra.', 'error')
     } finally {
       setIsCheckingOut(false)
       setPendingAction(null)
     }
-  }, [userId, currentTime, requestLocation, showNotification, locationError])
+  }, [currentTime, requestLocation, showNotification, updateLocationError, userId])
 
-  // Format time
   const formatTime = (date: Date) =>
     date.toLocaleTimeString('vi-VN', {
       hour: '2-digit',
@@ -251,7 +320,6 @@ const CheckInView = () => {
       second: '2-digit'
     })
 
-  // Format date
   const formatDate = (date: Date) =>
     date.toLocaleDateString('vi-VN', {
       weekday: 'long',
@@ -267,7 +335,6 @@ const CheckInView = () => {
           <CardHeader title='Chấm công' className='p-4 sm:p-6' />
           <CardContent className='p-4 sm:p-6'>
             <Box className='flex flex-col items-center gap-4 sm:gap-6 py-4 sm:py-6'>
-              {/* Current Date and Time */}
               <Box className='text-center w-full'>
                 <Typography
                   variant='h4'
@@ -281,8 +348,30 @@ const CheckInView = () => {
                 </Typography>
               </Box>
 
-              {/* Location Status */}
               <Box className='w-full max-w-md'>
+                {!isSecureContextReady && (
+                  <Alert severity='error' className='mb-4 text-xs sm:text-sm'>
+                    <AlertTitle className='font-semibold'>Không thể yêu cầu quyền vị trí</AlertTitle>
+                    Trình duyệt chỉ cho phép lấy vị trí trên trang an toàn như HTTPS hoặc localhost. Nếu đang mở bằng link
+                    lạ trong Zalo/Facebook, vui lòng mở lại bằng Chrome hoặc Safari.
+                  </Alert>
+                )}
+
+                {locationPermissionState === 'denied' && (
+                  <Alert severity='warning' className='mb-4 text-xs sm:text-sm'>
+                    <AlertTitle className='font-semibold'>Vui lòng bật quyền vị trí của trình duyệt</AlertTitle>
+                    Trên điện thoại, hãy bấm biểu tượng ổ khóa hoặc menu cạnh thanh địa chỉ, tìm mục <strong>Vị trí</strong>{' '}
+                    và chọn <strong>Cho phép</strong>, sau đó quay lại trang này để thử lại.
+                  </Alert>
+                )}
+
+                {(locationPermissionState === 'prompt' || locationPermissionState === 'unknown') && !locationError && (
+                  <Alert severity='info' className='mb-4 text-xs sm:text-sm'>
+                    Nếu điện thoại chưa hiện yêu cầu quyền vị trí, hãy bấm <strong>Kiểm tra / bật quyền vị trí</strong> ở
+                    dưới để trình duyệt mở lại yêu cầu quyền.
+                  </Alert>
+                )}
+
                 {locationError && (
                   <Alert severity={permissionDenied ? 'error' : 'warning'} className='mb-4 text-xs sm:text-sm'>
                     {locationError}
@@ -302,9 +391,31 @@ const CheckInView = () => {
                   </Alert>
                 )}
 
-                {/* Action Buttons */}
                 <Box className='flex flex-col gap-3 sm:gap-4'>
-                  {/* Check-in Button */}
+                  <Button
+                    variant='outlined'
+                    color='info'
+                    size='large'
+                    onClick={handlePrepareLocation}
+                    disabled={isCheckingIn || isCheckingOut || isRequestingLocation}
+                    startIcon={
+                      isRequestingLocation && pendingAction === 'prepare' ? (
+                        <CircularProgress size={20} color='inherit' />
+                      ) : (
+                        <i className='ri-map-pin-user-line' />
+                      )
+                    }
+                    fullWidth
+                    sx={{
+                      minHeight: { xs: '48px', sm: '56px' },
+                      fontSize: { xs: '0.875rem', sm: '1rem' }
+                    }}
+                  >
+                    {isRequestingLocation && pendingAction === 'prepare'
+                      ? 'Đang kiểm tra quyền vị trí...'
+                      : 'Kiểm tra / bật quyền vị trí'}
+                  </Button>
+
                   <Button
                     variant='contained'
                     color='primary'
@@ -331,7 +442,6 @@ const CheckInView = () => {
                         : 'Chấm công vào'}
                   </Button>
 
-                  {/* Check-out Button */}
                   <Button
                     variant='contained'
                     color='secondary'
@@ -360,13 +470,12 @@ const CheckInView = () => {
                 </Box>
               </Box>
 
-              {/* Instructions */}
               <Box className='mt-2 sm:mt-4 text-center w-full max-w-md px-2'>
                 <Typography variant='body2' color='text.secondary' className='text-xs sm:text-sm'>
                   <i className='ri-information-line mr-1 sm:mr-2' />
-                  {permissionDenied
-                    ? 'Bạn đã từ chối quyền truy cập vị trí. Nhấn "Chấm công" lại để thử yêu cầu quyền một lần nữa. Nếu vẫn không được, vui lòng cấp quyền trong cài đặt trình duyệt.'
-                    : `Khi nhấn "Chấm công", hệ thống sẽ yêu cầu quyền truy cập vị trí (chỉ chấp nhận GPS/Wi-Fi). Vị trí phải có độ chính xác ≤ ${MAX_ACCEPTABLE_ACCURACY}m để được gửi.`}
+                  {locationPermissionState === 'denied'
+                    ? 'Trình duyệt đang chặn quyền vị trí. Sau khi bật lại quyền vị trí trong cài đặt trình duyệt, hãy quay lại và thử chấm công lại.'
+                    : `Khi chấm công, hệ thống vẫn dùng logic cũ: lấy GPS hiện tại và chỉ gửi khi độ chính xác nhỏ hơn hoặc bằng ${MAX_ACCEPTABLE_ACCURACY}m.`}
                 </Typography>
               </Box>
             </Box>

@@ -87,6 +87,11 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         href: '/apps/attendance/list'
       },
       {
+        label: 'Quản lý điểm danh',
+        icon: 'ri-task-line',
+        href: '/apps/attendance/history'
+      },
+      {
         label: 'Phiếu điểm danh',
         icon: 'ri-file-list-3-line',
         href: '/apps/attendance/tickets'

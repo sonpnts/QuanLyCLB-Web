@@ -31,6 +31,7 @@ export interface GetDiscountedReceiptsParams {
   isActive?: boolean
   paymentDateFrom?: string
   paymentDateTo?: string
+  discountScope?: string
 }
 
 export interface CreatePaymentRequest {

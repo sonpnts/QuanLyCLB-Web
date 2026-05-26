@@ -2,16 +2,22 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
+import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
+import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
 import FormControl from '@mui/material/FormControl'
 import Grid from '@mui/material/Grid2'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
+import Stack from '@mui/material/Stack'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -22,12 +28,27 @@ import Typography from '@mui/material/Typography'
 
 import { useAuth } from '@/contexts/authContext'
 import classService from '@/services/classService'
-import studentAttendanceService, { type CoachClassOption, type StudentAttendanceSessionLogType } from '@/services/studentAttendanceService'
+import studentAttendanceService, {
+  type AttendanceSheetStudentType,
+  type AttendanceSheetType,
+  type CoachClassOption,
+  type StudentAttendanceSessionLogType
+} from '@/services/studentAttendanceService'
 import { hasAdminRole } from '@/utils/roleUtils'
 
 type FilterClass = {
   id: string
   name: string
+}
+
+type DailyLogGroup = {
+  date: string
+  totalSessions: number
+  totalStudents: number
+  totalPresent: number
+  totalExcused: number
+  totalUnexcused: number
+  logs: StudentAttendanceSessionLogType[]
 }
 
 const today = new Date().toISOString().slice(0, 10)
@@ -40,6 +61,41 @@ const oneMonthAgo = (() => {
   return date.toISOString().slice(0, 10)
 })()
 
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString('vi-VN', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) return '-'
+
+  return new Date(value).toLocaleString('vi-VN')
+}
+
+const getStudentStatus = (student: AttendanceSheetStudentType) => {
+  if (!student.isAbsent) {
+    return {
+      label: 'Đi học',
+      color: 'success' as const
+    }
+  }
+
+  if (student.isExcused) {
+    return {
+      label: 'Vắng có phép',
+      color: 'warning' as const
+    }
+  }
+
+  return {
+    label: 'Vắng không phép',
+    color: 'error' as const
+  }
+}
+
 const AttendanceHistoryView = () => {
   const { auth } = useAuth()
   const isAdmin = hasAdminRole(auth?.roles)
@@ -51,6 +107,12 @@ const AttendanceHistoryView = () => {
   const [toDate, setToDate] = useState(today)
   const [logs, setLogs] = useState<StudentAttendanceSessionLogType[]>([])
 
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState<string | null>(null)
+  const [selectedLog, setSelectedLog] = useState<StudentAttendanceSessionLogType | null>(null)
+  const [selectedSheet, setSelectedSheet] = useState<AttendanceSheetType | null>(null)
+
   useEffect(() => {
     const loadOptions = async () => {
       if (isAdmin) {
@@ -59,13 +121,18 @@ const AttendanceHistoryView = () => {
 
         setClassOptions(classes.map(c => ({ id: c.id || '', name: `${c.code || ''} - ${c.name}` })))
 
-return
+        return
       }
 
       const coachRes = await studentAttendanceService.getCoachClasses()
       const coachClasses = coachRes.success && coachRes.data ? coachRes.data : []
 
-      setClassOptions(coachClasses.map((c: CoachClassOption) => ({ id: c.classId, name: `${c.classCode} - ${c.className}` })))
+      setClassOptions(
+        coachClasses.map((c: CoachClassOption) => ({
+          id: c.classId,
+          name: `${c.classCode} - ${c.className}`
+        }))
+      )
     }
 
     loadOptions()
@@ -82,99 +149,408 @@ return
         toDate: toDate || undefined
       })
 
-      setLogs(response.success && response.data ? response.data : [])
+      const rows = response.success && response.data ? response.data : []
+
+      setLogs(
+        [...rows].sort((a, b) => {
+          const dateCompare = b.attendanceDate.localeCompare(a.attendanceDate)
+
+          if (dateCompare !== 0) return dateCompare
+
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        })
+      )
       setLoading(false)
     }
 
     loadLogs()
   }, [selectedClassId, fromDate, toDate])
 
-  const groupedLogs = useMemo(() => {
+  const summary = useMemo(() => {
+    const totalSessions = logs.length
+    const totalStudents = logs.reduce((sum, row) => sum + row.totalStudents, 0)
+    const totalExcused = logs.reduce((sum, row) => sum + row.excusedAbsentCount, 0)
+    const totalUnexcused = logs.reduce((sum, row) => sum + row.unexcusedAbsentCount, 0)
+    const totalPresent = logs.reduce((sum, row) => sum + Math.max(0, row.totalStudents - row.absentCount), 0)
+    const totalClasses = new Set(logs.map(row => row.classId)).size
+
+    return {
+      totalSessions,
+      totalClasses,
+      totalStudents,
+      totalPresent,
+      totalExcused,
+      totalUnexcused
+    }
+  }, [logs])
+
+  const groupedLogs = useMemo<DailyLogGroup[]>(() => {
     const map = new Map<string, StudentAttendanceSessionLogType[]>()
 
     for (const row of logs) {
-      const key = row.attendanceDate
-      const existing = map.get(key) || []
+      const existing = map.get(row.attendanceDate) || []
 
       existing.push(row)
-      map.set(key, existing)
+      map.set(row.attendanceDate, existing)
     }
 
-    return Array.from(map.entries()).sort((a, b) => (a[0] > b[0] ? -1 : 1))
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([date, rows]) => ({
+        date,
+        totalSessions: rows.length,
+        totalStudents: rows.reduce((sum, row) => sum + row.totalStudents, 0),
+        totalPresent: rows.reduce((sum, row) => sum + Math.max(0, row.totalStudents - row.absentCount), 0),
+        totalExcused: rows.reduce((sum, row) => sum + row.excusedAbsentCount, 0),
+        totalUnexcused: rows.reduce((sum, row) => sum + row.unexcusedAbsentCount, 0),
+        logs: rows.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      }))
   }, [logs])
 
+  const detailRows = useMemo(() => {
+    if (!selectedSheet?.students) return []
+
+    return [...selectedSheet.students].sort((a, b) => {
+      if (a.isAbsent !== b.isAbsent) return a.isAbsent ? 1 : -1
+
+      if (a.isExcused !== b.isExcused) return a.isExcused ? -1 : 1
+
+      return a.studentName.localeCompare(b.studentName, 'vi')
+    })
+  }, [selectedSheet])
+
+  const openDetail = async (row: StudentAttendanceSessionLogType) => {
+    setSelectedLog(row)
+    setSelectedSheet(null)
+    setDetailError(null)
+    setDetailLoading(true)
+    setDetailOpen(true)
+
+    const response = await studentAttendanceService.getCoachSheet(row.classId, row.attendanceDate)
+
+    if (!response.success || !response.data) {
+      setDetailError(response.message || 'Không tải được chi tiết điểm danh.')
+      setDetailLoading(false)
+
+      return
+    }
+
+    setSelectedSheet(response.data)
+    setDetailLoading(false)
+  }
+
+  const closeDetail = () => {
+    setDetailOpen(false)
+    setSelectedLog(null)
+    setSelectedSheet(null)
+    setDetailError(null)
+    setDetailLoading(false)
+  }
+
   return (
-    <Card>
-      <CardHeader title='Lịch sử điểm danh' subheader='Mặc định là hiển thị 1 tháng' />
-      <CardContent>
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <FormControl fullWidth>
-              <InputLabel>Lớp học</InputLabel>
-              <Select value={selectedClassId} label='Lớp học' onChange={e => setSelectedClassId(e.target.value)}>
-                <MenuItem value=''>Tất cả</MenuItem>
-                {classOptions.map(c => (
-                  <MenuItem key={c.id} value={c.id}>
-                    {c.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+    <>
+      <Box className='flex flex-col gap-6'>
+        <Card>
+          <CardHeader
+            title='Quản lý điểm danh coach'
+            subheader='Theo dõi lịch sử điểm danh theo ngày, lớp và xem lại chi tiết từng buổi.'
+          />
+          <CardContent>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Lớp học</InputLabel>
+                  <Select value={selectedClassId} label='Lớp học' onChange={e => setSelectedClassId(e.target.value)}>
+                    <MenuItem value=''>Tất cả</MenuItem>
+                    {classOptions.map(option => (
+                      <MenuItem key={option.id} value={option.id}>
+                        {option.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  fullWidth
+                  type='date'
+                  label='Từ ngày'
+                  value={fromDate}
+                  onChange={e => setFromDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  fullWidth
+                  type='date'
+                  label='Đến ngày'
+                  value={toDate}
+                  onChange={e => setToDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        <Grid container spacing={4}>
+          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+            <Card>
+              <CardContent>
+                <Typography variant='body2' color='text.secondary'>
+                  Buổi đã điểm danh
+                </Typography>
+                <Typography variant='h4'>{summary.totalSessions}</Typography>
+              </CardContent>
+            </Card>
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <TextField fullWidth type='date' label='Từ' value={fromDate} onChange={e => setFromDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+            <Card>
+              <CardContent>
+                <Typography variant='body2' color='text.secondary'>
+                  Lớp đã điểm danh
+                </Typography>
+                <Typography variant='h4'>{summary.totalClasses}</Typography>
+              </CardContent>
+            </Card>
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <TextField fullWidth type='date' label='Đến' value={toDate} onChange={e => setToDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+            <Card>
+              <CardContent>
+                <Typography variant='body2' color='text.secondary'>
+                  Học viên đi học
+                </Typography>
+                <Typography variant='h4' color='success.main'>
+                  {summary.totalPresent}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+            <Card>
+              <CardContent>
+                <Typography variant='body2' color='text.secondary'>
+                  Vắng có phép
+                </Typography>
+                <Typography variant='h4' color='warning.main'>
+                  {summary.totalExcused}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+            <Card>
+              <CardContent>
+                <Typography variant='body2' color='text.secondary'>
+                  Vắng không phép
+                </Typography>
+                <Typography variant='h4' color='error.main'>
+                  {summary.totalUnexcused}
+                </Typography>
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
 
-        {loading ? (
-          <Box className='flex items-center justify-center py-8'>
-            <CircularProgress size={28} />
-          </Box>
-        ) : null}
+        <Card>
+          <CardHeader title='Lịch sử điểm danh theo ngày' />
+          <CardContent>
+            {loading ? (
+              <Box className='flex items-center justify-center py-10'>
+                <CircularProgress size={30} />
+              </Box>
+            ) : null}
 
-        {!loading && groupedLogs.length === 0 ? <Typography color='text.secondary'>Không có dữ liệu</Typography> : null}
+            {!loading && groupedLogs.length === 0 ? (
+              <Typography color='text.secondary'>Không có dữ liệu điểm danh trong khoảng thời gian đã chọn.</Typography>
+            ) : null}
 
-        {!loading &&
-          groupedLogs.map(([date, rows]) => (
-            <Box key={date} sx={{ mb: 4 }}>
-              <Typography variant='h6' sx={{ mb: 1.5 }}>
-                Ngay {new Date(date).toLocaleDateString('vi-VN')}
-              </Typography>
+            {!loading &&
+              groupedLogs.map(group => (
+                <Box key={group.date} sx={{ mb: 5 }}>
+                  <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    spacing={2}
+                    sx={{ mb: 2, alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between' }}
+                  >
+                    <Box>
+                      <Typography variant='h6'>{formatDate(group.date)}</Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        {group.totalSessions} buổi điểm danh
+                      </Typography>
+                    </Box>
+                    <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
+                      <Chip label={`Đi học: ${group.totalPresent}`} color='success' variant='tonal' size='small' />
+                      <Chip label={`Có phép: ${group.totalExcused}`} color='warning' variant='tonal' size='small' />
+                      <Chip label={`Không phép: ${group.totalUnexcused}`} color='error' variant='tonal' size='small' />
+                    </Stack>
+                  </Stack>
+
+                  <div className='overflow-x-auto'>
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Lớp điểm danh</TableCell>
+                          <TableCell align='center'>Thời gian</TableCell>
+                          <TableCell align='center'>Tổng HV</TableCell>
+                          <TableCell align='center'>Đi học</TableCell>
+                          <TableCell align='center'>Vắng có phép</TableCell>
+                          <TableCell align='center'>Vắng không phép</TableCell>
+                          <TableCell>Người điểm danh</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {group.logs.map(row => {
+                          const presentCount = Math.max(0, row.totalStudents - row.absentCount)
+
+                          return (
+                            <TableRow
+                              hover
+                              key={row.id}
+                              onClick={() => openDetail(row)}
+                              sx={{ cursor: 'pointer' }}
+                            >
+                              <TableCell>
+                                <Stack spacing={0.5}>
+                                  <Typography color='primary.main' fontWeight={600}>
+                                    {row.className}
+                                  </Typography>
+                                  <Typography variant='caption' color='text.secondary'>
+                                    Bấm để xem chi tiết
+                                  </Typography>
+                                </Stack>
+                              </TableCell>
+                              <TableCell align='center'>{formatDateTime(row.createdAt)}</TableCell>
+                              <TableCell align='center'>{row.totalStudents}</TableCell>
+                              <TableCell align='center'>
+                                <Typography color='success.main' fontWeight={600}>
+                                  {presentCount}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align='center'>
+                                <Typography color='warning.main' fontWeight={600}>
+                                  {row.excusedAbsentCount}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align='center'>
+                                <Typography color='error.main' fontWeight={600}>
+                                  {row.unexcusedAbsentCount}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>{row.markedByUserName || '-'}</TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </Box>
+              ))}
+          </CardContent>
+        </Card>
+      </Box>
+
+      <Dialog open={detailOpen} onClose={closeDetail} maxWidth='md' fullWidth>
+        <DialogTitle>
+          <Stack spacing={0.5}>
+            <Typography variant='h5'>Chi tiết buổi điểm danh</Typography>
+            <Typography variant='body2' color='text.secondary'>
+              {selectedLog ? `${selectedLog.className} - ${formatDate(selectedLog.attendanceDate)}` : ''}
+            </Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          {detailLoading ? (
+            <Box className='flex items-center justify-center py-10'>
+              <CircularProgress size={30} />
+            </Box>
+          ) : null}
+
+          {!detailLoading && detailError ? <Alert severity='error'>{detailError}</Alert> : null}
+
+          {!detailLoading && !detailError && selectedLog && selectedSheet ? (
+            <Stack spacing={3}>
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Card variant='outlined'>
+                    <CardContent>
+                      <Typography variant='body2' color='text.secondary'>
+                        Người điểm danh
+                      </Typography>
+                      <Typography variant='h6'>{selectedLog.markedByUserName || '-'}</Typography>
+                      <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
+                        Thời gian ghi nhận: {formatDateTime(selectedLog.createdAt)}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Card variant='outlined'>
+                    <CardContent>
+                      <Typography variant='body2' color='text.secondary'>
+                        Tình hình buổi học
+                      </Typography>
+                      <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap sx={{ mt: 1 }}>
+                        <Chip
+                          label={`Đi học: ${Math.max(0, selectedLog.totalStudents - selectedLog.absentCount)}`}
+                          color='success'
+                          variant='tonal'
+                          size='small'
+                        />
+                        <Chip
+                          label={`Có phép: ${selectedLog.excusedAbsentCount}`}
+                          color='warning'
+                          variant='tonal'
+                          size='small'
+                        />
+                        <Chip
+                          label={`Không phép: ${selectedLog.unexcusedAbsentCount}`}
+                          color='error'
+                          variant='tonal'
+                          size='small'
+                        />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+
               <div className='overflow-x-auto'>
                 <Table size='small'>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Lop</TableCell>
-                      <TableCell align='center'>Tổng</TableCell>
-                      <TableCell align='center'>Vắng</TableCell>
-                      <TableCell align='center'>Có phép</TableCell>
-                      <TableCell align='center'>Không phép</TableCell>
-                      <TableCell>Người điểm danh</TableCell>
-                      <TableCell>Thời gian</TableCell>
+                      <TableCell width={70}>STT</TableCell>
+                      <TableCell>Học viên</TableCell>
+                      <TableCell>Số điện thoại</TableCell>
+                      <TableCell align='center'>Trạng thái</TableCell>
+                      <TableCell>Lý do / ghi chú</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {rows.map(row => (
-                      <TableRow key={row.id}>
-                        <TableCell>{row.className}</TableCell>
-                        <TableCell align='center'>{row.totalStudents}</TableCell>
-                        <TableCell align='center'>{row.absentCount}</TableCell>
-                        <TableCell align='center'>{row.excusedAbsentCount}</TableCell>
-                        <TableCell align='center'>{row.unexcusedAbsentCount}</TableCell>
-                        <TableCell>{row.markedByUserName || '-'}</TableCell>
-                        <TableCell>{new Date(row.createdAt).toLocaleString('vi-VN')}</TableCell>
-                      </TableRow>
-                    ))}
+                    {detailRows.map((student, index) => {
+                      const status = getStudentStatus(student)
+
+                      return (
+                        <TableRow key={student.studentId}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{student.studentName}</TableCell>
+                          <TableCell>{student.phoneNumber || '-'}</TableCell>
+                          <TableCell align='center'>
+                            <Chip label={status.label} color={status.color} variant='tonal' size='small' />
+                          </TableCell>
+                          <TableCell>{student.reason || '-'}</TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </div>
-            </Box>
-          ))}
-      </CardContent>
-    </Card>
+            </Stack>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 

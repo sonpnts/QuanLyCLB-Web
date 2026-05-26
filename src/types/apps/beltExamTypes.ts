@@ -41,6 +41,7 @@ export type ExamRegistrationType = {
   currentBeltLevelName?: string
   currentBeltLevelOrder?: number
   targetBeltLevelId: string
+  targetBeltLevelOrder?: number
   targetBeltLevelName: string
   classId: string
   className: string

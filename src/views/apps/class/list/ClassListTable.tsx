@@ -153,7 +153,11 @@ return
       try {
         setLoading(true)
 
-        const response = await classService.getClasses(filterParams)
+        const response = await classService.getClasses({
+          pageNumber: 1,
+          pageSize: 1000,
+          ...filterParams
+        })
 
         if (!cancelled) {
           setData(response.data || [])

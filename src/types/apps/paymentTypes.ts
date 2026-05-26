@@ -40,6 +40,10 @@ export type PaymentRecordType = {
   isActive?: boolean
   createdAt?: string
   updatedAt?: string
+  hasManualDiscount?: boolean
+  hasApprovedDiscount?: boolean
+  hasComboDiscount?: boolean
+  discountScope?: 'manual' | 'approved' | 'combo' | 'mixed' | 'all' | 'unknown' | string
 }
 
 export type DiscountedReceiptPagedResultType = {
