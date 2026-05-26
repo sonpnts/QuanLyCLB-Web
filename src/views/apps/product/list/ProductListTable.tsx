@@ -93,6 +93,10 @@ const ProductListTable = () => {
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'Product'),
     [auth?.permissions, auth?.roles]
   )
+  const bundlePermissions = useMemo(
+    () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductBundle'),
+    [auth?.permissions, auth?.roles]
+  )
   const inventoryPermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductInventory'),
     [auth?.permissions, auth?.roles]
@@ -333,7 +337,7 @@ const ProductListTable = () => {
                 Quản lý kho
               </Button>
             ) : null}
-            {productPermissions.canUpdate ? (
+            {bundlePermissions.canView ? (
               <Button variant='outlined' color='warning' onClick={() => router.push('/apps/product/bundles')}>
                 Quản lý combo
               </Button>

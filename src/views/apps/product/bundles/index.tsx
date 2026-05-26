@@ -23,9 +23,11 @@ import TablePagination from '@mui/material/TablePagination'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
+import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import productService from '@/services/productService'
 import type { ProductBundleType, ProductType } from '@/types/apps/productTypes'
+import { buildModulePermissionMap } from '@/utils/rbac'
 
 import tableStyles from '@core/styles/table.module.css'
 
@@ -48,6 +50,7 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 
 const ProductBundleView = () => {
+  const { auth } = useAuth()
   const { showNotification } = useNotification()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -89,6 +92,10 @@ const ProductBundleView = () => {
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'vi')),
     [products]
+  )
+  const bundlePermissions = useMemo(
+    () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductBundle'),
+    [auth?.permissions, auth?.roles]
   )
 
   const pagedBundles = useMemo(() => {
@@ -142,6 +149,16 @@ const ProductBundleView = () => {
   }
 
   const handleSave = async () => {
+    if (!editingBundle && !bundlePermissions.canCreate) {
+      showNotification('Bạn không có quyền tạo combo.', 'error')
+      return
+    }
+
+    if (editingBundle && !bundlePermissions.canUpdate) {
+      showNotification('Bạn không có quyền cập nhật combo.', 'error')
+      return
+    }
+
     if (!form.name.trim() || items.length === 0) {
       showNotification('Vui long nhap ten combo va it nhat mot dong san pham.', 'error')
       return
@@ -209,14 +226,16 @@ const ProductBundleView = () => {
           title='Combo san pham'
           subheader='Combo chi cau hinh san pham va muc giam tren tung mon. Luc ban, he thong van bung thanh cac dong le de chon bien the va tru kho binh thuong.'
           action={
-            <Button variant='contained' onClick={openCreateDialog}>
+            <Button variant='contained' onClick={openCreateDialog} disabled={!bundlePermissions.canCreate}>
               Them combo
             </Button>
           }
         />
         <Divider />
         <CardContent>
-          {loading ? (
+          {!bundlePermissions.canView ? (
+            <Alert severity='warning'>Bạn không có quyền quản lý combo sản phẩm.</Alert>
+          ) : loading ? (
             <Alert severity='info'>Dang tai du lieu combo...</Alert>
           ) : (
             <div className='overflow-x-auto'>
@@ -277,7 +296,12 @@ const ProductBundleView = () => {
                           </Stack>
                         </td>
                         <td>
-                          <Button size='small' variant='outlined' onClick={() => openEditDialog(bundle)}>
+                          <Button
+                            size='small'
+                            variant='outlined'
+                            onClick={() => openEditDialog(bundle)}
+                            disabled={!bundlePermissions.canUpdate}
+                          >
                             Chinh sua
                           </Button>
                         </td>
@@ -314,7 +338,7 @@ const ProductBundleView = () => {
                   label='Ma combo'
                   value={form.code}
                   onChange={event => setForm(prev => ({ ...prev, code: event.target.value }))}
-                  disabled={Boolean(editingBundle)}
+                  disabled={Boolean(editingBundle) || !bundlePermissions.canCreate}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 5 }}>
@@ -323,6 +347,7 @@ const ProductBundleView = () => {
                   label='Ten combo'
                   value={form.name}
                   onChange={event => setForm(prev => ({ ...prev, name: event.target.value }))}
+                  disabled={editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
@@ -335,12 +360,14 @@ const ProductBundleView = () => {
               label='Mo ta'
               value={form.description}
               onChange={event => setForm(prev => ({ ...prev, description: event.target.value }))}
+              disabled={editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate}
             />
 
             {editingBundle ? (
               <FormControlLabel
                 control={<Switch checked={form.isActive} onChange={event => setForm(prev => ({ ...prev, isActive: event.target.checked }))} />}
                 label={form.isActive ? 'Dang hoat dong' : 'Ngung hoat dong'}
+                disabled={!bundlePermissions.canUpdate}
               />
             ) : null}
 
@@ -348,7 +375,11 @@ const ProductBundleView = () => {
               <Typography variant='subtitle1' fontWeight={700}>
                 Dong san pham trong combo
               </Typography>
-              <Button variant='outlined' onClick={() => setItems(prev => [...prev, createBundleItemRow()])}>
+              <Button
+                variant='outlined'
+                onClick={() => setItems(prev => [...prev, createBundleItemRow()])}
+                disabled={editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate}
+              >
                 Them dong
               </Button>
             </Stack>
@@ -367,6 +398,7 @@ const ProductBundleView = () => {
                           label='San pham'
                           value={item.productId}
                           onChange={event => updateItem(item.clientId, { productId: String(event.target.value) })}
+                          disabled={editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate}
                         >
                           {sortedProducts.map(row => (
                             <MenuItem key={row.id} value={row.id}>
@@ -382,6 +414,7 @@ const ProductBundleView = () => {
                           type='number'
                           value={item.quantity}
                           onChange={event => updateItem(item.clientId, { quantity: Number(event.target.value) || 0 })}
+                          disabled={editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate}
                         />
                       </Grid>
                       <Grid size={{ xs: 12, md: 3 }}>
@@ -391,10 +424,15 @@ const ProductBundleView = () => {
                           type='number'
                           value={item.discountAmount}
                           onChange={event => updateItem(item.clientId, { discountAmount: event.target.value })}
+                          disabled={editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate}
                         />
                       </Grid>
                       <Grid size={{ xs: 12, md: 1 }}>
-                        <IconButton color='error' onClick={() => removeItem(item.clientId)} disabled={items.length === 1}>
+                        <IconButton
+                          color='error'
+                          onClick={() => removeItem(item.clientId)}
+                          disabled={items.length === 1 || (editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate)}
+                        >
                           <i className='ri-delete-bin-line' />
                         </IconButton>
                       </Grid>
@@ -417,7 +455,11 @@ const ProductBundleView = () => {
           <Button onClick={() => setDialogOpen(false)} disabled={saving}>
             Huy
           </Button>
-          <Button onClick={handleSave} variant='contained' disabled={saving}>
+          <Button
+            onClick={handleSave}
+            variant='contained'
+            disabled={saving || (editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate)}
+          >
             {saving ? 'Dang luu...' : editingBundle ? 'Luu thay doi' : 'Tao combo'}
           </Button>
         </DialogActions>
