@@ -84,6 +84,26 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     }
   }, [selectedClassId])
 
+  useEffect(() => {
+    if (!myList || myList.status !== 'Draft') return
+
+    const draftRegistrationsByStudentId = new Map(
+      myList.registrations.map(reg => [reg.studentId, reg.targetBeltLevelId] as const)
+    )
+
+    setStudents(prev =>
+      prev.map(student =>
+        draftRegistrationsByStudentId.has(student.studentId)
+          ? {
+              ...student,
+              selected: true,
+              selectedTargetBeltId: draftRegistrationsByStudentId.get(student.studentId) || student.selectedTargetBeltId
+            }
+          : student
+      )
+    )
+  }, [myList])
+
   const loadMyClasses = async () => {
     try {
       if (isAdmin) {
@@ -183,11 +203,14 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     setMyList(result.success ? (result.data ?? null) : null)
   }
 
+  const isStudentLockedByAnotherList = (student: StudentRow) =>
+    student.alreadyRegistered && (!myList || myList.status !== 'Draft' || student.existingRegistrationListId !== myList.id)
+
   const handleSelectAll = (checked: boolean) => {
-    setStudents(prev => prev.map(s => ({ ...s, selected: checked && !s.alreadyRegistered })))
+    setStudents(prev => prev.map(s => ({ ...s, selected: checked && !isStudentLockedByAnotherList(s) })))
   }
 
-  const allEligible = students.filter(s => !s.alreadyRegistered)
+  const allEligible = students.filter(s => !isStudentLockedByAnotherList(s))
   const selectedCount = students.filter(s => s.selected).length
   const allSelected = allEligible.length > 0 && allEligible.every(s => s.selected)
 
@@ -215,7 +238,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 
       if (result.success) {
         showNotification('Đã lưu danh sách nháp', 'success')
-        await loadMyExistingList(selectedClassId)
+        await Promise.all([loadMyExistingList(selectedClassId), loadEligibleStudents(selectedClassId)])
       } else {
         showNotification(result.message || 'Lưu thất bại', 'error')
       }
@@ -411,16 +434,22 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {students.map(student => (
+                    {students.map(student => {
+                      const isLockedByAnotherList = isStudentLockedByAnotherList(student)
+                      const isCurrentDraftStudent = Boolean(
+                        myList && myList.status === 'Draft' && student.existingRegistrationListId === myList.id
+                      )
+
+                      return (
                       <TableRow
                         key={student.studentId}
                         selected={student.selected}
-                        sx={{ opacity: student.alreadyRegistered ? 0.5 : 1 }}
+                        sx={{ opacity: isLockedByAnotherList ? 0.5 : 1 }}
                       >
                         <TableCell padding='checkbox'>
                           <Checkbox
                             checked={student.selected}
-                            disabled={student.alreadyRegistered}
+                            disabled={isLockedByAnotherList}
                             onChange={e => {
                               setStudents(prev =>
                                 prev.map(s =>
@@ -454,14 +483,17 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                         <TableCell>{student.suggestedTargetBeltLevelOrder}</TableCell>
 
                         <TableCell>
-                          {student.alreadyRegistered ? (
+                          {isLockedByAnotherList ? (
                             <Chip label='Đã ĐK' color='info' size='small' variant='tonal' />
+                          ) : isCurrentDraftStudent ? (
+                            <Chip label='Nháp' color='warning' size='small' variant='tonal' />
                           ) : (
                             <Chip label='Chưa ĐK' color='default' size='small' variant='outlined' />
                           )}
                         </TableCell>
                       </TableRow>
-                    ))}
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
