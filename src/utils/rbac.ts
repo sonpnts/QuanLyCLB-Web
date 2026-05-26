@@ -40,6 +40,7 @@ export const RBAC_MODULE_META: Record<string, ModulePermissionMeta> = {
   Payroll: { label: 'Bang luong', actions: ['View', 'Create', 'Update', 'Delete', 'Approve'] },
   Invoice: { label: 'Hoa don', actions: ['View', 'Create', 'Update', 'Delete'] },
   Product: { label: 'San pham', actions: ['View', 'Create', 'Update', 'Delete'] },
+  ProductBundle: { label: 'Combo san pham', actions: ['View', 'Create', 'Update'] },
   ProductSale: { label: 'Ban san pham', actions: ['View', 'Create', 'Update', 'Delete'] },
   BeltLevel: { label: 'Cap dai', actions: ['View', 'Create', 'Update', 'Delete'] },
   'BeltExam.Admin': { label: 'Thi cap dai', actions: ['View', 'Create', 'Update', 'Approve'] },
