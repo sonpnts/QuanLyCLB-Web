@@ -1161,7 +1161,7 @@ const PaymentInvoiceCreateView = () => {
                               <MenuItem value=''>Chọn combo</MenuItem>
                               {bundles.map(bundle => (
                                 <MenuItem key={bundle.id} value={bundle.id}>
-                                  {bundle.name} - giam {formatCurrency(bundle.items.reduce((sum, item) => sum + Number(item.discountAmount || 0) * Number(item.quantity || 0), 0))}
+                                  {bundle.name} - giảm {formatCurrency(bundle.items.reduce((sum, item) => sum + Number(item.discountAmount || 0) * Number(item.quantity || 0), 0))}
                                 </MenuItem>
                               ))}
                             </Select>

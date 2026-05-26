@@ -44,35 +44,35 @@ import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
 import ViewStudentDrawer from '@/views/apps/student/list/ViewStudentDrawer'
 
 const text = {
-  title: 'Quan ly dang ky thi cap',
-  subtitle: 'Theo doi trang thai dang ky, le phi thi, cap dai hien tai va cap dai du thi cua hoc vien',
-  examSession: 'Ky thi',
-  selectSession: 'Chon ky thi de xem danh sach',
-  class: 'Lop',
-  allClasses: 'Tat ca lop',
-  status: 'Trang thai',
-  all: 'Tat ca',
-  pending: 'Cho duyet',
-  approved: 'Da duyet',
-  rejected: 'Tu choi',
-  fee: 'Le phi',
-  paid: 'Da dong',
-  unpaid: 'Chua dong',
-  search: 'Tim hoc vien...',
-  empty: 'Chua co dang ky thi cap phu hop voi bo loc.',
-  loadError: 'Khong the tai danh sach dang ky thi cap',
-  student: 'Hoc vien',
-  registerStatus: 'Trang thai dang ky',
-  feePaid: 'Le phi thi',
-  requiredFees: 'Phi bat buoc',
-  currentBelt: 'Cap dai hien tai',
-  targetBelt: 'Cap dai du thi',
-  registeredBy: 'Nguoi dang ky',
-  noBelt: 'Chua co',
-  export: 'Xuat Excel',
-  exportSuccess: 'Da xuat danh sach dang ky thi cap.',
-  selectPrompt: 'Khong con ky dang ky nao dang mo. Vui long chon ky thi trong danh sach de xem dang ky.',
-  latestOpen: 'Dang mac dinh ky moi nhat con nhan dang ky'
+  title: 'Quản lý đăng ký thi cấp',
+  subtitle: 'Theo dõi trạng thái đăng ký, lệ phí thi, cấp đai hiện tại và cấp đai dự thi của học viên',
+  examSession: 'Kỳ thi',
+  selectSession: 'Chọn kỳ thi để xem danh sách',
+  class: 'Lớp',
+  allClasses: 'Tất cả lớp',
+  status: 'Trạng thái',
+  all: 'Tất cả',
+  pending: 'Chờ duyệt',
+  approved: 'Đã duyệt',
+  rejected: 'Từ chối',
+  fee: 'Lệ phí',
+  paid: 'Đã đóng',
+  unpaid: 'Chưa đóng',
+  search: 'Tìm học viên...',
+  empty: 'Chưa có đăng ký thi cấp phù hợp với bộ lọc.',
+  loadError: 'Không thể tải danh sách đăng ký thi cấp',
+  student: 'Học viên',
+  registerStatus: 'Trạng thái đăng ký',
+  feePaid: 'Lệ phí thi',
+  requiredFees: 'Phí bắt buộc',
+  currentBelt: 'Cấp đai hiện tại',
+  targetBelt: 'Cấp đai dự thi',
+  registeredBy: 'Người đăng ký',
+  noBelt: 'Chưa có',
+  export: 'Xuất Excel',
+  exportSuccess: 'Đã xuất danh sách đăng ký thi cấp.',
+  selectPrompt: 'Không còn kỳ đăng ký nào đang mở. Vui lòng chọn kỳ thi trong danh sách để xem đăng ký.',
+  latestOpen: 'Đang mặc định kỳ mới nhất còn nhận đăng ký'
 }
 
 const statusLabels: Record<string, string> = {
@@ -147,7 +147,7 @@ const BeltExamRegistrationsView = () => {
         setSelectedStudent(result.data)
         setViewStudentOpen(true)
       } else {
-        showNotification(result.message || 'Khong the tai thong tin hoc vien', 'error')
+        showNotification(result.message || 'Không thể tải thông tin học viên', 'error')
       }
     } finally {
       setLoadingStudent(false)
@@ -270,18 +270,18 @@ const BeltExamRegistrationsView = () => {
         sheetName: 'DangKyThiCap',
         columns: [
           { header: 'STT', accessor: 'stt', width: 8 },
-          { header: 'Hoc vien', accessor: 'studentName', width: 28 },
-          { header: 'Ky thi', accessor: 'examSessionName', width: 24 },
-          { header: 'Lop', accessor: 'className', width: 18 },
-          { header: 'Trang thai dang ky', accessor: 'status', width: 18 },
-          { header: 'Le phi thi', accessor: 'feePaid', width: 14 },
-          { header: 'Phi bat buoc', accessor: 'requiredFees', width: 18 },
-          { header: 'Cap dai hien tai', accessor: 'currentBelt', width: 18 },
-          { header: 'So cap dai hien tai', accessor: 'currentBeltOrder', width: 18 },
-          { header: 'Cap dai du thi', accessor: 'targetBelt', width: 18 },
-          { header: 'So cap dai du thi', accessor: 'targetBeltOrder', width: 18 },
-          { header: 'Nguoi dang ky', accessor: 'registeredBy', width: 22 },
-          { header: 'Thoi gian dang ky', accessor: 'createdAt', width: 20 }
+          { header: 'Học viên', accessor: 'studentName', width: 28 },
+          { header: 'Kỳ thi', accessor: 'examSessionName', width: 24 },
+          { header: 'Lớp', accessor: 'className', width: 18 },
+          { header: 'Trạng thái đăng ký', accessor: 'status', width: 18 },
+          { header: 'Lệ phí thi', accessor: 'feePaid', width: 14 },
+          { header: 'Phí bắt buộc', accessor: 'requiredFees', width: 18 },
+          { header: 'Cấp đai hiện tại', accessor: 'currentBelt', width: 18 },
+          { header: 'Số cấp đai hiện tại', accessor: 'currentBeltOrder', width: 18 },
+          { header: 'Cấp đai dự thi', accessor: 'targetBelt', width: 18 },
+          { header: 'Số cấp đai dự thi', accessor: 'targetBeltOrder', width: 18 },
+          { header: 'Người đăng ký', accessor: 'registeredBy', width: 22 },
+          { header: 'Thời gian đăng ký', accessor: 'createdAt', width: 20 }
         ],
         rows: sortedRegistrations.map((row, index) => ({
           stt: index + 1,
@@ -290,7 +290,7 @@ const BeltExamRegistrationsView = () => {
           className: row.className,
           status: statusLabels[row.status] || row.status,
           feePaid: row.isFeePaid ? text.paid : text.unpaid,
-          requiredFees: row.oneTimeFeesCompleted ? 'Da hoan thanh' : 'Chua hoan thanh',
+          requiredFees: row.oneTimeFeesCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành',
           currentBelt: row.currentBeltLevelName || text.noBelt,
           currentBeltOrder: row.currentBeltLevelOrder ?? '',
           targetBelt: row.targetBeltLevelName,
@@ -471,7 +471,7 @@ const BeltExamRegistrationsView = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={row.oneTimeFeesCompleted ? 'Hoan thanh' : 'Chua'}
+                        label={row.oneTimeFeesCompleted ? 'Hoàn thành' : 'Chưa'}
                         color={row.oneTimeFeesCompleted ? 'success' : 'warning'}
                         size='small'
                         variant='tonal'
