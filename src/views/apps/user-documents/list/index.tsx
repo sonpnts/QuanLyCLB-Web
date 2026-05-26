@@ -157,6 +157,7 @@ const UserDocumentListTable = () => {
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(false)
   const [filterType, setFilterType] = useState<number | ''>('')
+  const [previewZoom, setPreviewZoom] = useState(1)
 
   // User search filter
   const [userSearchInput, setUserSearchInput] = useState('')
@@ -191,6 +192,10 @@ const UserDocumentListTable = () => {
     }, 350)
     return () => { if (userSearchRef.current) clearTimeout(userSearchRef.current) }
   }, [userSearchInput])
+
+  useEffect(() => {
+    setPreviewZoom(1)
+  }, [previewDoc?.id])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -387,6 +392,8 @@ const UserDocumentListTable = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [])
 
+  const isPreviewImage = Boolean(previewDoc?.contentType.startsWith('image/'))
+
   const table = useReactTable({
     data: groupedData,
     columns,
@@ -552,7 +559,7 @@ const UserDocumentListTable = () => {
       </Card>
 
       {/* Preview dialog */}
-      <Dialog open={!!previewDoc} onClose={() => setPreviewDoc(null)} maxWidth='md' fullWidth>
+      <Dialog open={!!previewDoc} onClose={() => setPreviewDoc(null)} maxWidth='lg' fullWidth>
         <DialogTitle sx={{ pr: 6 }}>
           <Box className='flex items-center gap-2 flex-wrap'>
             {previewDoc && <DocTypeChip type={previewDoc.documentType} label={previewDoc.documentTypeLabel} />}
@@ -568,14 +575,88 @@ const UserDocumentListTable = () => {
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          {previewDoc?.contentType.startsWith('image/') ? (
-            <Box component='img' src={previewDoc.fileUrl} alt={previewDoc.fileName}
-              sx={{ width: '100%', borderRadius: 1 }} />
+          {isPreviewImage ? (
+            <Box
+              sx={{
+                width: '100%',
+                maxWidth: { xs: '100%', md: 720 },
+                aspectRatio: '1 / 1',
+                mx: 'auto',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'grey.50',
+                overflow: 'auto',
+                position: 'relative'
+              }}
+            >
+              <Box
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  minWidth: '100%',
+                  minHeight: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  p: 2
+                }}
+              >
+                <Box
+                  component='img'
+                  src={previewDoc?.fileUrl}
+                  alt={previewDoc?.fileName}
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    transform: `scale(${previewZoom})`,
+                    transformOrigin: 'center center',
+                    transition: 'transform 0.2s ease'
+                  }}
+                />
+              </Box>
+            </Box>
           ) : (
-            <Box component='iframe' src={previewDoc?.fileUrl} sx={{ width: '100%', height: 520, border: 0 }} />
+            <Box
+              component='iframe'
+              src={previewDoc?.fileUrl}
+              sx={{
+                width: '100%',
+                height: { xs: 420, md: 720 },
+                border: 0,
+                borderRadius: 2
+              }}
+            />
           )}
         </DialogContent>
         <DialogActions>
+          {isPreviewImage && (
+            <Box className='flex items-center gap-1 mr-auto'>
+              <Tooltip title='Thu nhỏ'>
+                <span>
+                  <IconButton size='small' onClick={() => setPreviewZoom(value => Math.max(0.5, Number((value - 0.25).toFixed(2))))}>
+                    <i className='ri-zoom-out-line' />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Chip size='small' label={`${Math.round(previewZoom * 100)}%`} />
+              <Tooltip title='Về mặc định'>
+                <span>
+                  <IconButton size='small' onClick={() => setPreviewZoom(1)}>
+                    <i className='ri-search-eye-line' />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Tooltip title='Phóng to'>
+                <span>
+                  <IconButton size='small' onClick={() => setPreviewZoom(value => Math.min(3, Number((value + 0.25).toFixed(2))))}>
+                    <i className='ri-zoom-in-line' />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </Box>
+          )}
           <Button href={previewDoc?.fileUrl ?? ''} download={previewDoc?.fileName} target='_blank'>
             <i className='ri-download-line mr-1' />Tải xuống
           </Button>
