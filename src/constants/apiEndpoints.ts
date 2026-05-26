@@ -128,6 +128,7 @@ export const API_ENDPOINTS = {
   },
   payments: {
     root: '/payments',
+    discountedReceipts: '/payments/discounted-receipts',
     bulk: '/payments/bulk',
     byId: (id: string) => `/payments/${id}`,
     byReceipt: (receiptNumber: string) => `/payments/receipt/${receiptNumber}`,
@@ -164,9 +165,13 @@ export const API_ENDPOINTS = {
   products: {
     root: '/products',
     saleOptions: '/products/sale-options',
+    bundles: '/products/bundles',
+    bundleSaleOptions: '/products/bundles/sale-options',
+    bundleById: (id: string) => `/products/bundles/${id}`,
     inventory: '/products/inventory',
     inventoryTransactions: '/products/inventory/transactions',
     inventoryEntries: '/products/inventory/entries',
+    inventoryEntriesBulk: '/products/inventory/entries/bulk',
     reportSummary: '/products/reports/summary',
     byId: (id: string) => `/products/${id}`,
     restore: (id: string) => `/products/${id}/restore`
@@ -273,6 +278,8 @@ export const API_ENDPOINTS = {
   oneTimeFees: {
     options: '/one-time-fees/options',
     studentStatuses: (studentId: string) => `/one-time-fees/students/${studentId}`,
+    adminStatuses: '/one-time-fees/admin-statuses',
+    markPaid: '/one-time-fees/mark-paid',
     definitions: '/one-time-fees/definitions',
     createDefinition: '/one-time-fees/definitions',
     updateDefinition: (feeCode: string) => `/one-time-fees/definitions/${encodeURIComponent(feeCode)}`,

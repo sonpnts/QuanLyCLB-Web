@@ -29,8 +29,10 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
 
+import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
+import classService from '@/services/classService'
 import instructorService from '@/services/instructorService'
 import studentAttendanceService from '@/services/studentAttendanceService'
 import type {
@@ -41,6 +43,8 @@ import type {
   ExamSessionType
 } from '@/types/apps/beltExamTypes'
 import { registrationListStatusColors, registrationListStatusLabels } from '@/types/apps/beltExamTypes'
+import { hasPermission } from '@/utils/permissionUtils'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 interface Props {
   session: ExamSessionType
@@ -54,7 +58,9 @@ interface StudentRow extends EligibleStudentForExamType {
 }
 
 const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
+  const { auth } = useAuth()
   const { showNotification } = useNotification()
+  const isAdmin = hasPermission(auth?.permissions, 'BeltExam.ManageAll') || hasAdminRole(auth?.roles)
 
   const [myClasses, setMyClasses] = useState<{ id: string; name: string }[]>([])
   const [selectedClassId, setSelectedClassId] = useState<string>('')
@@ -69,7 +75,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   useEffect(() => {
     loadMyClasses()
     loadBeltLevels()
-  }, [])
+  }, [isAdmin, coachId])
 
   useEffect(() => {
     if (selectedClassId) {
@@ -80,17 +86,37 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 
   const loadMyClasses = async () => {
     try {
+      if (isAdmin) {
+        const lookupResult = await classService.getClassLookup({ isActive: true, pageNumber: 1, pageSize: 1000 })
+
+        if (lookupResult.success && lookupResult.data) {
+          const records = lookupResult.data
+            .map(item => ({
+              id: item.id,
+              name: item.code ? `${item.name} (${item.code})` : item.name
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
+
+          setMyClasses(records)
+          if (records.length > 0) setSelectedClassId(current => current || records[0].id)
+
+          return
+        }
+      }
+
       // Ưu tiên API lớp của chính HLV (không cần quyền quản lý huấn luyện viên)
       const coachClasses = await studentAttendanceService.getCoachClasses()
 
       if (coachClasses.success && coachClasses.data && coachClasses.data.length > 0) {
-        const records = coachClasses.data.map(c => ({
-          id: c.classId,
-          name: c.className
-        }))
+        const records = coachClasses.data
+          .map(c => ({
+            id: c.classId,
+            name: c.className
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
 
         setMyClasses(records)
-        if (records.length > 0) setSelectedClassId(records[0].id)
+        if (records.length > 0) setSelectedClassId(current => current || records[0].id)
         return
       }
 
@@ -100,8 +126,12 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
         const records: { id: string; name: string }[] = Array.isArray(result.data)
           ? result.data
           : (result.data as any)?.records || []
-        setMyClasses(records.map((c: any) => ({ id: c.id, name: c.name })))
-        if (records.length > 0) setSelectedClassId(records[0].id)
+        const mappedRecords = records
+          .map((c: any) => ({ id: c.id, name: c.name }))
+          .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
+
+        setMyClasses(mappedRecords)
+        if (mappedRecords.length > 0) setSelectedClassId(current => current || mappedRecords[0].id)
       }
     } catch {
       showNotification('Không thể tải danh sách lớp', 'error')

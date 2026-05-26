@@ -2,6 +2,7 @@ import { apiClient } from '@/utils/apiClient'
 import { logger } from '@/utils/logger'
 import type {
   PaymentRecordType,
+  DiscountedReceiptPagedResultType,
   PaymentSummaryType,
   MonthlyReportType,
 } from '@/types/apps/paymentTypes'
@@ -19,6 +20,18 @@ export interface GetPaymentsParams {
   toDate?: string
   paymentDateFrom?: string
   paymentDateTo?: string
+}
+
+export interface GetDiscountedReceiptsParams {
+  pageNumber?: number
+  pageSize?: number
+  classId?: string
+  collectedByUserId?: string
+  keyword?: string
+  isActive?: boolean
+  paymentDateFrom?: string
+  paymentDateTo?: string
+  discountScope?: string
 }
 
 export interface CreatePaymentRequest {
@@ -194,6 +207,40 @@ class PaymentService {
     } catch (error) {
       logger.error('PaymentService', 'getPayments', error)
       return { success: true, data: [] }
+    }
+  }
+
+  async getDiscountedReceipts(
+    params?: GetDiscountedReceiptsParams
+  ): Promise<ResponseResult<DiscountedReceiptPagedResultType>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.discountedReceipts, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message,
+          data: { totalRecords: 0, records: [] }
+        }
+      }
+
+      const payload = apiResponse.data || {}
+
+      return {
+        success: true,
+        data: {
+          totalRecords: Number(payload.totalRecords ?? payload.TotalRecords ?? 0),
+          records: unwrapList(payload) as PaymentRecordType[]
+        }
+      }
+    } catch (error: any) {
+      logger.error('PaymentService', 'getDiscountedReceipts', error)
+      return {
+        success: false,
+        message: error?.response?.data?.message || 'Loi ket noi may chu',
+        data: { totalRecords: 0, records: [] }
+      }
     }
   }
 

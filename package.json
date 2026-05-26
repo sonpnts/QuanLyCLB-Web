@@ -48,6 +48,7 @@
     "@tiptap/pm": "^2.10.4",
     "@tiptap/react": "^2.10.4",
     "@tiptap/starter-kit": "^2.10.4",
+    "@vercel/speed-insights": "^2.0.0",
     "apexcharts": "3.49.0",
     "bootstrap-icons": "1.11.3",
     "classnames": "2.5.1",

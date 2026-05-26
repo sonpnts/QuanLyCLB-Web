@@ -333,6 +333,11 @@ const ProductListTable = () => {
                 Quản lý kho
               </Button>
             ) : null}
+            {productPermissions.canUpdate ? (
+              <Button variant='outlined' color='warning' onClick={() => router.push('/apps/product/bundles')}>
+                Quản lý combo
+              </Button>
+            ) : null}
             {reportPermissions.canView ? (
               <Button variant='outlined' color='info' onClick={() => router.push('/apps/product/report')}>
                 Báo cáo sản phẩm
@@ -391,7 +396,7 @@ const ProductListTable = () => {
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
-          count={table.getFilteredRowModel().rows.length}
+          count={table.getPrePaginationRowModel().rows.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
           onPageChange={(_, page) => table.setPageIndex(page)}

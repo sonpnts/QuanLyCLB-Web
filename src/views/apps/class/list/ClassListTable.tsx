@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback } from 'react'
@@ -153,7 +153,11 @@ return
       try {
         setLoading(true)
 
-        const response = await classService.getClasses(filterParams)
+        const response = await classService.getClasses({
+          pageNumber: 1,
+          pageSize: 1000,
+          ...filterParams
+        })
 
         if (!cancelled) {
           setData(response.data || [])
@@ -688,7 +692,7 @@ return (
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
-          count={table.getFilteredRowModel().rows.length}
+          count={table.getPrePaginationRowModel().rows.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
           onPageChange={(_, page) => {

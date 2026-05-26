@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 // React Imports
 import { useState, useMemo } from 'react'
@@ -321,7 +321,7 @@ const InvoiceListTable = ({ invoiceData }: { invoiceData?: InvoiceType[] }) => {
         rowsPerPageOptions={[10, 25, 50]}
         component='div'
         className='border-bs'
-        count={table.getFilteredRowModel().rows.length}
+        count={table.getPrePaginationRowModel().rows.length}
         rowsPerPage={table.getState().pagination.pageSize}
         page={table.getState().pagination.pageIndex}
         onPageChange={(_, page) => {

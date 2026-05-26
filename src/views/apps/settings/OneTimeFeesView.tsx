@@ -304,6 +304,9 @@ const OneTimeFeesView = () => {
           subheader='Danh sách này dùng để quản lý các khoản phí 1 lần toàn hệ thống. Phí CSVC được tách riêng theo từng chi nhánh.'
           action={
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+              <Button variant='text' onClick={() => router.push('/settings/one-time-fees/statuses')} startIcon={<i className='ri-list-check-3' />}>
+                Tổng hợp đã đóng
+              </Button>
               <Button variant='outlined' onClick={() => setImportDialogOpen(true)} startIcon={<i className='ri-upload-2-line' />}>
                 Upload đã đóng
               </Button>

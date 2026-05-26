@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -29,29 +29,18 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Button from '@mui/material/Button'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogContent from '@mui/material/DialogContent'
-import DialogActions from '@mui/material/DialogActions'
-import TextField from '@mui/material/TextField'
-import Select from '@mui/material/Select'
-import MenuItem from '@mui/material/MenuItem'
-import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
 
 import type { StudentType, EnrollmentType, ExamHistoryType } from '@/types/apps/studentTypes'
-import type { ClassType } from '@/types/apps/classTypes'
 import type { OneTimeFeeOptionType, StudentOneTimeFeeStatusType } from '@/types/apps/oneTimeFeeTypes'
 
 import studentService from '@/services/studentService'
-import classService from '@/services/classService'
-import classTransferService from '@/services/classTransferService'
 import oneTimeFeeService from '@/services/oneTimeFeeService'
 import { useNotification } from '@/contexts/notificationContext'
 import { savePaymentInvoiceDraft } from '@/utils/paymentDraft'
 import { logger } from '@/utils/logger'
 
 import CustomAvatar from '@core/components/mui/Avatar'
+import TransferStudentDialog from './TransferStudentDialog'
 import ZaloVerifyModal from './ZaloVerifyModal'
 
 type Props = {
@@ -61,6 +50,7 @@ type Props = {
   onEdit?: (student: StudentType) => void
   onSuspend?: (student: StudentType) => void
   onResume?: (student: StudentType) => void
+  onTransferred?: () => void
 }
 
 type PaymentHistoryType = {
@@ -113,7 +103,7 @@ const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateStri
 const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString('vi-VN') : '-')
 const formatCurrency = (value?: number) => `${Number(value || 0).toLocaleString('vi-VN')}đ`
 
-const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume }: Props) => {
+const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume, onTransferred }: Props) => {
   const router = useRouter()
   const { showNotification } = useNotification()
 
@@ -135,11 +125,6 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
   const [zaloModalOpen, setZaloModalOpen] = useState(false)
 
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
-  const [transferFromClassId, setTransferFromClassId] = useState('')
-  const [transferToClassId, setTransferToClassId] = useState('')
-  const [transferReason, setTransferReason] = useState('')
-  const [transferLoading, setTransferLoading] = useState(false)
-  const [availableClasses, setAvailableClasses] = useState<ClassType[]>([])
 
   const loadedDataRef = useRef({
     studentId: null as string | null,
@@ -296,7 +281,6 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     () => studentClasses.filter(item => item.status === 'Active' || item.status === '0'),
     [studentClasses]
   )
-  const currentClassIds = useMemo(() => activeStudentClasses.map(item => item.classId), [activeStudentClasses])
   const effectiveClassId = useMemo(() => {
     if (activeStudentClasses[0]?.classId) return activeStudentClasses[0].classId
 
@@ -336,52 +320,12 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     if (newValue === '4') loadExamHistory()
   }
 
-  const handleOpenTransferDialog = async () => {
-    const firstActiveClass = activeStudentClasses[0]
-
-    setTransferFromClassId(firstActiveClass?.classId || '')
-    setTransferToClassId('')
-    setTransferReason('')
-
-    const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
-
-    if (response.success && response.data) {
-      setAvailableClasses(response.data)
-    }
-
+  const handleOpenTransferDialog = () => {
     setTransferDialogOpen(true)
   }
 
   const handleCloseTransferDialog = () => {
     setTransferDialogOpen(false)
-    setTransferFromClassId('')
-    setTransferToClassId('')
-    setTransferReason('')
-  }
-
-  const handleSubmitTransfer = async () => {
-    if (!activeStudent?.id || !transferFromClassId || !transferToClassId || !transferReason.trim()) return
-
-    try {
-      setTransferLoading(true)
-      const response = await classTransferService.createClassTransfer({
-        studentId: activeStudent.id,
-        fromClassId: transferFromClassId,
-        toClassId: transferToClassId,
-        reason: transferReason.trim()
-      })
-
-      if (response.success) {
-        showNotification('Yêu cầu chuyển lớp đã được gửi thành công.', 'success')
-        handleCloseTransferDialog()
-      } else {
-        showNotification(response.message || 'Không thể gửi yêu cầu chuyển lớp.', 'error')
-      }
-    } catch {
-      showNotification('Đã có lỗi khi gửi yêu cầu chuyển lớp.', 'error')
-    } finally {
-      setTransferLoading(false)
-    }
   }
 
   const handleOpenInvoice = () => {
@@ -873,63 +817,12 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
         )}
       </Box>
 
-      <Dialog open={transferDialogOpen} onClose={handleCloseTransferDialog} maxWidth='sm' fullWidth>
-        <DialogTitle>Chuyển lớp học viên</DialogTitle>
-        <DialogContent>
-          <Box className='flex flex-col gap-4 pt-2'>
-            <FormControl fullWidth>
-              <InputLabel>Từ lớp</InputLabel>
-              <Select label='Từ lớp' value={transferFromClassId} onChange={event => setTransferFromClassId(String(event.target.value))}>
-                {activeStudentClasses.length > 0
-                  ? activeStudentClasses.map(item => (
-                      <MenuItem key={item.classId} value={item.classId}>
-                        {item.className}
-                      </MenuItem>
-                    ))
-                  : availableClasses.map(item => (
-                      <MenuItem key={item.id} value={item.id}>
-                        {item.name}
-                      </MenuItem>
-                    ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth>
-              <InputLabel>Đến lớp</InputLabel>
-              <Select label='Đến lớp' value={transferToClassId} onChange={event => setTransferToClassId(String(event.target.value))}>
-                {availableClasses
-                  .filter(item => !currentClassIds.includes(item.id))
-                  .map(item => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.name}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-
-            <TextField
-              fullWidth
-              label='Lý do'
-              value={transferReason}
-              onChange={event => setTransferReason(event.target.value)}
-              multiline
-              rows={3}
-              required
-              placeholder='Nhập lý do chuyển lớp...'
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseTransferDialog} disabled={transferLoading}>Hủy</Button>
-          <Button
-            onClick={handleSubmitTransfer}
-            variant='contained'
-            disabled={transferLoading || !transferFromClassId || !transferToClassId || !transferReason.trim()}
-          >
-            {transferLoading ? 'Đang gửi...' : 'Xác nhận chuyển lớp'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <TransferStudentDialog
+        open={transferDialogOpen}
+        onClose={handleCloseTransferDialog}
+        student={activeStudent}
+        onTransferred={onTransferred}
+      />
 
       <ZaloVerifyModal
         open={zaloModalOpen}

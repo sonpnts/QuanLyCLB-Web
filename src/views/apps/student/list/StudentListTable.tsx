@@ -434,10 +434,10 @@ const StudentListTable = () => {
           </div>
         )
       }),
-      columnHelper.accessor('phoneNumber', {
-      header: 'Số điện thoại',
-        cell: ({ row }) => <Typography>{row.original.phoneNumber || '-'}</Typography>
-      }),
+      // columnHelper.accessor('phoneNumber', {
+      // header: 'Số điện thoại',
+      //   cell: ({ row }) => <Typography>{row.original.phoneNumber || '-'}</Typography>
+      // }),
       columnHelper.accessor('gender', {
       header: 'Giới tính',
         cell: ({ row }) => (
@@ -745,7 +745,7 @@ const StudentListTable = () => {
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
-          count={table.getRowModel().rows.length}
+          count={table.getPrePaginationRowModel().rows.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
           onPageChange={(_, page) => table.setPageIndex(page)}
@@ -820,6 +820,7 @@ const StudentListTable = () => {
         }
         onSuspend={studentPermissions.canUpdate ? openSuspendDialog : undefined}
         onResume={studentPermissions.canUpdate ? handleResume : undefined}
+        onTransferred={handleEnrolled}
       />
 
       {studentPermissions.canUpdate && (

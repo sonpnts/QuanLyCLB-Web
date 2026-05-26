@@ -38,6 +38,7 @@ const FailedCheckInTable = () => {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
+  const [total, setTotal] = useState(0)
 
   const load = async () => {
     setLoading(true)
@@ -48,13 +49,20 @@ const FailedCheckInTable = () => {
       const apiResponse = res.data
 
       if (apiResponse?.isSuccess) {
-        setData(apiResponse.data?.records || apiResponse.data?.items || apiResponse.data || [])
+        const records = apiResponse.data?.records || apiResponse.data?.items || apiResponse.data || []
+        const totalRecords =
+          apiResponse.data?.totalRecords ?? apiResponse.data?.totalCount ?? apiResponse.data?.TotalRecords ?? records.length
+
+        setData(records)
+        setTotal(Number(totalRecords || 0))
       } else {
         setData([])
+        setTotal(0)
       }
     } catch (error) {
       logger.error('FailedCheckInTable', 'load', error)
       setData([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
@@ -176,7 +184,7 @@ const FailedCheckInTable = () => {
       </div>
       <TablePagination
         component='div'
-        count={data.length}
+        count={total}
         page={page}
         onPageChange={(_, p) => setPage(p)}
         rowsPerPage={pageSize}

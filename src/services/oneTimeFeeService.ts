@@ -1,10 +1,14 @@
 import { apiClient } from '@/utils/apiClient'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
-import { apiList, apiMutate } from '@/utils/serviceHelper'
+import { apiGet, apiList, apiMutate } from '@/utils/serviceHelper'
 import type {
   CreateFeeDefinitionRequest,
   FeeDefinitionType,
+  GetOneTimeFeeAdminStatusesParams,
+  MarkOneTimeFeePaidRequestType,
+  OneTimeFeeAdminStatusesResultType,
+  OneTimeFeeAdminStatusType,
   OneTimeFeeImportResultType,
   FeePriceType,
   OneTimeFeeOptionType,
@@ -85,6 +89,52 @@ class OneTimeFeeService {
           }
         }),
       data => data as OneTimeFeeImportResultType
+    )
+  }
+
+  async getAdminStatuses(params?: GetOneTimeFeeAdminStatusesParams): Promise<ResponseResult<OneTimeFeeAdminStatusesResultType>> {
+    return apiGet(
+      () => apiClient.get<any>(API_ENDPOINTS.oneTimeFees.adminStatuses, { params }),
+      (data: any) => ({
+        totalRecords: Number(data?.totalRecords ?? data?.totalCount ?? 0),
+        pageNumber: Number(data?.pageNumber ?? params?.pageNumber ?? 1),
+        pageSize: Number(data?.pageSize ?? params?.pageSize ?? 10),
+        records: Array.isArray(data?.records)
+          ? data.records.map(
+              (item: any): OneTimeFeeAdminStatusType => ({
+                studentId: item.studentId,
+                studentCode: item.studentCode ?? null,
+                studentName: item.studentName ?? '',
+                classId: item.classId,
+                classCode: item.classCode ?? null,
+                className: item.className ?? '',
+                branchId: item.branchId,
+                branchName: item.branchName ?? null,
+                feeCode: item.feeCode ?? '',
+                feeName: item.feeName ?? '',
+                amount: Number(item.amount ?? 0),
+                scopeType: item.scopeType ?? 'Global',
+                scopeId: item.scopeId ?? null,
+                isPaid: Boolean(item.isPaid),
+                paidAt: item.paidAt ?? null,
+                paymentRecordId: item.paymentRecordId ?? null,
+                recordedByUserId: item.recordedByUserId ?? null,
+                recordedByUserName: item.recordedByUserName ?? null,
+                note: item.note ?? null,
+                paidSource: item.paidSource ?? null
+              })
+            )
+          : []
+      }),
+      { className: 'OneTimeFeeService', method: 'getAdminStatuses' }
+    )
+  }
+
+  async markPaidManually(payload: MarkOneTimeFeePaidRequestType): Promise<ResponseResult<void>> {
+    return apiMutate(
+      () => apiClient.post<any>(API_ENDPOINTS.oneTimeFees.markPaid, payload),
+      undefined,
+      { className: 'OneTimeFeeService', method: 'markPaidManually' }
     )
   }
 }
