@@ -122,6 +122,7 @@ export type RegistrationListItemType = {
   studentName: string
   currentBeltLevelName?: string
   targetBeltLevelId: string
+  targetBeltLevelOrder?: number
   targetBeltLevelName: string
   isFeePaid: boolean
   paymentRecordId?: string
