@@ -72,32 +72,40 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 
   useEffect(() => {
     loadMyClasses()
-  }, [isAdmin, coachId])
+  }, [isAdmin, coachId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (selectedClassId) {
       loadEligibleStudents(selectedClassId)
       loadMyExistingList(selectedClassId)
     }
-  }, [selectedClassId])
+  }, [selectedClassId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!myList || myList.status !== 'Draft') return
+    if (!myList) return
 
-    const draftRegistrationsByStudentId = new Map(
-      myList.registrations.map(reg => [reg.studentId, reg.targetBeltLevelId] as const)
+    const registrationsByStudentId = new Map(
+      myList.registrations.map(reg => [reg.studentId, reg] as const)
     )
 
     setStudents(prev =>
-      prev.map(student =>
-        draftRegistrationsByStudentId.has(student.studentId)
-          ? {
-              ...student,
-              selected: true,
-              selectedTargetBeltId: draftRegistrationsByStudentId.get(student.studentId) || student.selectedTargetBeltId
-            }
-          : student
-      )
+      prev.map(student => {
+        const currentRegistration = registrationsByStudentId.get(student.studentId)
+
+        if (!currentRegistration) {
+          return {
+            ...student,
+            selected: false,
+            selectedTargetBeltId: student.suggestedTargetBeltLevelId ?? ''
+          }
+        }
+
+        return {
+          ...student,
+          selected: true,
+          selectedTargetBeltId: currentRegistration.targetBeltLevelId
+        }
+      })
     )
   }, [myList])
 
@@ -194,21 +202,38 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
     setMyList(result.success ? (result.data ?? null) : null)
   }
 
+  const currentRegistrationsByStudentId = new Map(myList?.registrations.map(reg => [reg.studentId, reg] as const) ?? [])
+
+  const isStudentInCurrentList = (student: StudentRow) => currentRegistrationsByStudentId.has(student.studentId)
+
+  const isStudentPaidInCurrentList = (student: StudentRow) =>
+    Boolean(currentRegistrationsByStudentId.get(student.studentId)?.isFeePaid)
+
   const isStudentLockedByAnotherList = (student: StudentRow) =>
-    student.alreadyRegistered && (!myList || myList.status !== 'Draft' || student.existingRegistrationListId !== myList.id)
+    student.alreadyRegistered && student.existingRegistrationListId !== myList?.id
+
+  const isStudentEditable = (student: StudentRow) => !isStudentLockedByAnotherList(student) && !isStudentPaidInCurrentList(student)
 
   const handleSelectAll = (checked: boolean) => {
-    setStudents(prev => prev.map(s => ({ ...s, selected: checked && !isStudentLockedByAnotherList(s) })))
+    setStudents(prev =>
+      prev.map(student => {
+        if (isStudentLockedByAnotherList(student)) return student
+        if (isStudentPaidInCurrentList(student)) return { ...student, selected: true }
+
+        return { ...student, selected: checked }
+      })
+    )
   }
 
-  const allEligible = students.filter(s => !isStudentLockedByAnotherList(s))
+  const editableStudents = students.filter(isStudentEditable)
+  const editableSelectedCount = editableStudents.filter(s => s.selected).length
   const selectedCount = students.filter(s => s.selected).length
-  const allSelected = allEligible.length > 0 && allEligible.every(s => s.selected)
+  const allSelected = editableStudents.length > 0 && editableStudents.every(s => s.selected)
 
   const handleSaveDraft = async () => {
     const chosen = students.filter(s => s.selected && s.selectedTargetBeltId)
 
-    if (chosen.length === 0) {
+    if (chosen.length === 0 && !myList) {
       showNotification('Vui lòng chọn ít nhất 1 học viên và cấp thi', 'warning')
 
       return
@@ -229,7 +254,7 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
       })
 
       if (result.success) {
-        showNotification('Đã lưu danh sách nháp', 'success')
+        showNotification('Đã lưu danh sách thành công', 'success')
         await Promise.all([loadMyExistingList(selectedClassId), loadEligibleStudents(selectedClassId)])
       } else {
         showNotification(result.message || 'Lưu thất bại', 'error')
@@ -249,7 +274,7 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
       if (result.success) {
         showNotification('Đã nộp danh sách thành công!', 'success')
         setConfirmOpen(false)
-        await loadMyExistingList(selectedClassId)
+        await Promise.all([loadMyExistingList(selectedClassId), loadEligibleStudents(selectedClassId)])
       } else {
         showNotification(result.message || 'Nộp thất bại', 'error')
       }
@@ -315,7 +340,8 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
           />
           <CardContent>
             <Alert severity='info' className='mb-3'>
-              Danh sách đã nộp. Vào mục <strong>Thu tiền lớp</strong> để thu lệ phí thi cho học viên.
+              Danh sách đã nộp. Bạn vẫn có thể cập nhật thêm hoặc bỏ các học viên chưa đóng phí; các học viên đã đóng phí sẽ
+              được giữ nguyên trong danh sách.
             </Alert>
             <TableContainer>
               <Table size='small'>
@@ -354,21 +380,23 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
         </Card>
       )}
 
-      {/* Bảng chọn học viên (chỉ khi chưa nộp) */}
-      {!isSubmitted && (
-        <Card>
+      <Card>
           <CardHeader
             title='Chọn học viên đăng ký thi'
-            subheader='Chỉ hiển thị học viên đang Active, cấp 10 -> 2 (không bao gồm đẳng)'
+            subheader={
+              isSubmitted
+                ? 'Danh sách đã nộp vẫn có thể cập nhật khi kỳ thi còn mở. Học viên đã đóng phí sẽ bị khóa.'
+                : 'Chỉ hiển thị học viên đang Active, cấp 10 -> 2 (không bao gồm đẳng)'
+            }
             action={
               <Box className='flex gap-2'>
                 <Button
                   variant='outlined'
                   onClick={handleSaveDraft}
-                  disabled={saving || selectedCount === 0}
+                  disabled={saving || (!myList && selectedCount === 0)}
                   startIcon={saving ? <CircularProgress size={16} /> : <i className='ri-save-line' />}
                 >
-                  Lưu nháp ({selectedCount})
+                  {myList ? `Cập nhật danh sách (${selectedCount})` : `Lưu nháp (${selectedCount})`}
                 </Button>
                 {myList && myList.status === 'Draft' && (
                   <Button
@@ -398,9 +426,10 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
                     <TableRow>
                       <TableCell padding='checkbox'>
                         <Checkbox
-                          indeterminate={selectedCount > 0 && !allSelected}
+                          indeterminate={editableSelectedCount > 0 && !allSelected}
                           checked={allSelected}
                           onChange={e => handleSelectAll(e.target.checked)}
+                          disabled={editableStudents.length === 0}
                         />
                       </TableCell>
                       <TableCell>Họ tên</TableCell>
@@ -416,10 +445,9 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
                   <TableBody>
                     {students.map(student => {
                       const isLockedByAnotherList = isStudentLockedByAnotherList(student)
-
-                      const isCurrentDraftStudent = Boolean(
-                        myList && myList.status === 'Draft' && student.existingRegistrationListId === myList.id
-                      )
+                      const isPaidInCurrentList = isStudentPaidInCurrentList(student)
+                      const isCurrentListStudent = isStudentInCurrentList(student)
+                      const currentRegistration = currentRegistrationsByStudentId.get(student.studentId)
 
                       return (
                       <TableRow
@@ -430,7 +458,7 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
                         <TableCell padding='checkbox'>
                           <Checkbox
                             checked={student.selected}
-                            disabled={isLockedByAnotherList}
+                            disabled={isLockedByAnotherList || isPaidInCurrentList}
                             onChange={e => {
                               setStudents(prev =>
                                 prev.map(s =>
@@ -460,13 +488,17 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
                         </TableCell>
                         <TableCell>{student.currentBeltLevelName}</TableCell>
                         <TableCell>{student.currentBeltOrder}</TableCell>
-                        <TableCell>{student.suggestedTargetBeltLevelName || '—'}</TableCell>
-                        <TableCell>{student.suggestedTargetBeltLevelOrder}</TableCell>
+                        <TableCell>{currentRegistration?.targetBeltLevelName || student.suggestedTargetBeltLevelName || '—'}</TableCell>
+                        <TableCell>{currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder}</TableCell>
 
                         <TableCell>
                           {isLockedByAnotherList ? (
                             <Chip label='Đã ĐK' color='info' size='small' variant='tonal' />
-                          ) : isCurrentDraftStudent ? (
+                          ) : isPaidInCurrentList ? (
+                            <Chip label='Đã đóng phí' color='success' size='small' variant='tonal' />
+                          ) : isCurrentListStudent && isSubmitted ? (
+                            <Chip label='Đã nộp' color='success' size='small' variant='tonal' />
+                          ) : isCurrentListStudent ? (
                             <Chip label='Nháp' color='warning' size='small' variant='tonal' />
                           ) : (
                             <Chip label='Chưa ĐK' color='default' size='small' variant='outlined' />
@@ -481,14 +513,14 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
             )}
           </CardContent>
         </Card>
-      )}
 
       {/* Confirm submit dialog */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Xác nhận nộp danh sách</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Sau khi nộp, bạn <strong>không thể chỉnh sửa</strong> danh sách nữa. Tiếp tục?
+            Sau khi nộp, danh sách sẽ chuyển sang trạng thái đã nộp để bắt đầu thu phí. Bạn vẫn có thể cập nhật tiếp các
+            học viên chưa đóng phí nếu kỳ thi còn mở. Tiếp tục?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
