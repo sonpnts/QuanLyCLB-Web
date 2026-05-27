@@ -129,6 +129,7 @@ const unwrapList = (payload: any): any[] => {
 
 const unwrapPaginatedList = <T>(payload: any): PaginatedResult<T> => {
   const records = unwrapList(payload) as T[]
+
   const totalRecords =
     payload?.totalRecords ??
     payload?.TotalRecords ??
@@ -153,7 +154,8 @@ class StudentService {
       return { success: true, data: apiResponse.data?.items || apiResponse.data?.records || [] }
     } catch (error) {
       logger.error('StudentService', 'getStudents', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -167,7 +169,8 @@ class StudentService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('StudentService', 'getStudentById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -181,7 +184,8 @@ class StudentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'createStudent', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -195,7 +199,8 @@ class StudentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'updateStudent', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -209,7 +214,8 @@ class StudentService {
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'deleteStudent', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -223,7 +229,8 @@ class StudentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'restoreStudent', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -237,7 +244,8 @@ class StudentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'suspendStudent', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -251,7 +259,8 @@ class StudentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'resumeStudent', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -265,7 +274,8 @@ class StudentService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('StudentService', 'getStudentEnrollments', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -279,7 +289,8 @@ class StudentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'enrollStudent', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -293,7 +304,8 @@ class StudentService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('StudentService', 'getStudentsByClass', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -302,6 +314,7 @@ class StudentService {
       const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionStatus(studentId), {
         params: { classId, month, year }
       })
+
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
@@ -309,7 +322,8 @@ class StudentService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('StudentService', 'getTuitionStatus', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -323,7 +337,8 @@ class StudentService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('StudentService', 'getExamHistory', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -348,7 +363,8 @@ class StudentService {
       return { success: true, data: unwrapList(apiResponse.data) }
     } catch (error) {
       logger.error('StudentService', 'getStudentPayments', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -362,7 +378,8 @@ class StudentService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('StudentService', 'getStudentAttendance', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -376,7 +393,8 @@ class StudentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'updateStudentZalo', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -385,10 +403,13 @@ class StudentService {
       const response = await apiClient.get<any>(API_ENDPOINTS.students.zaloVerifyPhone, {
         params: { phoneNumber }
       })
-      return response.data as ZaloVerifyResult
+
+      
+return response.data as ZaloVerifyResult
     } catch (error: any) {
       logger.error('StudentService', 'verifyZaloPhone', error)
-      return { success: false, isFollower: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, isFollower: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -396,11 +417,14 @@ class StudentService {
     try {
       const response = await apiClient.post<any>(API_ENDPOINTS.students.tuitionDiscountRequest(studentId), payload)
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
+      
+return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'requestTuitionDiscount', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -408,11 +432,14 @@ class StudentService {
     try {
       const response = await apiClient.post<any>(API_ENDPOINTS.students.tuitionDiscountDecide(studentId), payload)
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
+      
+return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'decideTuitionDiscount', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -420,11 +447,14 @@ class StudentService {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionDiscountMy, { params })
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: true, data: [] }
-      return { success: true, data: unwrapList(apiResponse.data) as TuitionDiscountRequestRow[] }
+      
+return { success: true, data: unwrapList(apiResponse.data) as TuitionDiscountRequestRow[] }
     } catch (error) {
       logger.error('StudentService', 'getMyTuitionDiscountRequests', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -432,11 +462,14 @@ class StudentService {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionDiscountPending, { params })
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: true, data: [] }
-      return { success: true, data: unwrapList(apiResponse.data) as TuitionDiscountRequestRow[] }
+      
+return { success: true, data: unwrapList(apiResponse.data) as TuitionDiscountRequestRow[] }
     } catch (error) {
       logger.error('StudentService', 'getPendingTuitionDiscountRequests', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -448,11 +481,14 @@ class StudentService {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionDiscountPending, { params })
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: true, data: { records: [], totalRecords: 0 } }
-      return { success: true, data: unwrapPaginatedList<TuitionDiscountRequestRow>(apiResponse.data) }
+      
+return { success: true, data: unwrapPaginatedList<TuitionDiscountRequestRow>(apiResponse.data) }
     } catch (error) {
       logger.error('StudentService', 'getPendingTuitionDiscountRequestsPaged', error)
-      return { success: true, data: { records: [], totalRecords: 0 } }
+      
+return { success: true, data: { records: [], totalRecords: 0 } }
     }
   }
 
@@ -465,41 +501,54 @@ class StudentService {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.students.tuitionDiscountHistory, { params })
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: true, data: { records: [], totalRecords: 0 } }
-      return { success: true, data: unwrapPaginatedList<TuitionDiscountRequestRow>(apiResponse.data) }
+      
+return { success: true, data: unwrapPaginatedList<TuitionDiscountRequestRow>(apiResponse.data) }
     } catch (error) {
       logger.error('StudentService', 'getHistoryTuitionDiscountRequestsPaged', error)
-      return { success: true, data: { records: [], totalRecords: 0 } }
+      
+return { success: true, data: { records: [], totalRecords: 0 } }
     }
   }
 
   async downloadImportTemplate(): Promise<ResponseResult<Blob>> {
     try {
       const response = await apiClient.get(API_ENDPOINTS.students.importTemplate, { responseType: 'blob' })
-      return { success: true, data: response.data as Blob }
+
+      
+return { success: true, data: response.data as Blob }
     } catch (error: any) {
       logger.error('StudentService', 'downloadImportTemplate', error)
-      return { success: false, message: error?.response?.data?.message || 'Không thể tải file mẫu' }
+      
+return { success: false, message: error?.response?.data?.message || 'Không thể tải file mẫu' }
     }
   }
 
   async importStudents(classId: string, file: File): Promise<ResponseResult<StudentImportResult>> {
     try {
       const form = new FormData()
+
       form.append('classId', classId)
       form.append('file', file)
+
       const response = await apiClient.post<any>(API_ENDPOINTS.students.import, form, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
+
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
+      
+return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentService', 'importStudents', error)
-      return { success: false, message: error?.response?.data?.message || 'Import thất bại' }
+      
+return { success: false, message: error?.response?.data?.message || 'Import thất bại' }
     }
   }
 }
 
 const studentService = new StudentService()
+
 export default studentService

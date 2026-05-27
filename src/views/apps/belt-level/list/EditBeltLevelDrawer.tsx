@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useEffect, useMemo, useState } from 'react'
@@ -14,6 +13,8 @@ import Button from '@mui/material/Button'
 
 // Form
 import { useForm, Controller } from 'react-hook-form'
+
+import { logger } from '@/utils/logger'
 
 // Types
 import type { BeltLevelType } from '@/types/apps/beltExamTypes'
@@ -67,12 +68,14 @@ const EditBeltLevelDrawer = (props: Props) => {
 
     if (!values.name.trim()) {
       showNotification('Vui lòng nhập tên cấp đai.', 'error')
-      return
+      
+return
     }
 
     if (!values.order || isNaN(Number(values.order)) || Number(values.order) < 1) {
       showNotification('Vui lòng nhập thứ tự hợp lệ (≥ 1).', 'error')
-      return
+      
+return
     }
 
     try {

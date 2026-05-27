@@ -23,10 +23,12 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
-      return
+      
+return
     }
 
     const params: GetBranchesParams = {}
+
     if (keyword) params.Keyword = keyword
     onFilterChange(params)
   }, [keyword, onFilterChange])

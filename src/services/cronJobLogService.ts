@@ -45,7 +45,8 @@ class CronJobLogService {
       }
     } catch (error: any) {
       logger.error('CronJobLogService', 'getCronJobLogs', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }

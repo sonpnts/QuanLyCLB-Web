@@ -82,7 +82,9 @@ const DebouncedInput = ({
 
   useEffect(() => {
     const timeout = setTimeout(() => onChange(value), debounce)
-    return () => clearTimeout(timeout)
+
+    
+return () => clearTimeout(timeout)
   }, [value, debounce, onChange])
 
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
@@ -139,13 +141,16 @@ const StudentListTable = () => {
   const { auth } = useAuth()
   const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth?.roles])
   const isInstructor = useMemo(() => isInstructorUser(auth?.roles), [auth?.roles])
+
   const studentPermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'Student'),
     [auth?.permissions, auth?.roles]
   )
+
   const userId = auth?.user?.id
 
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
 
   const studentsLoadedRef = useRef(false)
@@ -157,16 +162,19 @@ const StudentListTable = () => {
 
   const effectiveParams = useMemo<GetStudentsParams>(() => {
     const p = { ...filterParams }
+
     if (statusFilter === 'suspended') p.isSuspended = true
     else if (statusFilter === 'active') p.isSuspended = false
     else delete p.isSuspended
     if (searchKeyword.trim()) p.keyword = searchKeyword.trim()
     else delete p.keyword
-    return p
+    
+return p
   }, [filterParams, searchKeyword, statusFilter])
 
   useEffect(() => {
     const filterKey = JSON.stringify(effectiveParams) + `|${userId}|${isInstructor}|${isAdmin}`
+
     if (studentsLoadedRef.current && currentFilterRef.current === filterKey) return
 
     const loadStudents = async () => {
@@ -177,17 +185,21 @@ const StudentListTable = () => {
 
         if (!isAdmin && userId) {
           const classRes = await classService.getClassesByUserId(userId, { isActive: true, pageSize: 1000 })
+
           const activeClasses = (classRes.data || [])
             .filter(c => c.isActive !== false)
             .sort((left, right) => (left.name || '').localeCompare(right.name || '', 'vi'))
+
           const classIds = activeClasses.map(c => c.id)
 
           setAssignedClasses(activeClasses)
 
           const targetClassIds = effectiveParams.classId ? [effectiveParams.classId] : classIds
+
           if (targetClassIds.length === 0) {
             setData([])
-            return
+            
+return
           }
 
           const results = await Promise.all(
@@ -204,6 +216,7 @@ const StudentListTable = () => {
           )
 
           const studentMap = new Map<string, StudentType>()
+
           for (const res of results) {
             for (const student of res.data || []) {
               studentMap.set(student.id, student)
@@ -229,6 +242,7 @@ const StudentListTable = () => {
         } else {
           setAssignedClasses([])
           const response = await studentService.getStudents(effectiveParams)
+
           setData(response.data || [])
         }
       } catch (error) {
@@ -252,6 +266,7 @@ const StudentListTable = () => {
     try {
       setLoading(true)
       const response = await studentService.deleteStudent(id)
+
       if (response.success) {
         setData(prev => prev.filter(s => s.id !== id))
       showNotificationRef.current('Xóa học viên thành công!', 'success')
@@ -316,9 +331,11 @@ const StudentListTable = () => {
 
   const handleSuspendConfirm = useCallback(async () => {
     if (!suspendTarget) return
+
     try {
       setSuspendLoading(true)
       const response = await studentService.suspendStudent(suspendTarget.id, suspendReason.trim() || undefined)
+
       if (response.success) {
         setData(prev =>
           prev.map(s =>
@@ -352,6 +369,7 @@ const StudentListTable = () => {
       try {
         setLoading(true)
         const response = await studentService.resumeStudent(student.id)
+
         if (response.success) {
           setData(prev =>
             prev.map(s =>
@@ -434,6 +452,7 @@ const StudentListTable = () => {
           </div>
         )
       }),
+
       // columnHelper.accessor('phoneNumber', {
       // header: 'Số điện thoại',
       //   cell: ({ row }) => <Typography>{row.original.phoneNumber || '-'}</Typography>
@@ -468,6 +487,7 @@ const StudentListTable = () => {
       header: 'Lớp đang học',
         cell: ({ row }) => {
           const activeClasses = (row.original.classes || []).filter(c => !c.status || c.status === 'Active')
+
           if (activeClasses.length === 0) {
             return (
               <Typography variant='body2' color='text.disabled'>
@@ -497,7 +517,9 @@ const StudentListTable = () => {
       header: 'Thao tác',
         cell: ({ row }) => {
           const activeClasses = (row.original.classes || []).filter(c => !c.status || c.status === 'Active')
-          return (
+
+          
+return (
             <div className='flex items-center' onClick={event => event.stopPropagation()}>
               {studentPermissions.canUpdate && !row.original.isSuspended ? (
                 <>
@@ -552,7 +574,8 @@ const StudentListTable = () => {
     if (!isInstructor) return data
     if (statusFilter === 'suspended') return data.filter(s => s.isSuspended)
     if (statusFilter === 'active') return data.filter(s => !s.isSuspended)
-    return data
+    
+return data
   }, [data, isInstructor, statusFilter])
 
   const suspendedCount = data.filter(s => s.isSuspended).length

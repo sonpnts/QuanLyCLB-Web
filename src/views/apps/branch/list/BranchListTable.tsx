@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
@@ -16,6 +15,8 @@ import Box from '@mui/material/Box'
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import type { FilterFn } from '@tanstack/react-table'
+
+import { logger } from '@/utils/logger'
 
 // Type Imports
 import type { BranchType, GetBranchesParams } from '@/services/branchService'
@@ -56,6 +57,7 @@ const BranchListTable = ({ tableData }: { tableData?: BranchType[] }) => {
 
   // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
   const currentFilterRef = useRef<string>('')

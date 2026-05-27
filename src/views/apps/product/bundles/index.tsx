@@ -60,17 +60,20 @@ const ProductBundleView = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingBundle, setEditingBundle] = useState<ProductBundleType | null>(null)
+
   const [form, setForm] = useState({
     code: '',
     name: '',
     description: '',
     isActive: true
   })
+
   const [items, setItems] = useState<BundleItemForm[]>([])
 
   const loadData = async () => {
     try {
       setLoading(true)
+
       const [productRes, bundleRes] = await Promise.all([
         productService.getProducts({ pageSize: 500, isActive: true }),
         productService.getBundles({ pageSize: 500 })
@@ -93,6 +96,7 @@ const ProductBundleView = () => {
     () => [...products].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'vi')),
     [products]
   )
+
   const bundlePermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductBundle'),
     [auth?.permissions, auth?.roles]
@@ -100,7 +104,9 @@ const ProductBundleView = () => {
 
   const pagedBundles = useMemo(() => {
     const start = page * rowsPerPage
-    return bundles.slice(start, start + rowsPerPage)
+
+    
+return bundles.slice(start, start + rowsPerPage)
   }, [bundles, page, rowsPerPage])
 
   const totalDiscount = useMemo(
@@ -151,22 +157,26 @@ const ProductBundleView = () => {
   const handleSave = async () => {
     if (!editingBundle && !bundlePermissions.canCreate) {
       showNotification('Bạn không có quyền tạo combo.', 'error')
-      return
+      
+return
     }
 
     if (editingBundle && !bundlePermissions.canUpdate) {
       showNotification('Bạn không có quyền cập nhật combo.', 'error')
-      return
+      
+return
     }
 
     if (!form.name.trim() || items.length === 0) {
       showNotification('Vui long nhap ten combo va it nhat mot dong san pham.', 'error')
-      return
+      
+return
     }
 
     if (!editingBundle && !form.code.trim()) {
       showNotification('Vui long nhap ma combo.', 'error')
-      return
+      
+return
     }
 
     const normalizedItems = items.map((item, index) => ({
@@ -180,11 +190,13 @@ const ProductBundleView = () => {
 
     if (normalizedItems.some(item => !item.productId || item.quantity <= 0 || item.discountAmount <= 0)) {
       showNotification('Cac dong combo phai chon san pham, so luong va muc giam hop le.', 'error')
-      return
+      
+return
     }
 
     try {
       setSaving(true)
+
       const payload = {
         name: form.name.trim(),
         description: form.description.trim() || undefined,
@@ -201,7 +213,8 @@ const ProductBundleView = () => {
 
       if (!response.success || !response.data) {
         showNotification(response.message || 'Khong the luu combo.', 'error')
-        return
+        
+return
       }
 
       if (editingBundle) {

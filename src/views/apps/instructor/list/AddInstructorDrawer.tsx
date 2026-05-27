@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+
 import { useForm, Controller } from 'react-hook-form'
 
 // MUI Imports
@@ -33,7 +34,6 @@ import { logger } from '@/utils/logger'
 
 // Components
 import MemberCodeField from '@/components/member/MemberCodeField'
-import type { MemberInfo } from '@/components/member/MemberCodeField'
 
 type Props = {
   open: boolean
@@ -81,7 +81,9 @@ const AddInstructorDrawer = (props: Props) => {
   const eligibleUsers = useMemo(() => {
     return users.filter(u => {
       const roles = (u.roles || []).map(r => (typeof r === 'string' ? r : (r as any)?.name)).filter(Boolean)
-      return !roles.some((r: string) => r?.toLowerCase() === 'coach')
+
+      
+return !roles.some((r: string) => r?.toLowerCase() === 'coach')
     })
   }, [users])
 
@@ -91,8 +93,10 @@ const AddInstructorDrawer = (props: Props) => {
 
     const fetchBeltLevels = async () => {
       setBeltLevelsLoading(true)
+
       try {
         const res = await beltLevelService.getBeltLevels({ pageSize: 100 })
+
         if (res.success && res.data) {
           setBeltLevels(res.data.filter(b => b.isActive !== false))
         }
@@ -105,8 +109,10 @@ const AddInstructorDrawer = (props: Props) => {
 
     const fetchUsers = async () => {
       setUsersLoading(true)
+
       try {
         const res = await userService.getUsers({ PageSize: 1000 })
+
         if (res.success && res.data) {
           setUsers(res.data.filter(u => u.isActive !== false))
         }
@@ -130,7 +136,8 @@ const AddInstructorDrawer = (props: Props) => {
   const onSubmit = async (data: FormValidateType) => {
     if (!selectedUser) {
       showNotification('Vui lòng chọn người dùng cần thêm vào danh sách HLV.', 'error')
-      return
+      
+return
     }
 
     try {
@@ -299,7 +306,7 @@ const AddInstructorDrawer = (props: Props) => {
                 <MemberCodeField
                   value={field.value || ''}
                   onChange={field.onChange}
-                  onMemberInfoConfirmed={(_info: MemberInfo) => {
+                  onMemberInfoConfirmed={() => {
                     // Mã HV đã được set qua onChange; thông tin cá nhân không ghi đè vì
                     // AddInstructorDrawer chọn user có sẵn trong hệ thống
                   }}

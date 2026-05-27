@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useState } from 'react'
@@ -15,6 +14,8 @@ import Divider from '@mui/material/Divider'
 import TextField from '@mui/material/TextField'
 import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
+
+import { logger } from '@/utils/logger'
 
 // Type Imports
 import type { BranchType, CreateBranchRequest } from '@/services/branchService'
@@ -46,7 +47,8 @@ type FormValidateType = {
 const parseNum = (val: any) => {
   if (typeof val === 'number') return val
   if (!val) return 0
-  return Number(String(val).replace(',', '.'))
+  
+return Number(String(val).replace(',', '.'))
 }
 
 const AddBranchDrawer = (props: Props) => {

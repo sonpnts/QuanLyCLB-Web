@@ -78,5 +78,7 @@ export const buildModulePermissionMap = (
 
 export const getPermissionModuleFromCode = (permissionCode: string) => {
   const parts = permissionCode.split('.').filter(Boolean)
-  return parts.length > 1 ? parts.slice(0, parts.length - 1).join('.') : permissionCode
+
+  
+return parts.length > 1 ? parts.slice(0, parts.length - 1).join('.') : permissionCode
 }

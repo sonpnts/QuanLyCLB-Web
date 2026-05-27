@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -41,12 +42,14 @@ const TransferStudentDialog = ({ open, onClose, student, onTransferred }: Props)
   useEffect(() => {
     if (open && student) {
       const firstActiveClass = activeStudentClasses[0]
+
       setTransferFromClassId(firstActiveClass?.classId || firstActiveClass?.id || '')
       setTransferToClassId('')
       setTransferReason('')
 
       const loadClasses = async () => {
         const response = await classService.getClassLookup({ isActive: true, pageSize: 5000 })
+
         if (response.success && response.data) {
           setAvailableClasses(
             response.data.map(item => ({
@@ -57,20 +60,24 @@ const TransferStudentDialog = ({ open, onClose, student, onTransferred }: Props)
           )
         }
       }
+
       loadClasses()
     }
   }, [open, student])
 
   const handleSubmitTransfer = async () => {
     if (!student?.id || !transferFromClassId || !transferToClassId || !transferReason.trim()) return
+
     try {
       setTransferLoading(true)
+
       const response = await classTransferService.createClassTransfer({
         studentId: student.id,
         fromClassId: transferFromClassId,
         toClassId: transferToClassId,
         reason: transferReason.trim()
       })
+
       if (response.success) {
         showNotification('Yêu cầu chuyển lớp đã được gửi thành công.', 'success')
         onTransferred?.()

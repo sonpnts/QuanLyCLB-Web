@@ -33,14 +33,13 @@ import paymentService, { type ExamFeeOptionType, type TuitionQuoteType } from '@
 import productService from '@/services/productService'
 import studentService from '@/services/studentService'
 import StudentZaloLinkPromptDialog from '@/components/student/StudentZaloLinkPromptDialog'
-import type { ClassType } from '@/types/apps/classTypes'
+import type { ClassType , ClassUserAssignment } from '@/types/apps/classTypes'
 import type { OneTimeFeeOptionType } from '@/types/apps/oneTimeFeeTypes'
 import type { ProductBundleType, ProductType, ProductVariantType } from '@/types/apps/productTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { clearPaymentInvoiceDraft, readPaymentInvoiceDraft } from '@/utils/paymentDraft'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
-import type { ClassUserAssignment } from '@/types/apps/classTypes'
 
 const PAYMENT_TYPE_TUITION = 0
 const PAYMENT_TYPE_EXAM_FEE = 1
@@ -120,8 +119,7 @@ const PaymentInvoiceCreateView = () => {
   const { showNotification } = useNotification()
 
   const draftKey = searchParams.get('draft') || ''
-  const mode = searchParams.get('mode') || 'create'
-  const isReplacementMode = mode === 'replacement'
+
   const isAdmin = useMemo(
     () => hasPermission(auth?.permissions, 'Payment.Collect.ManageAll') || hasAdminRole(auth?.roles),
     [auth?.permissions, auth?.roles]
@@ -176,6 +174,7 @@ const PaymentInvoiceCreateView = () => {
     const loadInit = async () => {
       try {
         setLoadingInit(true)
+
         const [classRes, productRes, bundleRes] = await Promise.all([
           isAdmin ? classService.getClasses({ isActive: true, pageSize: 1000 }) : classService.getClassesByUserId(auth?.user?.id || ''),
           productService.getProducts({ pageSize: 300, isActive: true }),
@@ -223,7 +222,8 @@ const PaymentInvoiceCreateView = () => {
       if (!form.classId) {
         setStudents([])
         setSelectedStudent(null)
-        return
+        
+return
       }
 
       const response = await studentService.getStudents({ classId: form.classId, pageSize: 1000 })
@@ -265,11 +265,13 @@ const PaymentInvoiceCreateView = () => {
     const loadTuitionQuote = async () => {
       if (!form.classId || !form.studentId) {
         setTuitionQuote(null)
-        return
+        
+return
       }
 
       try {
         setLoadingQuote(true)
+
         const response = await paymentService.getTuitionQuote(
           form.classId,
           form.studentId,
@@ -286,12 +288,14 @@ const PaymentInvoiceCreateView = () => {
           }
         } else {
           setTuitionQuote(null)
+
           if (!tuitionTouchedRef.current) {
             setForm(prev => ({ ...prev, tuitionEnabled: false }))
           }
         }
       } catch {
         setTuitionQuote(null)
+
         if (!tuitionTouchedRef.current) {
           setForm(prev => ({ ...prev, tuitionEnabled: false }))
         }
@@ -312,7 +316,8 @@ const PaymentInvoiceCreateView = () => {
           examEnabled: false,
           selectedExamRegistrationId: ''
         }))
-        return
+        
+return
       }
 
       try {
@@ -347,7 +352,8 @@ const PaymentInvoiceCreateView = () => {
       if (!form.classId || !form.studentId) {
         setOneTimeFeeOptions([])
         setSelectedOneTimeFees({})
-        return
+        
+return
       }
 
       try {
@@ -441,6 +447,7 @@ const PaymentInvoiceCreateView = () => {
     () =>
       productRows.reduce((sum, row) => {
         const product = products.find(item => item.id === row.productId)
+
         if (!product) return sum
 
         return sum + getProductRowUnitPrice(product, row) * Number(row.quantity || 0)
@@ -481,12 +488,14 @@ const PaymentInvoiceCreateView = () => {
 
     if (!selectedBundle) {
       showNotification('Vui long chon combo truoc khi them vao bien lai.', 'error')
-      return
+      
+return
     }
 
     const reservedByProduct = productRows.reduce<Record<string, number>>((accumulator, row) => {
       accumulator[row.productId] = (accumulator[row.productId] || 0) + Number(row.quantity || 0)
-      return accumulator
+      
+return accumulator
     }, {})
 
     for (const item of selectedBundle.items) {
@@ -496,7 +505,8 @@ const PaymentInvoiceCreateView = () => {
 
       if (remainingStock < item.quantity) {
         showNotification(`Ton kho cua "${item.productName}" khong du de them combo nay.`, 'error')
-        return
+        
+return
       }
     }
 
@@ -560,8 +570,10 @@ const PaymentInvoiceCreateView = () => {
   const handleToggleOneTimeFee = (option: OneTimeFeeOptionType, checked: boolean) => {
     if (!checked && form.examEnabled && option.isRequiredForExam) {
       const examName = selectedExamOption?.examSessionName || 'kỳ thi đã đăng ký'
+
       showNotification(`Do tồn tại đăng ký "${examName}" nên không thể loại bỏ các khoản phí bắt buộc.`, 'error')
-      return
+      
+return
     }
 
     setSelectedOneTimeFees(prev => ({
@@ -572,11 +584,13 @@ const PaymentInvoiceCreateView = () => {
 
   const handleProofFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null
+
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
       showNotification('Vui lòng chọn file ảnh cho minh chứng chuyển khoản.', 'error')
-      return
+      
+return
     }
 
     if (proofPreview) {
@@ -645,6 +659,7 @@ const PaymentInvoiceCreateView = () => {
       const retailUnitPrice = getProductUnitPrice(product, variant?.id)
       const effectiveUnitPrice = getProductRowUnitPrice(product, row)
       const lineDiscountAmount = row.bundleName ? Math.max(0, Number(row.bundleDiscountAmount || 0)) : Math.max(0, retailUnitPrice - effectiveUnitPrice)
+
       const lineDiscountReason =
         row.bundleName && lineDiscountAmount > 0 ? `Áp dụng giá combo: ${row.bundleName}` : undefined
 
@@ -686,11 +701,13 @@ const PaymentInvoiceCreateView = () => {
       if (form.method === PAYMENT_METHOD_BANK_TRANSFER && proofFile) {
         setUploading(true)
         const uploadResponse = await paymentService.uploadTransferProof(proofFile)
+
         setUploading(false)
 
         if (!uploadResponse.success || !uploadResponse.data?.imageUrl) {
           showNotification(uploadResponse.message || 'Upload ảnh chuyển khoản thất bại.', 'error')
-          return
+          
+return
         }
 
         transferProofImageUrl = uploadResponse.data.imageUrl
@@ -698,6 +715,7 @@ const PaymentInvoiceCreateView = () => {
 
       if (items.length === 1) {
         const single = items[0]
+
         const response = await paymentService.createPayment({
           studentId: form.studentId,
           classId: single.classId,
@@ -720,12 +738,14 @@ const PaymentInvoiceCreateView = () => {
 
         if (!response.success || !response.data?.receiptNumber) {
           showNotification(response.message || 'Tạo phiếu thu thất bại.', 'error')
-          return
+          
+return
         }
 
         clearPaymentInvoiceDraft(draftKey)
         router.push(`/apps/invoice/preview/${encodeURIComponent(response.data.receiptNumber)}`)
-        return
+        
+return
       }
 
       const bulkResponse = await paymentService.createBulkPayment({
@@ -743,7 +763,8 @@ const PaymentInvoiceCreateView = () => {
 
       if (!bulkResponse.success || !receiptNumber) {
         showNotification(bulkResponse.message || 'Tạo phiếu thu thất bại.', 'error')
-        return
+        
+return
       }
 
       clearPaymentInvoiceDraft(draftKey)
@@ -759,85 +780,101 @@ const PaymentInvoiceCreateView = () => {
 
     if (!effectiveCollectorId) {
       showNotification('Không xác định được người thu tiền.', 'error')
-      return
+      
+return
     }
 
     if (!form.classId) {
       showNotification('Vui lòng chọn lớp hiện tại.', 'error')
-      return
+      
+return
     }
 
     if (!form.studentId) {
       showNotification('Vui lòng chọn học viên.', 'error')
-      return
+      
+return
     }
 
     if (form.tuitionEnabled) {
       if (!tuitionQuote) {
         showNotification('Chưa tải được học phí tháng này.', 'error')
-        return
+        
+return
       }
 
       if (tuitionQuote.alreadyPaid) {
         showNotification('Học phí tháng này đã thanh toán, không thể thu trùng.', 'error')
-        return
+        
+return
       }
     }
 
     if (discountAmount > 0 && !form.tuitionEnabled) {
       showNotification('Giảm trừ chỉ áp dụng cho học phí.', 'error')
-      return
+      
+return
     }
 
     if (discountAmount > 0 && !form.discountReason.trim()) {
       showNotification('Vui lòng nhập lý do giảm trừ.', 'error')
-      return
+      
+return
     }
 
     if (form.examEnabled && !form.selectedExamRegistrationId) {
       showNotification('Vui lòng chọn đăng ký thi cấp.', 'error')
-      return
+      
+return
     }
 
     for (const row of productRows) {
       if (!row.productId) {
         showNotification('Vui lòng chọn sản phẩm.', 'error')
-        return
+        
+return
       }
 
       const product = products.find(item => item.id === row.productId)
+
       if (!product) {
         showNotification('Sản phẩm không còn tồn tại trong hệ thống.', 'error')
-        return
+        
+return
       }
 
       if (product.hasVariants && !row.productVariantId) {
         showNotification('Vui lòng chọn biến thể sản phẩm.', 'error')
-        return
+        
+return
       }
 
       const availableStock = getAvailableProductStock(product, row.productVariantId)
 
       if (availableStock <= 0) {
         showNotification('Sản phẩm đã hết hàng. Vui lòng thông báo tới admin.', 'error')
-        return
+        
+return
       }
 
       if (Number(row.quantity || 0) < 1) {
         showNotification('Số lượng sản phẩm phải lớn hơn hoặc bằng 1.', 'error')
-        return
+        
+return
       }
 
       if (Number(row.quantity || 0) > availableStock) {
         showNotification(`Số lượng vượt quá tồn kho hiện có (${availableStock}).`, 'error')
-        return
+        
+return
       }
     }
 
     for (const row of otherFeeRows) {
       if ((row.description.trim() && Number(row.amount || 0) <= 0) || (!row.description.trim() && Number(row.amount || 0) > 0)) {
         showNotification('Khoản phí khác cần đủ mô tả và số tiền hợp lệ.', 'error')
-        return
+        
+return
       }
     }
 
@@ -845,17 +882,20 @@ const PaymentInvoiceCreateView = () => {
 
     if (items.length === 0) {
       showNotification('Vui lòng chọn ít nhất một khoản thu.', 'error')
-      return
+      
+return
     }
 
     if (form.method === PAYMENT_METHOD_BANK_TRANSFER && !proofFile) {
       showNotification('Chuyển khoản bắt buộc có ảnh minh chứng.', 'error')
-      return
+      
+return
     }
 
     if (sendZaloOverride === undefined && shouldSendZaloConfirmation && !studentHasZalo) {
       setZaloPromptOpen(true)
-      return
+      
+return
     }
 
     await submitPayment(items, effectiveCollectorId, sendZaloOverride ?? (shouldSendZaloConfirmation && studentHasZalo))
@@ -1187,9 +1227,11 @@ const PaymentInvoiceCreateView = () => {
                         const unitPrice = getProductRowUnitPrice(product, row)
                         const rowTotal = unitPrice * Number(row.quantity || 0)
                         const isOutOfStock = Boolean(product) && availableStock <= 0
+
                         const productHasAvailableStock = product?.hasVariants
                           ? variants.some(variant => Number(variant.stockQuantity || 0) > 0)
                           : Number(product?.totalStockQuantity || 0) > 0
+
                         const isBundleRow = Boolean(row.bundleId)
 
                         return (

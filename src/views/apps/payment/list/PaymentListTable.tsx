@@ -93,6 +93,7 @@ const columnHelper = createColumnHelper<PaymentRecordType>()
 
 const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
   const { auth } = useAuth()
+
   const isAdmin = useMemo(
     () => hasPermission(auth?.permissions, 'Payment.Collect.ManageAll') || hasAdminRole(auth?.roles),
     [auth?.permissions, auth?.roles]
@@ -122,6 +123,7 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
 
   // External "create payment" trigger (used by merged Payment+Invoice page).
   const lastCreateSignalRef = useRef<number | undefined>(createSignal)
+
   useEffect(() => {
     if (createSignal == null) return
     if (lastCreateSignalRef.current === createSignal) return
@@ -204,7 +206,9 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
         cell: ({ row }) => {
           const typeVal = row.original.type
           const numericType = normalizePaymentType(typeVal, 3)
-          return (
+
+          
+return (
             <Chip
               label={paymentTypeLabels[numericType] || String(typeVal)}
               size='small'
@@ -256,7 +260,9 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
         cell: ({ row }) => {
           const methodVal = row.original.method
           const numericMethod = normalizePaymentMethod(methodVal, 0)
-          return (
+
+          
+return (
             <Chip
               label={paymentMethodLabels[numericMethod] || String(methodVal)}
               size='small'
@@ -296,7 +302,9 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
         header: 'Thao tác',
         cell: ({ row }) => {
           const isBankTransfer = isBankTransferMethod(row.original.method)
-          return (
+
+          
+return (
             <div className='flex items-center' onClick={event => event.stopPropagation()}>
               {isBankTransfer && row.original.transferProofImageUrl && (
                 <Tooltip title='Xem ảnh chuyển khoản'>

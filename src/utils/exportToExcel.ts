@@ -8,17 +8,22 @@
 import * as XLSX from 'xlsx'
 
 export type ExcelColumn<T> = {
+
   /** Tiêu đề cột hiển thị trong file Excel */
   header: string
+
   /** Field name hoặc hàm lấy giá trị từ row */
   accessor: keyof T | ((row: T) => unknown)
+
   /** Hàm format giá trị (vd: format ngày, currency) */
   formatter?: (value: unknown, row: T) => string | number
+
   /** Độ rộng cột (số ký tự). Mặc định: tự tính theo nội dung */
   width?: number
 }
 
 export type ExcelSheet<T> = {
+
   /** Tên sheet (Excel giới hạn 31 ký tự) */
   name: string
   columns: ExcelColumn<T>[]
@@ -27,6 +32,7 @@ export type ExcelSheet<T> = {
 
 const buildAOA = <T extends Record<string, any>>(columns: ExcelColumn<T>[], rows: T[]): unknown[][] => {
   const headerRow = columns.map(c => c.header)
+
   const dataRows = rows.map(row =>
     columns.map(col => {
       const raw = typeof col.accessor === 'function' ? col.accessor(row) : row[col.accessor]
@@ -36,10 +42,13 @@ const buildAOA = <T extends Record<string, any>>(columns: ExcelColumn<T>[], rows
 
       // Giữ kiểu số nếu là number để Excel có thể tính toán
       if (typeof formatted === 'number') return formatted
-      return String(formatted)
+      
+return String(formatted)
     })
   )
-  return [headerRow, ...dataRows]
+
+  
+return [headerRow, ...dataRows]
 }
 
 const computeColWidths = (aoa: unknown[][]): { wch: number }[] => {
@@ -51,9 +60,12 @@ const computeColWidths = (aoa: unknown[][]): { wch: number }[] => {
     for (let i = 0; i < colCount; i++) {
       const cell = row[i]
       const len = cell === null || cell === undefined ? 0 : String(cell).length
+
       if (len > widths[i]) widths[i] = len
     }
   }
+
+
   // clamp 8..50
   return widths.map(w => ({ wch: Math.min(50, Math.max(8, w + 2)) }))
 }
@@ -66,6 +78,7 @@ const sanitizeSheetName = (name: string): string => {
 const downloadWorkbook = (wb: XLSX.WorkBook, filename: string) => {
   const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
   const finalName = filename.endsWith('.xlsx') ? filename : `${filename}_${timestamp}.xlsx`
+
   XLSX.writeFile(wb, finalName)
 }
 
@@ -86,9 +99,11 @@ export function exportToExcel<T extends Record<string, any>>(options: {
   // Set column widths
   const customWidths = columns.map(c => (c.width ? { wch: c.width } : null))
   const autoWidths = computeColWidths(aoa)
+
   ws['!cols'] = customWidths.map((w, i) => w || autoWidths[i])
 
   const wb = XLSX.utils.book_new()
+
   XLSX.utils.book_append_sheet(wb, ws, sanitizeSheetName(sheetName))
   downloadWorkbook(wb, filename)
 }
@@ -107,6 +122,7 @@ export function exportToExcelMultiSheet(options: { filename: string; sheets: Exc
 
     const customWidths = sheet.columns.map(c => (c.width ? { wch: c.width } : null))
     const autoWidths = computeColWidths(aoa)
+
     ws['!cols'] = customWidths.map((w, i) => w || autoWidths[i])
 
     XLSX.utils.book_append_sheet(wb, ws, sanitizeSheetName(sheet.name))
@@ -120,15 +136,19 @@ export function exportToExcelMultiSheet(options: { filename: string; sheets: Exc
 export const formatVnDate = (value: unknown): string => {
   if (!value) return ''
   const d = value instanceof Date ? value : new Date(value as string)
+
   if (isNaN(d.getTime())) return ''
-  return d.toLocaleDateString('vi-VN')
+  
+return d.toLocaleDateString('vi-VN')
 }
 
 export const formatVnDateTime = (value: unknown): string => {
   if (!value) return ''
   const d = value instanceof Date ? value : new Date(value as string)
+
   if (isNaN(d.getTime())) return ''
-  return d.toLocaleString('vi-VN')
+  
+return d.toLocaleString('vi-VN')
 }
 
 /**
@@ -138,12 +158,15 @@ export const formatVnDateTime = (value: unknown): string => {
 export const formatVnCurrency = (value: unknown): number | string => {
   if (value === null || value === undefined || value === '') return ''
   const n = Number(value)
+
   if (isNaN(n)) return String(value)
-  return n
+  
+return n
 }
 
 export const formatBool = (value: unknown, trueText = 'Có', falseText = 'Không'): string => {
   if (value === true) return trueText
   if (value === false) return falseText
-  return ''
+  
+return ''
 }

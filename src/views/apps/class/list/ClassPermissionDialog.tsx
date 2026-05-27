@@ -63,9 +63,11 @@ const ClassPermissionDialog = ({ open, onClose, classData }: Props) => {
     const nonLeadCoaches = classData?.coaches?.filter(c => !c.isLeadInstructor) || []
     const assistants = classData?.assistants || []
     const map = new Map<string, (typeof nonLeadCoaches)[number]>()
+
     nonLeadCoaches.forEach(item => map.set(item.userId, item))
     assistants.forEach(item => map.set(item.userId, item))
-    return Array.from(map.values())
+    
+return Array.from(map.values())
   }, [classData?.assistants, classData?.coaches])
 
   useEffect(() => {
@@ -88,6 +90,7 @@ const ClassPermissionDialog = ({ open, onClose, classData }: Props) => {
         await Promise.all(
           assistantCoaches.map(async coach => {
             const effectiveRes = await classService.getClassPermissionsForUser(classData.id, coach.userId)
+
             permMap[coach.userId] =
               effectiveRes.success && Array.isArray(effectiveRes.data)
                 ? effectiveRes.data
@@ -132,6 +135,7 @@ const ClassPermissionDialog = ({ open, onClose, classData }: Props) => {
 
       for (const coach of assistantCoaches) {
         const perms = permissions[coach.userId] || []
+
         await classService.updateClassPermissions(classData.id, coach.userId, perms)
       }
 
@@ -177,11 +181,13 @@ const ClassPermissionDialog = ({ open, onClose, classData }: Props) => {
 
   const lookupZaloByPhone = async () => {
     const phone = accessDialog?.phoneNumber?.trim()
+
     if (!phone) return
 
     try {
       setAccessLoading(true)
       const res = await zaloLinkService.lookupStudent({ phoneNumber: phone })
+
       if (res.success && res.data) {
         setZaloLookupText(`${res.data.studentName} (${res.data.studentCode}) - UserIdZalo: ${res.data.userIdZalo || '-'}`)
       } else {

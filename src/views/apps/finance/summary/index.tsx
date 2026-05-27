@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { useRouter } from 'next/navigation'
+
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -18,7 +20,6 @@ import Select from '@mui/material/Select'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import { useRouter } from 'next/navigation'
 
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
@@ -149,6 +150,7 @@ const FinanceSummaryView = () => {
     if (filters.timePreset === 'custom') return
 
     const nextRange = getPresetRange(filters.timePreset)
+
     setFilters(prev => ({
       ...prev,
       ...nextRange
@@ -197,6 +199,7 @@ const FinanceSummaryView = () => {
   const classIdsByBranch = useMemo(() => {
     return classes.reduce<Record<string, string[]>>((accumulator, item) => {
       const branchId = item.branchId || item.branch?.id
+
       if (!branchId) return accumulator
 
       if (!accumulator[branchId]) {
@@ -204,20 +207,23 @@ const FinanceSummaryView = () => {
       }
 
       accumulator[branchId].push(item.id)
-      return accumulator
+      
+return accumulator
     }, {})
   }, [classes])
 
   const selectedBranchClassIds = useMemo(() => {
     if (!filters.branchId) return []
-    return classIdsByBranch[filters.branchId] || []
+    
+return classIdsByBranch[filters.branchId] || []
   }, [classIdsByBranch, filters.branchId])
 
   const modeRequiresSelection = useMemo(() => {
     if (filters.statisticsMode === 'class') return Boolean(filters.classId)
     if (filters.statisticsMode === 'branch') return Boolean(filters.branchId)
     if (filters.statisticsMode === 'instructor') return Boolean(filters.instructorId)
-    return true
+    
+return true
   }, [filters.branchId, filters.classId, filters.instructorId, filters.statisticsMode])
 
   const getModeLabel = (mode: StatisticsMode) => {
@@ -252,10 +258,13 @@ const FinanceSummaryView = () => {
     if (filters.statisticsMode === 'instructor') {
       if (!filters.instructorId) return []
       const response = await financeService.getClassCollectionsByInstructor(filters.instructorId, filters.asOfDate || undefined)
-      return response.success && response.data ? response.data : []
+
+      
+return response.success && response.data ? response.data : []
     }
 
     const instructorIds = instructors.map(item => item.id).filter(Boolean)
+
     if (instructorIds.length === 0) return []
 
     const responses = await Promise.all(
@@ -270,6 +279,7 @@ const FinanceSummaryView = () => {
 
     if (filters.statisticsMode === 'branch' && filters.branchId) {
       const classIds = new Set(selectedBranchClassIds)
+
       rows = rows.filter(item => classIds.has(item.classId))
     }
 
@@ -280,7 +290,8 @@ const FinanceSummaryView = () => {
     if (!modeRequiresSelection) {
       setTotals(emptyTotals())
       setCollections([])
-      return
+      
+return
     }
 
     try {
@@ -395,22 +406,31 @@ const FinanceSummaryView = () => {
     switch (filters.statisticsMode) {
       case 'class': {
         const className = classes.find(item => item.id === filters.classId)?.name
-        return className
+
+        
+return className
           ? `Đang thống kê theo lớp ${className}, theo ${getTimePresetLabel(filters.timePreset)}.`
           : 'Vui lòng chọn lớp để xem thống kê.'
       }
+
       case 'branch': {
         const branchName = branches.find(item => item.id === filters.branchId)?.name
-        return branchName
+
+        
+return branchName
           ? `Đang thống kê theo chi nhánh ${branchName}, theo ${getTimePresetLabel(filters.timePreset)}.`
           : 'Vui lòng chọn chi nhánh để xem thống kê.'
       }
+
       case 'instructor': {
         const instructorName = instructors.find(item => item.id === filters.instructorId)?.fullName
-        return instructorName
+
+        
+return instructorName
           ? `Đang thống kê theo HLV ${instructorName}, theo ${getTimePresetLabel(filters.timePreset)}.`
           : 'Vui lòng chọn HLV để xem thống kê.'
       }
+
       case 'all':
       default:
         return `Đang thống kê toàn bộ dữ liệu trong phạm vi bạn được phép xem, theo ${getTimePresetLabel(filters.timePreset)}.`
@@ -433,7 +453,8 @@ const FinanceSummaryView = () => {
         ...prev,
         timePreset: preset
       }))
-      return
+      
+return
     }
 
     setFilters(prev => ({

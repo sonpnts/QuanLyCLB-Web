@@ -30,13 +30,16 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
     // Bỏ qua lần render đầu tiên để tránh gọi API khi component mới mount
     if (isFirstRender.current) {
       isFirstRender.current = false
-      return
+      
+return
     }
 
     const params: GetClassesParams = {}
+
     if (keyword) params.keyword = keyword
     if (statusFilter === 'active') params.isActive = true
     else if (statusFilter === 'inactive') params.isActive = false
+
     // 'all' → không truyền isActive → backend trả tất cả
 
     onFilterChange(params)

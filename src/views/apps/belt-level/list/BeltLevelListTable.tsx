@@ -1,5 +1,4 @@
 ﻿'use client'
-import { logger } from '@/utils/logger'
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 
@@ -21,6 +20,8 @@ import {
   getPaginationRowModel
 } from '@tanstack/react-table'
 import type { FilterFn } from '@tanstack/react-table'
+
+import { logger } from '@/utils/logger'
 
 import type { BeltLevelType } from '@/types/apps/beltExamTypes'
 
@@ -46,6 +47,7 @@ const BeltLevelListTable = () => {
   const { confirm, confirmDialog } = useConfirmAction()
 
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
   const currentKeywordRef = useRef<string>('')
@@ -63,6 +65,7 @@ const BeltLevelListTable = () => {
 
         const response = await beltLevelService.getBeltLevels({ keyword: keyword || undefined })
         const sorted = [...(response.data || [])].sort((a, b) => (a.order || 0) - (b.order || 0))
+
         setData(sorted)
       } catch {
         setData([])
@@ -109,14 +112,18 @@ const BeltLevelListTable = () => {
   const handleBeltLevelUpdated = useCallback((updated: BeltLevelType) => {
     setData(prev => {
       const newData = prev.map(item => (item.id === updated.id ? updated : item))
-      return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
+
+      
+return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
     })
   }, [])
 
   const handleBeltLevelAdded = useCallback((newBeltLevel: BeltLevelType) => {
     setData(prev => {
       const newData = [...prev, newBeltLevel]
-      return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
+
+      
+return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
     })
   }, [])
 
@@ -126,10 +133,13 @@ const BeltLevelListTable = () => {
         header: 'Thứ tự',
         cell: ({ row }) => {
           const order = row.original.order || 0
+
           if (order > 10) {
             return <Chip label={`${order - 10} Đẳng`} size='small' color='warning' variant='tonal' />
           }
-          return <Chip label={`Cấp ${order}`} size='small' color='primary' variant='tonal' />
+
+          
+return <Chip label={`Cấp ${order}`} size='small' color='primary' variant='tonal' />
         }
       }),
       columnHelper.accessor('name', {

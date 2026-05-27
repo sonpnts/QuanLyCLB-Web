@@ -55,6 +55,7 @@ class MenuService {
    */
   async getMenuByRole(): Promise<ResponseResult<VerticalMenuDataType[]>> {
     const now = Date.now()
+
     if (this.menuCache && this.menuCache.expiresAt > now) {
       return this.menuCache.value
     }
@@ -99,6 +100,7 @@ class MenuService {
 
         // Transform API menu items to frontend format
         const transformedMenu = menuItems.map(item => this.transformMenuItem(item))
+
         const successResult: ResponseResult<VerticalMenuDataType[]> = {
           success: true,
           data: transformedMenu
@@ -114,6 +116,7 @@ class MenuService {
         logger.error('MenuService', 'getMenuByRole', error)
         const status = error?.response?.status
         const message = error?.response?.data?.message || error?.message || 'Failed to fetch menu'
+
         const failedResult: ResponseResult<VerticalMenuDataType[]> = {
           success: false,
           data: [],
@@ -146,10 +149,13 @@ class MenuService {
       const menuData: MenuResponse = apiResponse.data
       const menuItems = menuData.menuItems || []
       const transformedMenu = menuItems.map(item => this.transformMenuItem(item))
-      return { success: true, data: transformedMenu }
+
+      
+return { success: true, data: transformedMenu }
     } catch (error: any) {
       logger.error('MenuService', 'getMenuByUser', error)
-      return { success: false, data: [], message: error?.response?.data?.message || error?.message || 'Failed to fetch menu' }
+      
+return { success: false, data: [], message: error?.response?.data?.message || error?.message || 'Failed to fetch menu' }
     }
   }
 
@@ -180,7 +186,8 @@ class MenuService {
       }
     } catch (error: any) {
       logger.error('MenuService', 'seedMenuData', error)
-      return {
+      
+return {
         success: false,
         message: error.message || 'Failed to seed menu data'
       }

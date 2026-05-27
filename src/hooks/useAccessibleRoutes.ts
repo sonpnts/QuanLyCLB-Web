@@ -11,9 +11,11 @@ function extractHrefs(items: VerticalMenuDataType[]): string[] {
 
   for (const item of items) {
     const href = (item as any).href
+
     if (href) hrefs.push(href)
 
     const children = (item as any).children
+
     if (children) hrefs.push(...extractHrefs(children))
   }
 
@@ -37,7 +39,8 @@ export function useAccessibleRoutes(): { routes: string[]; loading: boolean } {
     if (!isAuthenticated) {
       setRoutes([])
       setLoading(false)
-      return
+      
+return
     }
 
     menuService.getMenuByRole().then(res => {

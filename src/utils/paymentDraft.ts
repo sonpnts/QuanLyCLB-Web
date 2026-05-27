@@ -14,6 +14,7 @@ export const savePaymentInvoiceDraft = (draft: PaymentInvoiceDraft) => {
   if (typeof window === 'undefined') return ''
 
   const key = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+
   window.sessionStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(draft))
 
   return key
@@ -23,6 +24,7 @@ export const readPaymentInvoiceDraft = (key: string) => {
   if (typeof window === 'undefined' || !key) return null
 
   const raw = window.sessionStorage.getItem(`${STORAGE_PREFIX}${key}`)
+
   if (!raw) return null
 
   try {

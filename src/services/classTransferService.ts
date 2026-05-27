@@ -56,7 +56,8 @@ class ClassTransferService {
       }
     } catch (error) {
       logger.error('ClassTransferService', 'getClassTransfers', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -72,7 +73,8 @@ class ClassTransferService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('ClassTransferService', 'createClassTransfer', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -88,7 +90,8 @@ class ClassTransferService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('ClassTransferService', 'updateClassTransfer', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -107,7 +110,8 @@ class ClassTransferService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('ClassTransferService', 'approveClassTransfer', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -123,7 +127,8 @@ class ClassTransferService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('ClassTransferService', 'rejectClassTransfer', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -139,7 +144,8 @@ class ClassTransferService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('ClassTransferService', 'cancelClassTransfer', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -155,7 +161,8 @@ class ClassTransferService {
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('ClassTransferService', 'deleteClassTransfer', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -171,7 +178,8 @@ class ClassTransferService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('ClassTransferService', 'getTransfersByStudent', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -187,10 +195,12 @@ class ClassTransferService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('ClassTransferService', 'getPendingTransfers', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 }
 
 const classTransferService = new ClassTransferService()
+
 export default classTransferService

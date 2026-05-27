@@ -40,6 +40,7 @@ const PayrollListTable = () => {
     () => hasPermission(auth?.permissions, 'Payroll.Manage') || hasAdminRole(auth?.roles),
     [auth?.permissions, auth?.roles]
   )
+
   const currentUserId = auth?.user?.id
 
   const [data, setData] = useState<any[]>([])
@@ -63,6 +64,7 @@ const PayrollListTable = () => {
 
       const records = response.success && response.data ? response.data : []
       const sorted = [...records].sort((a, b) => new Date(b.generatedAt ?? 0).getTime() - new Date(a.generatedAt ?? 0).getTime())
+
       setData(sorted)
     } catch {
       setData([])
@@ -80,9 +82,11 @@ const PayrollListTable = () => {
       setLoading(true)
       const generateData: GeneratePayrollRequest = { coachId, year, month }
       const response = await payrollService.generatePayroll(generateData)
+
       if (!response.success) {
         showNotification(response.message || 'Không thể tạo bảng lương.', 'error')
-        return
+        
+return
       }
 
       showNotification('Tạo bảng lương thành công.', 'success')
@@ -100,10 +104,12 @@ const PayrollListTable = () => {
 
   const filteredData = useMemo(() => {
     let rows = [...data]
+
     if (filterParams.Year) rows = rows.filter(x => x.year === filterParams.Year)
     if (filterParams.Month) rows = rows.filter(x => x.month === filterParams.Month)
     if (isAdmin && filterParams.CoachId) rows = rows.filter(x => String(x.coachId).includes(String(filterParams.CoachId)))
-    return rows
+    
+return rows
   }, [data, filterParams, isAdmin])
 
   const columns = useMemo(

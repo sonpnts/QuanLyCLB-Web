@@ -16,7 +16,6 @@ import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
-import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
 import type { TextFieldProps } from '@mui/material/TextField'
 
@@ -58,16 +57,9 @@ type UsersTypeWithAction = UsersType & {
   action?: string
 }
 
-type UserRoleType = {
-  [key: string]: { icon: string; color: string }
-}
-
 type UserStatusType = {
   [key: string]: ThemeColor
 }
-
-// Styled Components
-const Icon = styled('i')({})
 
 const DebouncedInput = ({
   value: initialValue,
@@ -99,14 +91,6 @@ const DebouncedInput = ({
 }
 
 // Vars
-const userRoleObj: UserRoleType = {
-  admin: { icon: 'ri-vip-crown-line', color: 'error' },
-  author: { icon: 'ri-computer-line', color: 'warning' },
-  editor: { icon: 'ri-edit-box-line', color: 'info' },
-  maintainer: { icon: 'ri-pie-chart-2-line', color: 'success' },
-  subscriber: { icon: 'ri-user-3-line', color: 'primary' }
-}
-
 const userStatusObj: UserStatusType = {
   active: 'success',
   pending: 'warning',
@@ -118,6 +102,7 @@ const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
 const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const router = useRouter()
+
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
@@ -189,6 +174,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'Cấp đai',
         cell: ({ row }) => {
           const belt = row.original.beltLevelName
+
           if (!belt) return <Typography variant='body2' color='text.disabled'>—</Typography>
 
           return (

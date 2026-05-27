@@ -115,6 +115,7 @@ const BeltExamRegistrationsView = () => {
   const { showNotification } = useNotification()
   const { auth } = useAuth()
   const isAdmin = hasPermission(auth?.permissions, 'BeltExam.ManageAll') || hasAdminRole(auth?.roles)
+
   const studentPermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'Student'),
     [auth?.permissions, auth?.roles]
@@ -164,6 +165,7 @@ const BeltExamRegistrationsView = () => {
 
     if (sessionRes.success && sessionRes.data) {
       const sortedSessions = [...sessionRes.data].sort((a, b) => getSessionSortTime(b) - getSessionSortTime(a))
+
       setSessions(sortedSessions)
     }
 
@@ -256,6 +258,7 @@ const BeltExamRegistrationsView = () => {
   )
 
   const latestOpenSession = useMemo(() => sessions.find(isSessionAvailableForDefault) || null, [sessions])
+
   const selectedSession = useMemo(
     () => sessions.find(session => session.id === examSessionId) || null,
     [sessions, examSessionId]

@@ -99,6 +99,7 @@ const InstructorClassSalaryView = () => {
 
   const loadData = useCallback(async () => {
     setLoading(true)
+
     try {
       const [salaryRes, instructorRes, classRes] = await Promise.all([
         instructorClassSalaryService.getAll(),
@@ -178,6 +179,7 @@ const InstructorClassSalaryView = () => {
     }
 
     setSaving(true)
+
     try {
       let res
 
@@ -224,6 +226,7 @@ const InstructorClassSalaryView = () => {
   const confirmDelete = async () => {
     if (!deletingId) return
     setSaving(true)
+
     try {
       const res = await instructorClassSalaryService.delete(deletingId)
 

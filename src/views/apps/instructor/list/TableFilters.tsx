@@ -39,10 +39,12 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
-      return
+      
+return
     }
 
     const params: GetInstructorsParams = {}
+
     if (skillLevelId) params.skillLevelId = skillLevelId
     if (certification) params.certification = certification
     onFilterChange(params)

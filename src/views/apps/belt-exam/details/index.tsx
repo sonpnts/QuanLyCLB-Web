@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
+import { useRouter } from 'next/navigation'
+
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -12,7 +15,7 @@ import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 
 import { toast } from 'react-toastify'
-import { useParams, useRouter } from 'next/navigation'
+
 import beltExamService from '@/services/beltExamService'
 import type { ExamSessionType } from '@/types/apps/beltExamTypes'
 import { examSessionStatusObj } from '@/types/apps/beltExamTypes'
@@ -31,8 +34,10 @@ const BeltExamDetails = ({ id }: { id: string }) => {
     if (!confirm('Bạn có chắc chắn muốn chốt danh sách thi? Những học viên CHƯA ĐÓNG LỆ PHÍ sẽ tự động bị loại khỏi danh sách.')) return
 
     setSubmitting(true)
+
     try {
       const res = await beltExamService.submitExamSession(id)
+
       if (res.success) {
         toast.success(res.message || 'Chốt danh sách thành công!')
         fetchSession()
@@ -50,8 +55,10 @@ const BeltExamDetails = ({ id }: { id: string }) => {
 
   const fetchSession = async () => {
     setLoading(true)
+
     try {
       const res = await beltExamService.getExamSessionById(id)
+
       if (res.success && res.data) {
         setSession(res.data)
       } else {

@@ -41,9 +41,11 @@ const UserRoleDrawer = ({ open, onClose, user, allRoles, onSaved }: Props) => {
   const toggle = (roleName: string) => {
     setSelected(prev => {
       const next = new Set(prev)
+
       if (next.has(roleName)) next.delete(roleName)
       else next.add(roleName)
-      return next
+      
+return next
     })
   }
 
@@ -66,10 +68,12 @@ const UserRoleDrawer = ({ open, onClose, user, allRoles, onSaved }: Props) => {
 
   const getRoleColor = (name: string) => {
     const n = name.toLowerCase()
+
     if (n.includes('admin')) return 'error'
     if (n.includes('coach') || n.includes('instructor')) return 'primary'
     if (n.includes('student') || n.includes('member')) return 'success'
-    return 'default'
+    
+return 'default'
   }
 
   return (

@@ -39,9 +39,11 @@ const ImportStudentsDialog = ({ open, onClose, onImported }: Props) => {
 
   useEffect(() => {
     if (!open) return
+
     ;(async () => {
       const res = await classService.getClasses({ isActive: true, pageSize: 1000 })
       const list = (res.data || []).map(x => ({ id: x.id, name: x.name }))
+
       setClasses(list)
       if (list.length > 0) setClassId(list[0].id)
     })()
@@ -51,13 +53,16 @@ const ImportStudentsDialog = ({ open, onClose, onImported }: Props) => {
 
   const handleDownloadTemplate = async () => {
     const res = await studentService.downloadImportTemplate()
+
     if (!res.success || !res.data) {
       showNotification(res.message || 'Không thể tải file mẫu', 'error')
-      return
+      
+return
     }
 
     const url = window.URL.createObjectURL(res.data)
     const a = document.createElement('a')
+
     a.href = url
     a.download = 'student-import-template.xlsx'
     a.click()
@@ -69,11 +74,15 @@ const ImportStudentsDialog = ({ open, onClose, onImported }: Props) => {
     setLoading(true)
     setResult(null)
     const res = await studentService.importStudents(classId, file)
+
     setLoading(false)
+
     if (!res.success || !res.data) {
       showNotification(res.message || 'Import thất bại', 'error')
-      return
+      
+return
     }
+
     setResult(res.data)
     showNotification(res.message || 'Import thành công', 'success')
     onImported()

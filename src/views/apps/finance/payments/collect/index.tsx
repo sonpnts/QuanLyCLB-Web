@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
+import { useRouter } from 'next/navigation'
+
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -22,11 +25,10 @@ import TableRow from '@mui/material/TableRow'
 import Checkbox from '@mui/material/Checkbox'
 import Autocomplete from '@mui/material/Autocomplete'
 import { toast } from 'react-toastify'
-import { useRouter } from 'next/navigation'
 
-import paymentService, { BulkPaymentItemRequest } from '@/services/paymentService'
+import type { BulkPaymentItemRequest } from '@/services/paymentService';
+import paymentService from '@/services/paymentService'
 import classService from '@/services/classService'
-import studentService from '@/services/studentService'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 
@@ -48,6 +50,7 @@ const formatCurrency = (value: number) => {
 
 const CollectPayment = () => {
   const router = useRouter()
+
   // Search State
   const [classes, setClasses] = useState<ClassType[]>([])
   const [selectedClassId, setSelectedClassId] = useState<string>('')
@@ -76,14 +79,18 @@ const CollectPayment = () => {
   // Fetch classes on load
   useEffect(() => {
     let mounted = true
+
     const fetchClasses = async () => {
       const res = await classService.getClasses({ isActive: true, pageSize: 1000 })
+
       if (mounted && res.success && res.data) {
         setClasses(res.data)
       }
     }
+
     fetchClasses()
-    return () => { mounted = false }
+    
+return () => { mounted = false }
   }, [])
 
   // Fetch students when class changes
@@ -91,21 +98,26 @@ const CollectPayment = () => {
     if (!selectedClassId) {
       setStudents([])
       setSelectedStudent(null)
-      return
+      
+return
     }
 
     let mounted = true
+
     const fetchStudents = async () => {
       if (mounted) setLoadingStudents(true)
       const res = await classService.getClassStudents(selectedClassId, { pageNumber: 1, pageSize: 5000 })
+
       if (mounted && res.success && res.data) {
         setStudents(res.data.records || [])
       }
+
       if (mounted) setLoadingStudents(false)
     }
 
     fetchStudents()
-    return () => { mounted = false }
+    
+return () => { mounted = false }
   }, [selectedClassId])
 
   // Fetch debts when student is selected
@@ -113,12 +125,15 @@ const CollectPayment = () => {
     if (!selectedStudent || !selectedClassId) {
       setAvailableItems([])
       setSelectedItemIds([])
-      return
+      
+return
     }
 
     let mounted = true
+
     const fetchDebts = async () => {
       if (mounted) setLoadingDebts(true)
+
       try {
         const items: CartItem[] = []
 
@@ -128,6 +143,7 @@ const CollectPayment = () => {
         const currentYear = now.getFullYear()
 
         const tRes = await paymentService.getTuitionQuote(selectedClassId, selectedStudent.id, currentMonth, currentYear)
+
         if (tRes.success && tRes.data) {
           if (!tRes.data.alreadyPaid) {
             items.push({
@@ -144,6 +160,7 @@ const CollectPayment = () => {
 
         // 2. Fetch unpaid exam fees
         const eRes = await paymentService.getExamFeeOptions(selectedClassId, selectedStudent.id)
+
         if (eRes.success && eRes.data) {
           eRes.data.forEach(exam => {
             items.push({
@@ -159,6 +176,7 @@ const CollectPayment = () => {
 
         if (mounted) {
           setAvailableItems(items)
+
           // Auto select all by default
           setSelectedItemIds(items.map(i => i.id))
         }
@@ -170,15 +188,18 @@ const CollectPayment = () => {
     }
 
     fetchDebts()
-    return () => { mounted = false }
+    
+return () => { mounted = false }
   }, [selectedStudent, selectedClassId])
 
   const handleAddCustomItem = () => {
     if (!customName || !customAmount) return
     const amount = Number(customAmount)
+
     if (isNaN(amount) || amount <= 0) {
       toast.error('Số tiền không hợp lệ')
-      return
+      
+return
     }
 
     const newItem: CartItem = {
@@ -205,33 +226,40 @@ const CollectPayment = () => {
   const handleSubmit = async () => {
     if (!selectedStudent) {
       toast.error('Vui lòng chọn học viên')
-      return
+      
+return
     }
 
     if (selectedItemIds.length === 0) {
       toast.error('Chưa chọn khoản thu nào')
-      return
+      
+return
     }
 
     const selectedItems = availableItems.filter(i => selectedItemIds.includes(i.id))
 
     if (paymentMethod === 1 && !transferImage) {
       toast.error('Vui lòng đính kèm ảnh chụp uy nhiệm chi')
-      return
+      
+return
     }
 
     setIsSubmitting(true)
+
     try {
       let imageUrl = undefined
 
       // Upload image if transfer
       if (paymentMethod === 1 && transferImage) {
         const uploadRes = await paymentService.uploadTransferProof(transferImage)
+
         if (!uploadRes.success || !uploadRes.data?.imageUrl) {
           toast.error('Lỗi upload ảnh minh chứng: ' + uploadRes.message)
           setIsSubmitting(false)
-          return
+          
+return
         }
+
         imageUrl = uploadRes.data.imageUrl
       }
 
@@ -255,6 +283,7 @@ const CollectPayment = () => {
       }
 
       const res = await paymentService.createBulkPayment(payload)
+
       if (res.success) {
         toast.success('Thu tiền thành công!')
         router.push('/apps/finance/payments/list')

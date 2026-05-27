@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+
 import { useRouter, usePathname } from 'next/navigation'
 
 import { useAuth } from '@/contexts/authContext'
@@ -36,6 +37,7 @@ export default function RoleGuard({ children }: Props) {
 
   useEffect(() => {
     if (!isInitialized || loading) return
+
     if (!accessible) {
       router.replace('/pages/misc/401-not-authorized')
     }

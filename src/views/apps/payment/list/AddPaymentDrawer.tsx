@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+
 import Alert from '@mui/material/Alert'
 import AppBar from '@mui/material/AppBar'
 import Autocomplete from '@mui/material/Autocomplete'
@@ -128,16 +129,19 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
 
   const discountAmount = Number(formData.discountAmount || 0)
   const finalAmount = Math.max(0, payableAmount - discountAmount)
+
   const addOnProductsAmount = useMemo(
     () =>
       addOnProducts.reduce((sum, item) => {
         const product = products.find(x => x.id === item.productId)
+
         if (!product) return sum
 
         return sum + product.unitPrice * item.quantity
       }, 0),
     [addOnProducts, products]
   )
+
   const totalCollectAmount = finalAmount + addOnProductsAmount
 
   const resetForm = () => {
@@ -229,6 +233,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
         const userService = (await import('@/services/userService')).default
         const res = await userService.getUsers({ IsActive: true, PageSize: 1000 })
         const rows = (res.data || []).map(u => ({ id: u.id, fullName: u.fullName || u.email || u.id }))
+
         setCollectors(rows)
       } catch {
         setCollectors([])
@@ -245,6 +250,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     if (!formData.classId) return
 
     const cls = classes.find(x => x.id === formData.classId)
+
     const leadId =
       cls?.leadInstructorId ||
       cls?.instructorId ||
@@ -255,7 +261,9 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     setFormData(prev => {
       const nextCoachId = prev.coachId || leadId || ''
       const nextCollectorId = prev.collectedByUserId || nextCoachId || auth?.user?.id || ''
-      return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
+
+      
+return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
     })
   }, [open, mode, formData.classId, classes, auth?.user?.id])
 
@@ -386,7 +394,8 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
 
     if (mode === 'replacement' && !formData.coachId) {
       showNotification('Vui lòng chọn coach của lớp.', 'error')
-      return
+      
+return
     }
 
     if (!formData.studentId) {
@@ -518,6 +527,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
 
         if (bulkResponse.success) {
           const createdRows = Array.isArray(bulkResponse.data) ? bulkResponse.data : []
+
           setData(prev => [...createdRows, ...prev])
           showNotification('Tạo thanh toán thành công.', 'success')
           resetForm()
@@ -619,6 +629,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
                         value={formData.coachId}
                         onChange={e => {
                           const coachId = String(e.target.value)
+
                           setFormData(prev => ({
                             ...prev,
                             coachId,

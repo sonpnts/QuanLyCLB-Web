@@ -192,6 +192,7 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                     <tbody>
                       {items.map((item, index) => {
                         const paymentType = normalizePaymentType(item.type, 3)
+
                         const description =
                           item.description ||
                           (paymentType === 0 && item.forMonth && item.forYear

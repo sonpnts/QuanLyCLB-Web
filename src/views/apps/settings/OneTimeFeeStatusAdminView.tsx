@@ -82,6 +82,7 @@ const OneTimeFeeStatusAdminView = () => {
   const loadFilters = useCallback(async () => {
     try {
       setLoadingFilters(true)
+
       const [classResponse, definitionResponse] = await Promise.all([
         classService.getClasses({ isActive: true, pageSize: 1000 }),
         oneTimeFeeService.getDefinitions()
@@ -99,6 +100,7 @@ const OneTimeFeeStatusAdminView = () => {
   const loadStatuses = useCallback(async () => {
     try {
       setLoadingTable(true)
+
       const response = await oneTimeFeeService.getAdminStatuses({
         classId: classId || undefined,
         feeCode: feeCode || undefined,
@@ -112,7 +114,8 @@ const OneTimeFeeStatusAdminView = () => {
         setRecords([])
         setTotalRecords(0)
         showNotification(response.message || 'Không thể tải tổng hợp phí 1 lần.', 'error')
-        return
+        
+return
       }
 
       setRecords(response.data.records || [])
@@ -150,6 +153,7 @@ const OneTimeFeeStatusAdminView = () => {
 
     try {
       setSubmitting(true)
+
       const response = await oneTimeFeeService.markPaidManually({
         studentId: dialogRow.studentId,
         classId: dialogRow.classId,
@@ -159,7 +163,8 @@ const OneTimeFeeStatusAdminView = () => {
 
       if (!response.success) {
         showNotification(response.message || 'Không thể cập nhật trạng thái đã đóng.', 'error')
-        return
+        
+return
       }
 
       showNotification(response.message || 'Đã cập nhật trạng thái đã đóng.', 'success')

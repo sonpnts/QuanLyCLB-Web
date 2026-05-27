@@ -26,22 +26,28 @@ type Props = {
 
 const toDateInput = (isoOrDate?: string) => {
   if (!isoOrDate) return ''
+
   // API returns DateOnly as ISO-like string, keep first 10 chars.
   return isoOrDate.slice(0, 10)
 }
 
 const toDateTimeLocalInput = (iso?: string) => {
   if (!iso) return ''
+
   // Convert ISO -> yyyy-MM-ddTHH:mm for input datetime-local
   const d = new Date(iso)
+
   if (Number.isNaN(d.getTime())) return ''
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+
+  
+return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
   const { showNotification } = useNotification()
   const [loading, setLoading] = useState(false)
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -71,11 +77,13 @@ const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
 
     if (!formData.name.trim() || !formData.examDate) {
       showNotification('Vui lòng điền đầy đủ thông tin bắt buộc.', 'error')
-      return
+      
+return
     }
 
     try {
       setLoading(true)
+
       const res = await beltExamService.updateExamSession(session.id, {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,

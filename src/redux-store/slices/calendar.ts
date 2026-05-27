@@ -87,6 +87,7 @@ export const calendarSlice = createSlice({
 
       // filteredEvents = toàn bộ sự kiện (nguồn gốc, chưa lọc)
       state.filteredEvents = allEvents
+
       // events = áp filter selectedCalendars
       state.events = filterEventsUsingCheckbox(allEvents, state.selectedCalendars)
     },

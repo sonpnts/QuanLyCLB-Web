@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
-import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
@@ -237,7 +236,8 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
 
       if (!item.description.trim() || amount <= 0) {
         showNotification('Khoản trừ phải có mô tả và số tiền hợp lệ.', 'error')
-        return null
+        
+return null
       }
 
       validRows.push({ description: item.description.trim(), amount })
@@ -251,15 +251,18 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
 
     if (!formData.instructorId) {
       showNotification('Vui lòng chọn người bàn giao.', 'error')
-      return
+      
+return
     }
 
     if (collections.length === 0 || totalAvailableToHandover <= 0) {
       showNotification('Hiện không có lớp nào còn tiền để bàn giao.', 'warning')
-      return
+      
+return
     }
 
     const validDeductions = getValidDeductions()
+
     if (validDeductions === null) return
 
     try {
@@ -273,7 +276,8 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
 
       if (!response.success || !response.data) {
         showNotification(response.message || 'Không thể tạo phiếu bàn giao.', 'error')
-        return
+        
+return
       }
 
       setData(prev => [response.data!, ...prev])

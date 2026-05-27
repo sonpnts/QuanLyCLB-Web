@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
@@ -19,6 +18,8 @@ import ListItemText from '@mui/material/ListItemText'
 import ListItemButton from '@mui/material/ListItemButton'
 import Checkbox from '@mui/material/Checkbox'
 import InputAdornment from '@mui/material/InputAdornment'
+
+import { logger } from '@/utils/logger'
 
 // Types
 import type { ClassType } from '@/types/apps/classTypes'
@@ -40,12 +41,12 @@ type Props = {
 const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }: Props) => {
   const { showNotification } = useNotification()
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
 
   const [searchKeyword, setSearchKeyword] = useState('')
   const [searchResults, setSearchResults] = useState<StudentType[]>([])
   const [selectedStudents, setSelectedStudents] = useState<StudentType[]>([])
-  const [loading, setLoading] = useState(false)
   const [searching, setSearching] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -56,11 +57,13 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
     async (keyword: string) => {
       if (!keyword.trim()) {
         setSearchResults([])
-        return
+        
+return
       }
 
       try {
         setSearching(true)
+
         const response = await studentService.getStudents({
           keyword,
           pageSize: 10
@@ -70,8 +73,11 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
           // Lọc bỏ học viên đã có trong lớp này
           const filtered = response.data.filter(student => {
             const classes = (student as any).classes || []
-            return !classes.some((c: any) => c.classId === classData.id)
+
+            
+return !classes.some((c: any) => c.classId === classData.id)
           })
+
           setSearchResults(filtered)
         }
       } catch (error) {
@@ -112,10 +118,13 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
   const handleToggleStudent = (student: StudentType) => {
     setSelectedStudents(prev => {
       const exists = prev.find(s => s.id === student.id)
+
       if (exists) {
         return prev.filter(s => s.id !== student.id)
       }
-      return [...prev, student]
+
+      
+return [...prev, student]
     })
   }
 
@@ -126,7 +135,8 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
   const handleSubmit = async () => {
     if (selectedStudents.length === 0) {
       showNotificationRef.current('Vui lòng chọn ít nhất một học viên.', 'error')
-      return
+      
+return
     }
 
     try {
@@ -244,7 +254,9 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
             <List dense>
               {searchResults.map(student => {
                 const isSelected = selectedStudents.some(s => s.id === student.id)
-                return (
+
+                
+return (
                   <ListItem key={student.id} disablePadding>
                     <ListItemButton onClick={() => handleToggleStudent(student)} dense>
                       <Checkbox checked={isSelected} tabIndex={-1} disableRipple />

@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useEffect, useMemo, useState } from 'react'
@@ -23,10 +22,12 @@ import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 
 // Zalo
+import { Controller, useForm } from 'react-hook-form'
+
 import ZaloVerifyModal from './ZaloVerifyModal'
 
 // Form
-import { Controller, useForm } from 'react-hook-form'
+import { logger } from '@/utils/logger'
 
 // Types
 import type { StudentType } from '@/types/apps/studentTypes'
@@ -65,8 +66,10 @@ const EditStudentDrawer = (props: Props) => {
   const { open, onClose, student, onSaved } = props
   const { showNotification } = useNotification()
   const [submitting, setSubmitting] = useState(false)
+
   // Mã HV state (quản lý độc lập ngoài form và cần truyền cho MemberCodeField)
   const [memberCode, setMemberCode] = useState('')
+
   // Zalo
   const [zaloModalOpen, setZaloModalOpen] = useState(false)
   const [savingZalo, setSavingZalo] = useState(false)
@@ -104,12 +107,14 @@ const EditStudentDrawer = (props: Props) => {
     const verifyMemberCode = async () => {
       if (!open || !student?.code) return
       const check = await federationMemberService.getByCode(student.code)
+
       if (!check.success) {
         setMemberCode('')
         setValue('code', '')
         showNotification('Mã HV hiện tại không còn tồn tại trong dữ liệu Liên đoàn. Vui lòng chọn lại mã hợp lệ.', 'warning')
       }
     }
+
     verifyMemberCode()
   }, [open, student?.id, student?.code, setValue, showNotification])
 
@@ -123,9 +128,11 @@ const EditStudentDrawer = (props: Props) => {
   const handleMemberInfoConfirmed = (info: MemberInfo) => {
     if (isLocked) {
       if (info.personalIdNumber) setValue('personalIdNumber', info.personalIdNumber)
+
       // if (info.address) setValue('address', info.address)
       showNotification('Đã áp dụng CCCD từ liên đoàn cho học viên đã có mã HV.', 'info')
-      return
+      
+return
     }
 
     setValue('fullName', info.fullName || defaultValues.fullName)
@@ -238,7 +245,8 @@ const EditStudentDrawer = (props: Props) => {
                 validate: value => {
                   if (isLocked) return true
                   if (!value?.trim()) return 'Họ tên là bắt buộc'
-                  return true
+                  
+return true
                 }
               }}
               render={({ field }) => (
@@ -442,10 +450,13 @@ const EditStudentDrawer = (props: Props) => {
         onConfirm={async (userId, phone) => {
           if (!student) return
           setSavingZalo(true)
+
           try {
             const res = await studentService.updateStudentZalo(student.id, userId, phone)
+
             if (res.success && res.data) {
               showNotification('Liên kết Zalo thành công!', 'success')
+
               // onSaved(res.data as StudentType)
               reset({
                 ...defaultValues,

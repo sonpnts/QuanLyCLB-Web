@@ -72,6 +72,7 @@ type BulkInventoryRow = {
 const ProductInventoryView = () => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
+
   const inventoryPermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductInventory'),
     [auth?.permissions, auth?.roles]
@@ -86,6 +87,7 @@ const ProductInventoryView = () => {
   const [transactionPage, setTransactionPage] = useState(0)
   const [transactionRowsPerPage, setTransactionRowsPerPage] = useState(10)
   const [inventoryActionType, setInventoryActionType] = useState<InventoryActionType>('Import')
+
   const [form, setForm] = useState<CreateProductInventoryEntryRequest>({
     productId: '',
     productVariantId: undefined,
@@ -94,6 +96,7 @@ const ProductInventoryView = () => {
     transactionType: 'DamageWriteOff',
     notes: ''
   })
+
   const [importForm, setImportForm] = useState<{
     productId: string
     transactionType: 'Import' | 'AdjustmentIncrease'
@@ -110,18 +113,22 @@ const ProductInventoryView = () => {
     () => products.find(item => item.id === form.productId) || null,
     [form.productId, products]
   )
+
   const selectedImportProduct = useMemo(
     () => products.find(item => item.id === importForm.productId) || null,
     [importForm.productId, products]
   )
+
   const displayedProducts = useMemo(
     () => (filters.productId ? products.filter(item => item.id === filters.productId) : products),
     [filters.productId, products]
   )
+
   const selectedVariants = useMemo(
     () => (selectedProduct?.variants || []).filter(item => item.isActive !== false),
     [selectedProduct]
   )
+
   const filteredTransactions = useMemo(() => {
     return transactions.filter(item => {
       if (transactionFilters.transactionType && item.transactionType !== transactionFilters.transactionType) {
@@ -130,6 +137,7 @@ const ProductInventoryView = () => {
 
       if (transactionFilters.referenceType) {
         const normalizedReferenceType = item.referenceType === 'Manual' ? 'Manual' : 'Sales'
+
         if (normalizedReferenceType !== transactionFilters.referenceType) {
           return false
         }
@@ -138,10 +146,14 @@ const ProductInventoryView = () => {
       return true
     })
   }, [transactions, transactionFilters.referenceType, transactionFilters.transactionType])
+
   const pagedTransactions = useMemo(() => {
     const start = transactionPage * transactionRowsPerPage
-    return filteredTransactions.slice(start, start + transactionRowsPerPage)
+
+    
+return filteredTransactions.slice(start, start + transactionRowsPerPage)
   }, [filteredTransactions, transactionPage, transactionRowsPerPage])
+
   const totals = useMemo(() => {
     return products.reduce(
       (accumulator, product) => {
@@ -149,7 +161,8 @@ const ProductInventoryView = () => {
         accumulator.totalVariants += (product.variants || []).filter(item => item.isActive !== false).length
         accumulator.totalUnits += Number(product.totalStockQuantity || 0)
         accumulator.totalValue += Number(product.unitPrice || 0) * Number(product.totalStockQuantity || 0)
-        return accumulator
+        
+return accumulator
       },
       { totalProducts: 0, totalVariants: 0, totalUnits: 0, totalValue: 0 }
     )
@@ -160,6 +173,7 @@ const ProductInventoryView = () => {
   const loadData = async () => {
     try {
       setLoading(true)
+
       const [inventoryRes, transactionRes] = await Promise.all([
         productService.getInventory({ pageSize: 500, isActive: true }),
         productService.getInventoryTransactions(filters.productId || undefined)
@@ -185,7 +199,8 @@ const ProductInventoryView = () => {
   useEffect(() => {
     if (!selectedImportProduct) {
       setImportForm(prev => ({ ...prev, items: [] }))
-      return
+      
+return
     }
 
     const activeVariants = (selectedImportProduct.variants || []).filter(item => item.isActive !== false)
@@ -201,7 +216,8 @@ const ProductInventoryView = () => {
           unitCost: undefined
         }))
       }))
-      return
+      
+return
     }
 
     setImportForm(prev => ({
@@ -249,16 +265,19 @@ const ProductInventoryView = () => {
 
     if (!form.productId || Number(form.quantity || 0) <= 0) {
       showNotification('Vui lòng chọn sản phẩm và số lượng hợp lệ.', 'error')
-      return
+      
+return
     }
 
     if (selectedProduct?.hasVariants && !form.productVariantId) {
       showNotification('Vui lòng chọn biến thể sản phẩm.', 'error')
-      return
+      
+return
     }
 
     try {
       setSubmitting(true)
+
       const response = await productService.createInventoryEntry({
         ...form,
         transactionType: inventoryActionType,
@@ -268,7 +287,8 @@ const ProductInventoryView = () => {
 
       if (!response.success) {
         showNotification(response.message || 'Không thể cập nhật kho sản phẩm.', 'error')
-        return
+        
+return
       }
 
       showNotification('Đã cập nhật kho sản phẩm thành công.', 'success')
@@ -284,7 +304,8 @@ const ProductInventoryView = () => {
 
     if (!importForm.productId) {
       showNotification('Vui lòng chọn sản phẩm cần nhập kho.', 'error')
-      return
+      
+return
     }
 
     const items = importForm.items
@@ -298,11 +319,13 @@ const ProductInventoryView = () => {
 
     if (items.length === 0) {
       showNotification('Vui lòng nhập số lượng cho ít nhất một biến thể.', 'error')
-      return
+      
+return
     }
 
     try {
       setSubmitting(true)
+
       const payload: CreateProductInventoryBatchEntryRequest = {
         productId: importForm.productId,
         transactionType: importForm.transactionType,
@@ -314,7 +337,8 @@ const ProductInventoryView = () => {
 
       if (!response.success) {
         showNotification(response.message || 'Không thể cập nhật kho nhiều biến thể.', 'error')
-        return
+        
+return
       }
 
       showNotification('Đã cập nhật kho cho các biến thể đã chọn.', 'success')

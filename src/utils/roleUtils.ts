@@ -36,7 +36,8 @@ export const hasAdminRole = (roles?: string[] | null): boolean =>
  */
 export const hasRole = (roles?: string[] | null, roleName?: string): boolean => {
   if (!roleName) return false
-  return roles?.some(r => r.toLowerCase() === roleName.toLowerCase()) ?? false
+  
+return roles?.some(r => r.toLowerCase() === roleName.toLowerCase()) ?? false
 }
 
 /**

@@ -1,7 +1,6 @@
 'use client'
 
 // React Imports
-import { logger } from '@/utils/logger'
 import { useState, useEffect, useRef, memo } from 'react'
 
 // MUI Imports
@@ -12,6 +11,8 @@ import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import type { SelectChangeEvent } from '@mui/material/Select'
+
+import { logger } from '@/utils/logger'
 
 // Service Imports
 import classService from '@/services/classService'
@@ -38,6 +39,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
       try {
         classesLoaded.current = true
         const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
+
         if (response.success && response.data) {
           setClasses(response.data)
         }
@@ -46,6 +48,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
         classesLoaded.current = false
       }
     }
+
     loadClasses()
   }, [])
 
@@ -53,10 +56,12 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
-      return
+      
+return
     }
 
     const params: GetClassTransfersParams = {}
+
     if (status) params.status = status
     if (fromClassId) params.fromClassId = fromClassId
     if (toClassId) params.toClassId = toClassId

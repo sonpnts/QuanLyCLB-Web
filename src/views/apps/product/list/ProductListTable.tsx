@@ -49,6 +49,7 @@ import tableStyles from '@core/styles/table.module.css'
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
+
   addMeta({ itemRank })
 
   return itemRank.passed
@@ -89,18 +90,22 @@ const ProductListTable = () => {
   const { showNotification } = useNotification()
   const { confirm, confirmDialog } = useConfirmAction()
   const { auth } = useAuth()
+
   const productPermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'Product'),
     [auth?.permissions, auth?.roles]
   )
+
   const bundlePermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductBundle'),
     [auth?.permissions, auth?.roles]
   )
+
   const inventoryPermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductInventory'),
     [auth?.permissions, auth?.roles]
   )
+
   const reportPermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductReport'),
     [auth?.permissions, auth?.roles]
@@ -116,6 +121,7 @@ const ProductListTable = () => {
   const [filterParams, setFilterParams] = useState<GetProductsParams>({})
 
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
 
   const handleFilterChange = useCallback((params: GetProductsParams) => {
@@ -129,7 +135,8 @@ const ProductListTable = () => {
 
       if (!response.success || !response.data) {
         showNotificationRef.current(response.message || 'Không thể tải danh sách sản phẩm.', 'error')
-        return
+        
+return
       }
 
       setData(response.data)
@@ -158,7 +165,8 @@ const ProductListTable = () => {
 
       if (!response.success) {
         showNotificationRef.current(response.message || 'Không thể xóa sản phẩm.', 'error')
-        return
+        
+return
       }
 
       setData(prev => prev.map(item => (item.id === id ? { ...item, isActive: false } : item)))
@@ -184,7 +192,8 @@ const ProductListTable = () => {
 
       if (!response.success) {
         showNotificationRef.current(response.message || 'Không thể khôi phục sản phẩm.', 'error')
-        return
+        
+return
       }
 
       setData(prev => prev.map(item => (item.id === id ? { ...item, isActive: true } : item)))

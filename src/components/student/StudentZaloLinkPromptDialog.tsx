@@ -64,7 +64,8 @@ const StudentZaloLinkPromptDialog = ({
 
       if (!response.success || !response.data) {
         showNotification(response.message || 'Không thể lưu liên kết Zalo.', 'error')
-        return
+        
+return
       }
 
       showNotification('Đã cập nhật liên kết Zalo.', 'success')

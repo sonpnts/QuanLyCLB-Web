@@ -81,7 +81,8 @@ class AttendanceService {
       }
     } catch (error: any) {
       logger.error('AttendanceService', 'checkIn', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -104,7 +105,8 @@ class AttendanceService {
       }
     } catch (error: any) {
       logger.error('AttendanceService', 'createManualAttendance', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -127,7 +129,8 @@ class AttendanceService {
       }
     } catch (error: any) {
       logger.error('AttendanceService', 'checkOut', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -152,7 +155,8 @@ class AttendanceService {
       }
     } catch (error) {
       logger.error('AttendanceService', 'getUserAttendance', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -176,7 +180,8 @@ class AttendanceService {
       }
     } catch (error) {
       logger.error('AttendanceService', 'getMyAttendance', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -199,7 +204,8 @@ class AttendanceService {
       }
     } catch (error: any) {
       logger.error('AttendanceService', 'createTicket', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -222,7 +228,8 @@ class AttendanceService {
       }
     } catch (error: any) {
       logger.error('AttendanceService', 'approveTicket', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 

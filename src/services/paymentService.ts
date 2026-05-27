@@ -134,6 +134,7 @@ const unwrapList = (payload: any): any[] => {
 
 const normalizeNumber = (value: unknown) => {
   if (typeof value === 'number' && Number.isFinite(value)) return value
+
   if (typeof value === 'string' && value.trim() !== '') {
     const parsed = Number(value)
 
@@ -206,7 +207,8 @@ class PaymentService {
       }
     } catch (error) {
       logger.error('PaymentService', 'getPayments', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -236,7 +238,8 @@ class PaymentService {
       }
     } catch (error: any) {
       logger.error('PaymentService', 'getDiscountedReceipts', error)
-      return {
+      
+return {
         success: false,
         message: error?.response?.data?.message || 'Loi ket noi may chu',
         data: { totalRecords: 0, records: [] }
@@ -262,7 +265,8 @@ class PaymentService {
       return { success: true, data: normalizedQuote }
     } catch (error: any) {
       logger.error('PaymentService', 'getPaymentById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -278,7 +282,8 @@ class PaymentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('PaymentService', 'createPayment', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -294,7 +299,8 @@ class PaymentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('PaymentService', 'createBulkPayment', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -310,7 +316,8 @@ class PaymentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('PaymentService', 'updatePayment', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -326,7 +333,8 @@ class PaymentService {
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('PaymentService', 'deletePayment', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -342,7 +350,8 @@ class PaymentService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('PaymentService', 'restorePayment', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -358,7 +367,8 @@ class PaymentService {
       return { success: true, data: unwrapList(apiResponse.data) }
     } catch (error) {
       logger.error('PaymentService', 'getPaymentsByStudent', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -374,7 +384,8 @@ class PaymentService {
       return { success: true, data: unwrapList(apiResponse.data) }
     } catch (error) {
       logger.error('PaymentService', 'getPaymentsByClass', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -383,6 +394,7 @@ class PaymentService {
       const response = await apiClient.get<any>(API_ENDPOINTS.payments.classSummary(classId), {
         params: { fromDate, toDate }
       })
+
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -398,7 +410,8 @@ class PaymentService {
       return { success: true, data: normalizedQuote }
     } catch (error: any) {
       logger.error('PaymentService', 'getClassSummary', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -407,6 +420,7 @@ class PaymentService {
       const response = await apiClient.get<any>(API_ENDPOINTS.payments.monthlyReport, {
         params: { year, month }
       })
+
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -416,7 +430,8 @@ class PaymentService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('PaymentService', 'getMonthlyReport', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -425,6 +440,7 @@ class PaymentService {
       const response = await apiClient.get<any>(API_ENDPOINTS.payments.classStatistics(classId), {
         params: { month, year }
       })
+
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -463,6 +479,7 @@ class PaymentService {
       const response = await apiClient.get<any>(API_ENDPOINTS.payments.tuitionQuote, {
         params: { classId, studentId, month, year, paymentDate }
       })
+
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -486,6 +503,7 @@ class PaymentService {
       const response = await apiClient.get<any>(API_ENDPOINTS.payments.examFeeOptions, {
         params: { classId, studentId }
       })
+
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -527,12 +545,14 @@ class PaymentService {
   async getOutstandingByStudent(studentId: string, month?: number, year?: number): Promise<ResponseResult<any>> {
     try {
       const params: Record<string, string> = {}
+
       if (month) params['month'] = month.toString()
       if (year) params['year'] = year.toString()
       const qs = new URLSearchParams(params).toString()
       const url = `${API_ENDPOINTS.payments.outstanding(studentId)}${qs ? '?' + qs : ''}`
       const response = await apiClient.get<any>(url)
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
       return { success: true, data: apiResponse.data }
@@ -545,6 +565,7 @@ class PaymentService {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.payments.summaryMy, { params: { month, year } })
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
       return { success: true, data: apiResponse.data }
@@ -556,10 +577,12 @@ class PaymentService {
   async getSummaryForAdmin(month: number, year: number, classId?: string, coachId?: string): Promise<ResponseResult<any>> {
     try {
       const params: Record<string, string> = { month: month.toString(), year: year.toString() }
+
       if (classId) params['classId'] = classId
       if (coachId) params['coachId'] = coachId
       const response = await apiClient.get<any>(API_ENDPOINTS.payments.summaryAdmin, { params })
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
       return { success: true, data: apiResponse.data }
@@ -579,6 +602,7 @@ class PaymentService {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.payments.unpaid, { params })
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
       return { success: true, data: apiResponse.data }
@@ -589,4 +613,5 @@ class PaymentService {
 }
 
 const paymentService = new PaymentService()
+
 export default paymentService

@@ -50,10 +50,12 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
-      return
+      
+return
     }
 
     const params: GetAuditLogsParams = {}
+
     if (action) params.action = action
     if (entityType) params.entityType = entityType
     if (userRole) params.userRole = userRole

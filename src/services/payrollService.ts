@@ -39,7 +39,8 @@ class PayrollService {
       return { success: true, data: apiResponse.data?.records || [] }
     } catch (error) {
       logger.error('PayrollService', 'getPayrolls', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -61,7 +62,8 @@ class PayrollService {
       }
     } catch (error: any) {
       logger.error('PayrollService', 'getPayrollById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -75,7 +77,8 @@ class PayrollService {
       return { success: true, data: apiResponse.data?.records || apiResponse.data || [] }
     } catch (error) {
       logger.error('PayrollService', 'getPayrollByCoach', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -98,7 +101,8 @@ class PayrollService {
       }
     } catch (error: any) {
       logger.error('PayrollService', 'generatePayroll', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -121,7 +125,8 @@ class PayrollService {
       }
     } catch (error: any) {
       logger.error('PayrollService', 'createPayroll', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }

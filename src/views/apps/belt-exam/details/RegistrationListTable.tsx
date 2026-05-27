@@ -1,9 +1,8 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 import { useState, useEffect, useMemo } from 'react'
+
 import Card from '@mui/material/Card'
-import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import IconButton from '@mui/material/IconButton'
@@ -18,6 +17,8 @@ import {
   useReactTable,
   getPaginationRowModel
 } from '@tanstack/react-table'
+
+import { logger } from '@/utils/logger'
 
 import beltExamService from '@/services/beltExamService'
 import type { ExamRegistrationType, ExamSessionStatus } from '@/types/apps/beltExamTypes'
@@ -46,8 +47,10 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
 
   const fetchRegistrations = async () => {
     setLoading(true)
+
     try {
       const res = await beltExamService.getExamRegistrations({ examSessionId: sessionId })
+
       if (res.success && res.data) {
         setData(res.data)
       }
@@ -63,7 +66,7 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, refreshTrigger])
 
-  const deleteRegistration = async (id: string) => {
+  const deleteRegistration = async () => {
     if (!confirm('Bạn có chắc chắn muốn xóa thí sinh này khỏi danh sách dự thi?')) return
     alert('Tính năng xóa đang được phát triển') // TODO: call APi
   }
@@ -73,6 +76,7 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
     
     try {
       const res = await beltExamService.rejectExamRegistration(id)
+
       if (res.success) {
         toast.success(res.message || 'Huỷ dự thi thành công')
         fetchRegistrations()
@@ -108,7 +112,9 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
           header: 'Lệ phí',
           cell: ({ row }) => {
             const isPaid = row.original.isFeePaid
-            return (
+
+            
+return (
               <Box display='flex' flexDirection='column' alignItems='flex-start' gap={1}>
                 <Typography variant='body2'>{formatCurrency(row.original.feeAmount ?? 0)}</Typography>
                 <Chip
@@ -139,8 +145,8 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
           columnHelper.display({
             id: 'actions',
             header: 'Hành động',
-            cell: ({ row }) => (
-              <IconButton color='error' onClick={() => deleteRegistration(row.original.id)}>
+            cell: () => (
+              <IconButton color='error' onClick={() => deleteRegistration()}>
                 <i className='ri-delete-bin-7-line' />
               </IconButton>
             )
@@ -161,7 +167,9 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
           }) as any
         )
       }
-      return cols
+
+      
+return cols
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [sessionStatus]

@@ -37,7 +37,6 @@ import instructorService from '@/services/instructorService'
 import studentAttendanceService from '@/services/studentAttendanceService'
 import type {
   BeltExamRegistrationListType,
-  BeltLevelType,
   CreateRegistrationListItemRequest,
   EligibleStudentForExamType,
   ExamSessionType
@@ -65,7 +64,6 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const [myClasses, setMyClasses] = useState<{ id: string; name: string }[]>([])
   const [selectedClassId, setSelectedClassId] = useState<string>('')
   const [students, setStudents] = useState<StudentRow[]>([])
-  const [beltLevels, setBeltLevels] = useState<BeltLevelType[]>([])
   const [myList, setMyList] = useState<BeltExamRegistrationListType | null>(null)
   const [loadingStudents, setLoadingStudents] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -74,7 +72,6 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 
   useEffect(() => {
     loadMyClasses()
-    loadBeltLevels()
   }, [isAdmin, coachId])
 
   useEffect(() => {
@@ -137,15 +134,18 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 
         setMyClasses(records)
         if (records.length > 0) setSelectedClassId(current => current || records[0].id)
-        return
+        
+return
       }
 
       // Fallback cho tài khoản có quyền cao hơn (admin/staff)
       const result = await instructorService.getInstructorClasses(coachId)
+
       if (result.success && result.data) {
         const records: { id: string; name: string }[] = Array.isArray(result.data)
           ? result.data
           : (result.data as any)?.records || []
+
         const mappedRecords = records
           .map((c: any) => ({ id: c.id, name: c.name }))
           .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
@@ -158,17 +158,6 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     }
   }
 
-  const loadBeltLevels = async () => {
-    const result = await beltExamService.getBeltLevels()
-
-    if (result.success && result.data) {
-      // Chỉ lấy cấp kup (order 2-10), đẳng (order > 10) không dùng cho đăng ký thi kup
-      const levels = result.data.filter(b => b.order >= 2 && b.order <= 10)
-
-      setBeltLevels(levels)
-    }
-  }
-
   const loadEligibleStudents = async (classId: string) => {
     try {
       setLoadingStudents(true)
@@ -178,8 +167,10 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
         const sorted = [...result.data].sort((a, b) => {
           const ao = a.currentBeltOrder ?? -1
           const bo = b.currentBeltOrder ?? -1
+
           if (bo !== ao) return bo - ao // desc
-          return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
+          
+return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
         })
 
         setStudents(
@@ -225,6 +216,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 
     try {
       setSaving(true)
+
       const items: CreateRegistrationListItemRequest[] = chosen.map(s => ({
         studentId: s.studentId,
         targetBeltLevelId: s.selectedTargetBeltId
@@ -263,18 +255,6 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
       }
     } finally {
       setSubmitting(false)
-    }
-  }
-
-  const handleRemoveStudent = async (studentId: string) => {
-    if (!myList?.id) return
-    const result = await beltExamService.removeStudentFromList(myList.id, studentId)
-
-    if (result.success) {
-      showNotification('Đã xóa học viên', 'success')
-      await Promise.all([loadMyExistingList(selectedClassId), loadEligibleStudents(selectedClassId)])
-    } else {
-      showNotification(result.message || 'Xóa thất bại', 'error')
     }
   }
 
@@ -436,6 +416,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                   <TableBody>
                     {students.map(student => {
                       const isLockedByAnotherList = isStudentLockedByAnotherList(student)
+
                       const isCurrentDraftStudent = Boolean(
                         myList && myList.status === 'Draft' && student.existingRegistrationListId === myList.id
                       )
@@ -522,3 +503,5 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 }
 
 export default BeltExamRegisterClassPanel
+
+

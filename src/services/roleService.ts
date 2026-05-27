@@ -88,6 +88,7 @@ class RoleService {
     }
 
     const existingPromise = this.inFlightGetRoles.get(key)
+
     if (existingPromise) {
       return existingPromise
     }
@@ -114,6 +115,7 @@ class RoleService {
 
         const records: ApiRoleResponse[] = apiResponse.data?.records || []
         const roles = records.map(this.mapApiRoleToRoleType)
+
         const successResult: ResponseResult<RoleType[]> = {
           success: true,
           data: roles
@@ -127,7 +129,8 @@ class RoleService {
         return successResult
       } catch (error) {
         logger.error('RoleService', 'getRoles', error)
-        return { success: true, data: [] }
+        
+return { success: true, data: [] }
       }
     })()
 
@@ -165,7 +168,8 @@ class RoleService {
       }
     } catch (error: any) {
       logger.error('RoleService', 'createRole', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -193,7 +197,8 @@ class RoleService {
       }
     } catch (error: any) {
       logger.error('RoleService', 'getRoleById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -222,7 +227,8 @@ class RoleService {
       }
     } catch (error: any) {
       logger.error('RoleService', 'updateRole', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -248,7 +254,8 @@ class RoleService {
       }
     } catch (error: any) {
       logger.error('RoleService', 'deleteRole', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 

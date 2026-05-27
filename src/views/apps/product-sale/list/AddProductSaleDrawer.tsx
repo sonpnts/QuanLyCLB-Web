@@ -98,7 +98,8 @@ const AddProductSaleDrawer = ({ open, handleClose, setData, sale }: Props) => {
         buyerName: sale.buyerName || '',
         notes: sale.notes || ''
       })
-      return
+      
+return
     }
 
     setFormData({
@@ -117,7 +118,8 @@ const AddProductSaleDrawer = ({ open, handleClose, setData, sale }: Props) => {
   useEffect(() => {
     if (!formData.classId) {
       setClassStudents([])
-      return
+      
+return
     }
 
     studentService
@@ -130,10 +132,12 @@ const AddProductSaleDrawer = ({ open, handleClose, setData, sale }: Props) => {
   }, [formData.classId])
 
   const selectedProduct = useMemo(() => products.find(item => item.id === formData.productId) || null, [formData.productId, products])
+
   const selectedVariants = useMemo(
     () => (selectedProduct?.variants || []).filter(item => item.isActive !== false),
     [selectedProduct]
   )
+
   const selectedVariant = useMemo(
     () => selectedVariants.find(item => item.id === formData.productVariantId) || null,
     [formData.productVariantId, selectedVariants]
@@ -156,7 +160,8 @@ const AddProductSaleDrawer = ({ open, handleClose, setData, sale }: Props) => {
 
   const computedUnitPrice = useMemo(() => {
     if (!selectedProduct) return 0
-    return Number(selectedProduct.unitPrice || 0) + Number(selectedVariant?.additionalPrice || 0)
+    
+return Number(selectedProduct.unitPrice || 0) + Number(selectedVariant?.additionalPrice || 0)
   }, [selectedProduct, selectedVariant])
 
   useEffect(() => {
@@ -191,26 +196,31 @@ const AddProductSaleDrawer = ({ open, handleClose, setData, sale }: Props) => {
 
     if (!formData.productId || !formData.classId || quantity <= 0 || unitPrice <= 0) {
       showNotification('Vui lòng nhập đủ sản phẩm, lớp, số lượng và đơn giá hợp lệ.', 'error')
-      return
+      
+return
     }
 
     if (selectedProduct?.hasVariants && !formData.productVariantId) {
       showNotification('Vui lòng chọn biến thể sản phẩm.', 'error')
-      return
+      
+return
     }
 
     if (availableStock <= 0) {
       showNotification('Sản phẩm đã hết hàng. Vui lòng thông báo tới admin.', 'error')
-      return
+      
+return
     }
 
     if (quantity > availableStock) {
       showNotification(`Số lượng vượt quá tồn kho hiện có (${availableStock}).`, 'error')
-      return
+      
+return
     }
 
     try {
       setLoading(true)
+
       const response =
         isEditMode && sale
           ? await productSaleService.updateProductSale(sale.id, {
@@ -237,7 +247,8 @@ const AddProductSaleDrawer = ({ open, handleClose, setData, sale }: Props) => {
 
       if (!response.success || !response.data) {
         showNotification(response.message || 'Không thể lưu giao dịch bán sản phẩm.', 'error')
-        return
+        
+return
       }
 
       setData(prev =>

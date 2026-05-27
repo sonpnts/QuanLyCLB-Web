@@ -3,8 +3,6 @@
 // React Imports
 import { useEffect, useState, useMemo, useCallback } from 'react'
 
-// Next Imports
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 // MUI Imports
@@ -107,6 +105,7 @@ const columnHelper = createColumnHelper<ClassTypeWithAction>()
 
 const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   const router = useRouter()
+
   // States
   const [addClassOpen, setAddClassOpen] = useState(false)
   const [editClassOpen, setEditClassOpen] = useState(false)
@@ -237,6 +236,7 @@ return
           />
         )
       },
+
       /*columnHelper.accessor('name', {
         header: 'Tên',
         cell: ({ row }) => {
@@ -383,49 +383,6 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
         cell: ({ row }) => {
           // Explicitly check isActive === false (not undefined/null = active)
           const isInactive = row.original.isActive === false
-
-          const handleRestore = async () => {
-            try {
-              setLoading(true)
-              const response = await classService.restoreClass(row.original.id)
-
-              if (response.success && response.data) {
-                // Cập nhật lại class trong state với dữ liệu đã khôi phục
-                setData(prevData => prevData.map(clazz => (clazz.id === row.original.id ? response.data! : clazz)))
-                showNotification('Khôi phục lớp học thành công!', 'success')
-              } else {
-                showNotification(response.message || 'Không thể khôi phục lớp học.', 'error')
-              }
-            } catch (error) {
-              logger.error('ClassListTable', 'Error restoring class', error)
-              showNotification('Đã có lỗi khi khôi phục lớp học.', 'error')
-            } finally {
-              setLoading(false)
-            }
-          }
-
-          const handleDelete = async () => {
-            try {
-              setLoading(true)
-              const response = await classService.deleteClass(row.original.id)
-
-              if (response.success) {
-                // Cập nhật isActive = false trong state thay vì xóa khỏi danh sách
-                // (để người dùng có thể thấy và khôi phục)
-                setData(prevData =>
-                  prevData.map(clazz => (clazz.id === row.original.id ? { ...clazz, isActive: false } : clazz))
-                )
-                showNotification('Xóa lớp học thành công! Học viên thuộc lớp đã bị tạm nghỉ.', 'success')
-              } else {
-                showNotification(response.message || 'Không thể xóa lớp học.', 'error')
-              }
-            } catch (error) {
-              logger.error('ClassListTable', 'Error deleting class', error)
-              showNotification('Đã có lỗi khi xóa lớp học.', 'error')
-            } finally {
-              setLoading(false)
-            }
-          }
 
           return (
             <div className='flex items-center' onClick={event => event.stopPropagation()}>

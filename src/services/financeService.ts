@@ -30,6 +30,7 @@ const parseAmount = (payload: any): number => {
     payload?.total,
     payload?.value
   ]
+
   const first = candidates.find(item => typeof item === 'number')
 
   return Number(first ?? 0)
@@ -59,7 +60,8 @@ class FinanceService {
       }
     } catch (error: any) {
       logger.error('FinanceService', 'getClassTuitionSummary', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -85,7 +87,8 @@ class FinanceService {
       }
     } catch (error: any) {
       logger.error('FinanceService', 'getProductSalesSummary', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -98,6 +101,7 @@ class FinanceService {
       const response = await apiClient.get<any>(API_ENDPOINTS.finance.classInstructorSummary(classId, instructorId), {
         params
       })
+
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -121,7 +125,8 @@ class FinanceService {
       }
     } catch (error: any) {
       logger.error('FinanceService', 'getClassInstructorSummary', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -148,7 +153,8 @@ class FinanceService {
       }
     } catch (error: any) {
       logger.error('FinanceService', 'getBranchSummary', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -160,6 +166,7 @@ class FinanceService {
       const response = await apiClient.get<any>(API_ENDPOINTS.finance.instructorClassCollections(instructorId), {
         params: { asOfDate }
       })
+
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: true, data: [] }
@@ -192,7 +199,8 @@ class FinanceService {
       }
     } catch (error) {
       logger.error('FinanceService', 'getClassCollectionsByInstructor', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -201,6 +209,7 @@ class FinanceService {
       const response = await apiClient.get<any>(API_ENDPOINTS.finance.myClassCollections, {
         params: { asOfDate }
       })
+
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: true, data: [] }
@@ -233,7 +242,8 @@ class FinanceService {
         }
     } catch (error) {
       logger.error('FinanceService', 'getMyClassCollections', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 }

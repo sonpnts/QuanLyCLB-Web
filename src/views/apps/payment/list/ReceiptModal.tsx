@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import TextField from '@mui/material/TextField'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -19,13 +20,15 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 
+import { toast } from 'react-toastify'
+
 import { useAuth } from '@/contexts/authContext'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { apiClient } from '@/utils/apiClient'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
-import { PaymentRecordType, paymentTypeLabels, paymentMethodLabels } from '@/types/apps/paymentTypes'
-import { toast } from 'react-toastify'
+import type { PaymentRecordType} from '@/types/apps/paymentTypes';
+import { paymentTypeLabels, paymentMethodLabels } from '@/types/apps/paymentTypes'
 import paymentService from '@/services/paymentService'
 
 type ReceiptModalProps = {
@@ -50,8 +53,10 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
     if (open && receiptNumber) {
       const fetchReceipt = async () => {
         setLoading(true)
+
         try {
           const res = await apiClient.get<any>(API_ENDPOINTS.payments.byReceipt(receiptNumber))
+
           if (res.data.isSuccess) {
             setItems(res.data.data)
           } else {
@@ -63,6 +68,7 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
           setLoading(false)
         }
       }
+
       fetchReceipt()
     } else {
       setItems([])
@@ -79,12 +85,14 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
 
   const beginEdit = () => {
     const nextDraft: Record<string, { originalAmount: number; amount: number }> = {}
+
     for (const it of items) {
       nextDraft[it.id] = {
         originalAmount: Number(it.originalAmount ?? it.amount ?? 0),
         amount: Number(it.amount ?? 0)
       }
     }
+
     setDraft(nextDraft)
     setEditing(true)
   }
@@ -97,8 +105,10 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
   const reload = async () => {
     if (!receiptNumber) return
     setLoading(true)
+
     try {
       const res = await apiClient.get<any>(API_ENDPOINTS.payments.byReceipt(receiptNumber))
+
       if (res.data.isSuccess) {
         setItems(res.data.data)
       } else {
@@ -120,12 +130,15 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
 
       const changed = items.filter(it => {
         const d = draft[it.id]
+
         if (!d) return false
-        return Number(d.amount) !== Number(it.amount) || Number(d.originalAmount) !== Number(it.originalAmount)
+        
+return Number(d.amount) !== Number(it.amount) || Number(d.originalAmount) !== Number(it.originalAmount)
       })
 
       for (const it of changed) {
         const d = draft[it.id]
+
         const res = await paymentService.updatePayment(it.id, {
           type: it.type,
           amount: Number(d.amount || 0),
@@ -166,10 +179,12 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
     if (items.length === 0) return
 
     const ok = window.confirm('Hủy biên lai này? Biên lai sẽ không tính vào thống kê và coi như chưa thu.')
+
     if (!ok) return
 
     try {
       setSaving(true)
+
       for (const it of items) {
         const res = await paymentService.updatePayment(it.id, {
           type: it.type,

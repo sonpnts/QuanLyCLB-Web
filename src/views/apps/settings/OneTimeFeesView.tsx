@@ -68,6 +68,7 @@ const createEmptyDialogState = (): FeeDialogState => ({
 
 const parseAmount = (value: string) => {
   const normalized = value.replace(/,/g, '').trim()
+
   if (!normalized) return 0
 
   return Number(normalized)
@@ -131,6 +132,7 @@ const OneTimeFeesView = () => {
 
   const filteredDefinitions = useMemo(() => {
     const keyword = search.trim().toLowerCase()
+
     if (!keyword) return globalDefinitions
 
     return globalDefinitions.filter(definition => {
@@ -163,12 +165,14 @@ const OneTimeFeesView = () => {
 
       if (!definitionsResponse.success) {
         showNotification(definitionsResponse.message || 'Không thể tải danh sách khoản phí.', 'error')
-        return
+        
+return
       }
 
       if (!branchesResponse.success) {
         showNotification(branchesResponse.message || 'Không thể tải danh sách chi nhánh.', 'error')
-        return
+        
+return
       }
 
       setDefinitions(definitionsResponse.data || [])
@@ -221,27 +225,32 @@ const OneTimeFeesView = () => {
 
     if (!normalizedFeeCode) {
       showNotification('Vui lòng nhập mã khoản phí.', 'error')
-      return
+      
+return
     }
 
     if (BRANCH_SCOPED_FEE_CODES.has(normalizedFeeCode)) {
       showNotification('Phí CSVC được cấu hình riêng theo chi nhánh, không thêm ở đây.', 'error')
-      return
+      
+return
     }
 
     if (!dialog.name.trim()) {
       showNotification('Vui lòng nhập tên khoản phí.', 'error')
-      return
+      
+return
     }
 
     if (!/^[A-Z0-9_]+$/.test(normalizedFeeCode)) {
       showNotification('Mã khoản phí chỉ được gồm chữ in hoa, số và dấu gạch dưới.', 'error')
-      return
+      
+return
     }
 
     if (amount < 0 || Number.isNaN(amount)) {
       showNotification('Số tiền phải lớn hơn hoặc bằng 0.', 'error')
-      return
+      
+return
     }
 
     try {
@@ -258,7 +267,8 @@ const OneTimeFeesView = () => {
 
         if (!createDefinitionResponse.success) {
           showNotification(createDefinitionResponse.message || 'Không thể tạo khoản phí mới.', 'error')
-          return
+          
+return
         }
       } else {
         const updateDefinitionResponse = await oneTimeFeeService.updateDefinition(dialog.originalFeeCode, {
@@ -270,7 +280,8 @@ const OneTimeFeesView = () => {
 
         if (!updateDefinitionResponse.success) {
           showNotification(updateDefinitionResponse.message || 'Không thể cập nhật khoản phí.', 'error')
-          return
+          
+return
         }
       }
 
@@ -283,7 +294,8 @@ const OneTimeFeesView = () => {
 
       if (!priceResponse.success) {
         showNotification(priceResponse.message || 'Không thể cập nhật mức phí.', 'error')
-        return
+        
+return
       }
 
       showNotification(dialog.mode === 'create' ? 'Đã thêm khoản phí mới.' : 'Đã cập nhật khoản phí.', 'success')

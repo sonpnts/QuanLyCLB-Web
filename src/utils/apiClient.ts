@@ -61,7 +61,8 @@ const fetchNewTokens = async () => {
 
 refreshClient.interceptors.request.use(config => {
   config.url = normalizeEndpoint(config.url ?? '')
-  return config
+  
+return config
 })
 
 apiClient.interceptors.request.use(config => {

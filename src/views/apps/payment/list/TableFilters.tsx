@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, memo } from 'react'
+
 import CardContent from '@mui/material/CardContent'
 import FormControl from '@mui/material/FormControl'
 import Grid from '@mui/material/Grid2'
@@ -37,6 +38,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
       try {
         classesLoaded.current = true
         const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
+
         if (response.success && response.data) {
           setClasses(response.data)
         }
@@ -45,16 +47,19 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
         classesLoaded.current = false
       }
     }
+
     loadClasses()
   }, [])
 
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
-      return
+      
+return
     }
 
     const params: GetPaymentsParams = {}
+
     if (type !== '') params.type = Number(type)
     if (classId) params.classId = classId
     if (fromDate) params.paymentDateFrom = fromDate

@@ -69,10 +69,12 @@ const TableFilters = memo(({ onFilterChange }: Props) => {
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
-      return
+      
+return
     }
 
     const params: GetSchedulesParams = {}
+
     if (classId) params.ClassId = classId
     if (branchId) params.BranchId = branchId
     if (dayOfWeek !== '') params.DayOfWeek = parseInt(dayOfWeek)

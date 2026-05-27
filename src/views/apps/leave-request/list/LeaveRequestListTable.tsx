@@ -76,13 +76,16 @@ const columnHelper = createColumnHelper<StudentAbsenceType>()
 const LeaveRequestListTable = () => {
   const { auth } = useAuth()
   const isAdmin = hasAdminRole(auth?.roles)
+
   const leaveRequestPermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'LeaveRequest'),
     [auth?.permissions, auth?.roles]
   )
+
   const { showNotification } = useNotification()
   const { confirm, confirmDialog } = useConfirmAction()
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
 
   const [addRequestOpen, setAddRequestOpen] = useState(false)
@@ -119,6 +122,7 @@ const LeaveRequestListTable = () => {
   const loadAbsences = useCallback(async () => {
     try {
       setLoading(true)
+
       const response = await studentAttendanceService.getAbsences({
         pageSize: 500,
         ...filterParams
@@ -149,7 +153,8 @@ const LeaveRequestListTable = () => {
 
     if (!response.success) {
       showNotificationRef.current(response.message || 'Không thể xóa dòng xin nghỉ phép.', 'error')
-      return
+      
+return
     }
 
     setData(prev => prev.filter(item => item.id !== id))

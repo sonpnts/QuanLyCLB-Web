@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useEffect, useState, useCallback, useMemo } from 'react'
@@ -16,6 +15,8 @@ import Box from '@mui/material/Box'
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import type { FilterFn } from '@tanstack/react-table'
+
+import { logger } from '@/utils/logger'
 
 import type { UsersType } from '@/types/apps/userTypes'
 

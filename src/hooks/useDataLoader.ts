@@ -1,5 +1,6 @@
-import { logger } from '@/utils/logger'
 import { useEffect, useRef, useCallback, useState } from 'react'
+
+import { logger } from '@/utils/logger'
 
 interface UseDataLoaderOptions<T, P> {
   fetchFn: (params: P) => Promise<{ success: boolean; data?: T; message?: string }>
@@ -45,12 +46,14 @@ export function useDataLoader<T, P>({ fetchFn, params, onError, enabled = true }
         setData(response.data)
       } else {
         const errorMsg = response.message || 'Không thể tải dữ liệu'
+
         setError(errorMsg)
         onError?.(errorMsg)
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         const errorMsg = 'Đã có lỗi khi tải dữ liệu'
+
         setError(errorMsg)
         onError?.(errorMsg)
       }
@@ -98,6 +101,7 @@ export function useOnceLoader<T>(fetchFn: () => Promise<{ success: boolean; data
         loadedRef.current = true
         setLoading(true)
         const response = await fetchFn()
+
         if (response.success && response.data !== undefined) {
           setData(response.data)
         }

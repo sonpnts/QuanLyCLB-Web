@@ -38,6 +38,7 @@ import studentAttendanceService, {
 } from '@/services/studentAttendanceService'
 
 const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
+
 const parseDateString = (value: string) => {
   const [year, month, day] = value.split('-').map(Number)
 
@@ -161,7 +162,8 @@ const AttendanceListTable = () => {
 
         if (scheduleDays.length === 0) {
           showNotification('Lớp này chưa có lịch học để chọn ngày điểm danh', 'warning')
-          return
+          
+return
         }
 
         const nextAvailableDates = buildAttendanceDateOptions(scheduleDays)
@@ -172,7 +174,8 @@ const AttendanceListTable = () => {
 
         if (!preferredDate) {
           showNotification('Không tìm thấy buổi học phù hợp để điểm danh', 'warning')
-          return
+          
+return
         }
 
         await loadSheet(classId, preferredDate, keyword)
@@ -222,6 +225,7 @@ const AttendanceListTable = () => {
   }, [auth?.user?.id, loadClassAttendanceContext])
 
   const absentCount = useMemo(() => (sheet ? sheet.students.filter(student => student.isAbsent).length : 0), [sheet])
+
   const excusedCount = useMemo(
     () => (sheet ? sheet.students.filter(student => student.isAbsent && student.isExcused).length : 0),
     [sheet]
@@ -300,7 +304,8 @@ const AttendanceListTable = () => {
 
     if (invalidExcused) {
       showNotification('Nghỉ có phép bắt buộc nhập lý do', 'warning')
-      return
+      
+return
     }
 
     setSaving(true)
@@ -326,6 +331,7 @@ const AttendanceListTable = () => {
     <Card>
       <CardHeader
         title='Điểm danh'
+
         // subheader=''
         action={
           <Button component={Link} href='/apps/attendance/history' variant='outlined' size='small'>

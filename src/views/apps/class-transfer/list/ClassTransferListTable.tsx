@@ -73,7 +73,9 @@ const DebouncedInput = ({
 
   useEffect(() => {
     const timeout = setTimeout(() => onChange(value), debounce)
-    return () => clearTimeout(timeout)
+
+    
+return () => clearTimeout(timeout)
   }, [value, debounce, onChange])
 
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
@@ -102,6 +104,7 @@ const ClassTransferListTable = () => {
 
   // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
   const currentFilterRef = useRef<string>('')
@@ -125,6 +128,7 @@ const ClassTransferListTable = () => {
         dataLoadedRef.current = true
 
         const response = await classTransferService.getClassTransfers(filterParams)
+
         if (response.success && response.data) {
           setData(response.data)
         } else {
@@ -136,16 +140,20 @@ const ClassTransferListTable = () => {
         setLoading(false)
       }
     }
+
     loadTransfers()
   }, [filterParams])
 
   const handleApprove = async () => {
     if (!selectedTransfer) return
+
     try {
       setLoading(true)
+
       const response = await classTransferService.approveClassTransfer(selectedTransfer.id, {
         approvalNotes: approvalNotes || undefined
       })
+
       if (response.success) {
         setData(prev => prev.map(t => (t.id === selectedTransfer.id ? { ...t, status: 'Approved' as const } : t)))
         showNotification('Phê duyệt chuyển lớp thành công!', 'success')
@@ -165,13 +173,17 @@ const ClassTransferListTable = () => {
   const handleReject = async () => {
     if (!selectedTransfer || !rejectionReason.trim()) {
       showNotification('Vui lòng nhập lý do từ chối.', 'error')
-      return
+      
+return
     }
+
     try {
       setLoading(true)
+
       const response = await classTransferService.rejectClassTransfer(selectedTransfer.id, {
         rejectionReason
       })
+
       if (response.success) {
         setData(prev => prev.map(t => (t.id === selectedTransfer.id ? { ...t, status: 'Rejected' as const } : t)))
         showNotification('Đã từ chối yêu cầu chuyển lớp.', 'success')
@@ -192,6 +204,7 @@ const ClassTransferListTable = () => {
     try {
       setLoading(true)
       const response = await classTransferService.cancelClassTransfer(id)
+
       if (response.success) {
         setData(prev => prev.map(t => (t.id === id ? { ...t, status: 'Cancelled' as const } : t)))
         showNotification('Đã hủy yêu cầu chuyển lớp.', 'success')
@@ -270,7 +283,9 @@ const ClassTransferListTable = () => {
         header: 'Thao tác',
         cell: ({ row }) => {
           const isPending = row.original.status === 'Pending'
-          return (
+
+          
+return (
             <div className='flex items-center gap-1'>
               {isPending && isAdmin && (
                 <>

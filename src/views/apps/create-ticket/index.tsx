@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useState, useEffect, useCallback } from 'react'
@@ -19,6 +18,8 @@ import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid2'
 import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
+
+import { logger } from '@/utils/logger'
 
 // Service Imports
 import attendanceService, { type CreateTicketRequest } from '@/services/attendanceService'
