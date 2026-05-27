@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
@@ -56,6 +56,35 @@ interface StudentRow extends EligibleStudentForExamType {
   selectedTargetBeltId: string
 }
 
+const sortEligibleStudents = (students: EligibleStudentForExamType[]) =>
+  [...students].sort((a, b) => {
+    const aOrder = a.currentBeltOrder ?? -1
+    const bOrder = b.currentBeltOrder ?? -1
+
+    if (bOrder !== aOrder) return bOrder - aOrder
+
+    return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
+  })
+
+const mapStudentsToRows = (
+  eligibleStudents: EligibleStudentForExamType[],
+  registrationList: BeltExamRegistrationListType | null
+): StudentRow[] => {
+  const registrationsByStudentId = new Map(
+    registrationList?.registrations.map(registration => [registration.studentId, registration] as const) ?? []
+  )
+
+  return sortEligibleStudents(eligibleStudents).map(student => {
+    const registration = registrationsByStudentId.get(student.studentId)
+
+    return {
+      ...student,
+      selected: Boolean(registration),
+      selectedTargetBeltId: registration?.targetBeltLevelId ?? student.suggestedTargetBeltLevelId ?? ''
+    }
+  })
+}
+
 const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
@@ -70,46 +99,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const [submitting, setSubmitting] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  useEffect(() => {
-    loadMyClasses()
-  }, [isAdmin, coachId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (selectedClassId) {
-      loadEligibleStudents(selectedClassId)
-      loadMyExistingList(selectedClassId)
-    }
-  }, [selectedClassId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!myList) return
-
-    const registrationsByStudentId = new Map(
-      myList.registrations.map(reg => [reg.studentId, reg] as const)
-    )
-
-    setStudents(prev =>
-      prev.map(student => {
-        const currentRegistration = registrationsByStudentId.get(student.studentId)
-
-        if (!currentRegistration) {
-          return {
-            ...student,
-            selected: false,
-            selectedTargetBeltId: student.suggestedTargetBeltLevelId ?? ''
-          }
-        }
-
-        return {
-          ...student,
-          selected: true,
-          selectedTargetBeltId: currentRegistration.targetBeltLevelId
-        }
-      })
-    )
-  }, [myList])
-
-  const loadMyClasses = async () => {
+  const loadMyClasses = useCallback(async () => {
     try {
       if (isAdmin) {
         const lookupResult = await classService.getClassLookup({ isActive: true, pageNumber: 1, pageSize: 1000 })
@@ -129,33 +119,31 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
         }
       }
 
-      // Ưu tiên API lớp của chính HLV (không cần quyền quản lý huấn luyện viên)
       const coachClasses = await studentAttendanceService.getCoachClasses()
 
       if (coachClasses.success && coachClasses.data && coachClasses.data.length > 0) {
         const records = coachClasses.data
-          .map(c => ({
-            id: c.classId,
-            name: c.className
+          .map(item => ({
+            id: item.classId,
+            name: item.className
           }))
           .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
 
         setMyClasses(records)
         if (records.length > 0) setSelectedClassId(current => current || records[0].id)
-        
-return
+
+        return
       }
 
-      // Fallback cho tài khoản có quyền cao hơn (admin/staff)
       const result = await instructorService.getInstructorClasses(coachId)
 
       if (result.success && result.data) {
         const records: { id: string; name: string }[] = Array.isArray(result.data)
           ? result.data
-          : (result.data as any)?.records || []
+          : (result.data as { records?: { id: string; name: string }[] })?.records || []
 
         const mappedRecords = records
-          .map((c: any) => ({ id: c.id, name: c.name }))
+          .map(item => ({ id: item.id, name: item.name }))
           .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
 
         setMyClasses(mappedRecords)
@@ -164,45 +152,50 @@ return
     } catch {
       showNotification('Không thể tải danh sách lớp', 'error')
     }
-  }
+  }, [coachId, isAdmin, showNotification])
 
-  const loadEligibleStudents = async (classId: string) => {
-    try {
-      setLoadingStudents(true)
-      const result = await beltExamService.getEligibleStudents(session.id, classId)
+  const reloadClassData = useCallback(
+    async (classId: string, preferredList?: BeltExamRegistrationListType | null) => {
+      try {
+        setLoadingStudents(true)
 
-      if (result.success && result.data) {
-        const sorted = [...result.data].sort((a, b) => {
-          const ao = a.currentBeltOrder ?? -1
-          const bo = b.currentBeltOrder ?? -1
+        const [eligibleResult, listResult] = await Promise.all([
+          beltExamService.getEligibleStudents(session.id, classId),
+          preferredList === undefined
+            ? beltExamService.getMyRegistrationList(session.id, classId)
+            : Promise.resolve({ success: Boolean(preferredList), data: preferredList } as const)
+        ])
 
-          if (bo !== ao) return bo - ao // desc
-          
-return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
-        })
+        const nextList = preferredList === undefined ? (listResult.success ? (listResult.data ?? null) : null) : preferredList
 
-        setStudents(
-          sorted.map(s => ({
-            ...s,
-            selected: false,
-            selectedTargetBeltId: s.suggestedTargetBeltLevelId ?? ''
-          }))
-        )
-      } else {
-        showNotification(result.message || 'Không thể tải học viên', 'error')
+        setMyList(nextList)
+
+        if (eligibleResult.success && eligibleResult.data) {
+          setStudents(mapStudentsToRows(eligibleResult.data, nextList))
+        } else {
+          setStudents([])
+          showNotification(eligibleResult.message || 'Không thể tải học viên', 'error')
+        }
+      } finally {
+        setLoadingStudents(false)
       }
-    } finally {
-      setLoadingStudents(false)
-    }
-  }
+    },
+    [session.id, showNotification]
+  )
 
-  const loadMyExistingList = async (classId: string) => {
-    const result = await beltExamService.getMyRegistrationList(session.id, classId)
+  useEffect(() => {
+    loadMyClasses()
+  }, [loadMyClasses])
 
-    setMyList(result.success ? (result.data ?? null) : null)
-  }
+  useEffect(() => {
+    if (!selectedClassId) return
 
-  const currentRegistrationsByStudentId = new Map(myList?.registrations.map(reg => [reg.studentId, reg] as const) ?? [])
+    reloadClassData(selectedClassId)
+  }, [reloadClassData, selectedClassId])
+
+  const currentRegistrationsByStudentId = new Map(
+    myList?.registrations.map(registration => [registration.studentId, registration] as const) ?? []
+  )
 
   const isStudentInCurrentList = (student: StudentRow) => currentRegistrationsByStudentId.has(student.studentId)
 
@@ -226,14 +219,14 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
   }
 
   const editableStudents = students.filter(isStudentEditable)
-  const editableSelectedCount = editableStudents.filter(s => s.selected).length
-  const selectedCount = students.filter(s => s.selected).length
-  const allSelected = editableStudents.length > 0 && editableStudents.every(s => s.selected)
+  const editableSelectedCount = editableStudents.filter(student => student.selected).length
+  const selectedCount = students.filter(student => student.selected).length
+  const allSelected = editableStudents.length > 0 && editableStudents.every(student => student.selected)
 
-  const handleSaveDraft = async () => {
-    const chosen = students.filter(s => s.selected && s.selectedTargetBeltId)
+  const handleSaveList = async () => {
+    const selectedStudents = students.filter(student => student.selected && student.selectedTargetBeltId)
 
-    if (chosen.length === 0 && !myList) {
+    if (selectedStudents.length === 0 && !myList) {
       showNotification('Vui lòng chọn ít nhất 1 học viên và cấp thi', 'warning')
 
       return
@@ -242,9 +235,9 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
     try {
       setSaving(true)
 
-      const items: CreateRegistrationListItemRequest[] = chosen.map(s => ({
-        studentId: s.studentId,
-        targetBeltLevelId: s.selectedTargetBeltId
+      const items: CreateRegistrationListItemRequest[] = selectedStudents.map(student => ({
+        studentId: student.studentId,
+        targetBeltLevelId: student.selectedTargetBeltId
       }))
 
       const result = await beltExamService.createOrUpdateRegistrationList(session.id, {
@@ -253,9 +246,9 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
         students: items
       })
 
-      if (result.success) {
-        showNotification('Đã lưu danh sách thành công', 'success')
-        await Promise.all([loadMyExistingList(selectedClassId), loadEligibleStudents(selectedClassId)])
+      if (result.success && result.data) {
+        showNotification(result.message || 'Đã lưu danh sách thành công', 'success')
+        await reloadClassData(selectedClassId, result.data)
       } else {
         showNotification(result.message || 'Lưu thất bại', 'error')
       }
@@ -272,9 +265,9 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
       const result = await beltExamService.submitRegistrationList(myList.id)
 
       if (result.success) {
-        showNotification('Đã nộp danh sách thành công!', 'success')
+        showNotification(result.message || 'Đã nộp danh sách thành công', 'success')
         setConfirmOpen(false)
-        await Promise.all([loadMyExistingList(selectedClassId), loadEligibleStudents(selectedClassId)])
+        await reloadClassData(selectedClassId)
       } else {
         showNotification(result.message || 'Nộp thất bại', 'error')
       }
@@ -287,8 +280,7 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
 
   return (
     <Box>
-      {/* Header */}
-      <Box className='flex items-center gap-2 mb-4'>
+      <Box className='mb-4 flex items-center gap-2'>
         <IconButton onClick={onBack}>
           <i className='ri-arrow-left-line' />
         </IconButton>
@@ -297,21 +289,20 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
           <Typography variant='body2' color='text.secondary'>
             Ngày thi: {new Date(session.examDate).toLocaleDateString('vi-VN')}
             {session.registrationDeadline && (
-              <> • Hạn ĐK: {new Date(session.registrationDeadline).toLocaleDateString('vi-VN')}</>
+              <> • Hạn đăng ký: {new Date(session.registrationDeadline).toLocaleDateString('vi-VN')}</>
             )}
           </Typography>
         </Box>
       </Box>
 
-      {/* Chọn lớp */}
       <Card className='mb-4'>
         <CardContent>
-          <FormControl size='small' sx={{ minWidth: 200 }}>
+          <FormControl size='small' sx={{ minWidth: 240 }}>
             <InputLabel>Chọn lớp</InputLabel>
-            <Select value={selectedClassId} label='Chọn lớp' onChange={e => setSelectedClassId(e.target.value)}>
-              {myClasses.map(c => (
-                <MenuItem key={c.id} value={c.id}>
-                  {c.name}
+            <Select value={selectedClassId} label='Chọn lớp' onChange={event => setSelectedClassId(event.target.value)}>
+              {myClasses.map(classItem => (
+                <MenuItem key={classItem.id} value={classItem.id}>
+                  {classItem.name}
                 </MenuItem>
               ))}
             </Select>
@@ -319,7 +310,6 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
         </CardContent>
       </Card>
 
-      {/* Danh sách đã nộp (read-only) */}
       {isSubmitted && myList && (
         <Card className='mb-4'>
           <CardHeader
@@ -340,8 +330,8 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
           />
           <CardContent>
             <Alert severity='info' className='mb-3'>
-              Danh sách đã nộp. Bạn vẫn có thể cập nhật thêm hoặc bỏ các học viên chưa đóng phí; các học viên đã đóng phí sẽ
-              được giữ nguyên trong danh sách.
+              Danh sách đã nộp. Bạn vẫn có thể cập nhật thêm hoặc bỏ các học viên chưa đóng phí; các học viên đã đóng phí
+              sẽ được giữ nguyên trong danh sách.
             </Alert>
             <TableContainer>
               <Table size='small'>
@@ -355,18 +345,18 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {myList.registrations.map((reg, idx) => (
-                    <TableRow key={reg.id}>
-                      <TableCell>{idx + 1}</TableCell>
-                      <TableCell>{reg.studentName}</TableCell>
-                      <TableCell>{reg.currentBeltLevelName ?? '—'}</TableCell>
+                  {myList.registrations.map((registration, index) => (
+                    <TableRow key={registration.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{registration.studentName}</TableCell>
+                      <TableCell>{registration.currentBeltLevelName ?? '—'}</TableCell>
                       <TableCell>
-                        <strong>{reg.targetBeltLevelName}</strong>
+                        <strong>{registration.targetBeltLevelName}</strong>
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={reg.isFeePaid ? 'Đã đóng' : 'Chưa đóng'}
-                          color={reg.isFeePaid ? 'success' : 'warning'}
+                          label={registration.isFeePaid ? 'Đã đóng' : 'Chưa đóng'}
+                          color={registration.isFeePaid ? 'success' : 'warning'}
                           size='small'
                           variant='tonal'
                         />
@@ -381,88 +371,84 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
       )}
 
       <Card>
-          <CardHeader
-            title='Chọn học viên đăng ký thi'
-            subheader={
-              isSubmitted
-                ? 'Danh sách đã nộp vẫn có thể cập nhật khi kỳ thi còn mở. Học viên đã đóng phí sẽ bị khóa.'
-                : 'Chỉ hiển thị học viên đang Active, cấp 10 -> 2 (không bao gồm đẳng)'
-            }
-            action={
-              <Box className='flex gap-2'>
+        <CardHeader
+          title='Chọn học viên đăng ký thi'
+          subheader={
+            isSubmitted
+              ? 'Danh sách đã nộp vẫn có thể cập nhật khi kỳ thi còn mở. Học viên đã đóng phí sẽ bị khóa.'
+              : 'Chỉ hiển thị học viên đang active, cấp 10 đến cấp 2 (không bao gồm đẳng).'
+          }
+          action={
+            <Box className='flex gap-2'>
+              <Button
+                variant='outlined'
+                onClick={handleSaveList}
+                disabled={saving || (!myList && selectedCount === 0)}
+                startIcon={saving ? <CircularProgress size={16} /> : <i className='ri-save-line' />}
+              >
+                {myList ? `Cập nhật danh sách (${selectedCount})` : `Lưu nháp (${selectedCount})`}
+              </Button>
+              {myList && myList.status === 'Draft' && (
                 <Button
-                  variant='outlined'
-                  onClick={handleSaveDraft}
-                  disabled={saving || (!myList && selectedCount === 0)}
-                  startIcon={saving ? <CircularProgress size={16} /> : <i className='ri-save-line' />}
+                  variant='contained'
+                  onClick={() => setConfirmOpen(true)}
+                  startIcon={<i className='ri-send-plane-line' />}
                 >
-                  {myList ? `Cập nhật danh sách (${selectedCount})` : `Lưu nháp (${selectedCount})`}
+                  Nộp danh sách
                 </Button>
-                {myList && myList.status === 'Draft' && (
-                  <Button
-                    variant='contained'
-                    onClick={() => setConfirmOpen(true)}
-                    startIcon={<i className='ri-send-plane-line' />}
-                  >
-                    Nộp danh sách
-                  </Button>
-                )}
-              </Box>
-            }
-          />
-          <CardContent className='p-0'>
-            {loadingStudents ? (
-              <Box className='flex justify-center p-8'>
-                <CircularProgress />
-              </Box>
-            ) : students.length === 0 ? (
-              <Box className='p-4'>
-                <Alert severity='info'>Không có học viên đủ điều kiện trong lớp này.</Alert>
-              </Box>
-            ) : (
-              <TableContainer>
-                <Table size='small'>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell padding='checkbox'>
-                        <Checkbox
-                          indeterminate={editableSelectedCount > 0 && !allSelected}
-                          checked={allSelected}
-                          onChange={e => handleSelectAll(e.target.checked)}
-                          disabled={editableStudents.length === 0}
-                        />
-                      </TableCell>
-                      <TableCell>Họ tên</TableCell>
-                      <TableCell>Ngày sinh</TableCell>
-                      <TableCell>Giới tính</TableCell>
-                      <TableCell>Cấp hiện tại (chữ)</TableCell>
-                      <TableCell>Cấp hiện tại (số)</TableCell>
-                      <TableCell>Cấp thi(chữ)</TableCell>
-                      <TableCell>Cấp thi(số)</TableCell>
-                      <TableCell>Trạng thái</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {students.map(student => {
-                      const isLockedByAnotherList = isStudentLockedByAnotherList(student)
-                      const isPaidInCurrentList = isStudentPaidInCurrentList(student)
-                      const isCurrentListStudent = isStudentInCurrentList(student)
-                      const currentRegistration = currentRegistrationsByStudentId.get(student.studentId)
+              )}
+            </Box>
+          }
+        />
+        <CardContent className='p-0'>
+          {loadingStudents ? (
+            <Box className='flex justify-center p-8'>
+              <CircularProgress />
+            </Box>
+          ) : students.length === 0 ? (
+            <Box className='p-4'>
+              <Alert severity='info'>Không có học viên đủ điều kiện trong lớp này.</Alert>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table size='small'>
+                <TableHead>
+                  <TableRow>
+                    <TableCell padding='checkbox'>
+                      <Checkbox
+                        indeterminate={editableSelectedCount > 0 && !allSelected}
+                        checked={allSelected}
+                        onChange={event => handleSelectAll(event.target.checked)}
+                        disabled={editableStudents.length === 0}
+                      />
+                    </TableCell>
+                    <TableCell>Họ tên</TableCell>
+                    <TableCell>Ngày sinh</TableCell>
+                    <TableCell>Giới tính</TableCell>
+                    <TableCell>Cấp hiện tại (chữ)</TableCell>
+                    <TableCell>Cấp hiện tại (số)</TableCell>
+                    <TableCell>Cấp thi (chữ)</TableCell>
+                    <TableCell>Cấp thi (số)</TableCell>
+                    <TableCell>Trạng thái</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {students.map(student => {
+                    const isLockedByAnotherList = isStudentLockedByAnotherList(student)
+                    const isPaidInCurrentList = isStudentPaidInCurrentList(student)
+                    const isCurrentListStudent = isStudentInCurrentList(student)
+                    const currentRegistration = currentRegistrationsByStudentId.get(student.studentId)
 
-                      return (
-                      <TableRow
-                        key={student.studentId}
-                        selected={student.selected}
-                        sx={{ opacity: isLockedByAnotherList ? 0.5 : 1 }}
-                      >
+                    return (
+                      <TableRow key={student.studentId} selected={student.selected} sx={{ opacity: isLockedByAnotherList ? 0.5 : 1 }}>
                         <TableCell padding='checkbox'>
                           <Checkbox
                             checked={student.selected}
                             disabled={isLockedByAnotherList || isPaidInCurrentList}
-                            onChange={e => {
+                            onChange={event => {
                               setStudents(prev =>
-                                prev.map(s =>
-                                  s.studentId === student.studentId ? { ...s, selected: e.target.checked } : s
+                                prev.map(item =>
+                                  item.studentId === student.studentId ? { ...item, selected: event.target.checked } : item
                                 )
                               )
                             }}
@@ -483,17 +469,14 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
                             {student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : '—'}
                           </Typography>
                         </TableCell>
-                        <TableCell>
-                          {student.gender === true ? 'Nam' : student.gender === false ? 'Nữ' : '-'}
-                        </TableCell>
-                        <TableCell>{student.currentBeltLevelName}</TableCell>
-                        <TableCell>{student.currentBeltOrder}</TableCell>
+                        <TableCell>{student.gender === true ? 'Nam' : student.gender === false ? 'Nữ' : '—'}</TableCell>
+                        <TableCell>{student.currentBeltLevelName ?? '—'}</TableCell>
+                        <TableCell>{student.currentBeltOrder ?? '—'}</TableCell>
                         <TableCell>{currentRegistration?.targetBeltLevelName || student.suggestedTargetBeltLevelName || '—'}</TableCell>
-                        <TableCell>{currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder}</TableCell>
-
+                        <TableCell>{currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder ?? '—'}</TableCell>
                         <TableCell>
                           {isLockedByAnotherList ? (
-                            <Chip label='Đã ĐK' color='info' size='small' variant='tonal' />
+                            <Chip label='Đã đăng ký' color='info' size='small' variant='tonal' />
                           ) : isPaidInCurrentList ? (
                             <Chip label='Đã đóng phí' color='success' size='small' variant='tonal' />
                           ) : isCurrentListStudent && isSubmitted ? (
@@ -501,20 +484,19 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
                           ) : isCurrentListStudent ? (
                             <Chip label='Nháp' color='warning' size='small' variant='tonal' />
                           ) : (
-                            <Chip label='Chưa ĐK' color='default' size='small' variant='outlined' />
+                            <Chip label='Chưa đăng ký' color='default' size='small' variant='outlined' />
                           )}
                         </TableCell>
                       </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-          </CardContent>
-        </Card>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Confirm submit dialog */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Xác nhận nộp danh sách</DialogTitle>
         <DialogContent>
@@ -535,5 +517,3 @@ return (a.studentName || '').localeCompare(b.studentName || '', 'vi')
 }
 
 export default BeltExamRegisterClassPanel
-
-

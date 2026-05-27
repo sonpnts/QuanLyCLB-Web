@@ -1,10 +1,16 @@
-// Type Imports
 import type { ThemeColor } from '@core/types'
 
 export type ExamSessionStatus =
-  | 'Draft' | 'Pending' | 'PendingApproval'
-  | 'Approved' | 'Rejected' | 'Completed'
-  | 'Cancelled' | 'Open' | 'Closed' | 'Locked'
+  | 'Draft'
+  | 'Pending'
+  | 'PendingApproval'
+  | 'Approved'
+  | 'Rejected'
+  | 'Completed'
+  | 'Cancelled'
+  | 'Open'
+  | 'Closed'
+  | 'Locked'
 
 export type ExamSessionType = {
   id: string
@@ -92,8 +98,6 @@ export const examResultColors: Record<string, ThemeColor> = {
   Failed: 'error'
 }
 
-// ─── Luồng đăng ký thi cấp mới ────────────────────────────────────────────────
-
 /** @deprecated Use ExamSessionStatus which now includes all statuses */
 export type BeltExamSessionStatusExtended = ExamSessionStatus
 
@@ -110,7 +114,7 @@ export type EligibleStudentForExamType = {
   currentBeltLevelName?: string
   currentBeltOrder?: number
   suggestedTargetBeltLevelId?: string
-  suggestedTargetBeltLevelOrder?: string
+  suggestedTargetBeltLevelOrder?: number
   suggestedTargetBeltLevelName?: string
   alreadyRegistered: boolean
   existingRegistrationListId?: string
