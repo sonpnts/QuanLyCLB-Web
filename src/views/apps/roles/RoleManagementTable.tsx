@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -141,7 +141,7 @@ const RoleManagementTable = () => {
   }
 
   // Handle delete role
-  const handleDeleteRole = async (id: string) => {
+  const handleDeleteRole = useCallback(async (id: string) => {
     try {
       setLoading(true)
       const response = await roleService.deleteRole(id)
@@ -159,20 +159,20 @@ const RoleManagementTable = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showNotification])
 
   // Roles do not support restore (no soft-delete)
-  const handleRestoreRole = () => {
+  const handleRestoreRole = useCallback(() => {
     showNotification('Vai trò không hỗ trợ khôi phục.', 'warning')
-  }
+  }, [showNotification])
 
   // Handle edit role
-  const handleEditRole = (role: RoleType) => {
+  const handleEditRole = useCallback((role: RoleType) => {
     setSelectedRole(role)
     setRoleName(role.name)
     setRoleDescription(role.description || '')
     setEditRoleOpen(true)
-  }
+  }, [])
 
   // Columns
   const columns = useMemo(
@@ -225,7 +225,7 @@ const RoleManagementTable = () => {
               <i className='ri-edit-line text-xl' />
             </IconButton>
             {!row.original.isActive ? (
-              <IconButton size='small' onClick={() => handleRestoreRole(row.original.id)} color='success'>
+              <IconButton size='small' onClick={() => handleRestoreRole()} color='success'>
                 <i className='ri-restart-line text-xl' />
               </IconButton>
             ) : (
@@ -237,7 +237,7 @@ const RoleManagementTable = () => {
         )
       })
     ],
-    [data, filteredData, showNotification, setData, setLoading, handleDeleteRole, handleRestoreRole]
+    [handleDeleteRole, handleEditRole, handleRestoreRole]
   )
 
   // Table
@@ -395,3 +395,5 @@ const RoleManagementTable = () => {
 }
 
 export default RoleManagementTable
+
+
