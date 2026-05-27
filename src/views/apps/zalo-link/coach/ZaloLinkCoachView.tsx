@@ -69,17 +69,20 @@ export default function ZaloLinkCoachView() {
 
   const loadOverview = useCallback(async () => {
     const res = await zaloLinkService.getCoachOverview()
+
     setOverview(res.success ? (res.data as any) : null)
   }, [])
 
   const loadRows = useCallback(async () => {
     setLoading(true)
+
     try {
       const res = await zaloLinkService.getCoachStudents({
         classId: classId || undefined,
         onlyUnlinked,
         keyword: keyword.trim() || undefined
       })
+
       setRows(res.success && res.data ? res.data : [])
     } finally {
       setLoading(false)
@@ -96,10 +99,12 @@ export default function ZaloLinkCoachView() {
 
   const safeOverview = useMemo(() => overview ?? emptyOverview, [overview])
   const classes = useMemo(() => safeOverview.classes ?? [], [safeOverview])
+
   const selectedClassStats = useMemo(
     () => (classId ? classes.find(item => item.classId === classId) ?? null : null),
     [classId, classes]
   )
+
   const displayOverview = useMemo(
     () =>
       selectedClassStats
@@ -112,6 +117,7 @@ export default function ZaloLinkCoachView() {
         : safeOverview,
     [safeOverview, selectedClassStats]
   )
+
   const overviewTitle = selectedClassStats
     ? `Thống kê lớp ${selectedClassStats.classCode}`
     : 'Thống kê tất cả lớp'
@@ -123,13 +129,17 @@ export default function ZaloLinkCoachView() {
 
   const handleConfirmZalo = async (userId: string, phone: string) => {
     if (!selectedRow) return
+
     try {
       setSaving(true)
       const res = await studentService.updateStudentZalo(selectedRow.studentId, userId, phone)
+
       if (!res.success) {
         showNotification(res.message || 'Không thể cập nhật liên kết Zalo.', 'error')
-        return
+        
+return
       }
+
       showNotification('Đã cập nhật liên kết Zalo.', 'success')
       setVerifyOpen(false)
       setSelectedRow(null)
@@ -146,13 +156,17 @@ export default function ZaloLinkCoachView() {
 
   const doUnlink = async () => {
     if (!selectedRow) return
+
     try {
       setSaving(true)
       const res = await studentService.updateStudentZalo(selectedRow.studentId, '', selectedRow.phoneNumber || '')
+
       if (!res.success) {
         showNotification(res.message || 'Không thể hủy liên kết Zalo.', 'error')
-        return
+        
+return
       }
+
       showNotification('Đã hủy liên kết Zalo.', 'success')
       setUnlinkOpen(false)
       setSelectedRow(null)
@@ -257,7 +271,9 @@ export default function ZaloLinkCoachView() {
                 <TableBody>
                   {rows.map(r => {
                     const linked = !!(r.userIdZalo && r.userIdZalo.trim())
-                    return (
+
+                    
+return (
                       <TableRow key={`${r.classId}_${r.studentId}`} hover>
                         <TableCell>{r.studentCode}</TableCell>
                         <TableCell>{r.studentName}</TableCell>

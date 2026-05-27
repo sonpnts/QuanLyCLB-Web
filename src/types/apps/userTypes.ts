@@ -16,6 +16,7 @@ export type UsersType = {
   createdByUserId?: string | null
   updatedByUserId?: string | null
   avatarColor?: ThemeColor
+
   // Federation (read-only display)
   memberCode?: string | null
   beltLevelName?: string
@@ -35,6 +36,7 @@ export type ApiUserResponse = {
   hasPassword?: boolean
   isGoogleAccount?: boolean
   roles: string[]
+
   // Federation (read-only display) — camelCase from BeltLevel* properties in UserDto
   memberCode?: string | null
   beltLevelId?: string | null

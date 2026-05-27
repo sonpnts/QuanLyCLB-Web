@@ -10,7 +10,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
@@ -38,19 +37,25 @@ export interface MemberInfo {
 }
 
 interface Props {
+
   /** Giá trị hiện tại của trường mã HV */
   value: string
+
   /** Callback khi giá trị mã HV thay đổi */
   onChange: (code: string) => void
+
   /**
    * Callback khi người dùng xác nhận áp dụng thông tin từ hội viên liên đoàn.
    * Component cha dùng để copy fullName, gender, dob, ... sang form.
    */
   onMemberInfoConfirmed: (info: MemberInfo) => void
+
   /** Nếu true → trường chỉ đọc (không cho sửa gì) */
   locked?: boolean
+
   /** Trạng thái mở của form cha để reset preview khi đóng */
   active?: boolean
+
   /** Helper text bên dưới trường mã */
   helperText?: string
 }
@@ -58,9 +63,11 @@ interface Props {
 const genderToBool = (g?: string | null): boolean | undefined => {
   if (!g) return undefined
   const n = g.toLowerCase()
+
   if (n === 'nam' || n === 'true' || n === '1' || n === 'male') return true
   if (n === 'nữ' || n === 'nu' || n === 'false' || n === '0' || n === 'female') return false
-  return undefined
+  
+return undefined
 }
 
 const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = false, active = true, helperText }: Props) => {
@@ -116,16 +123,20 @@ const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = fals
   const renderPreviewTable = () => {
     if (!lookupResult) return null
     const m = lookupResult
+
     const rows: [string, string | undefined | null][] = [
       ['Họ và tên', m.fullName],
       ['Mã hội viên', m.memberCode],
       ['Giới tính', m.gender || '—'],
       ['Ngày sinh', m.dateOfBirth || '—'],
+
       // ['Số điện thoại', m.phoneNumber || '—'],
       ['CMND/CCCD', m.idCard || '—'],
+
       // ['Địa chỉ', m.address || '—'],
       // ['Email', m.email || '—'],
       ['Cấp đai', m.beltRank || '—'],
+
       // ['Câu lạc bộ', m.clubName || '—'],
       // ['Hiệu lực', m.isEffective === 'x' ? 'Còn hiệu lực ✓' : (m.isEffective || '—')]
     ]
@@ -176,6 +187,8 @@ const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = fals
         value={value}
         onChange={e => {
           onChange(e.target.value)
+
+
           // Chỉ giữ preview cho đúng mã vừa chọn từ modal, còn gõ tay thì ẩn preview
           if (e.target.value.trim() !== lastLookedUpCode) {
             setLookupResult(null)

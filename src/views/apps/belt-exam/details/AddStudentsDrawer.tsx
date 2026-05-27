@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 import { useState, useEffect } from 'react'
 
@@ -19,6 +18,8 @@ import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import Box from '@mui/material/Box'
 import { toast } from 'react-toastify'
+
+import { logger } from '@/utils/logger'
 
 import classService from '@/services/classService'
 import beltExamService from '@/services/beltExamService'
@@ -58,8 +59,10 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
 
   const fetchClasses = async () => {
     setLoadingClasses(true)
+
     try {
       const res = await classService.getClasses({ isActive: true, pageSize: 1000 })
+
       if (res.success && res.data) {
         setClasses(res.data)
       }
@@ -72,12 +75,16 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
 
   const fetchStudents = async (classId: string) => {
     setLoadingStudents(true)
+
     try {
       const res = await classService.getClassStudents(classId, { pageNumber: 1, pageSize: 5000 })
+
       if (res.success && res.data) {
         // Chỉ lấy học viên Active (giả sử có trường isActive)
         const activeStudents = (res.data.records || []).filter((s: any) => s.isActive !== false)
+
         setStudents(activeStudents)
+
         // Mặc định chọn tất cả
         setSelectedStudents(activeStudents.map((s: any) => s.id))
       }
@@ -90,6 +97,7 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
 
   const handleClassChange = (newClass: ClassType | null) => {
     setSelectedClass(newClass)
+
     if (newClass) {
       fetchStudents(newClass.id!)
     } else {
@@ -107,6 +115,7 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
     } else {
       newSelected.splice(currentIndex, 1)
     }
+
     setSelectedStudents(newSelected)
   }
 
@@ -122,6 +131,7 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
     if (!selectedClass || selectedStudents.length === 0) return
 
     setSubmitting(true)
+
     try {
       const payload = {
         examSessionId: sessionId,
@@ -131,6 +141,7 @@ const AddStudentsDrawer = ({ open, handleClose, sessionId, onSuccess }: AddStude
 
       // Giả sử gọi batchExamRegistration
       const res = await beltExamService.batchExamRegistration(payload)
+
       if (res.success) {
         toast.success(res.message || 'Thêm học viên dự thi thành công')
         onSuccess()

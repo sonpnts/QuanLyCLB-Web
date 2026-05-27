@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useState, useEffect, useRef, memo } from 'react'
@@ -12,6 +11,8 @@ import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import type { SelectChangeEvent } from '@mui/material/Select'
+
+import { logger } from '@/utils/logger'
 
 // Service Imports
 import classService from '@/services/classService'
@@ -38,7 +39,8 @@ const TableFilters = memo(({ onFilterChange, classOptions }: TableFiltersProps) 
     if (classOptions && classOptions.length > 0) {
       setClasses(classOptions)
       classesLoaded.current = true
-      return
+      
+return
     }
 
     if (classesLoaded.current) return
@@ -47,6 +49,7 @@ const TableFilters = memo(({ onFilterChange, classOptions }: TableFiltersProps) 
       try {
         classesLoaded.current = true
         const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
+
         if (response.success && response.data) {
           setClasses(response.data)
         }
@@ -55,6 +58,7 @@ const TableFilters = memo(({ onFilterChange, classOptions }: TableFiltersProps) 
         classesLoaded.current = false // Cho phép retry nếu lỗi
       }
     }
+
     loadClasses()
   }, [classOptions])
 
@@ -62,10 +66,12 @@ const TableFilters = memo(({ onFilterChange, classOptions }: TableFiltersProps) 
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
-      return
+      
+return
     }
 
     const params: GetStudentsParams = {}
+
     if (classId) params.classId = classId
     if (gender !== '') params.gender = gender === 'true'
     if (enrollmentStatus) params.enrollmentStatus = enrollmentStatus

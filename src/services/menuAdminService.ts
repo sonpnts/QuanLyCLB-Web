@@ -66,7 +66,8 @@ class MenuAdminService {
       return { success: true, data: apiResponse.data?.permissions || [] }
     } catch (error: any) {
       logger.error('MenuAdminService', 'getCanonicalRbacMatrix', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ', data: [] }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ', data: [] }
     }
   }
 
@@ -82,7 +83,8 @@ class MenuAdminService {
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('MenuAdminService', 'updatePermissionRoles', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -98,7 +100,8 @@ class MenuAdminService {
       return { success: true, data: apiResponse.data || { functions: [], permissions: [] } }
     } catch (error: any) {
       logger.error('MenuAdminService', 'getPermissionFunctionMatrix', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ', data: { functions: [], permissions: [] } }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ', data: { functions: [], permissions: [] } }
     }
   }
 
@@ -114,7 +117,8 @@ class MenuAdminService {
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('MenuAdminService', 'updatePermissionFunctions', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -122,11 +126,14 @@ class MenuAdminService {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.menu.functions)
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message, data: [] }
-      return { success: true, data: apiResponse.data || [] }
+      
+return { success: true, data: apiResponse.data || [] }
     } catch (error: any) {
       logger.error('MenuAdminService', 'getFunctions', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ', data: [] }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ', data: [] }
     }
   }
 
@@ -134,11 +141,14 @@ class MenuAdminService {
     try {
       const response = await apiClient.post<any>(API_ENDPOINTS.menu.functions, payload)
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
-      return { success: true, message: apiResponse.message }
+      
+return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('MenuAdminService', 'createFunction', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -146,11 +156,14 @@ class MenuAdminService {
     try {
       const response = await apiClient.put<any>(API_ENDPOINTS.menu.functionById(functionId), payload)
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
-      return { success: true, message: apiResponse.message }
+      
+return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('MenuAdminService', 'updateFunction', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -158,14 +171,18 @@ class MenuAdminService {
     try {
       const response = await apiClient.delete<any>(API_ENDPOINTS.menu.functionById(functionId))
       const apiResponse = response.data
+
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
-      return { success: true, message: apiResponse.message }
+      
+return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('MenuAdminService', 'deleteFunction', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }
 
 const menuAdminService = new MenuAdminService()
+
 export default menuAdminService

@@ -111,7 +111,8 @@ class InstructorService {
       }
     } catch (error) {
       logger.error('InstructorService', 'getInstructors', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -135,7 +136,8 @@ class InstructorService {
       }
     } catch (error: any) {
       logger.error('InstructorService', 'getInstructorById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -160,7 +162,8 @@ class InstructorService {
       }
     } catch (error: any) {
       logger.error('InstructorService', 'createInstructor', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -185,7 +188,8 @@ class InstructorService {
       }
     } catch (error: any) {
       logger.error('InstructorService', 'updateInstructor', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -207,7 +211,8 @@ class InstructorService {
       }
     } catch (error: any) {
       logger.error('InstructorService', 'deleteInstructor', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -232,7 +237,8 @@ class InstructorService {
       }
     } catch (error: any) {
       logger.error('InstructorService', 'restoreInstructor', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -248,7 +254,8 @@ class InstructorService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('InstructorService', 'getInstructorStatistics', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -264,7 +271,8 @@ class InstructorService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('InstructorService', 'getInstructorSchedules', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -280,7 +288,8 @@ class InstructorService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('InstructorService', 'getInstructorClasses', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 }

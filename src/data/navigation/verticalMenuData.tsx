@@ -101,6 +101,7 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         icon: 'ri-bar-chart-box-line',
         href: '/apps/attendance/admin-stats'
       },
+
       // {
       //   label: 'Xin nghỉ phép',
       //   icon: 'ri-calendar-close-line',

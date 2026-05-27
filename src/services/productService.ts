@@ -104,9 +104,11 @@ export interface UpdateProductBundleRequest {
 
 const compareVariant = (left: ProductVariantType, right: ProductVariantType) => {
   const byLabel = (left.label || '').localeCompare(right.label || '', 'vi')
+
   if (byLabel !== 0) return byLabel
 
   const bySize = (left.size || '').localeCompare(right.size || '', 'vi')
+
   if (bySize !== 0) return bySize
 
   return (left.color || '').localeCompare(right.color || '', 'vi')

@@ -24,6 +24,7 @@ async function postLog(payload: LogPayload): Promise<void> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+
       // fire-and-forget — don't await in callers
       keepalive: true
     })

@@ -193,6 +193,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
       try {
         setLoadingEnrollments(true)
         const response = await studentService.getStudentEnrollments(activeStudent.id)
+
         setEnrollments(response.success && Array.isArray(response.data) ? response.data : [])
         loadedDataRef.current.enrollments = true
       } catch (error) {
@@ -212,6 +213,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     try {
       setLoadingPayments(true)
       const response = await studentService.getStudentPayments(activeStudent.id)
+
       setPayments(response.success && Array.isArray(response.data) ? response.data : [])
       loadedDataRef.current.payments = true
     } catch (error) {
@@ -228,6 +230,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     try {
       setLoadingAttendance(true)
       const response = await studentService.getStudentAttendance(activeStudent.id)
+
       setAttendance(response.success && Array.isArray(response.data) ? response.data : [])
       loadedDataRef.current.attendance = true
     } catch (error) {
@@ -244,6 +247,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     try {
       setLoadingExamHistory(true)
       const response = await studentService.getExamHistory(activeStudent.id)
+
       setExamHistory(response.success && Array.isArray(response.data) ? response.data : [])
       loadedDataRef.current.examHistory = true
     } catch (error) {
@@ -254,21 +258,26 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     }
   }, [activeStudent?.id])
 
-  const loadOneTimeFees = useCallback(async () => {
-    if (!activeStudent?.id || loadedDataRef.current.oneTimeFees) return
+  useEffect(() => {
+    const loadOneTimeFees = async () => {
+      if (!activeStudent?.id || !open || loadedDataRef.current.oneTimeFees) return
 
-    try {
-      setLoadingOneTimeFees(true)
-      const response = await oneTimeFeeService.getStudentStatuses(activeStudent.id)
-      setOneTimeFeeStatuses(response.success && Array.isArray(response.data) ? response.data : [])
-      loadedDataRef.current.oneTimeFees = true
-    } catch (error) {
-      logger.error('ViewStudentDrawer', 'Error loading one-time fees', error)
-      setOneTimeFeeStatuses([])
-    } finally {
-      setLoadingOneTimeFees(false)
+      try {
+        setLoadingOneTimeFees(true)
+        const response = await oneTimeFeeService.getStudentStatuses(activeStudent.id)
+
+        setOneTimeFeeStatuses(response.success && Array.isArray(response.data) ? response.data : [])
+        loadedDataRef.current.oneTimeFees = true
+      } catch (error) {
+        logger.error('ViewStudentDrawer', 'Error loading one-time fees', error)
+        setOneTimeFeeStatuses([])
+      } finally {
+        setLoadingOneTimeFees(false)
+      }
     }
-  }, [activeStudent?.id])
+
+    loadOneTimeFees()
+  }, [activeStudent?.id, open])
 
   useEffect(() => {
     if (!open) {
@@ -277,10 +286,12 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
   }, [open])
 
   const studentClasses = useMemo(() => activeStudent?.classes || [], [activeStudent?.classes])
+
   const activeStudentClasses = useMemo(
     () => studentClasses.filter(item => item.status === 'Active' || item.status === '0'),
     [studentClasses]
   )
+
   const effectiveClassId = useMemo(() => {
     if (activeStudentClasses[0]?.classId) return activeStudentClasses[0].classId
 
@@ -293,7 +304,8 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     const loadPendingOneTimeFees = async () => {
       if (!open || !activeStudent?.id || !effectiveClassId) {
         setPendingOneTimeFees([])
-        return
+        
+return
       }
 
       try {
@@ -332,6 +344,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     if (!activeStudent?.id) return
 
     const firstClass = activeStudentClasses[0] || studentClasses[0]
+
     const draftKey = savePaymentInvoiceDraft({
       classId: firstClass?.classId,
       className: firstClass?.className,
@@ -370,7 +383,8 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
 
     if (!response.success || !response.data) {
       showNotification(response.message || 'Không thể cập nhật liên kết Zalo.', 'error')
-      return
+      
+return
     }
 
     setDetailStudent(response.data)

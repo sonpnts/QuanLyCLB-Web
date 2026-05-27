@@ -58,6 +58,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
     const fetchMenu = async () => {
       try {
         const response = await menuService.getMenuByRole()
+
         if (response.success && response.data && response.data.length > 0) {
           setDynamicMenu(response.data)
         } else {

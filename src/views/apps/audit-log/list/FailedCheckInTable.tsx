@@ -42,14 +42,17 @@ const FailedCheckInTable = () => {
 
   const load = async () => {
     setLoading(true)
+
     try {
       const res = await apiClient.get<any>('/attendance/failed-attempts', {
         params: { pageNumber: page + 1, pageSize }
       })
+
       const apiResponse = res.data
 
       if (apiResponse?.isSuccess) {
         const records = apiResponse.data?.records || apiResponse.data?.items || apiResponse.data || []
+
         const totalRecords =
           apiResponse.data?.totalRecords ?? apiResponse.data?.totalCount ?? apiResponse.data?.TotalRecords ?? records.length
 

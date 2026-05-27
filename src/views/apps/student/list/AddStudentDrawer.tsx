@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useEffect, useState } from 'react'
@@ -16,6 +15,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
+
+import { logger } from '@/utils/logger'
 
 // Type Imports
 import type { StudentType } from '@/types/apps/studentTypes'

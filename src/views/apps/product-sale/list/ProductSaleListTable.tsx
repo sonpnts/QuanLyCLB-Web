@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import TablePagination from '@mui/material/TablePagination'
@@ -82,6 +81,7 @@ const ProductSaleListTable = () => {
   const router = useRouter()
   const { auth } = useAuth()
   const isAdmin = hasAdminRole(auth?.roles)
+
   const productSalePermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductSale'),
     [auth?.permissions, auth?.roles]
@@ -225,6 +225,7 @@ const ProductSaleListTable = () => {
           </Typography>
         )
       }),
+
       // columnHelper.accessor('isActive', {
       //   header: 'Trạng thái',
       //   cell: ({ row }) => (

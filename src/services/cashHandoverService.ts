@@ -107,7 +107,8 @@ class CashHandoverService {
       return { success: true, data: unwrapList(apiResponse.data).map(toCashHandover) }
     } catch (error) {
       logger.error('CashHandoverService', 'getCashHandovers', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -123,7 +124,8 @@ class CashHandoverService {
       return { success: true, data: toCashHandover(apiResponse.data) }
     } catch (error: any) {
       logger.error('CashHandoverService', 'getCashHandoverById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -139,7 +141,8 @@ class CashHandoverService {
       return { success: true, data: toCashHandover(apiResponse.data), message: apiResponse.message }
     } catch (error: any) {
       logger.error('CashHandoverService', 'createCashHandover', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -155,7 +158,8 @@ class CashHandoverService {
       return { success: true, data: toCashHandover(apiResponse.data), message: apiResponse.message }
     } catch (error: any) {
       logger.error('CashHandoverService', 'confirmCashHandover', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -171,7 +175,8 @@ class CashHandoverService {
       return { success: true, data: toCashHandover(apiResponse.data), message: apiResponse.message }
     } catch (error: any) {
       logger.error('CashHandoverService', 'rejectCashHandover', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -188,7 +193,8 @@ class CashHandoverService {
       return { success: true, data: unwrapList(apiResponse.data).map(toLateTuitionStudent) }
     } catch (error) {
       logger.error('CashHandoverService', 'getLateTuitionStudents', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 }

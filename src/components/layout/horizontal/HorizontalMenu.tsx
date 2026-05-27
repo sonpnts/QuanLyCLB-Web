@@ -79,6 +79,7 @@ const HorizontalMenu = () => {
     const fetchMenu = async () => {
       try {
         const response = await menuService.getMenuByRole()
+
         if (response.success && response.data) {
           const fromApi = response.data as unknown as HorizontalMenuDataType[]
 

@@ -1,17 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+
 import Button from '@mui/material/Button'
 import Drawer from '@mui/material/Drawer'
-import FormControl from '@mui/material/FormControl'
 import IconButton from '@mui/material/IconButton'
-import InputLabel from '@mui/material/InputLabel'
-import MenuItem from '@mui/material/MenuItem'
-import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
-import Grid from '@mui/material/Grid2'
 import InputAdornment from '@mui/material/InputAdornment'
 
 import type { ExamSessionType } from '@/types/apps/beltExamTypes'
@@ -33,6 +29,7 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
     registrationDeadline: '',
     examFee: ''
   })
+
   const [loading, setLoading] = useState(false)
   const { showNotification } = useNotification()
 
@@ -41,11 +38,13 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
 
     if (!formData.name || !formData.examDate) {
       showNotification('Vui lòng điền đầy đủ thông tin bắt buộc.', 'error')
-      return
+      
+return
     }
 
     try {
       setLoading(true)
+
       const response = await beltExamService.createExamSession({
         name: formData.name,
         description: formData.description || undefined,

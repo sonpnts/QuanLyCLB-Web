@@ -28,10 +28,12 @@ const formatVnd = (n: number) => `${Math.round(n).toLocaleString('vi-VN')}đ`
 
 const statusChip = (s: any) => {
   const v = typeof s === 'string' ? s : String(s)
+
   if (v.toLowerCase().includes('approved') || v === '2') return <Chip label='Đã duyệt' color='success' size='small' />
   if (v.toLowerCase().includes('rejected') || v === '3') return <Chip label='Từ chối' color='error' size='small' />
   if (v.toLowerCase().includes('pending') || v === '1') return <Chip label='Chờ duyệt' color='warning' size='small' />
-  return <Chip label='—' size='small' variant='outlined' />
+  
+return <Chip label='—' size='small' variant='outlined' />
 }
 
 const StudentTuitionDiscountPage = () => {
@@ -51,8 +53,10 @@ const StudentTuitionDiscountPage = () => {
 
   const loadMyRows = useCallback(async () => {
     setLoadingRows(true)
+
     try {
       const res = await studentService.getMyTuitionDiscountRequests({ pageSize: 50 })
+
       setRows(res.data || [])
     } finally {
       setLoadingRows(false)
@@ -65,18 +69,26 @@ const StudentTuitionDiscountPage = () => {
 
   useEffect(() => {
     let active = true
+
     const run = async () => {
       const kw = studentKeyword.trim()
+
       if (!kw) {
         setStudentOptions([])
-        return
+        
+return
       }
+
       const res = await studentService.getStudents({ keyword: kw, pageSize: 20 })
+
       if (!active) return
       setStudentOptions(res.data || [])
     }
+
     run()
-    return () => {
+
+    
+return () => {
       active = false
     }
   }, [studentKeyword])
@@ -86,24 +98,31 @@ const StudentTuitionDiscountPage = () => {
     if (!reason.trim()) return false
     if (isExempt) return true
     const amt = Number(discountAmount || 0)
-    return amt > 0
+
+    
+return amt > 0
   }, [selectedStudent, reason, isExempt, discountAmount])
 
   const handleSubmit = useCallback(async () => {
     if (!selectedStudent) return
 
     setSubmitting(true)
+
     try {
       const payload = {
         discountAmount: isExempt ? 0 : Number(discountAmount || 0),
         reason: reason.trim(),
         isExempt
       }
+
       const res = await studentService.requestTuitionDiscount(selectedStudent.id, payload)
+
       if (!res.success) {
         showNotification(res.message || 'Không gửi được yêu cầu', 'error')
-        return
+        
+return
       }
+
       showNotification(res.message || 'Đã gửi yêu cầu', 'success')
       setSelectedStudent(null)
       setStudentKeyword('')

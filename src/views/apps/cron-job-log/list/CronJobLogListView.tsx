@@ -33,15 +33,18 @@ import { useNotification } from '@/contexts/notificationContext'
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return '-'
-  return new Date(value).toLocaleString('vi-VN')
+  
+return new Date(value).toLocaleString('vi-VN')
 }
 
 const getStatusColor = (status?: string) => {
   const normalized = (status || '').toLowerCase()
+
   if (normalized === 'success') return 'success'
   if (normalized === 'failed') return 'error'
   if (normalized === 'running') return 'warning'
-  return 'default'
+  
+return 'default'
 }
 
 export default function CronJobLogListView() {
@@ -68,6 +71,7 @@ export default function CronJobLogListView() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
+
       const response = await cronJobLogService.getCronJobLogs({
         pageNumber: page + 1,
         pageSize: rowsPerPage,
@@ -82,7 +86,8 @@ export default function CronJobLogListView() {
         setRows([])
         setTotalCount(0)
         showNotification(response.message || 'Không thể tải nhật ký cronjob.', 'error')
-        return
+        
+return
       }
 
       setRows(response.data.items || [])

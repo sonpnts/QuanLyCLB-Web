@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
@@ -18,6 +17,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
 import InputAdornment from '@mui/material/InputAdornment'
+
+import { logger } from '@/utils/logger'
 
 // Types
 import type { StudentType } from '@/types/apps/studentTypes'
@@ -40,6 +41,7 @@ type Props = {
 const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
   const { showNotification } = useNotification()
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
 
   const [classes, setClasses] = useState<ClassType[]>([])
@@ -61,11 +63,13 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
       try {
         setLoading(true)
         classesLoadedRef.current = true
+
         // Chỉ lấy các lớp đang hoạt động để đăng ký học viên
         const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
 
         if (response.success && response.data) {
           setClasses(response.data)
+
           // Hiển thị mặc định 5 lớp đầu tiên
           setFilteredClasses(response.data.slice(0, 5))
         }
@@ -83,13 +87,16 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
   useEffect(() => {
     if (!searchKeyword.trim()) {
       setFilteredClasses(classes.slice(0, 5))
-      return
+      
+return
     }
 
     const keyword = searchKeyword.toLowerCase()
+
     const filtered = classes.filter(
       cls => cls.name.toLowerCase().includes(keyword) || cls.code.toLowerCase().includes(keyword)
     )
+
     setFilteredClasses(filtered.slice(0, 10))
   }, [searchKeyword, classes])
 
@@ -98,7 +105,9 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
     if (!student) return filteredClasses
 
     const enrolledClassIds = ((student as any).classes || []).map((c: any) => c.classId)
-    return filteredClasses.filter(cls => !enrolledClassIds.includes(cls.id))
+
+    
+return filteredClasses.filter(cls => !enrolledClassIds.includes(cls.id))
   }, [filteredClasses, student])
 
   // Reset khi đóng drawer
@@ -117,7 +126,8 @@ const EnrollStudentDrawer = ({ open, onClose, student, onEnrolled }: Props) => {
   const handleSubmit = async () => {
     if (!student || !selectedClassId) {
       showNotificationRef.current('Vui lòng chọn lớp học.', 'error')
-      return
+      
+return
     }
 
     try {

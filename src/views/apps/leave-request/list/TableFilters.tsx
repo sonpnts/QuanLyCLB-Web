@@ -34,10 +34,12 @@ const TableFilters = memo(({ classes, onFilterChange }: TableFiltersProps) => {
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
-      return
+      
+return
     }
 
     const params: GetStudentAbsencesParams = {}
+
     if (classId) params.classId = classId
     if (absenceType !== '') params.isExcused = absenceType === 'excused'
     if (fromDate) params.fromDate = fromDate

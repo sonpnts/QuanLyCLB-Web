@@ -34,7 +34,8 @@ class AuditLogService {
       }
     } catch (error: any) {
       logger.error('AuditLogService', 'getAuditLogs', error)
-      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -50,7 +51,8 @@ class AuditLogService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('AuditLogService', 'getAuditLogById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -66,7 +68,8 @@ class AuditLogService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error: any) {
       logger.error('AuditLogService', 'getAuditLogsByUser', error)
-      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -82,10 +85,12 @@ class AuditLogService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error: any) {
       logger.error('AuditLogService', 'getAuditLogsByEntity', error)
-      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }
 
 const auditLogService = new AuditLogService()
+
 export default auditLogService

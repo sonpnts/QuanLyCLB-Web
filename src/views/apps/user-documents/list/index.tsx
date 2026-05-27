@@ -38,10 +38,6 @@ import userDocumentService from '@/services/userDocumentService'
 import userService from '@/services/userService'
 import type { UsersType } from '@/types/apps/userTypes'
 import type { UserDocumentDto, UserDocumentType } from '@/types/apps/userDocumentTypes'
-import {
-  documentStatusColors,
-  documentStatusLabels
-} from '@/types/apps/userDocumentTypes'
 import { fuzzyFilter } from '@/utils/tableHelpers'
 import tableStyles from '@core/styles/table.module.css'
 
@@ -67,13 +63,18 @@ const DOC_TYPE_NAME_MAP: Record<string, number> = {
 /** Chuyển string/number bất kỳ → numeric index (0-3), fallback 0 */
 const resolveDocTypeIndex = (type: unknown): number => {
   if (typeof type === 'number' && type >= 0 && type <= 3) return type
+
   if (typeof type === 'string') {
     const n = DOC_TYPE_NAME_MAP[type]
+
     if (n !== undefined) return n
     const parsed = parseInt(type, 10)
+
     if (!isNaN(parsed) && parsed >= 0 && parsed <= 3) return parsed
   }
-  return 0
+
+  
+return 0
 }
 
 /**
@@ -83,7 +84,9 @@ const resolveDocTypeIndex = (type: unknown): number => {
 const DocTypeChip = ({ type, label }: { type: unknown; label?: string }) => {
   const idx = resolveDocTypeIndex(type)
   const meta = DOC_TYPE_ICON[idx]
-  return (
+
+  
+return (
     <Box className='flex items-center gap-1.5'>
       <i className={`${meta.icon} text-sm`} style={{ color: meta.color }} />
       <Typography variant='body2'>{label ?? `Loại ${idx}`}</Typography>
@@ -96,11 +99,13 @@ const DocTypeChip = ({ type, label }: { type: unknown; label?: string }) => {
 type DocGroup = {
   groupKey: string
   ownerName: string
+
   // ownerSub: string          // "Tài khoản" | "Học viên"
   documentType: unknown     // raw value từ API (có thể string hoặc number)
   documentTypeLabel: string // label từ DTO, luôn đúng
   /** Newest doc in this group */
   latest: UserDocumentDto
+
   /** All older docs in this group (sorted newest → oldest, excludes latest) */
   history: UserDocumentDto[]
 }
@@ -111,22 +116,28 @@ const newestFirst = (a: UserDocumentDto, b: UserDocumentDto) =>
 /** Nhóm danh sách flat docs thành 1 hàng / (owner × documentType) */
 const groupDocs = (docs: UserDocumentDto[]): DocGroup[] => {
   const map = new Map<string, UserDocumentDto[]>()
+
   for (const doc of docs) {
     const ownerId = doc.userId ?? doc.studentId ?? 'unknown'
+
     // Dùng documentTypeLabel làm key phụ vì documentType có thể là string hoặc number
     const typeKey = doc.documentTypeLabel ?? String(doc.documentType)
     const key = `${ownerId}::${typeKey}`
+
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(doc)
   }
 
   const groups: DocGroup[] = []
+
   map.forEach(items => {
     const sorted = [...items].sort(newestFirst)
     const latest = sorted[0]
+
     groups.push({
       groupKey: `${latest.userId ?? latest.studentId}::${latest.documentTypeLabel ?? latest.documentType}`,
       ownerName: latest.userFullName ?? latest.studentFullName ?? '—',
+
       // ownerSub: latest.email,
       documentType: latest.documentType,
       documentTypeLabel: latest.documentTypeLabel ?? String(latest.documentType),
@@ -181,16 +192,20 @@ const UserDocumentListTable = () => {
   useEffect(() => {
     if (!userSearchInput.trim()) {
       setUserOptions([])
-      return
+      
+return
     }
+
     if (userSearchRef.current) clearTimeout(userSearchRef.current)
     userSearchRef.current = setTimeout(async () => {
       setUserSearchLoading(true)
       const res = await userService.getUsers({ Keyword: userSearchInput, PageSize: 20 })
+
       if (res.success) setUserOptions(res.data ?? [])
       setUserSearchLoading(false)
     }, 350)
-    return () => { if (userSearchRef.current) clearTimeout(userSearchRef.current) }
+    
+return () => { if (userSearchRef.current) clearTimeout(userSearchRef.current) }
   }, [userSearchInput])
 
   useEffect(() => {
@@ -199,12 +214,15 @@ const UserDocumentListTable = () => {
 
   const load = useCallback(async () => {
     setLoading(true)
+
     const params = {
       ...(filterType !== '' && { documentType: filterType }),
       ...(selectedUser && { userId: selectedUser.id }),
       pageSize: 500
     }
+
     const res = await userDocumentService.getAllDocuments(params)
+
     if (res.success) setRawDocs(res.data ?? [])
     setLoading(false)
   }, [filterType, selectedUser])
@@ -223,10 +241,13 @@ const UserDocumentListTable = () => {
   const handleResubmit = async () => {
     if (!resubmitTarget || !resubmitReason.trim()) {
       showNotification('Vui lòng nhập lý do yêu cầu nộp lại.', 'error')
-      return
+      
+return
     }
+
     setLoading(true)
     const res = await userDocumentService.requestResubmission(resubmitTarget.id, resubmitReason)
+
     if (res.success) {
       // Cập nhật local state
       setRawDocs(prev =>
@@ -240,6 +261,7 @@ const UserDocumentListTable = () => {
     } else {
       showNotification(res.message || 'Không thể gửi yêu cầu.', 'error')
     }
+
     setResubmitTarget(null)
     setResubmitReason('')
     setLoading(false)
@@ -249,7 +271,9 @@ const UserDocumentListTable = () => {
 
   const DocThumbnail = ({ doc, size = 64 }: { doc: UserDocumentDto; size?: number }) => {
     const isImage = doc.contentType.startsWith('image/')
-    return (
+
+    
+return (
       <Box
         onClick={() => setPreviewDoc(doc)}
         sx={{
@@ -297,7 +321,9 @@ const UserDocumentListTable = () => {
       header: 'Ảnh / File',
       cell: ({ row }) => {
         const doc = row.original.latest
-        return (
+
+        
+return (
           <Box className='flex items-center gap-3'>
             <DocThumbnail doc={doc} size={72} />
             <Box sx={{ minWidth: 0 }}>
@@ -345,8 +371,10 @@ const UserDocumentListTable = () => {
       header: 'Lịch sử',
       cell: ({ row }) => {
         const count = row.original.history.length
+
         if (count === 0) return <Typography variant='caption' color='text.disabled'>—</Typography>
-        return (
+        
+return (
           <Button
             size='small'
             variant='outlined'
@@ -366,7 +394,9 @@ const UserDocumentListTable = () => {
       header: 'Thao tác',
       cell: ({ row }) => {
         const doc = row.original.latest
-        return (
+
+        
+return (
           <Box className='flex items-center gap-0.5' onClick={event => event.stopPropagation()}>
             <Tooltip title='Tải xuống'>
               <IconButton size='small' component='a' href={doc.fileUrl} download={doc.fileName} target='_blank'>
@@ -688,7 +718,9 @@ const UserDocumentListTable = () => {
           <Box className='flex flex-col gap-3'>
             {historyGroup?.history.map((doc, idx) => {
               const isImage = doc.contentType.startsWith('image/')
-              return (
+
+              
+return (
                 <Box
                   key={doc.id}
                   sx={{

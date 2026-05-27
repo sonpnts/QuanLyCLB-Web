@@ -48,7 +48,9 @@ type ClassStudentOption = Pick<StudentType, 'id' | 'fullName' | 'phoneNumber'>
 
 const toSafeNumber = (value: unknown): number => {
   const num = Number(value)
-  return Number.isFinite(num) ? num : 0
+
+  
+return Number.isFinite(num) ? num : 0
 }
 
 const SummaryStatCard = ({
@@ -95,6 +97,7 @@ const PaymentCollectView = () => {
   // Filter + pagination
   const [searchQuery, setSearchQuery] = useState('')
   const [branchFilter, setBranchFilter] = useState<string>('')
+
   // Default: only show classes that still have unpaid items
   const [unpaidOnlyFilter, setUnpaidOnlyFilter] = useState<boolean>(true)
   const [page, setPage] = useState(1)
@@ -108,6 +111,7 @@ const PaymentCollectView = () => {
   const loadSummary = async () => {
     try {
       setLoading(true)
+
       const result = isAdmin
         ? await paymentService.getSummaryForAdmin(month, year)
         : await paymentService.getSummaryForCoach(month, year)
@@ -124,8 +128,6 @@ const PaymentCollectView = () => {
 
   const isAdminSummary = (value: CoachPaymentSummaryType | AdminPaymentSummaryType | null): value is AdminPaymentSummaryType =>
     Boolean(value && 'overallTuition' in value && 'totalExpectedAmount' in value)
-
-  const toggle = (key: string) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))
 
   const loadOneTimeFeesForClass = async (cls: ClassPaymentSummary) => {
     if ((oneTimeFeeMap[cls.classId] && classStudents[cls.classId]) || loadingOneTimeFees[cls.classId]) return
@@ -171,10 +173,13 @@ const PaymentCollectView = () => {
   const branchOptions = useMemo(() => {
     if (!summary?.classes) return [] as { id: string; name: string }[]
     const map = new Map<string, string>()
+
     for (const cls of summary.classes) {
       if (cls.branchId && cls.branchName) map.set(cls.branchId, cls.branchName)
     }
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
+
+    
+return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
   }, [summary])
 
   const classOneTimeOutstandingAmountMap = useMemo(() => {
@@ -200,31 +205,41 @@ const PaymentCollectView = () => {
       if (q) {
         const matchName = cls.className?.toLowerCase().includes(q)
         const matchBranch = cls.branchName?.toLowerCase().includes(q)
+
         if (!matchName && !matchBranch) return false
       }
+
+
       // Filter theo chi nhánh
       if (branchFilter && cls.branchId !== branchFilter) return false
+
+
       // Chỉ hiển thị lớp còn công nợ
       if (unpaidOnlyFilter) {
         const totalUnpaid =
           toSafeNumber(cls.tuition?.unpaidAmount) +
           (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0) +
           toSafeNumber(classOneTimeOutstandingAmountMap[cls.classId])
+
         if (totalUnpaid <= 0) return false
       }
-      return true
+
+      
+return true
     })
   }, [summary, searchQuery, branchFilter, unpaidOnlyFilter, classOneTimeOutstandingAmountMap])
 
   const totalUnpaidAmount = useMemo(() => {
     if (!summary) return 0
-    return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumber(summary.grandTotalUnpaid)
+    
+return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumber(summary.grandTotalUnpaid)
   }, [summary])
 
   // Pagination (pageSize=0 -> hiển thị tất cả)
   const effectivePageSize = pageSize === 0 ? filteredClasses.length || 1 : pageSize
   const totalPages = Math.max(1, Math.ceil(filteredClasses.length / effectivePageSize))
   const currentPage = Math.min(page, totalPages)
+
   const pagedClasses = useMemo(
     () =>
       pageSize === 0
@@ -434,6 +449,7 @@ const PaymentCollectView = () => {
                 toSafeNumber(cls.tuition?.unpaidAmount) +
                 (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0) +
                 toSafeNumber(classOneTimeOutstandingAmountMap[cls.classId])
+
               const classOneTimeOutstanding = toSafeNumber(classOneTimeOutstandingAmountMap[cls.classId])
 
               const tuitionAmountByStudentId = new Map(

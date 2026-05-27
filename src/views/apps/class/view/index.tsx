@@ -124,6 +124,7 @@ const ClassViewPage = ({ classId }: Props) => {
     try {
       setLoadingStudents(true)
       studentsLoadedRef.current = true
+
       const response = await classService.getClassStudents(classId, {
         pageNumber: studentsPage + 1,
         pageSize: studentsPageSize
@@ -188,17 +189,6 @@ const ClassViewPage = ({ classId }: Props) => {
       handleStudentUpdated({ ...student, isSuspended: false })
     } else {
       showNotificationRef.current(response.message || 'Không thể khôi phục học viên.', 'error')
-    }
-  }
-
-  const handleDeleteStudent = async (student: StudentType) => {
-    const response = await studentService.deleteStudent(student.id)
-
-    if (response.success) {
-      showNotificationRef.current('Xóa học viên thành công.', 'success')
-      setStudents(prev => prev.filter(item => item.id !== student.id))
-    } else {
-      showNotificationRef.current(response.message || 'Không thể xóa học viên.', 'error')
     }
   }
 

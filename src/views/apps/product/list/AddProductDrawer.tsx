@@ -40,6 +40,7 @@ const createVariantRow = (): VariantForm => ({
 
 const AddProductDrawer = ({ open, handleClose, setData }: Props) => {
   const [loading, setLoading] = useState(false)
+
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -47,6 +48,7 @@ const AddProductDrawer = ({ open, handleClose, setData }: Props) => {
     unitPrice: '',
     description: ''
   })
+
   const [variants, setVariants] = useState<VariantForm[]>([])
 
   const { showNotification } = useNotification()
@@ -76,13 +78,16 @@ const AddProductDrawer = ({ open, handleClose, setData }: Props) => {
 
     if (!formData.code || !formData.name || !formData.category || !formData.unitPrice) {
       showNotification('Vui lòng nhập đủ Mã, Tên, Danh mục và Đơn giá.', 'error')
-      return
+      
+return
     }
 
     const unitPrice = Number(formData.unitPrice)
+
     if (Number.isNaN(unitPrice) || unitPrice <= 0) {
       showNotification('Đơn giá phải là số lớn hơn 0.', 'error')
-      return
+      
+return
     }
 
     const normalizedVariants = variants
@@ -97,6 +102,7 @@ const AddProductDrawer = ({ open, handleClose, setData }: Props) => {
 
     try {
       setLoading(true)
+
       const response = await productService.createProduct({
         code: formData.code.trim(),
         name: formData.name.trim(),
@@ -108,7 +114,8 @@ const AddProductDrawer = ({ open, handleClose, setData }: Props) => {
 
       if (!response.success || !response.data) {
         showNotification(response.message || 'Không thể tạo sản phẩm.', 'error')
-        return
+        
+return
       }
 
       setData(prev => [response.data!, ...prev])

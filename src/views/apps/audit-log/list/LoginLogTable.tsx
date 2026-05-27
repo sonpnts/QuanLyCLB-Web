@@ -45,8 +45,10 @@ const LoginLogTable = () => {
 
   const load = async () => {
     setLoading(true)
+
     try {
       const params: Record<string, any> = { pageNumber: page + 1, pageSize }
+
       if (usernameFilter.trim()) params.username = usernameFilter.trim()
       if (statusFilter !== '') params.isSuccess = statusFilter
 

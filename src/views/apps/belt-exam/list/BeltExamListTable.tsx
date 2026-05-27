@@ -1,8 +1,10 @@
 ﻿'use client'
 
+import { useEffect, useState, useMemo, useRef } from 'react'
+
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useMemo, useRef } from 'react'
+
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import Divider from '@mui/material/Divider'
@@ -70,6 +72,7 @@ const BeltExamListTable = () => {
 
   // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
 
@@ -89,14 +92,17 @@ const BeltExamListTable = () => {
         setLoading(false)
       }
     }
+
     loadExams()
   }, [])
 
   const handleAction = async () => {
     if (!selectedExam) return
+
     try {
       setLoading(true)
       let response
+
       if (actionType === 'approve') {
         response = await beltExamService.approveExamSession(selectedExam.id)
       } else if (actionType === 'reject') {
@@ -112,11 +118,14 @@ const BeltExamListTable = () => {
           actionType === 'approve' ? 'Approved' :
           actionType === 'reject' ? 'Rejected' :
           actionType === 'open' ? 'Open' : 'Pending'
+
         setData(prev => prev.map(e => e.id === selectedExam.id ? { ...e, status: newStatus as any } : e))
+
         const label =
           actionType === 'approve' ? 'Phê duyệt' :
           actionType === 'reject' ? 'Từ chối' :
           actionType === 'open' ? 'Mở đăng ký' : 'Gửi duyệt'
+
         showNotification(`${label} thành công!`, 'success')
         setActionDialogOpen(false)
         setSelectedExam(null)
@@ -187,7 +196,9 @@ const BeltExamListTable = () => {
         cell: ({ row }) => {
           const exam = row.original
           const isNewFlow = ['Open', 'Closed', 'Locked'].includes(exam.status as string)
-            return (
+
+            
+return (
               <Box className='flex items-center gap-1' onClick={event => event.stopPropagation()}>
               <IconButton color='primary' title='Chỉnh sửa' onClick={() => openEditDrawer(exam)}>
                 <i className='ri-pencil-line' />

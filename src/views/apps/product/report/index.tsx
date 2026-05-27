@@ -35,6 +35,7 @@ const toDateInputValue = (date: Date) => {
 const ProductReportView = () => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
+
   const reportPermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'ProductReport'),
     [auth?.permissions, auth?.roles]
@@ -42,6 +43,7 @@ const ProductReportView = () => {
 
   const [loading, setLoading] = useState(false)
   const [summary, setSummary] = useState<ProductReportSummaryType | null>(null)
+
   const [filters, setFilters] = useState({
     fromDate: toDateInputValue(new Date(new Date().getFullYear(), new Date().getMonth(), 1)),
     toDate: toDateInputValue(new Date())
@@ -54,7 +56,8 @@ const ProductReportView = () => {
 
       if (!response.success || !response.data) {
         showNotification(response.message || 'Không thể tải báo cáo sản phẩm.', 'error')
-        return
+        
+return
       }
 
       setSummary(response.data)

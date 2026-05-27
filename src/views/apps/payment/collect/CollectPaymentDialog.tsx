@@ -138,6 +138,7 @@ const CollectPaymentDialog = ({
 
       try {
         const res = await paymentService.getTuitionQuote(classId, studentId, forMonth, forYear)
+
         if (ignore) return
 
         setTuitionQuote(res.success ? res.data || null : null)
@@ -154,13 +155,16 @@ const CollectPaymentDialog = ({
       try {
         setLoadingExamOptions(true)
         const res = await paymentService.getExamFeeOptions(classId, studentId)
+
         if (ignore) return
 
         const options = res.success && res.data ? res.data : []
+
         setExamFeeOptions(options)
 
         const suggested = options.find(option => option.isSuggested) || null
         const shouldInclude = Boolean(suggested)
+
         setIncludeExamFee(shouldInclude)
         setSelectedExamRegistrationId(shouldInclude ? suggested!.registrationId : options[0]?.registrationId || '')
       } catch {
@@ -189,12 +193,15 @@ const CollectPaymentDialog = ({
       if (!open || !classId) return
 
       const res = await oneTimeFeeService.getOptions(studentId, classId)
+
       if (ignore) return
 
       const options = res.success && res.data ? res.data : []
+
       setOneTimeFeeOptions(options)
 
       const selected: Record<string, boolean> = {}
+
       for (const option of options) selected[option.feeCode] = true
       setSelectedOneTimeFees(selected)
     }
@@ -213,6 +220,7 @@ const CollectPaymentDialog = ({
 
   const handleMethodChange = (newMethod: 'Cash' | 'BankTransfer') => {
     setMethod(newMethod)
+
     if (newMethod === 'Cash') {
       setTransferProofUrl(null)
       setPreviewUrl(null)
@@ -221,14 +229,17 @@ const CollectPaymentDialog = ({
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
+
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
       showNotification('Vui lòng chọn file ảnh (JPG, PNG, ...)', 'error')
-      return
+      
+return
     }
 
     const localUrl = URL.createObjectURL(file)
+
     setPreviewUrl(localUrl)
     setTransferProofUrl(null)
 
@@ -278,22 +289,26 @@ const CollectPaymentDialog = ({
   const handleSubmit = async () => {
     if (discountAmount > 0 && !hasTuitionLine) {
       showNotification('Giảm trừ chỉ áp dụng cho học phí.', 'error')
-      return
+      
+return
     }
 
     if (discountAmount > 0 && !discountReason.trim()) {
       showNotification('Vui lòng nhập lý do giảm trừ', 'error')
-      return
+      
+return
     }
 
     if (method === 'BankTransfer' && !transferProofUrl) {
       showNotification('Vui lòng upload ảnh chụp màn hình chuyển khoản', 'error')
-      return
+      
+return
     }
 
     if (Number(amount || 0) <= 0 && selectedOneTimeFeeAmount <= 0) {
       showNotification('Vui lòng chọn ít nhất một khoản phí cần thu.', 'error')
-      return
+      
+return
     }
 
     try {
@@ -317,7 +332,9 @@ const CollectPaymentDialog = ({
         .filter(option => Boolean(selectedOneTimeFees[option.feeCode]))
         .map(option => {
           const typeKey = option.feeCode === 'CSVC' ? 'FacilityFee' : 'CodeChangeFee'
-          return {
+
+          
+return {
             type: PAYMENT_TYPE_MAP[typeKey] ?? 3,
             classId: classId || undefined,
             amount: Number(option.amount || 0),

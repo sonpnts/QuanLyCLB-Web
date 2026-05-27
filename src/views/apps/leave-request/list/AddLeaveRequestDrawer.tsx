@@ -133,6 +133,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
           code: item.code || item.classCode,
           name: item.name || item.className
         }))
+
         setClasses(mapped)
       }
     }
@@ -146,7 +147,8 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
         setStudents([])
         setAvailableDates([])
         setDateInput('')
-        return
+        
+return
       }
 
       const [studentsResponse, schedulesResponse] = await Promise.all([
@@ -212,11 +214,13 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
 
     if (!classId || !student?.id || selectedDates.length === 0 || !reason.trim()) {
       showNotification('Vui lòng chọn lớp, học viên, buổi nghỉ và nhập lý do.', 'error')
-      return
+      
+return
     }
 
     try {
       setLoading(true)
+
       const response = await studentAttendanceService.createExcusedAbsences({
         classId,
         studentId: student.id,
@@ -226,14 +230,17 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
 
       if (!response.success) {
         showNotification(response.message || 'Không thể tạo xin nghỉ phép cho học viên.', 'error')
-        return
+        
+return
       }
 
       if (response.data?.length) {
         setData(prev => {
           const existing = new Map(prev.map(item => [item.id, item]))
+
           response.data!.forEach(item => existing.set(item.id, item))
-          return Array.from(existing.values()).sort((a, b) => b.attendanceDate.localeCompare(a.attendanceDate))
+          
+return Array.from(existing.values()).sort((a, b) => b.attendanceDate.localeCompare(a.attendanceDate))
         })
       }
 

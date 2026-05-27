@@ -152,6 +152,7 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
         showNotification('Đã chốt danh sách kỳ thi.', 'success')
         setLockDialogOpen(false)
         const refreshed = await beltExamService.getAdminView(sessionId, onlyPaid)
+
         if (refreshed.success && refreshed.data) setData(refreshed.data)
       } else {
         showNotification(result.message || 'Chốt danh sách thất bại.', 'error')
@@ -165,6 +166,7 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
     try {
       setExporting(true)
       const fullData = await fetchFullAdminView()
+
       const exportStudents = fullData.coachGroups
         .flatMap(group => group.students)
         .filter(student => student.hasPaid && student.oneTimeFeesCompleted)
@@ -253,7 +255,8 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
 
       if (missingCodeStudents.length === 0) {
         showNotification('Không có học viên nào thiếu mã HV để xuất file import.', 'info')
-        return
+        
+return
       }
 
       const rows = missingCodeStudents.map(student => ({

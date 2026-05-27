@@ -57,7 +57,8 @@ class LeaveRequestService {
       }
     } catch (error) {
       logger.error('LeaveRequestService', 'getLeaveRequests', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -73,7 +74,8 @@ class LeaveRequestService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('LeaveRequestService', 'getLeaveRequestById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -89,7 +91,8 @@ class LeaveRequestService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('LeaveRequestService', 'createLeaveRequest', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -105,7 +108,8 @@ class LeaveRequestService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('LeaveRequestService', 'updateLeaveRequest', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -121,7 +125,8 @@ class LeaveRequestService {
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('LeaveRequestService', 'deleteLeaveRequest', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -137,7 +142,8 @@ class LeaveRequestService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('LeaveRequestService', 'approveLeaveRequest', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -153,7 +159,8 @@ class LeaveRequestService {
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('LeaveRequestService', 'rejectLeaveRequest', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -169,7 +176,8 @@ class LeaveRequestService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('LeaveRequestService', 'getPendingRequests', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -185,10 +193,12 @@ class LeaveRequestService {
       return { success: true, data: apiResponse.data || [] }
     } catch (error) {
       logger.error('LeaveRequestService', 'getMyRequests', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 }
 
 const leaveRequestService = new LeaveRequestService()
+
 export default leaveRequestService

@@ -61,6 +61,7 @@ const DocumentCard = ({
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+
     if (!file) return
     await onUpload(config.type, file)
     e.target.value = ''
@@ -217,6 +218,7 @@ const DocumentsTab = () => {
   const load = async () => {
     setLoading(true)
     const res = await userDocumentService.getMyDocuments()
+
     if (res.success) setDocs(res.data ?? [])
     setLoading(false)
   }
@@ -226,12 +228,14 @@ const DocumentsTab = () => {
   const handleUpload = async (type: UserDocumentType, file: File) => {
     setLoading(true)
     const res = await userDocumentService.uploadMyDocument(type, file)
+
     if (res.success) {
       showNotification(res.message || 'Tải lên thành công!', 'success')
       await load()
     } else {
       showNotification(res.message || 'Tải lên thất bại.', 'error')
     }
+
     setLoading(false)
   }
 
@@ -239,12 +243,14 @@ const DocumentsTab = () => {
     if (!deleteTarget) return
     setLoading(true)
     const res = await userDocumentService.deleteMyDocument(deleteTarget.id)
+
     if (res.success) {
       setDocs(prev => prev.filter(d => d.id !== deleteTarget.id))
       showNotification('Đã xóa tài liệu.', 'success')
     } else {
       showNotification(res.message || 'Không thể xóa.', 'error')
     }
+
     setDeleteTarget(null)
     setLoading(false)
   }

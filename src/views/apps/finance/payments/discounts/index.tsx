@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { useRouter } from 'next/navigation'
+
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -22,7 +24,6 @@ import TableRow from '@mui/material/TableRow'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
-import { useRouter } from 'next/navigation'
 
 import { useNotification } from '@/contexts/notificationContext'
 import classService from '@/services/classService'
@@ -105,6 +106,7 @@ const DiscountedReceiptsView = () => {
   const loadRecords = useCallback(async () => {
     try {
       setLoadingTable(true)
+
       const response = await paymentService.getDiscountedReceipts({
         pageNumber: page + 1,
         pageSize: rowsPerPage,

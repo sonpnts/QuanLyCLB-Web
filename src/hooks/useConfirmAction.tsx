@@ -30,6 +30,7 @@ export const useConfirmAction = () => {
 
   const closeDialog = useCallback((confirmed: boolean) => {
     setOpen(false)
+
     if (resolverRef.current) {
       resolverRef.current(confirmed)
       resolverRef.current = null

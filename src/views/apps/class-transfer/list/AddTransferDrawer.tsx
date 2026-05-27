@@ -1,5 +1,4 @@
 ﻿'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
@@ -18,6 +17,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
+
+import { logger } from '@/utils/logger'
 
 // Type Imports
 import type { ClassTransferType } from '@/types/apps/classTransferTypes'
@@ -47,7 +48,9 @@ const getActiveClass = (student: StudentType) =>
 /** Hiển thị học viên trong dropdown: "Tên – Lớp A, Lớp B" */
 const studentLabel = (s: StudentType) => {
   const classNames = s.classes?.filter(c => c.status === 'Active').map(c => c.className).join(', ')
-  return classNames ? `${s.fullName}  –  ${classNames}` : s.fullName
+
+  
+return classNames ? `${s.fullName}  –  ${classNames}` : s.fullName
 }
 
 const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
@@ -79,15 +82,18 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
   // ── Load classes on open ──────────────────────────────────────────────────
   useEffect(() => {
     if (!open) return
+
     const load = async () => {
       try {
         // Coach needs to be able to select destination among all active classes.
         const res = await classService.getClassLookup({ isActive: true, pageSize: 5000 })
+
         if (res.success && res.data) setClasses(res.data)
 
         // For non-admin, still load "my classes" to validate FromClass permission.
         if (!isAdmin && currentUserId) {
           const mine = await classService.getClassesByUserId(currentUserId, { isActive: true, pageSize: 2000 })
+
           if (mine.success && mine.data) setMyClasses(mine.data)
         } else {
           setMyClasses([])
@@ -98,6 +104,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
         setClassesLoaded(true)
       }
       }
+
     load()
   }, [open, isAdmin, currentUserId])
 
@@ -105,9 +112,11 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
   // Debounced student search
   const searchStudents = useCallback(async (keyword: string) => {
     setStudentLoading(true)
+
     try {
       if (isAdmin) {
         const res = await studentService.getStudents({ keyword, pageSize: 50 })
+
         setStudentOptions(res.success && res.data ? res.data : [])
 
         return
@@ -120,6 +129,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
       }
 
       const classIds = myClasses.map(cls => cls.id).filter(Boolean)
+
       if (classIds.length === 0) {
         setStudentOptions([])
 
@@ -135,6 +145,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
         .flatMap(response => response.data || [])
 
       const uniqueStudents = Array.from(new Map(merged.map(student => [student.id, student])).values())
+
       setStudentOptions(uniqueStudents)
     } catch (err) {
       logger.error('AddTransferDrawer', 'Error searching students', err)
@@ -162,6 +173,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
 
     if (student) {
       const active = getActiveClass(student)
+
       setFromClassId(active?.classId ?? '')
       setFromClassName(active?.className ?? 'Chưa có lớp')
     } else {
@@ -173,7 +185,8 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
   // ── Class options filtered by role ────────────────────────────────────────
   const fromClassOptions = useMemo(() => {
     if (isAdmin) return classes
-    return myClasses
+    
+return myClasses
   }, [classes, myClasses, isAdmin])
 
   // To-class: exclude the from-class, only from active classes
@@ -192,26 +205,35 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
 
     if (!selectedStudent || !fromClassId || !toClassId) {
       showNotification('Vui lòng chọn học viên và lớp đích.', 'error')
-      return
+      
+return
     }
+
     if (!reason.trim()) {
       showNotification('Vui lòng nhập lý do chuyển lớp.', 'error')
-      return
+      
+return
     }
+
     if (fromClassId === toClassId) {
       showNotification('Lớp đích phải khác lớp hiện tại.', 'error')
-      return
+      
+return
     }
+
     if (!isAdmin) {
       const allowed = fromClassOptions.some(c => c.id === fromClassId)
+
       if (!allowed) {
         showNotification('Bạn chỉ có thể tạo yêu cầu từ lớp mình đang phụ trách.', 'error')
-        return
+        
+return
       }
     }
 
     try {
       setLoading(true)
+
       const response = await classTransferService.createClassTransfer({
         studentId: selectedStudent.id,
         fromClassId,
@@ -287,7 +309,9 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
             loadingText='Đang tìm...'
             renderOption={(props, option) => {
               const activeClass = getActiveClass(option)
-              return (
+
+              
+return (
                 <Box component='li' {...props} key={option.id}>
                   <Box>
                     <Typography variant='body2' fontWeight={500}>

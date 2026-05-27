@@ -48,8 +48,10 @@ const normalize = (values: string[] = []) =>
 const equal = (a: string[] = [], b: string[] = []) => JSON.stringify(normalize(a)) === JSON.stringify(normalize(b))
 const isSystemMenuPermission = (code: string) => code.toLowerCase().startsWith('menu.')
 const isLegacyGeneratedFunction = (code: string) => code.toLowerCase().startsWith('fn.')
+
 const functionLabel = (item: CanonicalFunctionDto) =>
   item.functionName || item.route || item.menuHref || item.requiredPermissionModule || item.module || 'Chưa đặt tên'
+
 const functionModule = (item: CanonicalFunctionDto) => item.requiredPermissionModule || item.module || '-'
 
 const emptyFunctionForm: FunctionForm = {
@@ -103,6 +105,7 @@ const PermissionMatrix = () => {
     }
 
     const visiblePermissions = roleRes.data.filter(permission => !isSystemMenuPermission(permission.permissionCode))
+
     const visibleFunctions = (
       functionListRes.success && functionListRes.data?.length ? functionListRes.data : functionMatrixRes.data.functions || []
     ).filter(item => !isLegacyGeneratedFunction(item.functionCode))
@@ -162,17 +165,17 @@ const PermissionMatrix = () => {
       if (parts.length < 2) return
 
       const action = parts[parts.length - 1] as ActionKey
-      const module = parts.slice(0, parts.length - 1).join('.')
+      const moduleCode = parts.slice(0, parts.length - 1).join('.')
 
-      if (!module || !RBAC_ACTION_ORDER.includes(action)) return
+      if (!moduleCode || !RBAC_ACTION_ORDER.includes(action)) return
 
-      if (!rowMap[module]) rowMap[module] = {}
-      rowMap[module][action] = permission
+      if (!rowMap[moduleCode]) rowMap[moduleCode] = {}
+      rowMap[moduleCode][action] = permission
     })
 
     return Object.keys(rowMap)
       .sort((a, b) => a.localeCompare(b))
-      .map(module => ({ module, actions: rowMap[module] }))
+      .map(moduleCode => ({ module: moduleCode, actions: rowMap[moduleCode] }))
   }, [permissions])
 
   const selectedFunctionCode = useMemo(() => functionForm.code.trim(), [functionForm.code])
@@ -205,6 +208,7 @@ const PermissionMatrix = () => {
     const results = await Promise.allSettled(
       changedRoleIds.map(id => menuAdminService.updatePermissionRoles(id, roleMatrix[id] || []))
     )
+
     const failed = results.filter(result => result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success))
 
     if (failed.length > 0) {
@@ -226,6 +230,7 @@ const PermissionMatrix = () => {
     const results = await Promise.allSettled(
       changedFunctionIds.map(id => menuAdminService.updatePermissionFunctions(id, functionMatrix[id] || []))
     )
+
     const failed = results.filter(result => result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success))
 
     if (failed.length > 0) {
@@ -465,6 +470,7 @@ const PermissionMatrix = () => {
                   {permissions.map((permission, index) => {
                     const action = (permission.permissionCode.split('.').pop() || '-') as ActionKey | '-'
                     const moduleCode = getPermissionModuleFromCode(permission.permissionCode)
+
                     const checked = selectedFunctionCode
                       ? (functionMatrix[permission.permissionId] || []).includes(selectedFunctionCode)
                       : false

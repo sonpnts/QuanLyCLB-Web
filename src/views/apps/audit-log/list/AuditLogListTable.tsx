@@ -52,8 +52,10 @@ import tableStyles from '@core/styles/table.module.css'
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
+
   addMeta({ itemRank })
-  return itemRank.passed
+  
+return itemRank.passed
 }
 
 const DebouncedInput = ({
@@ -74,7 +76,9 @@ const DebouncedInput = ({
 
   useEffect(() => {
     const timeout = setTimeout(() => onChange(value), debounce)
-    return () => clearTimeout(timeout)
+
+    
+return () => clearTimeout(timeout)
   }, [value, debounce, onChange])
 
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
@@ -95,6 +99,7 @@ const AuditLogListTable = () => {
 
   // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
   const currentFilterRef = useRef<string>('')
@@ -118,6 +123,7 @@ const AuditLogListTable = () => {
         dataLoadedRef.current = true
 
         const response = await auditLogService.getAuditLogs(filterParams)
+
         if (response.success && response.data) {
           setData(response.data)
         } else {
@@ -129,6 +135,7 @@ const AuditLogListTable = () => {
         setLoading(false)
       }
     }
+
     loadAuditLogs()
   }, [filterParams])
 
@@ -139,6 +146,7 @@ const AuditLogListTable = () => {
 
   const formatJson = (jsonString?: string) => {
     if (!jsonString) return '-'
+
     try {
       return JSON.stringify(JSON.parse(jsonString), null, 2)
     } catch {

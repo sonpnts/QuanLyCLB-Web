@@ -180,7 +180,8 @@ return { success: true, data: [] }
       }
     } catch (error) {
       logger.error('ClassService', 'getClassLookup', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -508,7 +509,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data || [] }
     } catch (error: any) {
       logger.error('ClassService', 'getClassPermissionsForUser', error)
-      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 

@@ -1,5 +1,4 @@
 'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
@@ -16,9 +15,12 @@ import Box from '@mui/material/Box'
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 
+import { logger } from '@/utils/logger'
+
 // Type Imports
 import type { InstructorType, GetInstructorsParams } from '@/services/instructorService'
 import { fuzzyFilter } from '@/utils/tableHelpers'
+
 // Component Imports
 import AddInstructorDrawer from './AddInstructorDrawer'
 import EditInstructorDrawer from './EditInstructorDrawer'
@@ -30,8 +32,6 @@ import instructorService from '@/services/instructorService'
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
 
-// Utils Imports
-import { getInitials } from '@/utils/getInitials'
 import { exportToExcel, formatBool } from '@/utils/exportToExcel'
 
 // Styled Component Imports
@@ -54,6 +54,7 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
 
   // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
   const currentFilterRef = useRef<string>('')
@@ -247,6 +248,7 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
                       { header: 'Email', accessor: 'email' as any },
                       { header: 'Số điện thoại', accessor: 'phoneNumber' as any },
                       { header: 'Cấp đai', accessor: 'beltLevelName' as any },
+
                       // { header: 'Chứng chỉ', accessor: 'certification' as any },
                       { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }
                     ]

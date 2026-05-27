@@ -95,7 +95,8 @@ class ProductSaleService {
       }
     } catch (error) {
       logger.error('ProductSaleService', 'getProductSales', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -111,7 +112,8 @@ class ProductSaleService {
       return { success: true, data: toProductSale(apiResponse.data) }
     } catch (error: any) {
       logger.error('ProductSaleService', 'getProductSaleById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -127,7 +129,8 @@ class ProductSaleService {
       return { success: true, data: toProductSale(apiResponse.data), message: apiResponse.message }
     } catch (error: any) {
       logger.error('ProductSaleService', 'createProductSale', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -143,7 +146,8 @@ class ProductSaleService {
       return { success: true, data: toProductSale(apiResponse.data), message: apiResponse.message }
     } catch (error: any) {
       logger.error('ProductSaleService', 'updateProductSale', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -159,7 +163,8 @@ class ProductSaleService {
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('ProductSaleService', 'deleteProductSale', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -175,7 +180,8 @@ class ProductSaleService {
       return { success: true, data: toProductSale(apiResponse.data), message: apiResponse.message }
     } catch (error: any) {
       logger.error('ProductSaleService', 'restoreProductSale', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }

@@ -45,6 +45,7 @@ class FederationMemberService {
           pageSize: params.pageSize ?? 10
         }
       })
+
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) {
@@ -67,7 +68,8 @@ class FederationMemberService {
       }
     } catch (error) {
       logger.error('FederationMemberService', 'search', error)
-      return { success: false, message: 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -85,11 +87,14 @@ class FederationMemberService {
     } catch (error: any) {
       logger.error('FederationMemberService', 'getByCode', error)
       const status = error?.response?.status
+
       if (status === 404) return { success: false, message: `Không tìm thấy hội viên với mã '${memberCode}'` }
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }
 
 const federationMemberService = new FederationMemberService()
+
 export default federationMemberService

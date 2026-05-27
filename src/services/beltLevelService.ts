@@ -62,4 +62,5 @@ class BeltLevelService {
 }
 
 const beltLevelService = new BeltLevelService()
+
 export default beltLevelService

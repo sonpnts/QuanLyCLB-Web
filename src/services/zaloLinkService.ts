@@ -66,7 +66,9 @@ class ZaloLinkService {
 
   async getUnlinkedStudents(classId?: string): Promise<ResponseResult<ZaloUnlinkedStudentRowType[]>> {
     const params = classId ? { classId } : undefined
-    return apiList(
+
+    
+return apiList(
       () => apiClient.get<any>(API_ENDPOINTS.zaloLinks.unlinked, { params }),
       data => (Array.isArray(data) ? data : [])
     )

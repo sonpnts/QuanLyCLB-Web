@@ -1,5 +1,4 @@
 ﻿'use client'
-import { logger } from '@/utils/logger'
 
 // React Imports
 import { useState, useEffect } from 'react'
@@ -15,6 +14,8 @@ import Divider from '@mui/material/Divider'
 import TextField from '@mui/material/TextField'
 import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
+
+import { logger } from '@/utils/logger'
 
 // Type Imports
 import type { BranchType, UpdateBranchRequest } from '@/services/branchService'
@@ -48,7 +49,8 @@ type FormValidateType = {
 const parseNum = (val: any) => {
   if (typeof val === 'number') return val
   if (!val) return 0
-  return Number(String(val).replace(',', '.'))
+  
+return Number(String(val).replace(',', '.'))
 }
 
 const EditBranchDrawer = (props: Props) => {
@@ -97,9 +99,11 @@ const EditBranchDrawer = (props: Props) => {
         .getPrices()
         .then(res => {
           if (!res.success) return
+
           const activeBranchPrice = (res.data || [])
             .filter(p => p.feeCode === 'CSVC' && p.scopeType === 'Branch' && p.scopeId === selectedBranch.id && p.isActive)
             .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0]
+
           if (activeBranchPrice) setValue('csvcFee', activeBranchPrice.amount)
         })
         .catch(() => {})
@@ -136,6 +140,7 @@ const EditBranchDrawer = (props: Props) => {
 
       if (response.success && response.data) {
         const csvcAmount = parseNum(data.csvcFee)
+
         if (csvcAmount >= 0) {
           oneTimeFeeService
             .upsertPrice({ feeCode: 'CSVC', scopeType: 'Branch', scopeId: selectedBranch.id, amount: csvcAmount })

@@ -37,10 +37,13 @@ const PAGE_SIZE = 20
 /** Định dạng ngày YYYY-MM-DD → DD/MM/YYYY */
 const formatDob = (dob?: string | null) => {
   if (!dob) return '—'
+
   try {
     const d = new Date(dob)
+
     if (isNaN(d.getTime())) return dob
-    return d.toLocaleDateString('vi-VN')
+    
+return d.toLocaleDateString('vi-VN')
   } catch {
     return dob
   }
@@ -50,7 +53,8 @@ const genderLabel = (g?: string | null) => {
   if (!g) return '—'
   if (g === 'Nam' || g === 'true' || g === '1') return 'Nam'
   if (g === 'Nữ' || g === 'false' || g === '0') return 'Nữ'
-  return g
+  
+return g
 }
 
 const MemberCodeSearchDialog = ({ open, onClose, onSelect }: Props) => {
@@ -77,6 +81,7 @@ const MemberCodeSearchDialog = ({ open, onClose, onSelect }: Props) => {
 
       if (res.success && res.data) {
         const { items, totalCount: tc } = res.data
+
         setResults(prev => (append ? [...prev, ...items] : items))
         setTotalCount(tc)
         setHasMore((append ? results.length + items.length : items.length) < tc)
@@ -111,7 +116,8 @@ const MemberCodeSearchDialog = ({ open, onClose, onSelect }: Props) => {
         doSearch(keyword, 1, false)
       }
     }, 350)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+    
+return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [keyword, doSearch])
 
   // IntersectionObserver cho load-more
@@ -123,7 +129,8 @@ const MemberCodeSearchDialog = ({ open, onClose, onSelect }: Props) => {
       }
     }, { threshold: 0.1 })
     if (sentinelRef.current) observerRef.current.observe(sentinelRef.current)
-    return () => observerRef.current?.disconnect()
+    
+return () => observerRef.current?.disconnect()
   }, [hasMore, loadingMore, loading, page, doSearch])
 
   const handleSelect = (member: FederationMemberDto) => {

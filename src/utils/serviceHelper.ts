@@ -12,11 +12,14 @@ export async function apiList<T>(
   try {
     const response = await fetchFn()
     const api = response.data
+
     if (!api?.isSuccess) return { success: true, data: [] }
-    return { success: true, data: mapFn(api.data) }
+    
+return { success: true, data: mapFn(api.data) }
   } catch (error) {
     logger.error(context?.className ?? 'serviceHelper', context?.method ?? 'apiList', error)
-    return { success: true, data: [] }
+    
+return { success: true, data: [] }
   }
 }
 
@@ -31,11 +34,14 @@ export async function apiGet<T>(
   try {
     const response = await fetchFn()
     const api = response.data
+
     if (!api?.isSuccess) return { success: false, message: api?.message }
-    return { success: true, data: mapFn(api.data) }
+    
+return { success: true, data: mapFn(api.data) }
   } catch (error: any) {
     logger.error(context?.className ?? 'serviceHelper', context?.method ?? 'apiGet', error)
-    return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
   }
 }
 
@@ -50,11 +56,14 @@ export async function apiMutate<T = void>(
   try {
     const response = await fetchFn()
     const api = response.data
+
     if (!api?.isSuccess) return { success: false, message: api?.message }
-    return { success: true, data: mapFn ? mapFn(api.data) : (undefined as T), message: api?.message }
+    
+return { success: true, data: mapFn ? mapFn(api.data) : (undefined as T), message: api?.message }
   } catch (error: any) {
     logger.error(context?.className ?? 'serviceHelper', context?.method ?? 'apiMutate', error)
-    return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
   }
 }
 
@@ -64,5 +73,6 @@ export async function apiMutate<T = void>(
 export function extractList<T>(data: any): T[] {
   if (!data) return []
   if (Array.isArray(data)) return data as T[]
-  return data.records || data.items || data.data || []
+  
+return data.records || data.items || data.data || []
 }

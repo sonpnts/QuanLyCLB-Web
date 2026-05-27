@@ -128,6 +128,7 @@ const CashHandoverListTable = () => {
   const [selectedHandover, setSelectedHandover] = useState<CashHandoverType | null>(null)
 
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
 
   useEffect(() => {
@@ -143,6 +144,7 @@ const CashHandoverListTable = () => {
           setInstructors(instructorRes.data || [])
         } else if (userId) {
           const classRes = await classService.getClassesByUserId(userId)
+
           setClasses((classRes.data || []).filter(c => c.isActive !== false))
           setInstructors([])
         }
@@ -158,13 +160,16 @@ const CashHandoverListTable = () => {
     const loadOutstandingCollections = async () => {
       if (!isAdmin || instructors.length === 0) {
         setOutstandingCollections([])
-        return
+        
+return
       }
 
       const rows = await Promise.all(
         instructors.map(async instructor => {
           const response = await financeService.getClassCollectionsByInstructor(instructor.id)
-          return (response.data || []).filter(item => item.availableToHandover > 0)
+
+          
+return (response.data || []).filter(item => item.availableToHandover > 0)
         })
       )
 
@@ -205,6 +210,7 @@ const CashHandoverListTable = () => {
         : { ...filterParams, instructorId: userId }
 
       const response = await cashHandoverService.getCashHandovers(effectiveParams)
+
       setData(response.data || [])
     } catch {
       setData([])
@@ -227,7 +233,8 @@ const CashHandoverListTable = () => {
 
       if (!response.success || !response.data) {
         showNotificationRef.current(response.message || 'Không thể tải chi tiết phiếu bàn giao.', 'error')
-        return
+        
+return
       }
 
       setSelectedHandover(response.data)
@@ -244,7 +251,8 @@ const CashHandoverListTable = () => {
 
       if (!response.success || !response.data) {
         showNotificationRef.current(response.message || 'Không thể xác nhận phiếu bàn giao.', 'error')
-        return
+        
+return
       }
 
       setData(prev => prev.map(item => (item.id === id ? response.data! : item)))
@@ -264,9 +272,11 @@ const CashHandoverListTable = () => {
 
   const handleReject = async () => {
     if (!rejectTarget) return
+
     if (!rejectReason.trim()) {
       showNotificationRef.current('Vui lòng nhập lý do từ chối.', 'error')
-      return
+      
+return
     }
 
     try {
@@ -275,7 +285,8 @@ const CashHandoverListTable = () => {
 
       if (!response.success || !response.data) {
         showNotificationRef.current(response.message || 'Không thể từ chối phiếu bàn giao.', 'error')
-        return
+        
+return
       }
 
       setData(prev => prev.map(item => (item.id === rejectTarget.id ? response.data! : item)))

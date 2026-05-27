@@ -62,12 +62,15 @@ const AssistantListTable = () => {
 
   const { showNotification } = useNotification()
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
 
   const loadAssistants = async () => {
     setLoading(true)
+
     try {
       const res = await assistantService.getAssistants()
+
       if (res.success && res.data) {
         setData(res.data)
       } else {
@@ -82,8 +85,10 @@ const AssistantListTable = () => {
 
   const loadAllUsers = async () => {
     setUsersLoading(true)
+
     try {
       const res = await userService.getUsers({ PageSize: 1000 })
+
       if (res.success && res.data) {
         setAllUsers(res.data.filter(u => u.isActive !== false))
       }
@@ -102,7 +107,9 @@ const AssistantListTable = () => {
   const eligibleUsers = useMemo(() => {
     return allUsers.filter(u => {
       const roles = (u.roles || []).map((r: any) => (typeof r === 'string' ? r : r?.name)).filter(Boolean)
-      return !roles.some((r: string) => r?.toLowerCase() === 'assistant')
+
+      
+return !roles.some((r: string) => r?.toLowerCase() === 'assistant')
     })
   }, [allUsers])
 
@@ -115,8 +122,10 @@ const AssistantListTable = () => {
   const handleAdd = async () => {
     if (!selectedUser) return
     setSubmitting(true)
+
     try {
       const res = await assistantService.assignAssistantRole(selectedUser.id)
+
       if (res.success) {
         showNotificationRef.current('Đã gán role Trợ giảng.', 'success')
         setAddOpen(false)
@@ -135,8 +144,10 @@ const AssistantListTable = () => {
 
   const handleRemove = async (user: UsersType) => {
     if (!confirm(`Bỏ role Trợ giảng của "${user.fullName}"?`)) return
+
     try {
       const res = await assistantService.removeAssistantRole(user.id)
+
       if (res.success) {
         setData(prev => prev.filter(u => u.id !== user.id))
         showNotificationRef.current('Đã bỏ role Trợ giảng.', 'success')
@@ -158,8 +169,10 @@ const AssistantListTable = () => {
   const handleSaveMemberCode = async () => {
     if (!editUser) return
     setEditSubmitting(true)
+
     try {
       const res = await userService.updateUser(editUser.id, { memberCode: editMemberCode.trim() || null })
+
       if (res.success) {
         showNotificationRef.current('Đã cập nhật mã hội viên.', 'success')
         setData(prev => prev.map(u => u.id === editUser.id ? { ...u, memberCode: editMemberCode.trim() || undefined } as any : u))
@@ -179,8 +192,10 @@ const AssistantListTable = () => {
   // Filter data theo search query
   const filteredData = useMemo(() => {
     const q = search.trim().toLowerCase()
+
     if (!q) return data
-    return data.filter(u =>
+    
+return data.filter(u =>
       (u.fullName || '').toLowerCase().includes(q) ||
       (u.email || '').toLowerCase().includes(q) ||
       (u.phoneNumber || '').toLowerCase().includes(q) ||
@@ -274,7 +289,7 @@ const AssistantListTable = () => {
         ) : filteredData.length === 0 ? (
           <Box className='p-8'>
             <Typography color='text.secondary' align='center'>
-              Không có kết quả khớp với "{search}".
+              Không có kết quả khớp với &quot;{search}&quot;.
             </Typography>
           </Box>
         ) : (
@@ -452,3 +467,4 @@ const AssistantListTable = () => {
 }
 
 export default AssistantListTable
+

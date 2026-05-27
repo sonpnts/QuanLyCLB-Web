@@ -47,6 +47,7 @@ const createVariantRow = (): VariantForm => ({
 
 const EditProductDrawer = ({ open, handleClose, product, onSaved }: Props) => {
   const { showNotification } = useNotification()
+
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -54,6 +55,7 @@ const EditProductDrawer = ({ open, handleClose, product, onSaved }: Props) => {
     description: '',
     isActive: true
   })
+
   const [variants, setVariants] = useState<VariantForm[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -92,19 +94,24 @@ const EditProductDrawer = ({ open, handleClose, product, onSaved }: Props) => {
     e.preventDefault()
 
     if (!product) return
+
     if (!formData.name.trim() || !formData.category.trim()) {
       showNotification('Vui lòng nhập đầy đủ tên sản phẩm và danh mục.', 'error')
-      return
+      
+return
     }
 
     const unitPrice = Number(formData.unitPrice)
+
     if (Number.isNaN(unitPrice) || unitPrice <= 0) {
       showNotification('Đơn giá phải lớn hơn 0.', 'error')
-      return
+      
+return
     }
 
     try {
       setLoading(true)
+
       const response = await productService.updateProduct(product.id, {
         name: formData.name.trim(),
         category: formData.category.trim(),

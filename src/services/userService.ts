@@ -104,7 +104,8 @@ class UserService {
       }
     } catch (error) {
       logger.error('UserService', 'getUsers', error)
-      return { success: true, data: [] }
+      
+return { success: true, data: [] }
     }
   }
 
@@ -134,7 +135,8 @@ class UserService {
       }
     } catch (error: any) {
       logger.error('UserService', 'getUserById', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -164,7 +166,8 @@ class UserService {
       }
     } catch (error: any) {
       logger.error('UserService', 'createUser', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -227,12 +230,14 @@ class UserService {
 
       const merged = [...(coachesRes.data || []), ...(assistantsRes.data || [])]
       const byId = new Map<string, UsersType>()
+
       merged.forEach(u => byId.set(String(u.id), u))
 
       return { success: true, data: Array.from(byId.values()) }
     } catch (error) {
       logger.error('UserService', 'getTeachingStaff', error)
-      return { success: false, data: [] }
+      
+return { success: false, data: [] }
     }
   }
 
@@ -261,7 +266,8 @@ class UserService {
       }
     } catch (error: any) {
       logger.error('UserService', 'updateUser', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -287,7 +293,8 @@ class UserService {
       }
     } catch (error: any) {
       logger.error('UserService', 'deleteUser', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -316,7 +323,8 @@ class UserService {
       }
     } catch (error: any) {
       logger.error('UserService', 'restoreUser', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -341,7 +349,8 @@ class UserService {
       }
     } catch (error: any) {
       logger.error('UserService', 'updateUserRoles', error)
-      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      
+return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }

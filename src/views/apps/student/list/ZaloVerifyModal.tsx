@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // MUI Imports
 import Avatar from '@mui/material/Avatar'
@@ -50,6 +50,16 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
   const [errMsg, setErrMsg]         = useState('')
   const [zaloUser, setZaloUser]     = useState<ZaloUserInfo | null>(null)
   const [copied, setCopied]         = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+
+    setPhone(defaultPhone)
+    setState('idle')
+    setErrMsg('')
+    setZaloUser(null)
+    setCopied(false)
+  }, [defaultPhone, open])
 
   const handleClose = () => {
     setState('idle')

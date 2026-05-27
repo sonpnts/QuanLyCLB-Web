@@ -18,6 +18,7 @@ import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '
 // Type Imports
 import type { ScheduleType, GetSchedulesParams } from '@/services/scheduleService'
 import { fuzzyFilter } from '@/utils/tableHelpers'
+
 // Component Imports
 import AddScheduleDrawer from './AddScheduleDrawer'
 import TableFilters from './TableFilters'
@@ -55,6 +56,7 @@ const ScheduleListTable = ({ tableData }: { tableData?: ScheduleType[] }) => {
 
   // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
+
   showNotificationRef.current = showNotification
   const dataLoadedRef = useRef(false)
   const currentFilterRef = useRef<string>('')

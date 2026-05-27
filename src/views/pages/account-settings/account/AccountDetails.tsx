@@ -48,10 +48,12 @@ const AccountDetails = () => {
       try {
         setLoading(true)
         const result = await userService.getUserById(auth.user.id)
+
         if (cancelled) return
 
         if (result.success && result.data) {
           const u = result.data
+
           setFormData({
             fullName: u.fullName || '',
             email: u.email || '',

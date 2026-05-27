@@ -36,12 +36,14 @@ const AddBeltLevelDrawer = ({ open, onClose, onAdded }: Props) => {
 
     if (!formData.name.trim()) {
       showNotification('Vui lòng nhập tên cấp đai.', 'error')
-      return
+      
+return
     }
 
     if (!formData.order || isNaN(Number(formData.order)) || Number(formData.order) < 1) {
       showNotification('Vui lòng nhập thứ tự hợp lệ (≥ 1).', 'error')
-      return
+      
+return
     }
 
     try {

@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+
+import { NextResponse } from 'next/server'
 
 interface LogPayload {
   level?: string
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
     const { level = 'ERROR', className = '', method = '', message = '', stack = '' } = body
 
     const timestamp = formatTimestamp()
+
     const content =
       `==${timestamp}==\n` +
       `- Level: ${level}\n` +
@@ -57,6 +59,7 @@ export async function POST(req: Request) {
       `==END==\n\n`
 
     const filePath = getLogFilePath()
+
     fs.appendFileSync(filePath, content, 'utf8')
 
     return NextResponse.json({ ok: true })

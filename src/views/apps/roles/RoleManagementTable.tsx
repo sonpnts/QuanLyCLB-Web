@@ -162,7 +162,7 @@ const RoleManagementTable = () => {
   }
 
   // Roles do not support restore (no soft-delete)
-  const handleRestoreRole = (_id: string) => {
+  const handleRestoreRole = () => {
     showNotification('Vai trò không hỗ trợ khôi phục.', 'warning')
   }
 

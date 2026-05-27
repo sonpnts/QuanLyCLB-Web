@@ -2,6 +2,7 @@
 
 // React Imports
 import { useState, useEffect, useRef } from 'react'
+
 import { useReactToPrint } from 'react-to-print'
 
 // MUI Imports
@@ -174,7 +175,9 @@ const Preview = ({ id }: Props) => {
     }
   `
   })
-  return (
+
+  
+return (
     <Grid container spacing={6} className='preview-layout'>
       <Grid size={{ xs: 12, md: 9 }} className='preview-layout__content'>
         <div ref={contentRef}>

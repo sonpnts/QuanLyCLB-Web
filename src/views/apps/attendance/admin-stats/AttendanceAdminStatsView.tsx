@@ -61,14 +61,17 @@ const AttendanceAdminStatsView = () => {
   useEffect(() => {
     const loadFilterOptions = async () => {
       setLoadingFilters(true)
+
       try {
         const [instructorRes, classRes] = await Promise.all([
           userService.getCoaches(),
           classService.getClasses({ isActive: true, pageSize: 1000 })
         ])
+
         if (instructorRes.success && instructorRes.data) {
           setInstructors(instructorRes.data)
         }
+
         if (classRes.success && classRes.data) {
           setClasses(classRes.data)
         }
@@ -76,12 +79,14 @@ const AttendanceAdminStatsView = () => {
         setLoadingFilters(false)
       }
     }
+
     loadFilterOptions()
   }, [])
 
   // Load attendance data when filters change
   const loadData = useCallback(async () => {
     setLoadingData(true)
+
     try {
       const params = {
         month: selectedMonth,
@@ -133,13 +138,15 @@ const AttendanceAdminStatsView = () => {
   const getInstructorRateChip = (rate: number) => {
     if (rate >= 90) return <Chip label={`${rate.toFixed(1)}%`} color='success' size='small' variant='tonal' />
     if (rate >= 70) return <Chip label={`${rate.toFixed(1)}%`} color='warning' size='small' variant='tonal' />
-    return <Chip label={`${rate.toFixed(1)}%`} color='error' size='small' variant='tonal' />
+    
+return <Chip label={`${rate.toFixed(1)}%`} color='error' size='small' variant='tonal' />
   }
 
   const getClassRateChip = (rate: number) => {
     if (rate >= 80) return <Chip label={`${rate.toFixed(1)}%`} color='success' size='small' variant='tonal' />
     if (rate >= 60) return <Chip label={`${rate.toFixed(1)}%`} color='warning' size='small' variant='tonal' />
-    return <Chip label={`${rate.toFixed(1)}%`} color='error' size='small' variant='tonal' />
+    
+return <Chip label={`${rate.toFixed(1)}%`} color='error' size='small' variant='tonal' />
   }
 
   return (
