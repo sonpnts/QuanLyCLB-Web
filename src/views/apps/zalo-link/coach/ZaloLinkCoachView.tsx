@@ -136,7 +136,7 @@ export default function ZaloLinkCoachView() {
 
       if (!res.success) {
         showNotification(res.message || 'Không thể cập nhật liên kết Zalo.', 'error')
-        
+
 return
       }
 
@@ -149,11 +149,6 @@ return
     }
   }
 
-  const unlink = async (r: ZaloLinkCoachStudentRowType) => {
-    setSelectedRow(r)
-    setUnlinkOpen(true)
-  }
-
   const doUnlink = async () => {
     if (!selectedRow) return
 
@@ -163,7 +158,7 @@ return
 
       if (!res.success) {
         showNotification(res.message || 'Không thể hủy liên kết Zalo.', 'error')
-        
+
 return
       }
 
@@ -272,7 +267,7 @@ return
                   {rows.map(r => {
                     const linked = !!(r.userIdZalo && r.userIdZalo.trim())
 
-                    
+
 return (
                       <TableRow key={`${r.classId}_${r.studentId}`} hover>
                         <TableCell>{r.studentCode}</TableCell>
@@ -293,11 +288,11 @@ return (
                             <IconButton size='small' title='Liên kết/cập nhật' onClick={() => openVerify(r)} disabled={saving}>
                               <i className='ri-chat-check-line' />
                             </IconButton>
-                            {linked && (
-                              <IconButton size='small' title='Hủy liên kết' onClick={() => unlink(r)} disabled={saving}>
-                                <i className='ri-link-unlink' />
-                              </IconButton>
-                            )}
+                            {/*{linked && (*/}
+                            {/*  <IconButton size='small' title='Hủy liên kết' onClick={() => unlink(r)} disabled={saving}>*/}
+                            {/*    <i className='ri-link-unlink' />*/}
+                            {/*  </IconButton>*/}
+                            {/*)}*/}
                           </Box>
                         </TableCell>
                       </TableRow>
