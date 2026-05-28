@@ -113,7 +113,7 @@ const BeltLevelListTable = () => {
     setData(prev => {
       const newData = prev.map(item => (item.id === updated.id ? updated : item))
 
-      
+
 return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
     })
   }, [])
@@ -122,7 +122,7 @@ return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
     setData(prev => {
       const newData = [...prev, newBeltLevel]
 
-      
+
 return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
     })
   }, [])
@@ -138,7 +138,7 @@ return newData.sort((a, b) => (a.order || 0) - (b.order || 0))
             return <Chip label={`${order - 10} Đẳng`} size='small' color='warning' variant='tonal' />
           }
 
-          
+
 return <Chip label={`Cấp ${order}`} size='small' color='primary' variant='tonal' />
         }
       }),
@@ -160,9 +160,9 @@ return <Chip label={`Cấp ${order}`} size='small' color='primary' variant='tona
             <IconButton size='small' onClick={() => handleEdit(row.original)} color='primary'>
               <i className='ri-edit-line text-xl' />
             </IconButton>
-            <IconButton size='small' onClick={() => handleDelete(row.original.id)} color='error'>
-              <i className='ri-delete-bin-7-line text-xl' />
-            </IconButton>
+            {/*<IconButton size='small' onClick={() => handleDelete(row.original.id)} color='error'>*/}
+            {/*  <i className='ri-delete-bin-7-line text-xl' />*/}
+            {/*</IconButton>*/}
           </Box>
         )
       })

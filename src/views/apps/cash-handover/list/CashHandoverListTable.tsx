@@ -201,6 +201,19 @@ return (response.data || []).filter(item => item.availableToHandover > 0)
     return Array.from(map.values()).sort((a, b) => b.totalAvailableToHandover - a.totalAvailableToHandover)
   }, [outstandingCollections])
 
+  const handoverSummary = useMemo(
+    () =>
+      data.reduce(
+        (summary, item) => ({
+          totalAmount: summary.totalAmount + Number(item.amountHandedOver || 0),
+          cashAmount: summary.cashAmount + Number(item.amountHandedOverCashAmount || 0),
+          bankTransferAmount: summary.bankTransferAmount + Number(item.amountHandedOverBankTransferAmount || 0)
+        }),
+        { totalAmount: 0, cashAmount: 0, bankTransferAmount: 0 }
+      ),
+    [data]
+  )
+
   const loadHandovers = useCallback(async () => {
     try {
       setLoading(true)
@@ -357,9 +370,14 @@ return
       columnHelper.accessor('amountHandedOver', {
         header: 'Số tiền đã nộp',
         cell: ({ row }) => (
-          <Typography className='font-medium' color='success.main'>
-            {formatCurrency(row.original.amountHandedOver)}
-          </Typography>
+          <div className='flex flex-col'>
+            <Typography className='font-medium' color='success.main'>
+              {formatCurrency(row.original.amountHandedOver)}
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              TM {formatCurrency(row.original.amountHandedOverCashAmount)} | CK {formatCurrency(row.original.amountHandedOverBankTransferAmount)}
+            </Typography>
+          </div>
         )
       }),
       columnHelper.accessor('status', {
@@ -456,6 +474,34 @@ return
           <Button variant='contained' onClick={() => openCreateDrawer()}>
             Tạo phiếu bàn giao
           </Button>
+        </div>
+        <div className='px-5 pb-4'>
+          <div className='grid grid-cols-1 gap-3 md:grid-cols-3'>
+            <div className='rounded border p-3'>
+              <Typography variant='caption' color='text.secondary'>
+                Tổng đã bàn giao
+              </Typography>
+              <Typography className='font-semibold' color='success.main'>
+                {formatCurrency(handoverSummary.totalAmount)}
+              </Typography>
+            </div>
+            <div className='rounded border p-3'>
+              <Typography variant='caption' color='text.secondary'>
+                Tiền mặt
+              </Typography>
+              <Typography className='font-semibold'>
+                {formatCurrency(handoverSummary.cashAmount)}
+              </Typography>
+            </div>
+            <div className='rounded border p-3'>
+              <Typography variant='caption' color='text.secondary'>
+                Chuyển khoản
+              </Typography>
+              <Typography className='font-semibold'>
+                {formatCurrency(handoverSummary.bankTransferAmount)}
+              </Typography>
+            </div>
+          </div>
         </div>
         {isAdmin && outstandingByInstructor.length > 0 && (
           <div className='px-5 pb-4'>
