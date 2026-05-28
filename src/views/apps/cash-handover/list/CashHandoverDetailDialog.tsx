@@ -76,6 +76,8 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
               <DetailRow label='Số tiền đã nộp trước đó' value={formatCurrency(data.previousHandedOverAmount)} />
               <DetailRow label='Tổng khoản trừ' value={formatCurrency(data.totalDeductionAmount)} />
               <DetailRow label='Số tiền bàn giao' value={formatCurrency(data.amountHandedOver)} />
+              <DetailRow label='Bàn giao tiền mặt' value={formatCurrency(data.amountHandedOverCashAmount)} />
+              <DetailRow label='Bàn giao chuyển khoản' value={formatCurrency(data.amountHandedOverBankTransferAmount)} />
               <DetailRow label='Còn lại sau bàn giao' value={formatCurrency(data.remainingAmountAfterHandover)} />
               <DetailRow
                 label='Trạng thái'
@@ -119,6 +121,8 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
                     <TableCell align='right'>Đã nộp trước đó</TableCell>
                     <TableCell align='right'>Khoản trừ</TableCell>
                     <TableCell align='right'>Bàn giao kỳ này</TableCell>
+                    <TableCell align='right'>TM</TableCell>
+                    <TableCell align='right'>CK</TableCell>
                     <TableCell align='right'>Còn lại</TableCell>
                   </TableRow>
                 </TableHead>
@@ -142,6 +146,8 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
                       <TableCell align='right'>{formatCurrency(detail.previousHandedOverAmount)}</TableCell>
                       <TableCell align='right'>{formatCurrency(detail.totalDeductionAmount)}</TableCell>
                       <TableCell align='right'>{formatCurrency(detail.amountHandedOver)}</TableCell>
+                      <TableCell align='right'>{formatCurrency(detail.amountHandedOverCashAmount)}</TableCell>
+                      <TableCell align='right'>{formatCurrency(detail.amountHandedOverBankTransferAmount)}</TableCell>
                       <TableCell align='right'>{formatCurrency(detail.remainingAmountAfterHandover)}</TableCell>
                     </TableRow>
                   ))}

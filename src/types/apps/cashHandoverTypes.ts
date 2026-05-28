@@ -18,10 +18,18 @@ export type CashHandoverClassDetailType = {
   snapshotTuitionAmount: number
   snapshotExamFeeAmount: number
   snapshotProductSalesAmount: number
+  snapshotCashAmount: number
+  snapshotBankTransferAmount: number
   snapshotTotalAmount: number
+  previousHandedOverCashAmount: number
+  previousHandedOverBankTransferAmount: number
   previousHandedOverAmount: number
   totalDeductionAmount: number
+  amountHandedOverCashAmount: number
+  amountHandedOverBankTransferAmount: number
   amountHandedOver: number
+  remainingCashAmountAfterHandover: number
+  remainingBankTransferAmountAfterHandover: number
   remainingAmountAfterHandover: number
 }
 
@@ -36,10 +44,18 @@ export type CashHandoverType = {
   snapshotTuitionAmount: number
   snapshotExamFeeAmount: number
   snapshotProductSalesAmount: number
+  snapshotCashAmount: number
+  snapshotBankTransferAmount: number
   snapshotTotalAmount: number
+  previousHandedOverCashAmount: number
+  previousHandedOverBankTransferAmount: number
   previousHandedOverAmount: number
   totalDeductionAmount: number
+  amountHandedOverCashAmount: number
+  amountHandedOverBankTransferAmount: number
   amountHandedOver: number
+  remainingCashAmountAfterHandover: number
+  remainingBankTransferAmountAfterHandover: number
   remainingAmountAfterHandover: number
   status: HandoverStatus
   confirmedByUserId?: string

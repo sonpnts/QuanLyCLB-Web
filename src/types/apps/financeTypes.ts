@@ -18,8 +18,12 @@ export type InstructorClassCollectionType = {
   examFeeCollectedToDate: number
   otherPaymentsCollectedToDate: number
   productSalesCollectedToDate: number
+  cashCollectedToDate: number
+  bankTransferCollectedToDate: number
   totalCollectedToDate: number
   totalHandedOver: number
+  cashAvailableToHandover: number
+  bankTransferAvailableToHandover: number
   availableToHandover: number
   asOf?: string
   breakdown: {

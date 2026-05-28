@@ -178,6 +178,16 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
     [totalAvailableToHandover, totalDeductionAmount]
   )
 
+  const totalCashAvailableToHandover = useMemo(
+    () => collections.reduce((sum, item) => sum + Number(item.cashAvailableToHandover || 0), 0),
+    [collections]
+  )
+
+  const totalBankTransferAvailableToHandover = useMemo(
+    () => collections.reduce((sum, item) => sum + Number(item.bankTransferAvailableToHandover || 0), 0),
+    [collections]
+  )
+
   const aggregatedBreakdown = useMemo(() => {
     const map = new Map<string, { key: string; label: string; amount: number }>()
 
@@ -342,6 +352,24 @@ return
               Số tiền cần bàn giao tới thời điểm hiện tại
             </Typography>
 
+            <div className='flex justify-between mb-1'>
+              <Typography variant='body2' color='text.secondary'>
+                Tiền mặt:
+              </Typography>
+              <Typography variant='body2' className='font-medium'>
+                {formatCurrency(totalCashAvailableToHandover)}
+              </Typography>
+            </div>
+
+            <div className='flex justify-between mb-2'>
+              <Typography variant='body2' color='text.secondary'>
+                Chuyển khoản:
+              </Typography>
+              <Typography variant='body2' className='font-medium'>
+                {formatCurrency(totalBankTransferAvailableToHandover)}
+              </Typography>
+            </div>
+
             {aggregatedBreakdown.map(item => (
               <div key={item.key} className='flex justify-between mb-1'>
                 <Typography variant='body2' color='text.secondary'>
@@ -401,6 +429,9 @@ return
                           <Typography variant='body2' color='success.main'>
                             Cần bàn giao: {formatCurrency(item.availableToHandover)}
                           </Typography>
+                          <Typography variant='caption' color='text.secondary'>
+                            TM {formatCurrency(item.cashAvailableToHandover)} | CK {formatCurrency(item.bankTransferAvailableToHandover)}
+                          </Typography>
                         </div>
 
                         <Button
@@ -423,6 +454,14 @@ return
                               </TableRow>
                             </TableHead>
                             <TableBody>
+                              <TableRow>
+                                <TableCell>Tiền mặt</TableCell>
+                                <TableCell align='right'>{formatCurrency(item.cashAvailableToHandover)}</TableCell>
+                              </TableRow>
+                              <TableRow>
+                                <TableCell>Chuyển khoản</TableCell>
+                                <TableCell align='right'>{formatCurrency(item.bankTransferAvailableToHandover)}</TableCell>
+                              </TableRow>
                               {item.breakdown.map(detail => (
                                 <TableRow key={detail.key}>
                                   <TableCell>{detail.label}</TableCell>
