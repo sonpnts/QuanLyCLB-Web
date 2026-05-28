@@ -33,6 +33,7 @@ import type { Mode } from '@core/types'
 // Component Imports
 import Logo from '@components/layout/shared/Logo'
 import Illustrations from '@components/Illustrations'
+import GoogleResourceBlockedDialog from '@/components/auth/GoogleResourceBlockedDialog'
 
 // Config Imports
 import themeConfig from '@configs/themeConfig'
@@ -66,6 +67,8 @@ const LoginAdmin = ({ mode }: { mode: Mode }) => {
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleReady, setIsGoogleReady] = useState(() => isGoogleClientAvailable())
+  const [googleResourceDialogOpen, setGoogleResourceDialogOpen] = useState(false)
+  const [googleResourceIssueReported, setGoogleResourceIssueReported] = useState(false)
 
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-dark.png'
@@ -122,6 +125,21 @@ const LoginAdmin = ({ mode }: { mode: Mode }) => {
     }
   }, [isGoogleReady])
 
+  useEffect(() => {
+    if (isGoogleReady || googleResourceIssueReported) {
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      if (!isGoogleClientAvailable()) {
+        setGoogleResourceIssueReported(true)
+        setGoogleResourceDialogOpen(true)
+      }
+    }, 5000)
+
+    return () => window.clearTimeout(timeout)
+  }, [googleResourceIssueReported, isGoogleReady])
+
   const handleLoginResult = (result: Awaited<ReturnType<typeof login>>) => {
     if (result.success) {
       const redirectURL = searchParams.get('redirectTo') ?? '/'
@@ -153,6 +171,13 @@ const LoginAdmin = ({ mode }: { mode: Mode }) => {
   }
 
   const handleGoogleLogin = async () => {
+    if (!isGoogleReady) {
+      setGoogleResourceDialogOpen(true)
+      setGoogleResourceIssueReported(true)
+
+      return
+    }
+
     setIsSubmitting(true)
     setErrorState(null)
 
@@ -177,6 +202,8 @@ const LoginAdmin = ({ mode }: { mode: Mode }) => {
   }
 
   const handleGoogleScriptError = () => {
+    setGoogleResourceIssueReported(true)
+    setGoogleResourceDialogOpen(true)
     setErrorState(prev =>
       prev ?? {
         message: ['Không thể tải Google login. Vui lòng làm mới trang.']
@@ -191,6 +218,11 @@ const LoginAdmin = ({ mode }: { mode: Mode }) => {
         strategy='afterInteractive'
         onLoad={handleGoogleScriptLoad}
         onError={handleGoogleScriptError}
+      />
+      <GoogleResourceBlockedDialog
+        open={googleResourceDialogOpen}
+        onClose={() => setGoogleResourceDialogOpen(false)}
+        onReload={() => window.location.reload()}
       />
       <div
         className={classnames(

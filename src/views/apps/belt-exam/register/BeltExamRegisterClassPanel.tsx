@@ -205,13 +205,20 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const isStudentLockedByAnotherList = (student: StudentRow) =>
     student.alreadyRegistered && student.existingRegistrationListId !== myList?.id
 
-  const isStudentEditable = (student: StudentRow) => !isStudentLockedByAnotherList(student) && !isStudentPaidInCurrentList(student)
+  const hasStudentProfileIssue = (student: StudentRow) => !student.isRegistrationProfileComplete
+
+  const isStudentSelectable = (student: StudentRow) =>
+    !isStudentLockedByAnotherList(student) && !isStudentPaidInCurrentList(student) && !hasStudentProfileIssue(student)
+
+  const isStudentEditable = (student: StudentRow) => isStudentSelectable(student)
 
   const handleSelectAll = (checked: boolean) => {
     setStudents(prev =>
       prev.map(student => {
         if (isStudentLockedByAnotherList(student)) return student
         if (isStudentPaidInCurrentList(student)) return { ...student, selected: true }
+        if (!checked) return { ...student, selected: false }
+        if (hasStudentProfileIssue(student)) return student
 
         return { ...student, selected: checked }
       })
@@ -219,6 +226,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   }
 
   const editableStudents = students.filter(isStudentEditable)
+  const studentsWithProfileIssues = students.filter(hasStudentProfileIssue)
   const editableSelectedCount = editableStudents.filter(student => student.selected).length
   const selectedCount = students.filter(student => student.selected).length
   const allSelected = editableStudents.length > 0 && editableStudents.every(student => student.selected)
@@ -401,6 +409,14 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
           }
         />
         <CardContent className='p-0'>
+          {studentsWithProfileIssues.length > 0 && (
+            <Box className='p-4 pb-0'>
+              <Alert severity='warning'>
+                Có {studentsWithProfileIssues.length} học viên chưa có mã và còn thiếu CCCD hoặc trình độ học vấn. HLV có thể xem trực tiếp ở
+                cột hồ sơ trước khi lưu hoặc nộp danh sách.
+              </Alert>
+            </Box>
+          )}
           {loadingStudents ? (
             <Box className='flex justify-center p-8'>
               <CircularProgress />
@@ -429,6 +445,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                     <TableCell>Cấp hiện tại (số)</TableCell>
                     <TableCell>Cấp thi (chữ)</TableCell>
                     <TableCell>Cấp thi (số)</TableCell>
+                    <TableCell>Hồ sơ đăng ký</TableCell>
                     <TableCell>Trạng thái</TableCell>
                   </TableRow>
                 </TableHead>
@@ -438,13 +455,14 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                     const isPaidInCurrentList = isStudentPaidInCurrentList(student)
                     const isCurrentListStudent = isStudentInCurrentList(student)
                     const currentRegistration = currentRegistrationsByStudentId.get(student.studentId)
+                    const hasProfileIssue = hasStudentProfileIssue(student)
 
                     return (
                       <TableRow key={student.studentId} selected={student.selected} sx={{ opacity: isLockedByAnotherList ? 0.5 : 1 }}>
                         <TableCell padding='checkbox'>
                           <Checkbox
                             checked={student.selected}
-                            disabled={isLockedByAnotherList || isPaidInCurrentList}
+                            disabled={isLockedByAnotherList || isPaidInCurrentList || (hasProfileIssue && !student.selected)}
                             onChange={event => {
                               setStudents(prev =>
                                 prev.map(item =>
@@ -463,6 +481,11 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                               {student.studentCode}
                             </Typography>
                           )}
+                          {student.registrationProfileNote && (
+                            <Typography variant='caption' sx={{ color: 'warning.main', display: 'block' }}>
+                              {student.registrationProfileNote}
+                            </Typography>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Typography variant='body2'>
@@ -474,6 +497,14 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                         <TableCell>{student.currentBeltOrder ?? '—'}</TableCell>
                         <TableCell>{currentRegistration?.targetBeltLevelName || student.suggestedTargetBeltLevelName || '—'}</TableCell>
                         <TableCell>{currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder ?? '—'}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={student.isRegistrationProfileComplete ? 'Đủ hồ sơ' : 'Thiếu hồ sơ'}
+                            color={student.isRegistrationProfileComplete ? 'success' : 'warning'}
+                            size='small'
+                            variant='tonal'
+                          />
+                        </TableCell>
                         <TableCell>
                           {isLockedByAnotherList ? (
                             <Chip label='Đã đăng ký' color='info' size='small' variant='tonal' />
