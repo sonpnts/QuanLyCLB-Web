@@ -31,12 +31,8 @@ import Typography from '@mui/material/Typography'
 
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
-import oneTimeFeeService from '@/services/oneTimeFeeService'
 import paymentService from '@/services/paymentService'
-import studentService from '@/services/studentService'
 import type { AdminPaymentSummaryType, ClassPaymentSummary, CoachPaymentSummaryType } from '@/types/apps/paymentSummaryTypes'
-import type { OneTimeFeeOptionType } from '@/types/apps/oneTimeFeeTypes'
-import type { StudentType } from '@/types/apps/studentTypes'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { savePaymentInvoiceDraft } from '@/utils/paymentDraft'
@@ -44,13 +40,10 @@ import { savePaymentInvoiceDraft } from '@/utils/paymentDraft'
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 const YEARS = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() - i)
 
-type ClassStudentOption = Pick<StudentType, 'id' | 'fullName' | 'phoneNumber'>
-
 const toSafeNumber = (value: unknown): number => {
   const num = Number(value)
 
-  
-return Number.isFinite(num) ? num : 0
+  return Number.isFinite(num) ? num : 0
 }
 
 const SummaryStatCard = ({
@@ -90,9 +83,6 @@ const PaymentCollectView = () => {
   const [summary, setSummary] = useState<CoachPaymentSummaryType | AdminPaymentSummaryType | null>(null)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
-  const [classStudents, setClassStudents] = useState<Record<string, ClassStudentOption[]>>({})
-  const [oneTimeFeeMap, setOneTimeFeeMap] = useState<Record<string, Record<string, OneTimeFeeOptionType[]>>>({})
-  const [loadingOneTimeFees, setLoadingOneTimeFees] = useState<Record<string, boolean>>({})
 
   // Filter + pagination
   const [searchQuery, setSearchQuery] = useState('')
@@ -129,44 +119,9 @@ const PaymentCollectView = () => {
   const isAdminSummary = (value: CoachPaymentSummaryType | AdminPaymentSummaryType | null): value is AdminPaymentSummaryType =>
     Boolean(value && 'overallTuition' in value && 'totalExpectedAmount' in value)
 
-  const loadOneTimeFeesForClass = async (cls: ClassPaymentSummary) => {
-    if ((oneTimeFeeMap[cls.classId] && classStudents[cls.classId]) || loadingOneTimeFees[cls.classId]) return
-
-    try {
-      setLoadingOneTimeFees(prev => ({ ...prev, [cls.classId]: true }))
-      const studentResponse = await studentService.getStudents({ classId: cls.classId, pageSize: 1000 })
-      const students = studentResponse.success && studentResponse.data ? studentResponse.data : []
-      const sortedStudents = [...students].sort((left, right) => left.fullName.localeCompare(right.fullName, 'vi'))
-
-      setClassStudents(prev => ({ ...prev, [cls.classId]: sortedStudents }))
-
-      const results = await Promise.all(
-        sortedStudents.map(async student => {
-          const response = await oneTimeFeeService.getOptions(student.id, cls.classId)
-          const options = response.success && response.data ? response.data.filter(item => !item.isPaid) : []
-
-          return [student.id, options] as const
-        })
-      )
-
-      setOneTimeFeeMap(prev => ({
-        ...prev,
-        [cls.classId]: Object.fromEntries(results)
-      }))
-    } finally {
-      setLoadingOneTimeFees(prev => ({ ...prev, [cls.classId]: false }))
-    }
-  }
-
   const toggleTuitionSection = (cls: ClassPaymentSummary) => {
     const key = `tuition-${cls.classId}`
-    const nextOpen = !expanded[key]
-
-    setExpanded(prev => ({ ...prev, [key]: nextOpen }))
-
-    if (nextOpen) {
-      loadOneTimeFeesForClass(cls)
-    }
+    setExpanded(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
   // Danh sách chi nhánh duy nhất từ classes (cho dropdown filter)
@@ -178,22 +133,8 @@ const PaymentCollectView = () => {
       if (cls.branchId && cls.branchName) map.set(cls.branchId, cls.branchName)
     }
 
-    
-return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
   }, [summary])
-
-  const classOneTimeOutstandingAmountMap = useMemo(() => {
-    const result: Record<string, number> = {}
-
-    for (const [classId, studentFees] of Object.entries(oneTimeFeeMap)) {
-      result[classId] = Object.values(studentFees).reduce(
-        (classSum, items) => classSum + items.reduce((feeSum, item) => feeSum + Number(item.amount || 0), 0),
-        0
-      )
-    }
-
-    return result
-  }, [oneTimeFeeMap])
 
   // Áp dụng filter
   const filteredClasses = useMemo(() => {
@@ -208,31 +149,25 @@ return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
 
         if (!matchName && !matchBranch) return false
       }
-
-
       // Filter theo chi nhánh
       if (branchFilter && cls.branchId !== branchFilter) return false
-
 
       // Chỉ hiển thị lớp còn công nợ
       if (unpaidOnlyFilter) {
         const totalUnpaid =
           toSafeNumber(cls.tuition?.unpaidAmount) +
-          (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0) +
-          toSafeNumber(classOneTimeOutstandingAmountMap[cls.classId])
+          (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0)
 
         if (totalUnpaid <= 0) return false
       }
-
-      
-return true
+      return true
     })
-  }, [summary, searchQuery, branchFilter, unpaidOnlyFilter, classOneTimeOutstandingAmountMap])
+  }, [summary, searchQuery, branchFilter, unpaidOnlyFilter])
 
   const totalUnpaidAmount = useMemo(() => {
     if (!summary) return 0
-    
-return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumber(summary.grandTotalUnpaid)
+
+    return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumber(summary.grandTotalUnpaid)
   }, [summary])
 
   // Pagination (pageSize=0 -> hiển thị tất cả)
@@ -253,23 +188,13 @@ return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumbe
     setPage(1)
   }, [searchQuery, branchFilter, unpaidOnlyFilter, pageSize, month, year])
 
-  useEffect(() => {
-    if (!summary?.classes?.length) return
-
-    summary.classes.forEach(cls => {
-      if (!oneTimeFeeMap[cls.classId] && !loadingOneTimeFees[cls.classId]) {
-        loadOneTimeFeesForClass(cls)
-      }
-    })
-  }, [summary, oneTimeFeeMap, loadingOneTimeFees])
-
   const handleOpenCreateInvoice = (payload: {
     classId: string
     className: string
     studentId: string
     studentName: string
     tuitionAmount: number
-    hasOneTimeFees: boolean
+    examFeeAmount: number
   }) => {
     const draftKey = savePaymentInvoiceDraft({
       classId: payload.classId,
@@ -278,7 +203,7 @@ return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumbe
       studentName: payload.studentName,
       forMonth: month,
       forYear: year,
-      initialMode: payload.tuitionAmount > 0 ? 'tuition' : payload.hasOneTimeFees ? 'one-time' : 'blank'
+      initialMode: payload.tuitionAmount > 0 ? 'tuition' : payload.examFeeAmount > 0 ? 'exam' : 'blank'
     })
 
     router.push(`/apps/invoice/add?draft=${encodeURIComponent(draftKey)}`)
@@ -435,6 +360,10 @@ return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumbe
                     </Typography>
                   </Box>
                 </Box>
+                {/*<Alert severity='info' className='mt-4'>*/}
+                {/*  Công nợ ở màn này chỉ tải học phí và lệ phí thi theo lớp. Phí 1 lần sẽ được kiểm tra riêng khi bấm <strong>Thu</strong>{' '}*/}
+                {/*  cho từng học viên để giảm tải cho server.*/}
+                {/*</Alert>*/}
               </CardContent>
             </Card>
           )}
@@ -447,39 +376,61 @@ return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumbe
             pagedClasses.map((cls: ClassPaymentSummary) => {
               const totalUnpaid =
                 toSafeNumber(cls.tuition?.unpaidAmount) +
-                (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0) +
-                toSafeNumber(classOneTimeOutstandingAmountMap[cls.classId])
-
-              const classOneTimeOutstanding = toSafeNumber(classOneTimeOutstandingAmountMap[cls.classId])
+                (cls.examFees ?? []).reduce((acc, ef) => acc + toSafeNumber(ef.unpaidAmount), 0)
 
               const tuitionAmountByStudentId = new Map(
                 (cls.tuition?.unpaidStudents ?? []).map(student => [student.studentId, Number(student.amount || 0)])
               )
 
-              const mergedCollectRows = (classStudents[cls.classId] ?? [])
-                .map(student => {
-                  const oneTimeItems = oneTimeFeeMap[cls.classId]?.[student.id] ?? []
-                  const tuitionAmount = tuitionAmountByStudentId.get(student.id) ?? 0
+              const examFeeSummaryByStudentId = (cls.examFees ?? [])
+                .filter(ef => Boolean(ef.isCollectable))
+                .flatMap(ef => ef.unpaidStudents ?? [])
+                .reduce(
+                  (acc, student) => {
+                    const current = acc.get(student.studentId) ?? {
+                      studentId: student.studentId,
+                      studentName: student.studentName,
+                      examFeeAmount: 0,
+                      examFeeCount: 0
+                    }
 
-                  if (tuitionAmount <= 0 && oneTimeItems.length === 0) {
-                    return null
-                  }
+                    current.examFeeAmount += Number(student.amount || 0)
+                    current.examFeeCount += 1
+                    acc.set(student.studentId, current)
+
+                    return acc
+                  },
+                  new Map<
+                    string,
+                    {
+                      studentId: string
+                      studentName: string
+                      examFeeAmount: number
+                      examFeeCount: number
+                    }
+                  >()
+                )
+
+              const mergedCollectRows = Array.from(
+                new Set([...tuitionAmountByStudentId.keys(), ...examFeeSummaryByStudentId.keys()])
+              )
+                .map(studentId => {
+                  const tuitionAmount = tuitionAmountByStudentId.get(studentId) ?? 0
+                  const examFeeSummary = examFeeSummaryByStudentId.get(studentId)
 
                   return {
-                    studentId: student.id,
-                    studentName: student.fullName,
-                    phoneNumber: student.phoneNumber,
+                    studentId,
+                    studentName:
+                      cls.tuition?.unpaidStudents?.find(student => student.studentId === studentId)?.studentName ||
+                      examFeeSummary?.studentName ||
+                      'Học viên',
                     tuitionAmount,
-                    oneTimeItems
+                    examFeeAmount: examFeeSummary?.examFeeAmount ?? 0,
+                    examFeeCount: examFeeSummary?.examFeeCount ?? 0
                   }
                 })
-                .filter(Boolean) as Array<{
-                studentId: string
-                studentName: string
-                phoneNumber?: string
-                tuitionAmount: number
-                oneTimeItems: OneTimeFeeOptionType[]
-              }>
+                .filter(student => student.tuitionAmount > 0 || student.examFeeAmount > 0)
+                .sort((left, right) => left.studentName.localeCompare(right.studentName, 'vi'))
 
               return (
                 <Card key={cls.classId} className='mb-4'>
@@ -514,14 +465,6 @@ return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumbe
                             color={toSafeNumber(cls.tuition?.unpaidCount) > 0 ? 'warning' : 'success'}
                             size='small'
                           />
-                          {classOneTimeOutstanding > 0 && (
-                            <Chip
-                              label={`Phí 1 lần còn ${classOneTimeOutstanding.toLocaleString('vi-VN')}đ`}
-                              color='secondary'
-                              size='small'
-                              variant='tonal'
-                            />
-                          )}
                         </Box>
                         <Box className='flex items-center gap-2'>
                           <Typography
@@ -550,13 +493,11 @@ return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumbe
                                   <TableCell>
                                     <Box className='flex items-center gap-2 flex-wrap'>
                                       <Typography>{student.studentName}</Typography>
-                                      {loadingOneTimeFees[cls.classId] ? (
-                                        <Chip label='Đang kiểm tra phí 1 lần...' size='small' variant='outlined' />
-                                      ) : student.oneTimeItems.length > 0 ? (
+                                      {student.examFeeAmount > 0 ? (
                                         <Chip
-                                          label={`${student.oneTimeItems.length} phí 1 lần chưa đóng`}
+                                          label={`${student.examFeeCount} lệ phí thi chưa đóng`}
                                           size='small'
-                                          color='secondary'
+                                          color='warning'
                                           variant='tonal'
                                         />
                                       ) : null}
@@ -564,19 +505,17 @@ return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumbe
                                   </TableCell>
                                   <TableCell align='right'>
                                     <Box className='flex flex-col items-end gap-1'>
-                                      <Typography variant='body2'>
-                                        {student.tuitionAmount > 0
-                                          ? `${toSafeNumber(student.tuitionAmount).toLocaleString('vi-VN')}đ`
-                                          : '-'}
-                                      </Typography>
-                                      {student.oneTimeItems.length > 0 && (
-                                        <Typography variant='caption' color='secondary.main'>
-                                          {student.oneTimeItems
-                                            .reduce((sum, item) => sum + Number(item.amount || 0), 0)
-                                            .toLocaleString('vi-VN')}
-                                          đ phí 1 lần
+                                      {student.tuitionAmount > 0 ? (
+                                        <Typography variant='body2'>
+                                          {toSafeNumber(student.tuitionAmount).toLocaleString('vi-VN')}đ học phí
                                         </Typography>
-                                      )}
+                                      ) : null}
+                                      {student.examFeeAmount > 0 ? (
+                                        <Typography variant='caption' color='secondary.main'>
+                                          {toSafeNumber(student.examFeeAmount).toLocaleString('vi-VN')}đ lệ phí thi
+                                        </Typography>
+                                      ) : null}
+                                      {student.tuitionAmount <= 0 && student.examFeeAmount <= 0 ? <Typography variant='body2'>-</Typography> : null}
                                     </Box>
                                   </TableCell>
                                   <TableCell align='right'>
@@ -590,7 +529,7 @@ return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumbe
                                           studentId: student.studentId,
                                           studentName: student.studentName,
                                           tuitionAmount: student.tuitionAmount,
-                                          hasOneTimeFees: student.oneTimeItems.length > 0
+                                          examFeeAmount: student.examFeeAmount
                                         })
                                       }
                                     >
@@ -623,6 +562,9 @@ return isAdminSummary(summary) ? toSafeNumber(summary.totalUnpaid) : toSafeNumbe
                                 size='small'
                               />
                             </Box>
+                            <Typography variant='body2' color={ef.unpaidCount > 0 ? 'warning.main' : 'success.main'}>
+                              {toSafeNumber(ef.unpaidAmount).toLocaleString('vi-VN')}đ
+                            </Typography>
                           </Box>
                         </Box>
                       ))}
