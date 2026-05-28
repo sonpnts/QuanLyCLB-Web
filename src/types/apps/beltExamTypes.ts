@@ -118,6 +118,8 @@ export type EligibleStudentForExamType = {
   suggestedTargetBeltLevelName?: string
   alreadyRegistered: boolean
   existingRegistrationListId?: string
+  isRegistrationProfileComplete: boolean
+  registrationProfileNote?: string
 }
 
 export type RegistrationListItemType = {

@@ -36,6 +36,7 @@ import type { Mode } from '@core/types'
 // Component Imports
 import Logo from '@components/layout/shared/Logo'
 import Illustrations from '@components/Illustrations'
+import GoogleResourceBlockedDialog from '@/components/auth/GoogleResourceBlockedDialog'
 
 // Config Imports
 import themeConfig from '@configs/themeConfig'
@@ -68,6 +69,8 @@ const Login = ({ mode }: { mode: Mode }) => {
   // const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [googleResourceDialogOpen, setGoogleResourceDialogOpen] = useState(false)
+  const [googleResourceIssueReported, setGoogleResourceIssueReported] = useState(false)
 
   const [isGoogleReady, setIsGoogleReady] = useState(() => {
     // Check if Google script is already loaded
@@ -144,6 +147,21 @@ const Login = ({ mode }: { mode: Mode }) => {
     }
   }, [])
 
+  useEffect(() => {
+    if (isGoogleReady || googleResourceIssueReported) {
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      if (typeof window !== 'undefined' && typeof (window as any).google === 'undefined') {
+        setGoogleResourceIssueReported(true)
+        setGoogleResourceDialogOpen(true)
+      }
+    }, 5000)
+
+    return () => window.clearTimeout(timeout)
+  }, [googleResourceIssueReported, isGoogleReady])
+
   // const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const handleLoginResult = (result: Awaited<ReturnType<typeof login>>) => {
@@ -177,6 +195,13 @@ const Login = ({ mode }: { mode: Mode }) => {
   // }
 
   const handleGoogleLogin = async () => {
+    if (!isGoogleReady) {
+      setGoogleResourceDialogOpen(true)
+      setGoogleResourceIssueReported(true)
+
+      return
+    }
+
     setIsSubmitting(true)
     setErrorState(null)
 
@@ -199,6 +224,8 @@ const Login = ({ mode }: { mode: Mode }) => {
   }
 
   const handleGoogleScriptError = () => {
+    setGoogleResourceIssueReported(true)
+    setGoogleResourceDialogOpen(true)
     setErrorState(
       prev =>
         prev ?? {
@@ -214,6 +241,11 @@ const Login = ({ mode }: { mode: Mode }) => {
         strategy='afterInteractive'
         onLoad={handleGoogleScriptLoad}
         onError={handleGoogleScriptError}
+      />
+      <GoogleResourceBlockedDialog
+        open={googleResourceDialogOpen}
+        onClose={() => setGoogleResourceDialogOpen(false)}
+        onReload={() => window.location.reload()}
       />
       <div
         className={classnames(
