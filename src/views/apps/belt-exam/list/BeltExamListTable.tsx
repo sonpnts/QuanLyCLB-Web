@@ -115,16 +115,24 @@ const BeltExamListTable = () => {
 
       if (response.success) {
         const newStatus =
-          actionType === 'approve' ? 'Approved' :
-          actionType === 'reject' ? 'Rejected' :
-          actionType === 'open' ? 'Open' : 'Pending'
+          actionType === 'approve'
+            ? 'Approved'
+            : actionType === 'reject'
+              ? 'Rejected'
+              : actionType === 'open'
+                ? 'Open'
+                : 'Pending'
 
-        setData(prev => prev.map(e => e.id === selectedExam.id ? { ...e, status: newStatus as any } : e))
+        setData(prev => prev.map(e => (e.id === selectedExam.id ? { ...e, status: newStatus as any } : e)))
 
         const label =
-          actionType === 'approve' ? 'Phê duyệt' :
-          actionType === 'reject' ? 'Từ chối' :
-          actionType === 'open' ? 'Mở đăng ký' : 'Gửi duyệt'
+          actionType === 'approve'
+            ? 'Phê duyệt'
+            : actionType === 'reject'
+              ? 'Từ chối'
+              : actionType === 'open'
+                ? 'Mở đăng ký'
+                : 'Gửi duyệt'
 
         showNotification(`${label} thành công!`, 'success')
         setActionDialogOpen(false)
@@ -163,9 +171,7 @@ const BeltExamListTable = () => {
       }),
       columnHelper.accessor('examDate', {
         header: 'Ngày thi',
-        cell: ({ row }) => (
-          <Typography>{new Date(row.original.examDate).toLocaleDateString('vi-VN')}</Typography>
-        )
+        cell: ({ row }) => <Typography>{new Date(row.original.examDate).toLocaleDateString('vi-VN')}</Typography>
       }),
       columnHelper.accessor('location', {
         header: 'Địa điểm',
@@ -173,11 +179,7 @@ const BeltExamListTable = () => {
       }),
       columnHelper.accessor('totalRegistrations', {
         header: 'Số lượt đ.ký',
-        cell: ({ row }) => (
-          <Typography>
-            {row.original.totalRegistrations || 0}
-          </Typography>
-        )
+        cell: ({ row }) => <Typography>{row.original.totalRegistrations || 0}</Typography>
       }),
       columnHelper.accessor('status', {
         header: 'Trạng thái',
@@ -197,19 +199,14 @@ const BeltExamListTable = () => {
           const exam = row.original
           const isNewFlow = ['Open', 'Closed', 'Locked'].includes(exam.status as string)
 
-            
-return (
-              <Box className='flex items-center gap-1' onClick={event => event.stopPropagation()}>
+          return (
+            <Box className='flex items-center gap-1' onClick={event => event.stopPropagation()}>
               <IconButton color='primary' title='Chỉnh sửa' onClick={() => openEditDrawer(exam)}>
                 <i className='ri-pencil-line' />
               </IconButton>
               {exam.status === 'Draft' && (
                 <>
-                  <IconButton
-                    color='primary'
-                    title='Gửi duyệt'
-                    onClick={() => openActionDialog(exam, 'submit')}
-                  >
+                  <IconButton color='primary' title='Gửi duyệt' onClick={() => openActionDialog(exam, 'submit')}>
                     <i className='ri-send-plane-line' />
                   </IconButton>
                   <IconButton
@@ -223,18 +220,10 @@ return (
               )}
               {(exam.status === 'Pending' || (exam.status as string) === 'PendingApproval') && (
                 <>
-                  <IconButton
-                    color='success'
-                    title='Phê duyệt'
-                    onClick={() => openActionDialog(exam, 'approve')}
-                  >
+                  <IconButton color='success' title='Phê duyệt' onClick={() => openActionDialog(exam, 'approve')}>
                     <i className='ri-check-line' />
                   </IconButton>
-                  <IconButton
-                    color='error'
-                    title='Từ chối'
-                    onClick={() => openActionDialog(exam, 'reject')}
-                  >
+                  <IconButton color='error' title='Từ chối' onClick={() => openActionDialog(exam, 'reject')}>
                     <i className='ri-close-line' />
                   </IconButton>
                 </>
@@ -324,7 +313,7 @@ return (
                 table.getRowModel().rows.map(row => (
                   <tr
                     key={row.id}
-                    onClick={() => router.push(`/apps/belt-exam/${row.original.id}`)}
+                    onClick={() => router.push(`/apps/belt-exam/${row.original.id}/admin`)}
                     style={{ cursor: 'pointer' }}
                   >
                     {row.getVisibleCells().map(cell => (
@@ -351,13 +340,25 @@ return (
       {/* Action Dialog */}
       <Dialog open={actionDialogOpen} onClose={() => setActionDialogOpen(false)} maxWidth='sm' fullWidth>
         <DialogTitle>
-          {actionType === 'approve' ? 'Phê duyệt kỳ thi' :
-           actionType === 'reject' ? 'Từ chối kỳ thi' :
-           actionType === 'open' ? 'Mở đăng ký thi cấp' : 'Gửi duyệt kỳ thi'}
+          {actionType === 'approve'
+            ? 'Phê duyệt kỳ thi'
+            : actionType === 'reject'
+              ? 'Từ chối kỳ thi'
+              : actionType === 'open'
+                ? 'Mở đăng ký thi cấp'
+                : 'Gửi duyệt kỳ thi'}
         </DialogTitle>
         <DialogContent className='flex flex-col gap-4 pt-2'>
           <Typography>
-            Bạn có chắc muốn {actionType === 'approve' ? 'phê duyệt' : actionType === 'reject' ? 'từ chối' : actionType === 'open' ? 'mở đăng ký cho' : 'gửi duyệt'} kỳ thi <strong>{selectedExam?.name}</strong>?
+            Bạn có chắc muốn{' '}
+            {actionType === 'approve'
+              ? 'phê duyệt'
+              : actionType === 'reject'
+                ? 'từ chối'
+                : actionType === 'open'
+                  ? 'mở đăng ký cho'
+                  : 'gửi duyệt'}{' '}
+            kỳ thi <strong>{selectedExam?.name}</strong>?
           </Typography>
           {actionType === 'open' && (
             <TextField
@@ -373,14 +374,35 @@ return (
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setActionDialogOpen(false); setOpenDeadline('') }}>Hủy</Button>
+          <Button
+            onClick={() => {
+              setActionDialogOpen(false)
+              setOpenDeadline('')
+            }}
+          >
+            Hủy
+          </Button>
           <Button
             variant='contained'
-            color={actionType === 'reject' ? 'error' : actionType === 'open' ? 'success' : actionType === 'approve' ? 'success' : 'primary'}
+            color={
+              actionType === 'reject'
+                ? 'error'
+                : actionType === 'open'
+                  ? 'success'
+                  : actionType === 'approve'
+                    ? 'success'
+                    : 'primary'
+            }
             onClick={handleAction}
             disabled={loading}
           >
-            {actionType === 'approve' ? 'Phê duyệt' : actionType === 'reject' ? 'Từ chối' : actionType === 'open' ? 'Mở ĐK' : 'Gửi duyệt'}
+            {actionType === 'approve'
+              ? 'Phê duyệt'
+              : actionType === 'reject'
+                ? 'Từ chối'
+                : actionType === 'open'
+                  ? 'Mở ĐK'
+                  : 'Gửi duyệt'}
           </Button>
         </DialogActions>
       </Dialog>

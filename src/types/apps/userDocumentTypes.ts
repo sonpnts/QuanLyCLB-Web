@@ -49,13 +49,13 @@ export const documentTypeAccept: Record<UserDocumentType, string> = {
 }
 
 export const documentStatusLabels: Record<UserDocumentStatus, string> = {
-  0: 'Chờ duyệt',
-  1: 'Đã duyệt',
-  2: 'Từ chối / cần nộp lại'
+  0: 'Đã nộp',
+  1: 'Hợp lệ',
+  2: 'Cần nộp lại'
 }
 
 export const documentStatusColors: Record<UserDocumentStatus, ThemeColor> = {
-  0: 'warning',
+  0: 'success',
   1: 'success',
   2: 'error'
 }

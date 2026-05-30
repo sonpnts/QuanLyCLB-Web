@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
@@ -23,6 +23,7 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TablePagination from '@mui/material/TablePagination'
 import TableRow from '@mui/material/TableRow'
+import TableSortLabel from '@mui/material/TableSortLabel'
 import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
@@ -101,6 +102,73 @@ const formatDateTime = (value?: string | null) => {
   })
 }
 
+type RegistrationSortField =
+  | 'studentName'
+  | 'examSessionName'
+  | 'className'
+  | 'status'
+  | 'isFeePaid'
+  | 'oneTimeFeesCompleted'
+  | 'currentBeltLevelOrder'
+  | 'targetBeltLevelOrder'
+  | 'registeredByUserName'
+  | 'createdAt'
+
+type SortDirection = 'asc' | 'desc'
+
+const compareText = (left?: string | null, right?: string | null) =>
+  String(left || '').localeCompare(String(right || ''), 'vi', { sensitivity: 'base' })
+
+const compareNumber = (left?: number | null, right?: number | null) => (left ?? -1) - (right ?? -1)
+
+const compareBoolean = (left?: boolean, right?: boolean) => Number(left ?? false) - Number(right ?? false)
+
+const compareDate = (left?: string | null, right?: string | null) =>
+  new Date(left || 0).getTime() - new Date(right || 0).getTime()
+
+const sortRegistrations = (
+  rows: ExamRegistrationType[],
+  sortBy: RegistrationSortField,
+  sortDirection: SortDirection
+) => {
+  const sorted = [...rows].sort((left, right) => {
+    switch (sortBy) {
+      case 'studentName':
+        return compareText(left.studentName, right.studentName)
+      case 'examSessionName':
+        return compareText(left.examSessionName, right.examSessionName)
+      case 'className':
+        return compareText(left.className, right.className)
+      case 'status':
+        return compareText(left.status, right.status)
+      case 'isFeePaid':
+        return compareBoolean(left.isFeePaid, right.isFeePaid) || compareDate(left.paidAt, right.paidAt)
+      case 'oneTimeFeesCompleted':
+        return compareBoolean(left.oneTimeFeesCompleted, right.oneTimeFeesCompleted)
+      case 'currentBeltLevelOrder':
+        return (
+          compareNumber(left.currentBeltLevelOrder, right.currentBeltLevelOrder) ||
+          compareText(left.currentBeltLevelName, right.currentBeltLevelName) ||
+          compareText(left.studentName, right.studentName)
+        )
+      case 'targetBeltLevelOrder':
+        return (
+          compareNumber(left.targetBeltLevelOrder, right.targetBeltLevelOrder) ||
+          compareText(left.targetBeltLevelName, right.targetBeltLevelName) ||
+          compareText(left.studentName, right.studentName)
+        )
+      case 'registeredByUserName':
+        return compareText(left.registeredByUserName, right.registeredByUserName)
+      case 'createdAt':
+        return compareDate(left.createdAt, right.createdAt)
+      default:
+        return 0
+    }
+  })
+
+  return sortDirection === 'asc' ? sorted : sorted.reverse()
+}
+
 const getSessionSortTime = (session: ExamSessionType) =>
   new Date(session.registrationDeadline || session.examDate || session.createdAt).getTime()
 
@@ -138,6 +206,8 @@ const BeltExamRegistrationsView = () => {
   const [viewStudentOpen, setViewStudentOpen] = useState(false)
   const [editStudentOpen, setEditStudentOpen] = useState(false)
   const [loadingStudent, setLoadingStudent] = useState(false)
+  const [sortBy, setSortBy] = useState<RegistrationSortField>('currentBeltLevelOrder')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   const openStudentDrawer = async (studentId: string) => {
     try {
@@ -146,7 +216,12 @@ const BeltExamRegistrationsView = () => {
 
       if (result.success && result.data) {
         setSelectedStudent(result.data)
-        setViewStudentOpen(true)
+
+        if (studentPermissions.canUpdate) {
+          setEditStudentOpen(true)
+        } else {
+          setViewStudentOpen(true)
+        }
       } else {
         showNotification(result.message || 'Không thể tải thông tin học viên', 'error')
       }
@@ -155,7 +230,7 @@ const BeltExamRegistrationsView = () => {
     }
   }
 
-  const loadFilters = async () => {
+  const loadFilters = useCallback(async () => {
     const [sessionRes, classRes] = await Promise.all([
       beltExamService.getExamSessions(),
       isAdmin
@@ -177,9 +252,9 @@ const BeltExamRegistrationsView = () => {
 
       setClasses(normalized as ClassType[])
     }
-  }
+  }, [isAdmin])
 
-  const loadRegistrations = async () => {
+  const loadRegistrations = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -210,7 +285,7 @@ const BeltExamRegistrationsView = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [classId, examSessionId, feePaid, keyword, showNotification, status])
 
   const handleStudentUpdated = (updated: StudentType) => {
     setSelectedStudent(updated)
@@ -218,7 +293,7 @@ const BeltExamRegistrationsView = () => {
 
   useEffect(() => {
     loadFilters()
-  }, [])
+  }, [loadFilters])
 
   useEffect(() => {
     if (sessions.length === 0 || examSessionId) return
@@ -232,25 +307,33 @@ const BeltExamRegistrationsView = () => {
 
   useEffect(() => {
     loadRegistrations()
-  }, [examSessionId, classId, status, feePaid, keyword])
+  }, [loadRegistrations])
 
   useEffect(() => {
     setPage(0)
   }, [examSessionId, classId, status, feePaid, keyword])
 
-  const sortedRegistrations = useMemo(() => {
-    return [...registrations].sort((a, b) => {
-      const ao = a.currentBeltLevelOrder ?? -1
-      const bo = b.currentBeltLevelOrder ?? -1
+  const handleSort = (field: RegistrationSortField) => {
+    if (sortBy === field) {
+      setSortDirection(current => (current === 'asc' ? 'desc' : 'asc'))
 
-      if (bo !== ao) return bo - ao
+      return
+    }
 
-      const at = new Date(a.createdAt || 0).getTime()
-      const bt = new Date(b.createdAt || 0).getTime()
+    setSortBy(field)
+    setSortDirection(field === 'currentBeltLevelOrder' ? 'desc' : 'asc')
+  }
 
-      return bt - at
-    })
-  }, [registrations])
+  const renderSortHeader = (label: string, field: RegistrationSortField) => (
+    <TableSortLabel active={sortBy === field} direction={sortBy === field ? sortDirection : 'asc'} onClick={() => handleSort(field)}>
+      {label}
+    </TableSortLabel>
+  )
+
+  const sortedRegistrations = useMemo(
+    () => sortRegistrations(registrations, sortBy, sortDirection),
+    [registrations, sortBy, sortDirection]
+  )
 
   const pagedRows = useMemo(
     () => sortedRegistrations.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
@@ -423,15 +506,15 @@ const BeltExamRegistrationsView = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>{text.student}</TableCell>
-                  <TableCell>{text.examSession}</TableCell>
-                  <TableCell>{text.class}</TableCell>
-                  <TableCell>{text.registerStatus}</TableCell>
-                  <TableCell>{text.feePaid}</TableCell>
-                  <TableCell>{text.requiredFees}</TableCell>
-                  <TableCell>{text.currentBelt}</TableCell>
-                  <TableCell>{text.targetBelt}</TableCell>
-                  <TableCell>{text.registeredBy}</TableCell>
+                  <TableCell>{renderSortHeader(text.student, 'studentName')}</TableCell>
+                  <TableCell>{renderSortHeader(text.examSession, 'examSessionName')}</TableCell>
+                  <TableCell>{renderSortHeader(text.class, 'className')}</TableCell>
+                  <TableCell>{renderSortHeader(text.registerStatus, 'status')}</TableCell>
+                  <TableCell>{renderSortHeader(text.feePaid, 'isFeePaid')}</TableCell>
+                  <TableCell>{renderSortHeader(text.requiredFees, 'oneTimeFeesCompleted')}</TableCell>
+                  <TableCell>{renderSortHeader(text.currentBelt, 'currentBeltLevelOrder')}</TableCell>
+                  <TableCell>{renderSortHeader(text.targetBelt, 'targetBeltLevelOrder')}</TableCell>
+                  <TableCell>{renderSortHeader(text.registeredBy, 'registeredByUserName')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -553,3 +636,5 @@ const BeltExamRegistrationsView = () => {
 }
 
 export default BeltExamRegistrationsView
+
+
