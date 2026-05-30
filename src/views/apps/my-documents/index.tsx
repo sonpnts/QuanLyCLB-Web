@@ -123,9 +123,8 @@ const MyDocumentsView = () => {
 
   /** Docs đang yêu cầu nộp lại */
   const needsResubmitDocs = docs.filter(d => d.isActive && d.status === 2 && !hasNewerSubmission(d))
-  const pendingDocsCount = docs.filter(d => d.isActive && d.status === 0).length
-  const approvedDocsCount = docs.filter(d => d.isActive && d.status === 1).length
-  const rejectedDocsCount = needsResubmitDocs.length
+  const submittedDocsCount = docs.filter(d => d.isActive && d.status !== 2).length
+  const needsResubmitCount = needsResubmitDocs.length
 
   const triggerUpload = (type: UserDocumentType) => fileRefs.current[type]?.click()
   const allTypes: UserDocumentType[] = [...SINGLETON_TYPES, CERT_TYPE]
@@ -225,9 +224,8 @@ const MyDocumentsView = () => {
         <Alert severity='info' icon={<i className='ri-information-line' />}>
           <AlertTitle>Trạng thái tài liệu của bạn</AlertTitle>
           <Box className='flex items-center gap-2 flex-wrap mt-2'>
-            <Chip size='small' color='warning' label={`Chờ duyệt: ${pendingDocsCount}`} />
-            <Chip size='small' color='success' label={`Đã duyệt: ${approvedDocsCount}`} />
-            <Chip size='small' color='error' label={`Từ chối / cần nộp lại: ${rejectedDocsCount}`} />
+            <Chip size='small' color='success' label={`Đã nộp / hợp lệ: ${submittedDocsCount}`} />
+            <Chip size='small' color='error' label={`Cần nộp lại: ${needsResubmitCount}`} />
           </Box>
         </Alert>
       </Box>

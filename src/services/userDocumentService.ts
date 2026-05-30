@@ -1,4 +1,4 @@
-import { apiClient } from '@/utils/apiClient'
+﻿import { apiClient } from '@/utils/apiClient'
 import { logger } from '@/utils/logger'
 import type { UserDocumentDto } from '@/types/apps/userDocumentTypes'
 import type { ResponseResult } from '@/types/common'
@@ -14,7 +14,7 @@ export interface GetDocumentsParams {
 }
 
 class UserDocumentService {
-  // ── User-facing ─────────────────────────────────────────────────────────────
+  // User-facing
 
   async getMyDocuments(): Promise<ResponseResult<UserDocumentDto[]>> {
     try {
@@ -68,7 +68,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
     }
   }
 
-  // ── Student-facing ───────────────────────────────────────────────────────────
+  // Student-facing
 
   async getStudentDocuments(studentId: string): Promise<ResponseResult<UserDocumentDto[]>> {
     try {
@@ -122,7 +122,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
     }
   }
 
-  // ── Admin ────────────────────────────────────────────────────────────────────
+  // Admin
 
   async getAllDocuments(params?: GetDocumentsParams): Promise<ResponseResult<UserDocumentDto[]>> {
     try {
@@ -172,3 +172,4 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
 const userDocumentService = new UserDocumentService()
 
 export default userDocumentService
+

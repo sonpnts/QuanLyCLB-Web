@@ -18,6 +18,7 @@ import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 
+import { useNotification } from '@/contexts/notificationContext'
 import userDocumentService from '@/services/userDocumentService'
 import type { UserDocumentDto, UserDocumentType } from '@/types/apps/userDocumentTypes'
 import {
@@ -27,7 +28,6 @@ import {
   documentTypeIcons,
   documentTypeLabels
 } from '@/types/apps/userDocumentTypes'
-import { useNotification } from '@/contexts/notificationContext'
 
 // Loại tài liệu chỉ được phép 1 file (singleton)
 const SINGLETON_TYPES: UserDocumentType[] = [0, 1, 3]
@@ -39,8 +39,6 @@ const DOCUMENT_CONFIGS: { type: UserDocumentType; hint: string }[] = [
   { type: 2, hint: 'Scan chứng chỉ. Có thể tải nhiều file.' },
   { type: 3, hint: 'Ảnh chụp màn hình chuyển khoản, tối đa 10 MB (JPEG/PNG/WEBP)' }
 ]
-
-// ── Document Card ─────────────────────────────────────────────────────────────
 
 const DocumentCard = ({
   config,
@@ -72,7 +70,6 @@ const DocumentCard = ({
   return (
     <Card variant='outlined'>
       <CardContent className='flex flex-col gap-3'>
-        {/* Header */}
         <Box className='flex items-center gap-2'>
           <Box
             className='flex items-center justify-center rounded-lg'
@@ -108,7 +105,6 @@ const DocumentCard = ({
 
         <Divider />
 
-        {/* File list */}
         {docs.length === 0 ? (
           <Box
             className='flex flex-col items-center justify-center gap-2 py-4 rounded-lg border-2 border-dashed cursor-pointer'
@@ -117,7 +113,7 @@ const DocumentCard = ({
           >
             <i className='ri-upload-cloud-2-line text-3xl text-textDisabled' />
             <Typography variant='body2' color='text.secondary'>
-              Chưa có file — click để tải lên
+              Chưa có file, bấm để tải lên
             </Typography>
           </Box>
         ) : (
@@ -128,7 +124,6 @@ const DocumentCard = ({
                 className='flex items-center gap-2 p-2 rounded-lg'
                 sx={{ bgcolor: 'action.hover' }}
               >
-                {/* Preview / icon */}
                 {isImage(doc.contentType) ? (
                   <Box
                     component='img'
@@ -145,7 +140,6 @@ const DocumentCard = ({
                   </Box>
                 )}
 
-                {/* Info */}
                 <Box className='flex-1 min-w-0'>
                   <Typography variant='body2' fontWeight={500} noWrap>
                     {doc.fileName}
@@ -165,7 +159,6 @@ const DocumentCard = ({
                   </Box>
                 </Box>
 
-                {/* Actions */}
                 <Box className='flex items-center gap-0.5 shrink-0'>
                   <Tooltip title='Xem file'>
                     <IconButton size='small' href={doc.fileUrl} target='_blank' rel='noopener'>
@@ -188,7 +181,6 @@ const DocumentCard = ({
               </Box>
             ))}
 
-            {/* Thêm file (chỉ với Certificate) */}
             {!isSingleton && (
               <Button
                 variant='outlined'
@@ -207,8 +199,6 @@ const DocumentCard = ({
   )
 }
 
-// ── Main Tab ──────────────────────────────────────────────────────────────────
-
 const DocumentsTab = () => {
   const [docs, setDocs] = useState<UserDocumentDto[]>([])
   const [loading, setLoading] = useState(false)
@@ -223,7 +213,9 @@ const DocumentsTab = () => {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   const handleUpload = async (type: UserDocumentType, file: File) => {
     setLoading(true)
@@ -279,7 +271,6 @@ const DocumentsTab = () => {
         ))}
       </Grid>
 
-      {/* Confirm delete dialog */}
       <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth='xs' fullWidth>
         <DialogTitle>Xác nhận xóa</DialogTitle>
         <DialogContent>

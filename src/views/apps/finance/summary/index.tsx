@@ -52,6 +52,7 @@ type SummaryCardProps = {
 
 type SummaryTotals = {
   tuitionTotal: number
+  examFeeTotal: number
   productSalesTotal: number
   coachCollectedTotal: number
   handedOverTotal: number
@@ -110,6 +111,7 @@ const SummaryCard = ({ title, amount, color = 'success.main', subtitle }: Summar
 
 const emptyTotals = (): SummaryTotals => ({
   tuitionTotal: 0,
+  examFeeTotal: 0,
   productSalesTotal: 0,
   coachCollectedTotal: 0,
   handedOverTotal: 0
@@ -377,12 +379,17 @@ return
         .filter(item => Number(item.type) === 0)
         .reduce((sum, item) => sum + Number(item.amount || 0), 0)
 
+      const examFeeTotal = filteredPayments
+        .filter(item => Number(item.type) === 1)
+        .reduce((sum, item) => sum + Number(item.amount || 0), 0)
+
       const productSalesTotal = filteredProductSales.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0)
-      const coachCollectedTotal = filteredPayments.reduce((sum, item) => sum + Number(item.amount || 0), 0) + productSalesTotal
+      const coachCollectedTotal = filteredPayments.reduce((sum, item) => sum + Number(item.amount || 0), 0)
       const handedOverTotal = filteredCashHandovers.reduce((sum, item) => sum + Number(item.amountHandedOver || 0), 0)
 
       setTotals({
         tuitionTotal,
+        examFeeTotal,
         productSalesTotal,
         coachCollectedTotal,
         handedOverTotal
@@ -467,8 +474,9 @@ return
   const exportReport = () => {
     const summaryRows = [
       { ten: 'Tổng học phí đã thu', soTien: totals.tuitionTotal },
+      { ten: 'Tổng lệ phí thi cấp đã thu', soTien: totals.examFeeTotal },
       { ten: 'Tổng doanh thu bán sản phẩm', soTien: totals.productSalesTotal },
-      { ten: 'Tổng tiền HLV đã thu', soTien: totals.coachCollectedTotal },
+      { ten: 'Tổng tiền theo biên lai', soTien: totals.coachCollectedTotal },
       { ten: 'Tổng tiền đã bàn giao', soTien: totals.handedOverTotal }
     ]
 
@@ -686,16 +694,19 @@ return
       ) : (
         <>
           <Grid container spacing={4}>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
               <SummaryCard title='Tổng học phí đã thu' amount={totals.tuitionTotal} />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
+              <SummaryCard title='Tổng lệ phí thi cấp đã thu' amount={totals.examFeeTotal} color='primary.main' />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
               <SummaryCard title='Tổng doanh thu bán sản phẩm' amount={totals.productSalesTotal} color='info.main' />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <SummaryCard title='Tổng tiền HLV đã thu' amount={totals.coachCollectedTotal} color='warning.main' />
+            <Grid size={{ xs: 12, sm: 6, md: 6, xl: 2.4 }}>
+              <SummaryCard title='Tổng tiền theo biên lai' amount={totals.coachCollectedTotal} color='warning.main' />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 6, xl: 2.4 }}>
               <SummaryCard title='Tổng tiền đã bàn giao' amount={totals.handedOverTotal} color='secondary.main' />
             </Grid>
           </Grid>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -18,7 +18,11 @@ import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogContentText from '@mui/material/DialogContentText'
 import DialogTitle from '@mui/material/DialogTitle'
+import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
+import Select from '@mui/material/Select'
 import Switch from '@mui/material/Switch'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -26,13 +30,17 @@ import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
+import TableSortLabel from '@mui/material/TableSortLabel'
 import Typography from '@mui/material/Typography'
 
+import studentService from '@/services/studentService'
 import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import type { AdminExamSessionViewType, AdminExamStudentRowType } from '@/types/apps/beltExamTypes'
+import type { StudentType } from '@/types/apps/studentTypes'
 import { examSessionStatusColors, examSessionStatusLabels, registrationListStatusLabels } from '@/types/apps/beltExamTypes'
 import { exportToExcel } from '@/utils/exportToExcel'
+import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
 
 interface Props {
   sessionId: string
@@ -82,6 +90,84 @@ const formatEducationLevel = (value?: string) => {
   }
 }
 
+type AdminSortField =
+  | 'studentName'
+  | 'studentCode'
+  | 'dateOfBirth'
+  | 'gender'
+  | 'currentBeltLevelOrder'
+  | 'targetBeltLevelOrder'
+  | 'phoneNumber'
+  | 'oneTimeFeesCompleted'
+  | 'hasPaid'
+  | 'eligible'
+
+type SortDirection = 'asc' | 'desc'
+type RegistrationBucket = 'all' | 'examRegistration' | 'import'
+
+const compareText = (left?: string | null, right?: string | null) =>
+  String(left || '').localeCompare(String(right || ''), 'vi', { sensitivity: 'base' })
+
+const compareNumber = (left?: number | null, right?: number | null) => (left ?? -1) - (right ?? -1)
+
+const compareBoolean = (left?: boolean, right?: boolean) => Number(left ?? false) - Number(right ?? false)
+
+const compareDate = (left?: string | null, right?: string | null) =>
+  new Date(left || 0).getTime() - new Date(right || 0).getTime()
+
+const matchesRegistrationBucket = (student: AdminExamStudentRowType, bucket: RegistrationBucket) => {
+  const currentOrder = student.currentBeltLevelOrder ?? 0
+
+  if (bucket === 'examRegistration') return currentOrder > 10
+  if (bucket === 'import') return currentOrder <= 10
+
+  return true
+}
+
+const sortAdminStudents = (
+  rows: AdminExamStudentRowType[],
+  sortBy: AdminSortField,
+  sortDirection: SortDirection
+) => {
+  const sorted = [...rows].sort((left, right) => {
+    switch (sortBy) {
+      case 'studentName':
+        return compareText(left.studentName, right.studentName)
+      case 'studentCode':
+        return compareText(left.studentCode, right.studentCode)
+      case 'dateOfBirth':
+        return compareDate(left.dateOfBirth, right.dateOfBirth)
+      case 'gender':
+        return compareText(formatGender(left.gender), formatGender(right.gender))
+      case 'currentBeltLevelOrder':
+        return (
+          compareNumber(left.currentBeltLevelOrder, right.currentBeltLevelOrder) ||
+          compareText(left.studentName, right.studentName)
+        )
+      case 'targetBeltLevelOrder':
+        return (
+          compareNumber(left.targetBeltLevelOrder, right.targetBeltLevelOrder) ||
+          compareText(left.studentName, right.studentName)
+        )
+      case 'phoneNumber':
+        return compareText(left.phoneNumber, right.phoneNumber)
+      case 'oneTimeFeesCompleted':
+        return compareBoolean(left.oneTimeFeesCompleted, right.oneTimeFeesCompleted)
+      case 'hasPaid':
+        return compareBoolean(left.hasPaid, right.hasPaid)
+      case 'eligible':
+        return (
+          compareBoolean(left.oneTimeFeesCompleted && left.hasPaid, right.oneTimeFeesCompleted && right.hasPaid) ||
+          compareText(left.studentName, right.studentName)
+        )
+      default:
+        return 0
+    }
+  })
+
+  return sortDirection === 'asc' ? sorted : sorted.reverse()
+}
+
 const BeltExamAdminView = ({ sessionId }: Props) => {
   const { showNotification } = useNotification()
   const [data, setData] = useState<AdminExamSessionViewType | null>(null)
@@ -90,6 +176,12 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
   const [lockDialogOpen, setLockDialogOpen] = useState(false)
   const [locking, setLocking] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [registrationBucket, setRegistrationBucket] = useState<RegistrationBucket>('all')
+  const [sortBy, setSortBy] = useState<AdminSortField>('currentBeltLevelOrder')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
+  const [editStudentOpen, setEditStudentOpen] = useState(false)
+  const [loadingStudent, setLoadingStudent] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -110,11 +202,65 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
     loadData()
   }, [sessionId, onlyPaid, showNotification])
 
-  const flattenedStudents = useMemo(() => {
+  const handleSort = (field: AdminSortField) => {
+    if (sortBy === field) {
+      setSortDirection(current => (current === 'asc' ? 'desc' : 'asc'))
+
+      return
+    }
+
+    setSortBy(field)
+    setSortDirection(field === 'currentBeltLevelOrder' ? 'desc' : 'asc')
+  }
+
+  const renderSortHeader = (label: string, field: AdminSortField) => (
+    <TableSortLabel active={sortBy === field} direction={sortBy === field ? sortDirection : 'asc'} onClick={() => handleSort(field)}>
+      {label}
+    </TableSortLabel>
+  )
+
+  const visibleGroups = useMemo(() => {
     if (!data) return []
 
-    return data.coachGroups.flatMap(group => group.students)
-  }, [data])
+    return [...data.coachGroups]
+      .sort((left, right) => compareText(left.className, right.className) || compareText(left.coachName, right.coachName))
+      .map(group => {
+        const students = sortAdminStudents(
+          group.students.filter(student => matchesRegistrationBucket(student, registrationBucket)),
+          sortBy,
+          sortDirection
+        )
+
+        return {
+          ...group,
+          students,
+          visiblePaidCount: students.filter(student => student.hasPaid).length
+        }
+      })
+      .filter(group => group.students.length > 0)
+  }, [data, registrationBucket, sortBy, sortDirection])
+
+  const flattenedStudents = useMemo(() => visibleGroups.flatMap(group => group.students), [visibleGroups])
+
+  const openStudentEditor = async (studentId: string) => {
+    try {
+      setLoadingStudent(true)
+      const result = await studentService.getStudentById(studentId)
+
+      if (result.success && result.data) {
+        setSelectedStudent(result.data)
+        setEditStudentOpen(true)
+      } else {
+        showNotification(result.message || 'Không thể tải thông tin học viên.', 'error')
+      }
+    } finally {
+      setLoadingStudent(false)
+    }
+  }
+
+  const handleStudentUpdated = (updated: StudentType) => {
+    setSelectedStudent(updated)
+  }
 
   const fetchFullAdminView = async () => {
     const response = await beltExamService.getAdminView(sessionId, false)
@@ -130,10 +276,10 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
     students.map((student, index) => ({
       stt: index + 1,
       studentName: student.studentName,
-      studentCode: student.studentCode || '',
+      studentCode: student.studentCode || '—',
       dateOfBirth: formatDate(student.dateOfBirth),
       gender: formatGender(student.gender),
-      phoneNumber: student.phoneNumber || '',
+      phoneNumber: student.phoneNumber || '—',
       currentBeltLevelOrder: formatBeltOrder(student.currentBeltLevelOrder),
       targetBeltLevelOrder: formatBeltOrder(student.targetBeltLevelOrder, ''),
       className: student.className,
@@ -174,10 +320,10 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
       const rows = exportStudents.map((student, index) => ({
         stt: index + 1,
         studentName: student.studentName,
-        studentCode: student.studentCode || '',
+        studentCode: student.studentCode || '—',
         dateOfBirth: formatDate(student.dateOfBirth),
         gender: formatGender(student.gender),
-        phoneNumber: student.phoneNumber || '',
+        phoneNumber: student.phoneNumber || '—',
         currentBeltLevelOrder: formatBeltOrder(student.currentBeltLevelOrder),
         targetBeltLevelOrder: formatBeltOrder(student.targetBeltLevelOrder, ''),
         className: student.className
@@ -251,7 +397,7 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
       const missingCodeStudents = fullData.coachGroups
         .flatMap(group => group.students)
         .filter(student => student.hasPaid && student.oneTimeFeesCompleted)
-        .filter(student => !String(student.studentCode || '').trim())
+        .filter(student => !String(student.studentCode || '—').trim())
 
       if (missingCodeStudents.length === 0) {
         showNotification('Không có học viên nào thiếu mã HV để xuất file import.', 'info')
@@ -263,7 +409,7 @@ return
         fullName: student.studentName,
         dateOfBirth: formatDate(student.dateOfBirth),
         gender: formatGender(student.gender),
-        phoneNumber: student.phoneNumber || '',
+        phoneNumber: student.phoneNumber || '—',
         personalIdNumber: student.personalIdNumber || '',
         educationLevel: formatEducationLevel(student.educationLevel)
       }))
@@ -282,7 +428,7 @@ return
         rows
       })
 
-      showNotification('Đã xuất file Dữ liệu học viên import cho học viên đủ điều kiện.', 'success')
+      showNotification('Đã xuất file dữ liệu học viên import cho học viên đủ điều kiện.', 'success')
     } catch (error: any) {
       showNotification(error?.message || 'Không thể xuất file dữ liệu học viên import.', 'error')
     } finally {
@@ -429,20 +575,36 @@ return
 
       <Card className='mb-4'>
         <CardContent className='py-2'>
-          <FormControlLabel
-            control={<Switch checked={onlyPaid} onChange={event => setOnlyPaid(event.target.checked)} color='success' />}
-            label='Chỉ hiển thị học viên đã đóng lệ phí thi'
-          />
-          <Typography variant='body2' color='text.secondary'>
-            Khi tắt bộ lọc này, màn hình sẽ hiển thị toàn bộ học viên đã đăng ký cùng trạng thái các khoản phí.
-          </Typography>
+          <Box className='flex flex-col gap-3 md:flex-row md:items-center md:justify-between'>
+            <Box>
+              <FormControlLabel
+                control={<Switch checked={onlyPaid} onChange={event => setOnlyPaid(event.target.checked)} color='success' />}
+                label='Chỉ hiển thị học viên đã đóng lệ phí thi'
+              />
+              <Typography variant='body2' color='text.secondary'>
+                Khi tắt bộ lọc này, màn hình sẽ hiển thị toàn bộ học viên đã đăng ký cùng trạng thái các khoản phí.
+              </Typography>
+            </Box>
+            <FormControl size='small' sx={{ minWidth: 220 }}>
+              <InputLabel>Nhóm danh sách</InputLabel>
+              <Select
+                label='Nhóm danh sách'
+                value={registrationBucket}
+                onChange={event => setRegistrationBucket(event.target.value as RegistrationBucket)}
+              >
+                <MenuItem value='all'>Tất cả</MenuItem>
+                <MenuItem value='examRegistration'>Đăng ký thi ({'>'} 10)</MenuItem>
+                <MenuItem value='import'>Import ({'<='} 10)</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
         </CardContent>
       </Card>
 
       {flattenedStudents.length === 0 ? (
-        <Alert severity='info'>Chưa có danh sách đăng ký nào được nộp.</Alert>
+        <Alert severity='info'>Chưa có danh sách đăng ký nào phù hợp bộ lọc.</Alert>
       ) : (
-        data.coachGroups.map(group => (
+        visibleGroups.map(group => (
           <Accordion key={`${group.coachId}-${group.classId}`} defaultExpanded className='mb-2'>
             <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />}>
               <Box className='flex items-center gap-3 flex-wrap w-full pr-4'>
@@ -454,9 +616,9 @@ return
                   size='small'
                   color={group.listStatus === 'Submitted' ? 'success' : 'warning'}
                 />
-                {group.isAutoSubmitted && <Chip label='Tự động nộp' size='small' color='warning' variant='outlined' />}
+                {group.isAutoSubmitted && <Chip label='Tự động khóa' size='small' color='warning' variant='outlined' />}
                 <Typography variant='body2' color='text.secondary' className='ml-auto'>
-                  {group.paidCount}/{group.totalStudents} đã đóng lệ phí
+                  {group.visiblePaidCount}/{group.students.length} đã đóng lệ phí
                 </Typography>
               </Box>
             </AccordionSummary>
@@ -466,16 +628,16 @@ return
                   <TableHead>
                     <TableRow>
                       <TableCell width={50}>STT</TableCell>
-                      <TableCell>Họ tên</TableCell>
-                      <TableCell>Mã HV</TableCell>
-                      <TableCell>Ngày sinh</TableCell>
-                      <TableCell>Giới tính</TableCell>
-                      <TableCell>Cấp hiện tại</TableCell>
-                      <TableCell>Cấp thi</TableCell>
-                      <TableCell>SĐT</TableCell>
-                      <TableCell>Phí 1 lần</TableCell>
-                      <TableCell>Lệ phí</TableCell>
-                      <TableCell>Điều kiện thi</TableCell>
+                      <TableCell>{renderSortHeader('Họ tên', 'studentName')}</TableCell>
+                      <TableCell>{renderSortHeader('Mã HV', 'studentCode')}</TableCell>
+                      <TableCell>{renderSortHeader('Ngày sinh', 'dateOfBirth')}</TableCell>
+                      <TableCell>{renderSortHeader('Giới tính', 'gender')}</TableCell>
+                      <TableCell>{renderSortHeader('Cấp hiện tại', 'currentBeltLevelOrder')}</TableCell>
+                      <TableCell>{renderSortHeader('Cấp thi', 'targetBeltLevelOrder')}</TableCell>
+                      <TableCell>{renderSortHeader('SDT', 'phoneNumber')}</TableCell>
+                      <TableCell>{renderSortHeader('Phí 1 lần', 'oneTimeFeesCompleted')}</TableCell>
+                      <TableCell>{renderSortHeader('Lệ phí', 'hasPaid')}</TableCell>
+                      <TableCell>{renderSortHeader('Điều kiện thi', 'eligible')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -483,7 +645,12 @@ return
                       stt += 1
 
                       return (
-                        <TableRow key={student.registrationId}>
+                        <TableRow
+                            key={student.registrationId}
+                            hover
+                            onClick={() => openStudentEditor(student.studentId)}
+                            sx={{ cursor: 'pointer' }}
+                          >
                           <TableCell>{stt}</TableCell>
                           <TableCell>
                             <Typography variant='body2' className='font-medium'>
@@ -512,15 +679,38 @@ return
         ))
       )}
 
+      {loadingStudent && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: theme => theme.zIndex.modal + 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'rgba(255,255,255,0.45)'
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
+
+      <EditStudentDrawer
+        open={editStudentOpen}
+        onClose={() => setEditStudentOpen(false)}
+        student={selectedStudent}
+        onSaved={handleStudentUpdated}
+      />
+
       <Dialog open={lockDialogOpen} onClose={() => setLockDialogOpen(false)}>
         <DialogTitle>Xác nhận chốt danh sách</DialogTitle>
         <DialogContent>
           <DialogContentText component='div'>
             Sau khi chốt:
             <ul className='mt-2 pl-4 list-disc'>
-              <li>Không thể thu tiền thêm</li>
-              <li>Học viên chưa đóng lệ phí sẽ bị loại khỏi danh sách</li>
-              <li>Chỉ học viên đã đóng lệ phí mới được thi</li>
+              <li>Không thể đăng ký thêm hoặc chỉnh sửa danh sách</li>
+              <li>Không thể thu thêm lệ phí thi</li>
+              <li>Danh sách chuyển sang trạng thái chỉ xem</li>
             </ul>
             Bạn có chắc chắn muốn chốt không?
           </DialogContentText>
@@ -537,3 +727,6 @@ return
 }
 
 export default BeltExamAdminView
+
+
+

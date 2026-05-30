@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
 
@@ -11,11 +11,6 @@ import CardHeader from '@mui/material/CardHeader'
 import Checkbox from '@mui/material/Checkbox'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
-import Dialog from '@mui/material/Dialog'
-import DialogActions from '@mui/material/DialogActions'
-import DialogContent from '@mui/material/DialogContent'
-import DialogContentText from '@mui/material/DialogContentText'
-import DialogTitle from '@mui/material/DialogTitle'
 import FormControl from '@mui/material/FormControl'
 import IconButton from '@mui/material/IconButton'
 import InputLabel from '@mui/material/InputLabel'
@@ -35,15 +30,18 @@ import beltExamService from '@/services/beltExamService'
 import classService from '@/services/classService'
 import instructorService from '@/services/instructorService'
 import studentAttendanceService from '@/services/studentAttendanceService'
+import studentService from '@/services/studentService'
 import type {
   BeltExamRegistrationListType,
   CreateRegistrationListItemRequest,
   EligibleStudentForExamType,
   ExamSessionType
 } from '@/types/apps/beltExamTypes'
+import type { StudentType } from '@/types/apps/studentTypes'
 import { registrationListStatusColors, registrationListStatusLabels } from '@/types/apps/beltExamTypes'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
+import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
 
 interface Props {
   session: ExamSessionType
@@ -85,6 +83,13 @@ const mapStudentsToRows = (
   })
 }
 
+const isSessionReadOnly = (session: ExamSessionType) => {
+  if (session.isLocked || session.status === 'Locked' || session.status === 'Closed') return true
+  if (!session.registrationDeadline) return false
+
+  return new Date(session.registrationDeadline).getTime() <= Date.now()
+}
+
 const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
@@ -96,8 +101,10 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const [myList, setMyList] = useState<BeltExamRegistrationListType | null>(null)
   const [loadingStudents, setLoadingStudents] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
+  const [editStudentOpen, setEditStudentOpen] = useState(false)
+  const [loadingStudent, setLoadingStudent] = useState(false)
+  const readOnly = isSessionReadOnly(session)
 
   const loadMyClasses = useCallback(async () => {
     try {
@@ -193,6 +200,26 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     reloadClassData(selectedClassId)
   }, [reloadClassData, selectedClassId])
 
+  const openStudentEditor = async (studentId: string) => {
+    try {
+      setLoadingStudent(true)
+      const result = await studentService.getStudentById(studentId)
+
+      if (result.success && result.data) {
+        setSelectedStudent(result.data)
+        setEditStudentOpen(true)
+      } else {
+        showNotification(result.message || 'Không thể tải thông tin học viên', 'error')
+      }
+    } finally {
+      setLoadingStudent(false)
+    }
+  }
+
+  const handleStudentUpdated = (updated: StudentType) => {
+    setSelectedStudent(updated)
+  }
+
   const currentRegistrationsByStudentId = new Map(
     myList?.registrations.map(registration => [registration.studentId, registration] as const) ?? []
   )
@@ -210,9 +237,11 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const isStudentSelectable = (student: StudentRow) =>
     !isStudentLockedByAnotherList(student) && !isStudentPaidInCurrentList(student) && !hasStudentProfileIssue(student)
 
-  const isStudentEditable = (student: StudentRow) => isStudentSelectable(student)
+  const isStudentEditable = (student: StudentRow) => !readOnly && isStudentSelectable(student)
 
   const handleSelectAll = (checked: boolean) => {
+    if (readOnly) return
+
     setStudents(prev =>
       prev.map(student => {
         if (isStudentLockedByAnotherList(student)) return student
@@ -232,6 +261,12 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const allSelected = editableStudents.length > 0 && editableStudents.every(student => student.selected)
 
   const handleSaveList = async () => {
+    if (readOnly) {
+      showNotification('Danh sách đã khóa, không thể cập nhật', 'warning')
+
+      return
+    }
+
     const selectedStudents = students.filter(student => student.selected && student.selectedTargetBeltId)
 
     if (selectedStudents.length === 0 && !myList) {
@@ -265,27 +300,6 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     }
   }
 
-  const handleSubmit = async () => {
-    if (!myList?.id) return
-
-    try {
-      setSubmitting(true)
-      const result = await beltExamService.submitRegistrationList(myList.id)
-
-      if (result.success) {
-        showNotification(result.message || 'Đã nộp danh sách thành công', 'success')
-        setConfirmOpen(false)
-        await reloadClassData(selectedClassId)
-      } else {
-        showNotification(result.message || 'Nộp thất bại', 'error')
-      }
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const isSubmitted = myList?.status === 'Submitted'
-
   return (
     <Box>
       <Box className='mb-4 flex items-center gap-2'>
@@ -318,28 +332,27 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
         </CardContent>
       </Card>
 
-      {isSubmitted && myList && (
+      {myList && (
         <Card className='mb-4'>
           <CardHeader
             title={
               <Box className='flex items-center gap-2'>
-                <Typography variant='h6'>Danh sách đã nộp</Typography>
+                <Typography variant='h6'>Danh sách đã đăng ký</Typography>
                 <Chip
                   label={registrationListStatusLabels[myList.status]}
                   color={registrationListStatusColors[myList.status]}
                   size='small'
                 />
-                {myList.isAutoSubmitted && <Chip label='Tự động nộp' color='warning' size='small' variant='outlined' />}
+                {myList.isAutoSubmitted && <Chip label='Tự động khóa' color='warning' size='small' variant='outlined' />}
               </Box>
             }
             subheader={
-              myList.submittedAt ? `Nộp lúc: ${new Date(myList.submittedAt).toLocaleString('vi-VN')}` : undefined
+              myList.submittedAt ? `Cập nhật lúc: ${new Date(myList.submittedAt).toLocaleString('vi-VN')}` : undefined
             }
           />
           <CardContent>
             <Alert severity='info' className='mb-3'>
-              Danh sách đã nộp. Bạn vẫn có thể cập nhật thêm hoặc bỏ các học viên chưa đóng phí; các học viên đã đóng phí
-              sẽ được giữ nguyên trong danh sách.
+              Danh sách này chỉ tổng hợp học viên đã đăng ký. Bạn có thể bấm vào từng dòng để sửa hồ sơ học viên.
             </Alert>
             <TableContainer>
               <Table size='small'>
@@ -354,7 +367,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                 </TableHead>
                 <TableBody>
                   {myList.registrations.map((registration, index) => (
-                    <TableRow key={registration.id}>
+                    <TableRow key={registration.id} hover onClick={() => openStudentEditor(registration.studentId)} sx={{ cursor: 'pointer' }}>
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{registration.studentName}</TableCell>
                       <TableCell>{registration.currentBeltLevelName ?? '—'}</TableCell>
@@ -381,30 +394,18 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
       <Card>
         <CardHeader
           title='Chọn học viên đăng ký thi'
-          subheader={
-            isSubmitted
-              ? 'Danh sách đã nộp vẫn có thể cập nhật khi kỳ thi còn mở. Học viên đã đóng phí sẽ bị khóa.'
-              : 'Chỉ hiển thị học viên đang active, cấp 10 đến cấp 2 (không bao gồm đẳng).'
-          }
+          subheader={readOnly ? 'Danh sách chỉ còn để xem. Không thể chỉnh sửa hoặc thu thêm lệ phí thi.' : 'Chỉ hiển thị học viên đang active, cấp 10 đến cấp 2 (không bao gồm đẳng).'}
           action={
             <Box className='flex gap-2'>
               <Button
                 variant='outlined'
                 onClick={handleSaveList}
-                disabled={saving || (!myList && selectedCount === 0)}
+                disabled={readOnly || saving || (!myList && selectedCount === 0)}
                 startIcon={saving ? <CircularProgress size={16} /> : <i className='ri-save-line' />}
               >
-                {myList ? `Cập nhật danh sách (${selectedCount})` : `Lưu nháp (${selectedCount})`}
+                {myList ? `Cập nhật danh sách (${selectedCount})` : `Lưu danh sách (${selectedCount})`}
               </Button>
-              {myList && myList.status === 'Draft' && (
-                <Button
-                  variant='contained'
-                  onClick={() => setConfirmOpen(true)}
-                  startIcon={<i className='ri-send-plane-line' />}
-                >
-                  Nộp danh sách
-                </Button>
-              )}
+              
             </Box>
           }
         />
@@ -413,7 +414,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
             <Box className='p-4 pb-0'>
               <Alert severity='warning'>
                 Có {studentsWithProfileIssues.length} học viên chưa có mã và còn thiếu CCCD hoặc trình độ học vấn. HLV có thể xem trực tiếp ở
-                cột hồ sơ trước khi lưu hoặc nộp danh sách.
+                cột hồ sơ trước khi lưu danh sách.
               </Alert>
             </Box>
           )}
@@ -458,11 +459,17 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                     const hasProfileIssue = hasStudentProfileIssue(student)
 
                     return (
-                      <TableRow key={student.studentId} selected={student.selected} sx={{ opacity: isLockedByAnotherList ? 0.5 : 1 }}>
-                        <TableCell padding='checkbox'>
+                      <TableRow
+                        key={student.studentId}
+                        hover
+                        onClick={() => openStudentEditor(student.studentId)}
+                        selected={student.selected}
+                        sx={{ opacity: isLockedByAnotherList ? 0.5 : 1, cursor: 'pointer' }}
+                      >
+                        <TableCell padding='checkbox' onClick={event => event.stopPropagation()}>
                           <Checkbox
                             checked={student.selected}
-                            disabled={isLockedByAnotherList || isPaidInCurrentList || (hasProfileIssue && !student.selected)}
+                            disabled={readOnly || isLockedByAnotherList || isPaidInCurrentList || (hasProfileIssue && !student.selected)}
                             onChange={event => {
                               setStudents(prev =>
                                 prev.map(item =>
@@ -510,8 +517,6 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                             <Chip label='Đã đăng ký' color='info' size='small' variant='tonal' />
                           ) : isPaidInCurrentList ? (
                             <Chip label='Đã đóng phí' color='success' size='small' variant='tonal' />
-                          ) : isCurrentListStudent && isSubmitted ? (
-                            <Chip label='Đã nộp' color='success' size='small' variant='tonal' />
                           ) : isCurrentListStudent ? (
                             <Chip label='Nháp' color='warning' size='small' variant='tonal' />
                           ) : (
@@ -528,23 +533,32 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
         </CardContent>
       </Card>
 
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Xác nhận nộp danh sách</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Sau khi nộp, danh sách sẽ chuyển sang trạng thái đã nộp để bắt đầu thu phí. Bạn vẫn có thể cập nhật tiếp các
-            học viên chưa đóng phí nếu kỳ thi còn mở. Tiếp tục?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Hủy</Button>
-          <Button variant='contained' onClick={handleSubmit} disabled={submitting}>
-            {submitting ? <CircularProgress size={18} /> : 'Nộp danh sách'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {loadingStudent && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: theme => theme.zIndex.modal + 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'rgba(255,255,255,0.45)'
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
+      <EditStudentDrawer
+        open={editStudentOpen}
+        onClose={() => setEditStudentOpen(false)}
+        student={selectedStudent}
+        onSaved={handleStudentUpdated}
+      />
     </Box>
   )
 }
 
 export default BeltExamRegisterClassPanel
+
+
+
