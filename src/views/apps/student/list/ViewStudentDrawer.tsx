@@ -27,6 +27,7 @@ import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
+import TablePagination from '@mui/material/TablePagination'
 import TableRow from '@mui/material/TableRow'
 import Button from '@mui/material/Button'
 
@@ -34,6 +35,7 @@ import type { StudentType, EnrollmentType, ExamHistoryType } from '@/types/apps/
 import type { OneTimeFeeOptionType, StudentOneTimeFeeStatusType } from '@/types/apps/oneTimeFeeTypes'
 
 import studentService from '@/services/studentService'
+import type { StudentAttendanceHistoryType } from '@/services/studentService'
 import oneTimeFeeService from '@/services/oneTimeFeeService'
 import { useNotification } from '@/contexts/notificationContext'
 import { savePaymentInvoiceDraft } from '@/utils/paymentDraft'
@@ -64,16 +66,6 @@ type PaymentHistoryType = {
   forYear?: number
   description?: string
   className?: string
-}
-
-type AttendanceHistoryType = {
-  id: string
-  date: string
-  status: string
-  className?: string
-  checkInTime?: string
-  checkOutTime?: string
-  notes?: string
 }
 
 const paymentTypeLabels: Record<number, string> = {
@@ -112,7 +104,10 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
   const [loadingStudent, setLoadingStudent] = useState(false)
   const [enrollments, setEnrollments] = useState<EnrollmentType[]>([])
   const [payments, setPayments] = useState<PaymentHistoryType[]>([])
-  const [attendance, setAttendance] = useState<AttendanceHistoryType[]>([])
+  const [attendance, setAttendance] = useState<StudentAttendanceHistoryType[]>([])
+  const [attendancePage, setAttendancePage] = useState(0)
+  const [attendanceRowsPerPage, setAttendanceRowsPerPage] = useState(10)
+  const [attendanceTotalRecords, setAttendanceTotalRecords] = useState(0)
   const [examHistory, setExamHistory] = useState<ExamHistoryType[]>([])
   const [oneTimeFeeStatuses, setOneTimeFeeStatuses] = useState<StudentOneTimeFeeStatusType[]>([])
   const [pendingOneTimeFees, setPendingOneTimeFees] = useState<OneTimeFeeOptionType[]>([])
@@ -157,6 +152,9 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
       setEnrollments([])
       setPayments([])
       setAttendance([])
+      setAttendancePage(0)
+      setAttendanceRowsPerPage(10)
+      setAttendanceTotalRecords(0)
       setExamHistory([])
       setOneTimeFeeStatuses([])
       setPendingOneTimeFees([])
@@ -225,21 +223,26 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
   }, [activeStudent?.id])
 
   const loadAttendance = useCallback(async () => {
-    if (!activeStudent?.id || loadedDataRef.current.attendance) return
+    if (!activeStudent?.id) return
 
     try {
       setLoadingAttendance(true)
-      const response = await studentService.getStudentAttendance(activeStudent.id)
+      const response = await studentService.getStudentAttendance(activeStudent.id, {
+        pageNumber: attendancePage + 1,
+        pageSize: attendanceRowsPerPage
+      })
 
-      setAttendance(response.success && Array.isArray(response.data) ? response.data : [])
+      setAttendance(response.success ? response.data?.records || [] : [])
+      setAttendanceTotalRecords(response.success ? response.data?.totalRecords || 0 : 0)
       loadedDataRef.current.attendance = true
     } catch (error) {
       logger.error('ViewStudentDrawer', 'Error loading attendance', error)
       setAttendance([])
+      setAttendanceTotalRecords(0)
     } finally {
       setLoadingAttendance(false)
     }
-  }, [activeStudent?.id])
+  }, [activeStudent?.id, attendancePage, attendanceRowsPerPage])
 
   const loadExamHistory = useCallback(async () => {
     if (!activeStudent?.id || loadedDataRef.current.examHistory) return
@@ -285,6 +288,12 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     }
   }, [open])
 
+  useEffect(() => {
+    if (open && activeTab === '3') {
+      loadAttendance()
+    }
+  }, [activeTab, loadAttendance, open])
+
   const studentClasses = useMemo(() => activeStudent?.classes || [], [activeStudent?.classes])
 
   const activeStudentClasses = useMemo(
@@ -328,8 +337,16 @@ return
     setActiveTab(newValue)
 
     if (newValue === '2') loadPayments()
-    if (newValue === '3') loadAttendance()
     if (newValue === '4') loadExamHistory()
+  }
+
+  const handleAttendancePageChange = (_event: unknown, newPage: number) => {
+    setAttendancePage(newPage)
+  }
+
+  const handleAttendanceRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAttendanceRowsPerPage(Number(event.target.value))
+    setAttendancePage(0)
   }
 
   const handleOpenTransferDialog = () => {
@@ -747,36 +764,58 @@ return
             <Card variant='outlined'>
               <CardContent>
                 <Typography variant='subtitle1' className='font-medium mb-3'>
-                  Lịch sử điểm danh
+                  Lịch sử nghỉ học
                 </Typography>
 
                 {loadingAttendance ? (
                   <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
                 ) : attendance.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>Chưa có lịch sử điểm danh.</Typography>
+                  <Typography variant='body2' color='text.secondary'>Chưa có record nghỉ học nào.</Typography>
                 ) : (
-                  <TableContainer>
-                    <Table size='small'>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Ngày</TableCell>
-                          <TableCell>Lớp</TableCell>
-                          <TableCell>Trạng thái</TableCell>
-                          <TableCell>Ghi chú</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {attendance.map(record => (
-                          <TableRow key={record.id}>
-                            <TableCell>{formatDate(record.date)}</TableCell>
-                            <TableCell>{record.className || '-'}</TableCell>
-                            <TableCell>{record.status || '-'}</TableCell>
-                            <TableCell>{record.notes || '-'}</TableCell>
+                  <>
+                    <TableContainer>
+                      <Table size='small'>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Ngày nghỉ</TableCell>
+                            <TableCell>Lớp</TableCell>
+                            <TableCell>Loại nghỉ</TableCell>
+                            <TableCell>Lý do</TableCell>
+                            <TableCell>Người ghi nhận</TableCell>
+                            <TableCell>Ghi nhận lúc</TableCell>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                        </TableHead>
+                        <TableBody>
+                          {attendance.map(record => (
+                            <TableRow key={record.id}>
+                              <TableCell>{formatDate(record.attendanceDate)}</TableCell>
+                              <TableCell>{record.className || '-'}</TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={record.isExcused ? 'Nghỉ có phép' : 'Nghỉ không phép'}
+                                  size='small'
+                                  color={record.isExcused ? 'info' : 'warning'}
+                                  variant='tonal'
+                                />
+                              </TableCell>
+                              <TableCell>{record.reason || '-'}</TableCell>
+                              <TableCell>{record.markedByUserName || '-'}</TableCell>
+                              <TableCell>{formatDateTime(record.createdAt)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                    <TablePagination
+                      rowsPerPageOptions={[5, 10, 20]}
+                      component='div'
+                      count={attendanceTotalRecords}
+                      rowsPerPage={attendanceRowsPerPage}
+                      page={attendancePage}
+                      onPageChange={handleAttendancePageChange}
+                      onRowsPerPageChange={handleAttendanceRowsPerPageChange}
+                    />
+                  </>
                 )}
               </CardContent>
             </Card>
