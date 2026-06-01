@@ -34,9 +34,11 @@ import TableSortLabel from '@mui/material/TableSortLabel'
 import Typography from '@mui/material/Typography'
 
 import studentService from '@/services/studentService'
+import classService from '@/services/classService'
 import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import type { AdminExamSessionViewType, AdminExamStudentRowType } from '@/types/apps/beltExamTypes'
+import type { ClassType } from '@/types/apps/classTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { examSessionStatusColors, examSessionStatusLabels } from '@/types/apps/beltExamTypes'
 import { exportToExcel } from '@/utils/exportToExcel'
@@ -124,6 +126,10 @@ const matchesRegistrationBucket = (student: AdminExamStudentRowType, bucket: Reg
   return true
 }
 
+const isEligibleStudent = (student: AdminExamStudentRowType) => student.hasPaid && student.oneTimeFeesCompleted
+
+const getGroupKey = (coachId: string, classId: string) => `${coachId}-${classId}`
+
 const sortAdminStudents = (
   rows: AdminExamStudentRowType[],
   sortBy: AdminSortField,
@@ -182,15 +188,20 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
   const [editStudentOpen, setEditStudentOpen] = useState(false)
   const [loadingStudent, setLoadingStudent] = useState(false)
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([])
+  const [classes, setClasses] = useState<ClassType[]>([])
+  const [loadingClasses, setLoadingClasses] = useState(false)
+  const [unregisteredClassesOpen, setUnregisteredClassesOpen] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true)
-        const result = await beltExamService.getAdminView(sessionId, onlyPaid)
+        const result = await beltExamService.getAdminView(sessionId, false)
 
         if (result.success && result.data) {
           setData(result.data)
+          setExpandedGroups([])
         } else {
           showNotification(result.message || 'Không thể tải dữ liệu kỳ thi.', 'error')
         }
@@ -200,7 +211,24 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
     }
 
     loadData()
-  }, [sessionId, onlyPaid, showNotification])
+  }, [sessionId, showNotification])
+
+  useEffect(() => {
+    const loadClasses = async () => {
+      try {
+        setLoadingClasses(true)
+        const result = await classService.getClasses({ isActive: true, pageSize: 1000, pageNumber: 1 })
+
+        if (result.success) {
+          setClasses(result.data || [])
+        }
+      } finally {
+        setLoadingClasses(false)
+      }
+    }
+
+    loadClasses()
+  }, [])
 
   const handleSort = (field: AdminSortField) => {
     if (sortBy === field) {
@@ -219,28 +247,123 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
     </TableSortLabel>
   )
 
-  const visibleGroups = useMemo(() => {
+  const allGroups = useMemo(() => {
     if (!data) return []
 
     return [...data.coachGroups]
       .sort((left, right) => compareText(left.className, right.className) || compareText(left.coachName, right.coachName))
+  }, [data])
+
+  const visibleGroups = useMemo(() => {
+    return allGroups
       .map(group => {
         const students = sortAdminStudents(
-          group.students.filter(student => matchesRegistrationBucket(student, registrationBucket)),
+          group.students.filter(
+            student => matchesRegistrationBucket(student, registrationBucket) && (!onlyPaid || student.hasPaid)
+          ),
           sortBy,
           sortDirection
         )
 
         return {
           ...group,
+          groupKey: getGroupKey(group.coachId, group.classId),
           students,
-          visiblePaidCount: students.filter(student => student.hasPaid).length
+          visiblePaidCount: students.filter(student => student.hasPaid).length,
+          visibleEligibleCount: students.filter(isEligibleStudent).length
         }
       })
       .filter(group => group.students.length > 0)
-  }, [data, registrationBucket, sortBy, sortDirection])
+  }, [allGroups, onlyPaid, registrationBucket, sortBy, sortDirection])
 
   const flattenedStudents = useMemo(() => visibleGroups.flatMap(group => group.students), [visibleGroups])
+
+  const eligibleStudents = useMemo(() => {
+    const seen = new Set<string>()
+
+    return allGroups
+      .flatMap(group => group.students)
+      .filter(student => {
+        if (seen.has(student.registrationId)) return false
+        seen.add(student.registrationId)
+
+        return isEligibleStudent(student)
+      })
+  }, [allGroups])
+
+  const unregisteredClasses = useMemo(() => {
+    const registeredClassIds = new Set(
+      allGroups.filter(group => group.students.length > 0).map(group => group.classId)
+    )
+
+    return classes
+      .filter(item => item.isActive && (item.currentStudents ?? 0) > 0 && !registeredClassIds.has(item.id))
+      .sort((left, right) => compareText(left.name, right.name))
+  }, [allGroups, classes])
+
+  const targetBeltStats = useMemo(
+    () =>
+      eligibleStudents
+        .reduce<Array<{ label: string; order: number; count: number }>>((acc, student) => {
+          const order = student.targetBeltLevelOrder ?? 0
+          const label = student.targetBeltLevelName || `Cấp ${formatBeltOrder(student.targetBeltLevelOrder, '')}`
+          const existing = acc.find(item => item.label === label && item.order === order)
+
+          if (existing) {
+            existing.count += 1
+          } else {
+            acc.push({ label, order, count: 1 })
+          }
+
+          return acc
+        }, [])
+        .sort((left, right) => left.order - right.order || compareText(left.label, right.label)),
+    [eligibleStudents]
+  )
+
+  const coachStats = useMemo(
+    () =>
+      allGroups
+        .reduce<Array<{ id: string; label: string; count: number }>>((acc, group) => {
+          const count = group.students.filter(isEligibleStudent).length
+          const label = group.coachName || 'Chưa xác định'
+          const existing = acc.find(item => item.id === group.coachId)
+
+          if (count === 0) return acc
+
+          if (existing) {
+            existing.count += count
+          } else {
+            acc.push({ id: group.coachId, label, count })
+          }
+
+          return acc
+        }, [])
+        .sort((left, right) => right.count - left.count || compareText(left.label, right.label)),
+    [allGroups]
+  )
+
+  const classStats = useMemo(
+    () =>
+      allGroups
+        .reduce<Array<{ id: string; label: string; count: number }>>((acc, group) => {
+          const count = group.students.filter(isEligibleStudent).length
+          const label = group.className || 'Chưa xác định'
+          const existing = acc.find(item => item.id === group.classId)
+
+          if (count === 0) return acc
+
+          if (existing) {
+            existing.count += count
+          } else {
+            acc.push({ id: group.classId, label, count })
+          }
+
+          return acc
+        }, [])
+        .sort((left, right) => right.count - left.count || compareText(left.label, right.label)),
+    [allGroups]
+  )
 
   const openStudentEditor = async (studentId: string) => {
     try {
@@ -263,6 +386,8 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
   }
 
   const fetchFullAdminView = async () => {
+    if (data) return data
+
     const response = await beltExamService.getAdminView(sessionId, false)
 
     if (!response.success || !response.data) {
@@ -297,7 +422,7 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
       if (result.success) {
         showNotification('Đã chốt danh sách kỳ thi.', 'success')
         setLockDialogOpen(false)
-        const refreshed = await beltExamService.getAdminView(sessionId, onlyPaid)
+        const refreshed = await beltExamService.getAdminView(sessionId, false)
 
         if (refreshed.success && refreshed.data) setData(refreshed.data)
       } else {
@@ -463,6 +588,22 @@ return
     />
   )
 
+  const toggleGroup = (groupKey: string, expanded: boolean) => {
+    setExpandedGroups(current =>
+      expanded ? [...new Set([...current, groupKey])] : current.filter(item => item !== groupKey)
+    )
+  }
+
+  const handleExpandAll = () => {
+    setExpandedGroups(visibleGroups.map(group => group.groupKey))
+  }
+
+  const handleCollapseAll = () => {
+    setExpandedGroups([])
+  }
+
+  const hasExpandedGroups = expandedGroups.length > 0
+
   if (loading) {
     return (
       <Box className='flex justify-center p-8'>
@@ -549,11 +690,12 @@ return
         />
       </Card>
 
-      <Box className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-4'>
+      <Box className='grid grid-cols-2 md:grid-cols-5 gap-4 mb-4'>
         {[
           { label: 'Tổng đăng ký', value: data.totalRegistered, color: 'primary.main' },
           { label: 'Đã đóng tiền', value: data.totalPaid, color: 'success.main' },
           { label: 'Chưa đóng tiền', value: data.totalUnpaid, color: 'warning.main' },
+          { label: 'Đủ điều kiện thi', value: eligibleStudents.length, color: 'secondary.main' },
           {
             label: 'Tổng đã thu',
             value: `${data.totalAmountCollected.toLocaleString('vi-VN')} đ`,
@@ -573,12 +715,122 @@ return
         ))}
       </Box>
 
+      <Box className='grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4'>
+        <Card>
+          <CardHeader
+            title='Thống kê cấp đai dự thi'
+            subheader='Chỉ tính học viên đã đóng lệ phí và hoàn thành điều kiện'
+          />
+          <CardContent sx={{ pt: 0 }}>
+            {targetBeltStats.length === 0 ? (
+              <Typography variant='body2' color='text.secondary'>
+                Chưa có học viên đủ điều kiện để thống kê.
+              </Typography>
+            ) : (
+              <TableContainer>
+                <Table size='small'>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Cấp đai dự thi(chữ)</TableCell>
+                      <TableCell>Cấp đai dự thi(số)</TableCell>
+                      <TableCell align='right'>Số lượng</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {targetBeltStats.map(item => (
+                      <TableRow key={`${item.order}-${item.label}`}>
+                        <TableCell>{item.label}</TableCell>
+                        <TableCell align={'center'}>{item.order || '-'}</TableCell>
+                        <TableCell align='center'>{item.count}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader title='Thống kê theo HLV' subheader='Chỉ tính học viên đủ điều kiện thi' />
+          <CardContent sx={{ pt: 0 }}>
+            {coachStats.length === 0 ? (
+              <Typography variant='body2' color='text.secondary'>
+                Chưa có dữ liệu.
+              </Typography>
+            ) : (
+              <TableContainer>
+                <Table size='small'>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>HLV</TableCell>
+                      <TableCell align='right'>Số lượng</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {coachStats.map(item => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.label}</TableCell>
+                        <TableCell align='right'>{item.count}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader title='Thống kê theo lớp' subheader='Chỉ tính học viên đủ điều kiện thi' />
+          <CardContent sx={{ pt: 0 }}>
+            {classStats.length === 0 ? (
+              <Typography variant='body2' color='text.secondary'>
+                Chưa có dữ liệu.
+              </Typography>
+            ) : (
+              <TableContainer>
+                <Table size='small'>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Lớp</TableCell>
+                      <TableCell align='right'>Số lượng</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {classStats.map(item => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.label}</TableCell>
+                        <TableCell align='right'>{item.count}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
+
+      <Box className='mb-4'>
+        <Button
+          variant='outlined'
+          onClick={() => setUnregisteredClassesOpen(true)}
+          disabled={loadingClasses}
+          startIcon={loadingClasses ? <CircularProgress size={16} /> : <i className='ri-list-check-3' />}
+        >
+          {`Xem các lớp chưa đăng ký thi (${unregisteredClasses.length})`}
+        </Button>
+      </Box>
+
       <Card className='mb-4'>
         <CardContent className='py-2'>
           <Box className='flex flex-col gap-3 md:flex-row md:items-center md:justify-between'>
             <Box>
               <FormControlLabel
-                control={<Switch checked={onlyPaid} onChange={event => setOnlyPaid(event.target.checked)} color='success' />}
+                control={
+                  <Switch checked={onlyPaid} onChange={event => setOnlyPaid(event.target.checked)} color='success' />
+                }
                 label='Chỉ hiển thị học viên đã đóng lệ phí thi'
               />
               {/*<Typography variant='body2' color='text.secondary'>*/}
@@ -604,73 +856,92 @@ return
       {flattenedStudents.length === 0 ? (
         <Alert severity='info'>Chưa có danh sách đăng ký nào phù hợp bộ lọc.</Alert>
       ) : (
-        visibleGroups.map(group => (
-          <Accordion key={`${group.coachId}-${group.classId}`} defaultExpanded className='mb-2'>
-            <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />}>
-              <Box className='flex items-center gap-3 flex-wrap w-full pr-4'>
-                <Typography className='font-medium'>{group.coachName}</Typography>
-                <Typography color='text.secondary'>-</Typography>
-                <Typography color='text.secondary'>{group.className}</Typography>
-                <Typography variant='body2' color='text.secondary' className='ml-auto'>
-                  {group.visiblePaidCount}/{group.students.length} đã đóng lệ phí
-                </Typography>
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails className='p-0'>
-              <TableContainer>
-                <Table size='small'>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell width={50}>STT</TableCell>
-                      <TableCell>{renderSortHeader('Họ tên', 'studentName')}</TableCell>
-                      <TableCell>{renderSortHeader('Mã HV', 'studentCode')}</TableCell>
-                      <TableCell>{renderSortHeader('Ngày sinh', 'dateOfBirth')}</TableCell>
-                      <TableCell>{renderSortHeader('Giới tính', 'gender')}</TableCell>
-                      <TableCell>{renderSortHeader('Cấp hiện tại', 'currentBeltLevelOrder')}</TableCell>
-                      <TableCell>{renderSortHeader('Cấp thi', 'targetBeltLevelOrder')}</TableCell>
-                      <TableCell>{renderSortHeader('SDT', 'phoneNumber')}</TableCell>
-                      <TableCell>{renderSortHeader('Phí 1 lần', 'oneTimeFeesCompleted')}</TableCell>
-                      <TableCell>{renderSortHeader('Lệ phí', 'hasPaid')}</TableCell>
-                      <TableCell>{renderSortHeader('Điều kiện thi', 'eligible')}</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {group.students.map(student => {
-                      stt += 1
+        <>
+          <Box className='flex justify-end gap-2 mb-3'>
+            {hasExpandedGroups ? (
+              <Button variant='outlined' size='small' onClick={handleCollapseAll}>
+                Thu gọn toàn bộ
+              </Button>
+            ) : (
+              <Button variant='outlined' size='small' onClick={handleExpandAll}>
+                Mở rộng toàn bộ
+              </Button>
+            )}
+          </Box>
 
-                      return (
-                        <TableRow
+          {visibleGroups.map(group => (
+            <Accordion
+              key={group.groupKey}
+              expanded={expandedGroups.includes(group.groupKey)}
+              onChange={(_, expanded) => toggleGroup(group.groupKey, expanded)}
+              className='mb-2'
+            >
+              <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />}>
+                <Box className='flex items-center gap-3 flex-wrap w-full pr-4'>
+                  <Typography className='font-medium'>{group.coachName}</Typography>
+                  <Typography color='text.secondary'>-</Typography>
+                  <Typography color='text.secondary'>{group.className}</Typography>
+                  <Typography variant='body2' color='text.secondary' className='ml-auto'>
+                    {group.visibleEligibleCount}/{group.students.length} đủ điều kiện
+                  </Typography>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails className='p-0'>
+                <TableContainer>
+                  <Table size='small'>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell width={50}>STT</TableCell>
+                        <TableCell>{renderSortHeader('Họ tên', 'studentName')}</TableCell>
+                        <TableCell>{renderSortHeader('Mã HV', 'studentCode')}</TableCell>
+                        <TableCell>{renderSortHeader('Ngày sinh', 'dateOfBirth')}</TableCell>
+                        <TableCell>{renderSortHeader('Giới tính', 'gender')}</TableCell>
+                        <TableCell>{renderSortHeader('Cấp hiện tại', 'currentBeltLevelOrder')}</TableCell>
+                        <TableCell>{renderSortHeader('Cấp thi', 'targetBeltLevelOrder')}</TableCell>
+                        <TableCell>{renderSortHeader('SDT', 'phoneNumber')}</TableCell>
+                        <TableCell>{renderSortHeader('Phí 1 lần', 'oneTimeFeesCompleted')}</TableCell>
+                        <TableCell>{renderSortHeader('Lệ phí', 'hasPaid')}</TableCell>
+                        <TableCell>{renderSortHeader('Điều kiện thi', 'eligible')}</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {group.students.map(student => {
+                        stt += 1
+
+                        return (
+                          <TableRow
                             key={student.registrationId}
                             hover
                             onClick={() => openStudentEditor(student.studentId)}
                             sx={{ cursor: 'pointer' }}
                           >
-                          <TableCell>{stt}</TableCell>
-                          <TableCell>
-                            <Typography variant='body2' className='font-medium'>
-                              {student.studentName}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>{student.studentCode || '—'}</TableCell>
-                          <TableCell>{student.dateOfBirth ? formatDate(student.dateOfBirth) : '—'}</TableCell>
-                          <TableCell>{student.gender === undefined ? '—' : formatGender(student.gender)}</TableCell>
-                          <TableCell>{formatBeltOrder(student.currentBeltLevelOrder)}</TableCell>
-                          <TableCell>
-                            <strong>{formatBeltOrder(student.targetBeltLevelOrder, '')}</strong>
-                          </TableCell>
-                          <TableCell>{student.phoneNumber || '—'}</TableCell>
-                          <TableCell>{renderOneTimeFeeBadge(student)}</TableCell>
-                          <TableCell>{renderPaidBadge(student)}</TableCell>
-                          <TableCell>{renderEligibleBadge(student)}</TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </AccordionDetails>
-          </Accordion>
-        ))
+                            <TableCell>{stt}</TableCell>
+                            <TableCell>
+                              <Typography variant='body2' className='font-medium'>
+                                {student.studentName}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>{student.studentCode || '—'}</TableCell>
+                            <TableCell>{student.dateOfBirth ? formatDate(student.dateOfBirth) : '—'}</TableCell>
+                            <TableCell>{student.gender === undefined ? '—' : formatGender(student.gender)}</TableCell>
+                            <TableCell>{formatBeltOrder(student.currentBeltLevelOrder)}</TableCell>
+                            <TableCell>
+                              <strong>{formatBeltOrder(student.targetBeltLevelOrder, '')}</strong>
+                            </TableCell>
+                            <TableCell>{student.phoneNumber || '—'}</TableCell>
+                            <TableCell>{renderOneTimeFeeBadge(student)}</TableCell>
+                            <TableCell>{renderPaidBadge(student)}</TableCell>
+                            <TableCell>{renderEligibleBadge(student)}</TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </>
       )}
 
       {loadingStudent && (
@@ -716,11 +987,51 @@ return
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog open={unregisteredClassesOpen} onClose={() => setUnregisteredClassesOpen(false)} maxWidth='md' fullWidth>
+        <DialogTitle>{`Các lớp chưa đăng ký thi (${unregisteredClasses.length})`}</DialogTitle>
+        <DialogContent>
+          {loadingClasses ? (
+            <Box className='flex justify-center py-6'>
+              <CircularProgress size={24} />
+            </Box>
+          ) : unregisteredClasses.length === 0 ? (
+            <Typography variant='body2' color='text.secondary'>
+              Không còn lớp nào chưa đăng ký thi trong kỳ này.
+            </Typography>
+          ) : (
+            <TableContainer>
+              <Table size='small'>
+                <TableHead>
+                  <TableRow>
+                    <TableCell width={50}>STT</TableCell>
+                    <TableCell>Mã lớp</TableCell>
+                    <TableCell>Tên lớp</TableCell>
+                    <TableCell>HLV chính</TableCell>
+                    <TableCell align='right'>Sĩ số hiện tại</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {unregisteredClasses.map((item, index) => (
+                    <TableRow key={item.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{item.code}</TableCell>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.coaches?.find(coach => coach.isLeadInstructor)?.fullName || '—'}</TableCell>
+                      <TableCell align='right'>{item.currentStudents ?? 0}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setUnregisteredClassesOpen(false)}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
 
 export default BeltExamAdminView
-
-
-
