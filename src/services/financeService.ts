@@ -3,6 +3,7 @@ import { logger } from '@/utils/logger'
 import type {
   ClassInstructorSummaryType,
   FinanceAmountSummaryType,
+  FinanceTransactionSummaryType,
   InstructorClassCollectionType
 } from '@/types/apps/financeTypes'
 import type { ResponseResult } from '@/types/common'
@@ -14,6 +15,12 @@ export interface FinanceDateRangeParams {
 }
 
 export interface ProductSalesSummaryParams extends FinanceDateRangeParams {
+  classId?: string
+  branchId?: string
+  instructorId?: string
+}
+
+export interface FinanceTransactionSummaryParams extends FinanceDateRangeParams {
   classId?: string
   branchId?: string
   instructorId?: string
@@ -37,6 +44,41 @@ const parseAmount = (payload: any): number => {
 }
 
 class FinanceService {
+  async getTransactionSummary(
+    params?: FinanceTransactionSummaryParams
+  ): Promise<ResponseResult<FinanceTransactionSummaryType>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.finance.transactionSummary, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      const payload = unwrapPayload(apiResponse.data) || {}
+
+      return {
+        success: true,
+        data: {
+          tuitionTotal: Number(payload.tuitionTotal || 0),
+          examFeeTotal: Number(payload.examFeeTotal || 0),
+          productSalesTotal: Number(payload.productSalesTotal || 0),
+          receiptTotal: Number(payload.receiptTotal || 0),
+          handedOverTotal: Number(payload.handedOverTotal || 0),
+          fromDate: payload.fromDate,
+          toDate: payload.toDate,
+          classId: payload.classId,
+          branchId: payload.branchId,
+          instructorId: payload.instructorId
+        }
+      }
+    } catch (error: any) {
+      logger.error('FinanceService', 'getTransactionSummary', error)
+
+      return { success: false, message: error?.response?.data?.message || 'Lá»—i káº¿t ná»‘i mÃ¡y chá»§' }
+    }
+  }
+
   async getClassTuitionSummary(
     classId: string,
     params?: FinanceDateRangeParams

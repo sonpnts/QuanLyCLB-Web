@@ -38,7 +38,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import type { AdminExamSessionViewType, AdminExamStudentRowType } from '@/types/apps/beltExamTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
-import { examSessionStatusColors, examSessionStatusLabels, registrationListStatusLabels } from '@/types/apps/beltExamTypes'
+import { examSessionStatusColors, examSessionStatusLabels } from '@/types/apps/beltExamTypes'
 import { exportToExcel } from '@/utils/exportToExcel'
 import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
 
@@ -103,7 +103,7 @@ type AdminSortField =
   | 'eligible'
 
 type SortDirection = 'asc' | 'desc'
-type RegistrationBucket = 'all' | 'examRegistration' | 'import'
+type RegistrationBucket = 'all' | 'equal10' | 'under10'
 
 const compareText = (left?: string | null, right?: string | null) =>
   String(left || '').localeCompare(String(right || ''), 'vi', { sensitivity: 'base' })
@@ -118,8 +118,8 @@ const compareDate = (left?: string | null, right?: string | null) =>
 const matchesRegistrationBucket = (student: AdminExamStudentRowType, bucket: RegistrationBucket) => {
   const currentOrder = student.currentBeltLevelOrder ?? 0
 
-  if (bucket === 'examRegistration') return currentOrder > 10
-  if (bucket === 'import') return currentOrder <= 10
+  if (bucket === 'equal10') return currentOrder === 10
+  if (bucket === 'under10') return currentOrder < 10
 
   return true
 }
@@ -401,7 +401,7 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
 
       if (missingCodeStudents.length === 0) {
         showNotification('Không có học viên nào thiếu mã HV để xuất file import.', 'info')
-        
+
 return
       }
 
@@ -484,10 +484,10 @@ return
           title={
             <Box className='flex items-center gap-3 flex-wrap'>
               <Typography variant='h5'>{data.sessionName}</Typography>
-              <Chip
-                label={examSessionStatusLabels[data.status] ?? data.status}
-                color={examSessionStatusColors[data.status] ?? 'default'}
-              />
+              {/*<Chip*/}
+              {/*  label={examSessionStatusLabels[data.status] ?? data.status}*/}
+              {/*  color={examSessionStatusColors[data.status] ?? 'default'}*/}
+              {/*/>*/}
               {data.isLocked && <Chip label='Đã chốt' color='error' icon={<i className='ri-lock-line' />} />}
             </Box>
           }
@@ -581,9 +581,9 @@ return
                 control={<Switch checked={onlyPaid} onChange={event => setOnlyPaid(event.target.checked)} color='success' />}
                 label='Chỉ hiển thị học viên đã đóng lệ phí thi'
               />
-              <Typography variant='body2' color='text.secondary'>
-                Khi tắt bộ lọc này, màn hình sẽ hiển thị toàn bộ học viên đã đăng ký cùng trạng thái các khoản phí.
-              </Typography>
+              {/*<Typography variant='body2' color='text.secondary'>*/}
+              {/*  Khi tắt bộ lọc này, màn hình sẽ hiển thị toàn bộ học viên đã đăng ký cùng trạng thái các khoản phí.*/}
+              {/*</Typography>*/}
             </Box>
             <FormControl size='small' sx={{ minWidth: 220 }}>
               <InputLabel>Nhóm danh sách</InputLabel>
@@ -593,8 +593,8 @@ return
                 onChange={event => setRegistrationBucket(event.target.value as RegistrationBucket)}
               >
                 <MenuItem value='all'>Tất cả</MenuItem>
-                <MenuItem value='examRegistration'>Đăng ký thi ({'>'} 10)</MenuItem>
-                <MenuItem value='import'>Import ({'<='} 10)</MenuItem>
+                <MenuItem value='equal10'>Chưa có mã = 10</MenuItem>
+                <MenuItem value='under10'>Đã có mã &lt; 10</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -611,12 +611,6 @@ return
                 <Typography className='font-medium'>{group.coachName}</Typography>
                 <Typography color='text.secondary'>-</Typography>
                 <Typography color='text.secondary'>{group.className}</Typography>
-                <Chip
-                  label={registrationListStatusLabels[group.listStatus]}
-                  size='small'
-                  color={group.listStatus === 'Submitted' ? 'success' : 'warning'}
-                />
-                {group.isAutoSubmitted && <Chip label='Tự động khóa' size='small' color='warning' variant='outlined' />}
                 <Typography variant='body2' color='text.secondary' className='ml-auto'>
                   {group.visiblePaidCount}/{group.students.length} đã đóng lệ phí
                 </Typography>

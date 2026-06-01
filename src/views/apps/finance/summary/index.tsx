@@ -24,11 +24,8 @@ import Typography from '@mui/material/Typography'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import branchService from '@/services/branchService'
-import cashHandoverService from '@/services/cashHandoverService'
 import classService from '@/services/classService'
 import financeService from '@/services/financeService'
-import paymentService from '@/services/paymentService'
-import productSaleService from '@/services/productSaleService'
 import userService from '@/services/userService'
 import type { BranchType } from '@/types/apps/branchTypes'
 import type { ClassType } from '@/types/apps/classTypes'
@@ -57,8 +54,6 @@ type SummaryTotals = {
   coachCollectedTotal: number
   handedOverTotal: number
 }
-
-const ALL_PAGE_SIZE = 10000
 
 const pad2 = (value: number) => String(value).padStart(2, '0')
 
@@ -298,101 +293,27 @@ return
 
     try {
       setLoading(true)
-
-      const paymentParams = {
-        pageSize: ALL_PAGE_SIZE,
-        paymentDateFrom: filters.fromDate || undefined,
-        paymentDateTo: filters.toDate || undefined
+      const summaryParams = {
+        classId: filters.statisticsMode === 'class' ? filters.classId || undefined : undefined,
+        branchId: filters.statisticsMode === 'branch' ? filters.branchId || undefined : undefined,
+        instructorId: filters.statisticsMode === 'instructor' ? filters.instructorId || undefined : undefined,
+        fromDate: filters.fromDate || undefined,
+        toDate: filters.toDate || undefined
       }
 
-      const [paymentRes, productSaleRes, cashHandoverRes, collectionRows] = await Promise.all([
-        paymentService.getPayments(paymentParams),
-        productSaleService.getProductSales({
-          pageSize: ALL_PAGE_SIZE,
-          saleDateFrom: filters.fromDate || undefined,
-          saleDateTo: filters.toDate || undefined,
-          isActive: true
-        }),
-        cashHandoverService.getCashHandovers({
-          handoverFrom: filters.fromDate || undefined,
-          handoverTo: filters.toDate || undefined
-        }),
+      const [summaryRes, collectionRows] = await Promise.all([
+        financeService.getTransactionSummary(summaryParams),
         loadCollectionsForMode()
       ])
 
-      const payments = paymentRes.success && paymentRes.data ? paymentRes.data : []
-      const productSales = productSaleRes.success && productSaleRes.data ? productSaleRes.data : []
-      const cashHandovers = cashHandoverRes.success && cashHandoverRes.data ? cashHandoverRes.data : []
-      const branchClassIdSet = new Set(selectedBranchClassIds)
-
-      const filteredPayments = payments.filter(item => {
-        if (filters.statisticsMode === 'class') {
-          return item.classId === filters.classId
-        }
-
-        if (filters.statisticsMode === 'branch') {
-          return Boolean(item.classId && branchClassIdSet.has(item.classId))
-        }
-
-        if (filters.statisticsMode === 'instructor') {
-          return item.collectedByUserId === filters.instructorId
-        }
-
-        return true
-      })
-
-      const filteredProductSales = productSales.filter(item => {
-        if (filters.statisticsMode === 'class') {
-          return item.classId === filters.classId
-        }
-
-        if (filters.statisticsMode === 'branch') {
-          return Boolean(item.classId && branchClassIdSet.has(item.classId))
-        }
-
-        if (filters.statisticsMode === 'instructor') {
-          return item.soldByUserId === filters.instructorId
-        }
-
-        return true
-      })
-
-      const filteredCashHandovers = cashHandovers.filter(item => {
-        if (item.status === 'Rejected') return false
-
-        if (filters.statisticsMode === 'class') {
-          return item.classId === filters.classId
-        }
-
-        if (filters.statisticsMode === 'branch') {
-          return !!item.classId && branchClassIdSet.has(item.classId)
-        }
-
-        if (filters.statisticsMode === 'instructor') {
-          return item.instructorId === filters.instructorId
-        }
-
-        return true
-      })
-
-      const tuitionTotal = filteredPayments
-        .filter(item => Number(item.type) === 0)
-        .reduce((sum, item) => sum + Number(item.amount || 0), 0)
-
-      const examFeeTotal = filteredPayments
-        .filter(item => Number(item.type) === 1)
-        .reduce((sum, item) => sum + Number(item.amount || 0), 0)
-
-      const productSalesTotal = filteredProductSales.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0)
-      const coachCollectedTotal = filteredPayments.reduce((sum, item) => sum + Number(item.amount || 0), 0)
-      const handedOverTotal = filteredCashHandovers.reduce((sum, item) => sum + Number(item.amountHandedOver || 0), 0)
+      const summary = summaryRes.success && summaryRes.data ? summaryRes.data : null
 
       setTotals({
-        tuitionTotal,
-        examFeeTotal,
-        productSalesTotal,
-        coachCollectedTotal,
-        handedOverTotal
+        tuitionTotal: summary?.tuitionTotal || 0,
+        examFeeTotal: summary?.examFeeTotal || 0,
+        productSalesTotal: summary?.productSalesTotal || 0,
+        coachCollectedTotal: summary?.receiptTotal || 0,
+        handedOverTotal: summary?.handedOverTotal || 0
       })
 
       setCollections(collectionRows)

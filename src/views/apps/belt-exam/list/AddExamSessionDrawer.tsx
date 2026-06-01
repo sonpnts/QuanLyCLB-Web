@@ -3,16 +3,16 @@
 import { useState } from 'react'
 
 import Button from '@mui/material/Button'
+import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
 import IconButton from '@mui/material/IconButton'
+import InputAdornment from '@mui/material/InputAdornment'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import Divider from '@mui/material/Divider'
-import InputAdornment from '@mui/material/InputAdornment'
 
-import type { ExamSessionType } from '@/types/apps/beltExamTypes'
-import beltExamService from '@/services/beltExamService'
 import { useNotification } from '@/contexts/notificationContext'
+import beltExamService from '@/services/beltExamService'
+import type { ExamSessionType } from '@/types/apps/beltExamTypes'
 
 type Props = {
   open: boolean
@@ -29,17 +29,28 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
     registrationDeadline: '',
     examFee: ''
   })
-
   const [loading, setLoading] = useState(false)
   const { showNotification } = useNotification()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleReset = () => {
+    setFormData({
+      name: '',
+      description: '',
+      examDate: '',
+      location: '',
+      registrationDeadline: '',
+      examFee: ''
+    })
+    handleClose()
+  }
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
 
     if (!formData.name || !formData.examDate) {
       showNotification('Vui lòng điền đầy đủ thông tin bắt buộc.', 'error')
-      
-return
+
+      return
     }
 
     try {
@@ -54,30 +65,18 @@ return
         examFee: formData.examFee ? parseFloat(formData.examFee) : undefined
       })
 
-      if (response.success && response.data) {
-        setData(prev => [...prev, response.data!])
-        showNotification('Tạo kỳ thi thành công!', 'success')
-        handleReset()
-      } else {
+      if (!response.success || !response.data) {
         showNotification(response.message || 'Không thể tạo kỳ thi.', 'error')
+
+        return
       }
-    } catch (error) {
-      showNotification('Đã có lỗi khi tạo kỳ thi.', 'error')
+
+      setData(prev => [...prev, response.data as ExamSessionType])
+      showNotification('Tạo kỳ thi thành công.', 'success')
+      handleReset()
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleReset = () => {
-    setFormData({
-      name: '',
-      description: '',
-      examDate: '',
-      location: '',
-      registrationDeadline: '',
-      examFee: ''
-    })
-    handleClose()
   }
 
   return (
@@ -102,42 +101,42 @@ return
             fullWidth
             label='Tên kỳ thi *'
             value={formData.name}
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
+            onChange={event => setFormData(prev => ({ ...prev, name: event.target.value }))}
           />
           <TextField
             fullWidth
             type='date'
             label='Ngày thi *'
             value={formData.examDate}
-            onChange={e => setFormData({ ...formData, examDate: e.target.value })}
+            onChange={event => setFormData(prev => ({ ...prev, examDate: event.target.value }))}
             InputLabelProps={{ shrink: true }}
           />
           <TextField
             fullWidth
             label='Địa điểm thi'
             value={formData.location}
-            onChange={e => setFormData({ ...formData, location: e.target.value })}
+            onChange={event => setFormData(prev => ({ ...prev, location: event.target.value }))}
           />
           <TextField
             fullWidth
             type='number'
-            label='Lệ phí thi (VNĐ)'
+            label='Lệ phí thi (VND)'
             value={formData.examFee}
-            onChange={e => setFormData({ ...formData, examFee: e.target.value })}
+            onChange={event => setFormData(prev => ({ ...prev, examFee: event.target.value }))}
             inputProps={{ min: 0, step: 1000 }}
-            helperText='Lệ phí chung áp dụng cho tất cả học viên trong kỳ thi này'
+            helperText='Lệ phí chung áp dụng cho tất cả học viên trong kỳ thi này.'
             InputProps={{
-              endAdornment: <InputAdornment position='end'>VNĐ</InputAdornment>
+              endAdornment: <InputAdornment position='end'>VND</InputAdornment>
             }}
           />
           <TextField
             fullWidth
             type='datetime-local'
-            label='Hạn đăng ký (tùy chọn)'
+            label='Hạn đăng ký'
             value={formData.registrationDeadline}
-            onChange={e => setFormData({ ...formData, registrationDeadline: e.target.value })}
+            onChange={event => setFormData(prev => ({ ...prev, registrationDeadline: event.target.value }))}
             InputLabelProps={{ shrink: true }}
-            helperText='Hạn cuối HLV nộp danh sách. Để trống nếu không giới hạn.'
+            helperText='HLV sẽ dùng trực tiếp hạn này khi kỳ thi được mở đăng ký.'
           />
           <TextField
             fullWidth
@@ -145,7 +144,7 @@ return
             rows={3}
             label='Mô tả'
             value={formData.description}
-            onChange={e => setFormData({ ...formData, description: e.target.value })}
+            onChange={event => setFormData(prev => ({ ...prev, description: event.target.value }))}
           />
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>

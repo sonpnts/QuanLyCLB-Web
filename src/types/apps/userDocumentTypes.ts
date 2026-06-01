@@ -1,9 +1,10 @@
-﻿import type { ThemeColor } from '@core/types'
+import type { ThemeColor } from '@core/types'
 
 // 0=ProfilePhoto, 1=BeltCertificate, 2=Certificate, 3=BankTransferProof
 export type UserDocumentType = 0 | 1 | 2 | 3
 
-// 0=Pending, 1=Approved, 2=NeedsResubmission
+// Backend mới chỉ dùng 1=Approved, 2=NeedsResubmission.
+// Giá trị 0 được giữ để tương thích dữ liệu cũ và hiển thị như hợp lệ.
 export type UserDocumentStatus = 0 | 1 | 2
 
 export type UserDocumentDto = {
@@ -49,7 +50,7 @@ export const documentTypeAccept: Record<UserDocumentType, string> = {
 }
 
 export const documentStatusLabels: Record<UserDocumentStatus, string> = {
-  0: 'Đã nộp',
+  0: 'Hợp lệ',
   1: 'Hợp lệ',
   2: 'Cần nộp lại'
 }
