@@ -62,6 +62,7 @@ export interface GetStudentsParams {
   pageSize?: number
   keyword?: string
   classId?: string
+  withoutClass?: boolean
   beltLevelId?: string
   gender?: boolean
   enrollmentStatus?: string
@@ -70,6 +71,7 @@ export interface GetStudentsParams {
 
 export interface CreateStudentRequest {
   fullName: string
+  classId: string
   code?: string
   phoneNumber?: string
   personalIdNumber?: string
@@ -173,6 +175,23 @@ class StudentService {
       logger.error('StudentService', 'getStudents', error)
       
 return { success: true, data: [] }
+    }
+  }
+
+  async getStudentsPaged(params?: GetStudentsParams): Promise<ResponseResult<PaginatedResult<StudentType>>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.students.root, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: { records: [], totalRecords: 0 } }
+      }
+
+      return { success: true, data: unwrapPaginatedList<StudentType>(apiResponse.data) }
+    } catch (error) {
+      logger.error('StudentService', 'getStudentsPaged', error)
+
+      return { success: true, data: { records: [], totalRecords: 0 } }
     }
   }
 

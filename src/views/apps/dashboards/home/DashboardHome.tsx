@@ -330,7 +330,11 @@ const DashboardHome = () => {
         <Card sx={{ height: '100%' }}>
           <CardHeader
             title='Thông báo hệ thống'
-            subheader={canViewAdminDashboard ? 'Tổng số yêu cầu chờ duyệt toàn hệ thống' : 'Tác vụ của bạn'}
+            subheader={
+              canViewAdminDashboard
+                ? 'Chờ duyệt lấy toàn bộ, đã duyệt và từ chối theo tháng đang chọn'
+                : 'Tác vụ của bạn'
+            }
           />
           <CardContent className='flex flex-col gap-3'>
             <div className='flex gap-2 flex-wrap'>

@@ -240,9 +240,12 @@ return
 
           setData(sortedStudents)
         } else {
-          setAssignedClasses([])
-          const response = await studentService.getStudents(effectiveParams)
+          const [response, classesResponse] = await Promise.all([
+            studentService.getStudents(effectiveParams),
+            classService.getClasses({ isActive: true, pageNumber: 1, pageSize: 1000 })
+          ])
 
+          setAssignedClasses((classesResponse.data || []).filter(cls => cls.isActive !== false))
           setData(response.data || [])
         }
       } catch (error) {
@@ -808,8 +811,7 @@ return data
           open={addStudentOpen}
           handleClose={() => setAddStudentOpen(false)}
           setData={setData}
-          classOptions={!isAdmin && isInstructor ? assignedClasses : []}
-          requireClassEnrollment={!isAdmin && isInstructor}
+          classOptions={assignedClasses}
           onStudentCreated={reloadData}
         />
       )}
