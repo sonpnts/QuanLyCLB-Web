@@ -40,6 +40,23 @@ export interface PaginatedResult<T> {
   totalRecords: number
 }
 
+export interface StudentAttendanceHistoryType {
+  id: string
+  studentId: string
+  studentName: string
+  studentPhone?: string
+  classId: string
+  className: string
+  classScheduleId?: string
+  attendanceDate: string
+  isExcused: boolean
+  reason?: string
+  markedByUserId?: string
+  markedByUserName?: string
+  createdAt: string
+  updatedAt?: string
+}
+
 export interface GetStudentsParams {
   pageNumber?: number
   pageSize?: number
@@ -368,18 +385,23 @@ return { success: true, data: [] }
     }
   }
 
-  async getStudentAttendance(studentId: string, params?: { fromDate?: string; toDate?: string }): Promise<ResponseResult<any[]>> {
+  async getStudentAttendance(
+    studentId: string,
+    params?: { fromDate?: string; toDate?: string; pageNumber?: number; pageSize?: number; keyword?: string }
+  ): Promise<ResponseResult<PaginatedResult<StudentAttendanceHistoryType>>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.students.attendance(studentId), { params })
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) return { success: true, data: [] }
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: { records: [], totalRecords: 0 } }
+      }
 
-      return { success: true, data: apiResponse.data || [] }
+      return { success: true, data: unwrapPaginatedList<StudentAttendanceHistoryType>(apiResponse.data) }
     } catch (error) {
       logger.error('StudentService', 'getStudentAttendance', error)
       
-return { success: true, data: [] }
+ return { success: true, data: { records: [], totalRecords: 0 } }
     }
   }
 

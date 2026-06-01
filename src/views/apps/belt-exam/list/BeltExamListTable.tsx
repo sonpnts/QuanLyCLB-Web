@@ -43,20 +43,40 @@ import EditExamSessionDrawer from './EditExamSessionDrawer'
 
 const columnHelper = createColumnHelper<ExamSessionType>()
 
-const formatDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleString('vi-VN', {
+const parseDateTime = (value?: string | null) => {
+  if (!value) return null
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number)
+
+    return new Date(year, month - 1, day, 0, 0, 0)
+  }
+
+  const parsed = new Date(value)
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+const formatDateTime = (value?: string | null) => {
+  const parsed = parseDateTime(value)
+
+  if (!parsed) return '-'
+
+  return parsed.toLocaleString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
+    hour12: false
   })
+}
 
 const sortSessions = (sessions: ExamSessionType[]) =>
   [...sessions].sort((left, right) => {
-    const leftTime = new Date(left.examDate).getTime()
-    const rightTime = new Date(right.examDate).getTime()
+    const leftTime = parseDateTime(left.examDate)?.getTime() ?? 0
+    const rightTime = parseDateTime(right.examDate)?.getTime() ?? 0
 
     return rightTime - leftTime
   })
@@ -142,11 +162,11 @@ const BeltExamListTable = () => {
       }),
       columnHelper.accessor('examDate', {
         header: 'Ngày thi',
-        cell: ({ row }) => <Typography>{formatDate(row.original.examDate)}</Typography>
+        cell: ({ row }) => <Typography>{formatDateTime(row.original.examDate)}</Typography>
       }),
       columnHelper.accessor('registrationDeadline', {
         header: 'Hạn đăng ký',
-        cell: ({ row }) => <Typography>{formatDate(row.original.registrationDeadline)}</Typography>
+        cell: ({ row }) => <Typography>{formatDateTime(row.original.registrationDeadline)}</Typography>
       }),
       columnHelper.accessor('location', {
         header: 'Địa điểm',
