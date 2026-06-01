@@ -29,23 +29,23 @@ const BeltExamRegisterView = () => {
   const [selectedSession, setSelectedSession] = useState<ExamSessionType | null>(null)
 
   useEffect(() => {
-    loadSessions()
-  }, [])
+    const loadSessions = async () => {
+      try {
+        setLoading(true)
+        const result = await beltExamService.getOpenSessions()
 
-  const loadSessions = async () => {
-    try {
-      setLoading(true)
-      const result = await beltExamService.getOpenSessions()
-
-      if (result.success) {
-        setSessions(result.data || [])
-      } else {
-        showNotification(result.message || 'Không thể tải danh sách kỳ thi', 'error')
+        if (result.success) {
+          setSessions(result.data || [])
+        } else {
+          showNotification(result.message || 'Không thể tải danh sách kỳ thi.', 'error')
+        }
+      } finally {
+        setLoading(false)
       }
-    } finally {
-      setLoading(false)
     }
-  }
+
+    loadSessions()
+  }, [showNotification])
 
   if (loading) {
     return (
@@ -68,7 +68,7 @@ const BeltExamRegisterView = () => {
   return (
     <Box>
       <Typography variant='h5' className='mb-4'>
-        Đăng Ký Thi Cấp
+        Đăng ký thi cấp
       </Typography>
 
       {sessions.length === 0 ? (
@@ -103,13 +103,9 @@ const BeltExamRegisterView = () => {
                           variant='body2'
                           color={daysLeft !== null && daysLeft <= 3 ? 'error' : 'text.secondary'}
                         >
-                          Hạn ĐK: {deadline.toLocaleDateString('vi-VN')}
-                          {daysLeft !== null && daysLeft >= 0 && (
-                            <strong className='ml-1'>(còn {daysLeft} ngày)</strong>
-                          )}
-                          {daysLeft !== null && daysLeft < 0 && (
-                            <strong className='ml-1 text-red-500'> — Đã hết hạn</strong>
-                          )}
+                          Hạn đăng ký: {deadline.toLocaleDateString('vi-VN')}
+                          {daysLeft !== null && daysLeft >= 0 && <strong className='ml-1'>(còn {daysLeft} ngày)</strong>}
+                          {daysLeft !== null && daysLeft < 0 && <strong className='ml-1 text-red-500'>Đã hết hạn</strong>}
                         </Typography>
                       </Box>
                     )}

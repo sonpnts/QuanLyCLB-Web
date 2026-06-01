@@ -1,16 +1,16 @@
-import { apiClient } from '@/utils/apiClient'
-import { logger } from '@/utils/logger'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 import type {
-  ExamSessionType,
-  ExamRegistrationType,
-  BeltLevelType,
-  EligibleStudentForExamType,
+  AdminExamSessionViewType,
   BeltExamRegistrationListType,
+  BeltLevelType,
   CreateRegistrationListRequest,
-  AdminExamSessionViewType
+  EligibleStudentForExamType,
+  ExamRegistrationType,
+  ExamSessionType
 } from '@/types/apps/beltExamTypes'
 import type { ResponseResult } from '@/types/common'
-import { API_ENDPOINTS } from '@/constants/apiEndpoints'
+import { apiClient } from '@/utils/apiClient'
+import { logger } from '@/utils/logger'
 
 const unwrapList = (payload: any): any[] => {
   if (Array.isArray(payload?.records)) return payload.records
@@ -20,8 +20,6 @@ const unwrapList = (payload: any): any[] => {
   return []
 }
 
-
-// Request body for POST /belt-exams/sessions
 export interface CreateExamSessionRequest {
   name: string
   description?: string
@@ -41,19 +39,18 @@ export interface UpdateExamSessionRequest {
   examFee?: number
 }
 
-// Request body for POST /belt-exams/registrations
 export interface CreateExamRegistrationRequest {
   examSessionId: string
   studentId: string
+  classId: string
 }
 
-// Request body for batch registration
 export interface BatchExamRegistrationRequest {
   examSessionId: string
+  classId: string
   studentIds: string[]
 }
 
-// Request body for updating result
 export interface UpdateExamResultRequest {
   result: number
   score?: number
@@ -61,15 +58,12 @@ export interface UpdateExamResultRequest {
 }
 
 class BeltExamService {
-  // Exam Sessions
   async getExamSessions(): Promise<ResponseResult<ExamSessionType[]>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.sessions)
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        return { success: true, data: [] }
-      }
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
 
       return {
         success: true,
@@ -77,8 +71,8 @@ class BeltExamService {
       }
     } catch (error) {
       logger.error('BeltExamService', 'getExamSessions', error)
-      
-return { success: true, data: [] }
+
+      return { success: true, data: [] }
     }
   }
 
@@ -87,15 +81,13 @@ return { success: true, data: [] }
       const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.sessionById(id))
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'getExamSessionById', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -104,15 +96,13 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessions, data)
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'createExamSession', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -121,75 +111,19 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       const response = await apiClient.put<any>(API_ENDPOINTS.beltExams.sessionById(id), data)
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'updateExamSession', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
-  async submitExamSession(id: string): Promise<ResponseResult<ExamSessionType>> {
+  async openSession(id: string): Promise<ResponseResult<ExamSessionType>> {
     try {
-      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionSubmit(id))
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
-    } catch (error: any) {
-      logger.error('BeltExamService', 'submitExamSession', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
-    }
-  }
-
-  async approveExamSession(id: string): Promise<ResponseResult<ExamSessionType>> {
-    try {
-      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionApprove(id))
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
-    } catch (error: any) {
-      logger.error('BeltExamService', 'approveExamSession', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
-    }
-  }
-
-  async rejectExamSession(id: string): Promise<ResponseResult<ExamSessionType>> {
-    try {
-      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.sessionReject(id))
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
-    } catch (error: any) {
-      logger.error('BeltExamService', 'rejectExamSession', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
-    }
-  }
-
-  async openSession(id: string, registrationDeadline?: string): Promise<ResponseResult<ExamSessionType>> {
-    try {
-      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.openSession(id), {
-        registrationDeadline: registrationDeadline || null
-      })
-
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.openSession(id))
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
@@ -197,20 +131,17 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'openSession', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
-  // Exam Registrations
   async getExamRegistrations(params?: any): Promise<ResponseResult<ExamRegistrationType[]>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.registrations, { params })
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        return { success: true, data: [] }
-      }
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
 
       return {
         success: true,
@@ -218,8 +149,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       }
     } catch (error) {
       logger.error('BeltExamService', 'getExamRegistrations', error)
-      
-return { success: true, data: [] }
+
+      return { success: true, data: [] }
     }
   }
 
@@ -228,15 +159,13 @@ return { success: true, data: [] }
       const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrations, data)
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'createExamRegistration', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -245,49 +174,13 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationBatch, data)
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'batchExamRegistration', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
-    }
-  }
 
-  async approveExamRegistration(id: string): Promise<ResponseResult<ExamRegistrationType>> {
-    try {
-      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationApprove(id))
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
-    } catch (error: any) {
-      logger.error('BeltExamService', 'approveExamRegistration', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
-    }
-  }
-
-  async rejectExamRegistration(id: string): Promise<ResponseResult<ExamRegistrationType>> {
-    try {
-      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationReject(id))
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
-
-      return { success: true, data: apiResponse.data, message: apiResponse.message }
-    } catch (error: any) {
-      logger.error('BeltExamService', 'rejectExamRegistration', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -296,29 +189,23 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       const response = await apiClient.put<any>(API_ENDPOINTS.beltExams.registrationResult(id), data)
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        return { success: false, message: apiResponse.message }
-      }
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
 
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'updateExamResult', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
-  // Belt Levels - NOTE: API chưa có, cần backend bổ sung
   async getBeltLevels(): Promise<ResponseResult<BeltLevelType[]>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.beltLevels.root)
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) {
-        return { success: true, data: [] }
-      }
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
 
-      // Handle different response formats
       let data = apiResponse.data
 
       if (data && typeof data === 'object' && !Array.isArray(data)) {
@@ -333,8 +220,6 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
     }
   }
 
-  // ─── Luồng HLV đăng ký thi cấp ───────────────────────────────────────────
-
   async getOpenSessions(): Promise<ResponseResult<ExamSessionType[]>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.openSessions)
@@ -345,8 +230,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data?.records || apiResponse.data || [] }
     } catch (error: any) {
       logger.error('BeltExamService', 'getOpenSessions', error)
-      
-return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối' }
+
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -360,8 +245,8 @@ return { success: false, data: [], message: error?.response?.data?.message || 'L
       return { success: true, data: apiResponse.data || [] }
     } catch (error: any) {
       logger.error('BeltExamService', 'getEligibleStudents', error)
-      
-return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối' }
+
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -378,8 +263,8 @@ return { success: false, data: [], message: error?.response?.data?.message || 'L
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'createOrUpdateRegistrationList', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -388,7 +273,6 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       const response = await apiClient.get<any>(
         `${API_ENDPOINTS.beltExams.myRegistrationList(sessionId)}?classId=${classId}`
       )
-
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
@@ -396,23 +280,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('BeltExamService', 'getMyRegistrationList', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
-    }
-  }
 
-  async submitRegistrationList(listId: string): Promise<ResponseResult<null>> {
-    try {
-      const response = await apiClient.put<any>(API_ENDPOINTS.beltExams.submitRegistrationList(listId))
-      const apiResponse = response.data
-
-      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
-
-      return { success: true, message: apiResponse.message }
-    } catch (error: any) {
-      logger.error('BeltExamService', 'submitRegistrationList', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -426,8 +295,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'removeStudentFromList', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -441,8 +310,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('BeltExamService', 'lockSession', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -451,7 +320,6 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       const response = await apiClient.get<any>(
         `${API_ENDPOINTS.beltExams.adminView(sessionId)}?onlyPaid=${onlyPaid}`
       )
-
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
@@ -459,8 +327,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('BeltExamService', 'getAdminView', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -469,7 +337,6 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       const response = await apiClient.get<any>(
         `${API_ENDPOINTS.beltExams.exportList(sessionId)}?format=${format}`
       )
-
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
@@ -477,8 +344,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('BeltExamService', 'exportRegistrationList', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }

@@ -1,35 +1,35 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-import TextField from '@mui/material/TextField'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogContent from '@mui/material/DialogContent'
-import DialogActions from '@mui/material/DialogActions'
-import Button from '@mui/material/Button'
-import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
-import Grid from '@mui/material/Grid'
+import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
 import Divider from '@mui/material/Divider'
+import Grid from '@mui/material/Grid'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
 
 import { toast } from 'react-toastify'
 
 import { useAuth } from '@/contexts/authContext'
+import paymentService from '@/services/paymentService'
+import { API_ENDPOINTS } from '@/constants/apiEndpoints'
+import type { PaymentRecordType } from '@/types/apps/paymentTypes'
+import { paymentMethodLabels, paymentTypeLabels } from '@/types/apps/paymentTypes'
+import { apiClient } from '@/utils/apiClient'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
-import { apiClient } from '@/utils/apiClient'
-import { API_ENDPOINTS } from '@/constants/apiEndpoints'
-import type { PaymentRecordType} from '@/types/apps/paymentTypes';
-import { paymentTypeLabels, paymentMethodLabels } from '@/types/apps/paymentTypes'
-import paymentService from '@/services/paymentService'
 
 type ReceiptModalProps = {
   open: boolean
@@ -50,46 +50,48 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (open && receiptNumber) {
-      const fetchReceipt = async () => {
-        setLoading(true)
-
-        try {
-          const res = await apiClient.get<any>(API_ENDPOINTS.payments.byReceipt(receiptNumber))
-
-          if (res.data.isSuccess) {
-            setItems(res.data.data)
-          } else {
-            toast.error(res.data.message || 'Không thể tải chi tiết biên lai')
-          }
-        } catch (error) {
-          toast.error('Lỗi khi tải chi tiết biên lai')
-        } finally {
-          setLoading(false)
-        }
-      }
-
-      fetchReceipt()
-    } else {
+    if (!open || !receiptNumber) {
       setItems([])
       setEditing(false)
       setDraft({})
+
+      return
     }
+
+    const fetchReceipt = async () => {
+      setLoading(true)
+
+      try {
+        const response = await apiClient.get<any>(API_ENDPOINTS.payments.byReceipt(receiptNumber))
+
+        if (response.data.isSuccess) {
+          setItems(response.data.data)
+        } else {
+          toast.error(response.data.message || 'Không thể tải chi tiết biên lai.')
+        }
+      } catch {
+        toast.error('Lỗi khi tải chi tiết biên lai.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReceipt()
   }, [open, receiptNumber])
 
   if (!open) return null
 
   const firstItem = items.length > 0 ? items[0] : null
   const totalAmount = items.reduce((sum, current) => sum + current.amount, 0)
-  const isReceiptInactive = items.length > 0 && items.every(x => x.isActive === false)
+  const isReceiptInactive = items.length > 0 && items.every(item => item.isActive === false)
 
   const beginEdit = () => {
     const nextDraft: Record<string, { originalAmount: number; amount: number }> = {}
 
-    for (const it of items) {
-      nextDraft[it.id] = {
-        originalAmount: Number(it.originalAmount ?? it.amount ?? 0),
-        amount: Number(it.amount ?? 0)
+    for (const item of items) {
+      nextDraft[item.id] = {
+        originalAmount: Number(item.originalAmount ?? item.amount ?? 0),
+        amount: Number(item.amount ?? 0)
       }
     }
 
@@ -104,115 +106,116 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
 
   const reload = async () => {
     if (!receiptNumber) return
+
     setLoading(true)
 
     try {
-      const res = await apiClient.get<any>(API_ENDPOINTS.payments.byReceipt(receiptNumber))
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.byReceipt(receiptNumber))
 
-      if (res.data.isSuccess) {
-        setItems(res.data.data)
+      if (response.data.isSuccess) {
+        setItems(response.data.data)
       } else {
-        toast.error(res.data.message || 'Không thể tải chi tiết biên lai')
+        toast.error(response.data.message || 'Không thể tải chi tiết biên lai.')
       }
     } catch {
-      toast.error('Lỗi khi tải chi tiết biên lai')
+      toast.error('Lỗi khi tải chi tiết biên lai.')
     } finally {
       setLoading(false)
     }
   }
 
   const saveEdits = async () => {
-    if (!isAdmin) return
-    if (!firstItem) return
+    if (!isAdmin || !firstItem) return
 
     try {
       setSaving(true)
 
-      const changed = items.filter(it => {
-        const d = draft[it.id]
+      const changed = items.filter(item => {
+        const currentDraft = draft[item.id]
 
-        if (!d) return false
-        
-return Number(d.amount) !== Number(it.amount) || Number(d.originalAmount) !== Number(it.originalAmount)
+        if (!currentDraft) return false
+
+        return (
+          Number(currentDraft.amount) !== Number(item.amount) ||
+          Number(currentDraft.originalAmount) !== Number(item.originalAmount)
+        )
       })
 
-      for (const it of changed) {
-        const d = draft[it.id]
+      for (const item of changed) {
+        const currentDraft = draft[item.id]
 
-        const res = await paymentService.updatePayment(it.id, {
-          type: it.type,
-          amount: Number(d.amount || 0),
-          originalAmount: Number(d.originalAmount || 0),
-          paymentDate: it.paymentDate,
-          method: it.method,
-          description: it.description || '',
-          transactionRef: it.transactionRef || undefined,
-          receiptNumber: it.receiptNumber || undefined,
-          classId: it.classId || undefined,
-          productId: it.productId || undefined,
-          forMonth: it.forMonth || undefined,
-          forYear: it.forYear || undefined,
-          transferProofImageUrl: it.transferProofImageUrl || undefined,
-          collectedByUserId: it.collectedByUserId || undefined,
-          isActive: it.isActive !== false
+        const response = await paymentService.updatePayment(item.id, {
+          type: item.type,
+          amount: Number(currentDraft.amount || 0),
+          originalAmount: Number(currentDraft.originalAmount || 0),
+          paymentDate: item.paymentDate,
+          method: item.method,
+          description: item.description || '',
+          transactionRef: item.transactionRef || undefined,
+          receiptNumber: item.receiptNumber || undefined,
+          classId: item.classId || undefined,
+          productId: item.productId || undefined,
+          forMonth: item.forMonth || undefined,
+          forYear: item.forYear || undefined,
+          transferProofImageUrl: item.transferProofImageUrl || undefined,
+          collectedByUserId: item.collectedByUserId || undefined,
+          isActive: item.isActive !== false
         })
 
-        if (!res.success) {
-          throw new Error(res.message || 'update failed')
+        if (!response.success) {
+          throw new Error(response.message || 'Update failed')
         }
       }
 
-      toast.success('Đã cập nhật biên lai')
+      toast.success('Đã cập nhật biên lai.')
       setEditing(false)
       setDraft({})
       await reload()
     } catch {
-      toast.error('Không thể cập nhật biên lai')
+      toast.error('Không thể cập nhật biên lai.')
     } finally {
       setSaving(false)
     }
   }
 
   const cancelReceipt = async () => {
-    if (!isAdmin) return
-    if (!firstItem) return
-    if (items.length === 0) return
+    if (!isAdmin || !firstItem || items.length === 0) return
 
-    const ok = window.confirm('Hủy biên lai này? Biên lai sẽ không tính vào thống kê và coi như chưa thu.')
+    const confirmed = window.confirm('Hủy biên lai này? Biên lai sẽ không còn tính vào thống kê và coi như chưa thu.')
 
-    if (!ok) return
+    if (!confirmed) return
 
     try {
       setSaving(true)
 
-      for (const it of items) {
-        const res = await paymentService.updatePayment(it.id, {
-          type: it.type,
-          amount: it.amount,
-          originalAmount: Number(it.originalAmount ?? it.amount ?? 0),
-          paymentDate: it.paymentDate,
-          method: it.method,
-          description: it.description || '',
-          transactionRef: it.transactionRef || undefined,
-          receiptNumber: it.receiptNumber || undefined,
-          classId: it.classId || undefined,
-          productId: it.productId || undefined,
-          forMonth: it.forMonth || undefined,
-          forYear: it.forYear || undefined,
-          transferProofImageUrl: it.transferProofImageUrl || undefined,
-          collectedByUserId: it.collectedByUserId || undefined,
+      for (const item of items) {
+        const response = await paymentService.updatePayment(item.id, {
+          type: item.type,
+          amount: item.amount,
+          originalAmount: Number(item.originalAmount ?? item.amount ?? 0),
+          paymentDate: item.paymentDate,
+          method: item.method,
+          description: item.description || '',
+          transactionRef: item.transactionRef || undefined,
+          receiptNumber: item.receiptNumber || undefined,
+          classId: item.classId || undefined,
+          productId: item.productId || undefined,
+          forMonth: item.forMonth || undefined,
+          forYear: item.forYear || undefined,
+          transferProofImageUrl: item.transferProofImageUrl || undefined,
+          collectedByUserId: item.collectedByUserId || undefined,
           isActive: false
         })
 
-        if (!res.success) {
-          throw new Error(res.message || 'cancel failed')
+        if (!response.success) {
+          throw new Error(response.message || 'Cancel failed')
         }
       }
 
-      toast.success('Đã hủy biên lai')
+      toast.success('Đã hủy biên lai.')
       await reload()
     } catch {
-      toast.error('Không thể hủy biên lai')
+      toast.error('Không thể hủy biên lai.')
     } finally {
       setSaving(false)
     }
@@ -221,7 +224,7 @@ return Number(d.amount) !== Number(it.amount) || Number(d.originalAmount) !== Nu
   return (
     <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
       <DialogTitle>
-        <Typography variant='h5'>Chi tiết Biên lai: {receiptNumber}</Typography>
+        <Typography variant='h5'>Chi tiết biên lai: {receiptNumber}</Typography>
       </DialogTitle>
       <DialogContent dividers>
         {loading ? (
@@ -229,41 +232,71 @@ return Number(d.amount) !== Number(it.amount) || Number(d.originalAmount) !== Nu
             <CircularProgress />
           </Box>
         ) : items.length === 0 ? (
-          <Typography textAlign='center' color='textSecondary'>Không tìm thấy dữ liệu biên lai.</Typography>
+          <Typography textAlign='center' color='text.secondary'>
+            Không tìm thấy dữ liệu biên lai.
+          </Typography>
         ) : (
           <Grid container spacing={6}>
             <Grid item xs={12} md={firstItem?.transferProofImageUrl ? 7 : 12}>
               {isReceiptInactive && (
                 <Box mb={4}>
                   <Typography color='error' fontWeight={600}>
-                    Biên lai đã bị hủy (inactive)
+                    Biên lai đã bị hủy.
                   </Typography>
                 </Box>
               )}
+
               <Box mb={4}>
-                <Typography variant='subtitle2' color='textSecondary'>Học viên</Typography>
-                <Typography variant='body1' fontWeight={500}>{firstItem?.studentName}</Typography>
+                <Typography variant='subtitle2' color='text.secondary'>
+                  Học viên
+                </Typography>
+                <Typography variant='body1' fontWeight={500}>
+                  {firstItem?.studentName}
+                </Typography>
               </Box>
+
               <Box mb={4}>
-                <Typography variant='subtitle2' color='textSecondary'>Người thu tiền</Typography>
+                <Typography variant='subtitle2' color='text.secondary'>
+                  Lớp
+                </Typography>
+                <Typography variant='body1'>{firstItem?.className || '-'}</Typography>
+              </Box>
+
+              <Box mb={4}>
+                <Typography variant='subtitle2' color='text.secondary'>
+                  Người thu tiền
+                </Typography>
                 <Typography variant='body1'>{firstItem?.collectedByUserName || '-'}</Typography>
               </Box>
+
               <Box mb={4}>
-                <Typography variant='subtitle2' color='textSecondary'>Người tạo</Typography>
+                <Typography variant='subtitle2' color='text.secondary'>
+                  Người tạo
+                </Typography>
                 <Typography variant='body1'>{firstItem?.createdByUserName || '-'}</Typography>
               </Box>
+
               <Box mb={4}>
-                <Typography variant='subtitle2' color='textSecondary'>Phương thức</Typography>
-                <Typography variant='body1'>{firstItem?.method !== undefined ? paymentMethodLabels[firstItem.method] : '-'}</Typography>
+                <Typography variant='subtitle2' color='text.secondary'>
+                  Phương thức
+                </Typography>
+                <Typography variant='body1'>
+                  {firstItem?.method !== undefined ? paymentMethodLabels[firstItem.method] : '-'}
+                </Typography>
               </Box>
+
               <Box mb={4}>
-                <Typography variant='subtitle2' color='textSecondary'>Ngày thanh toán</Typography>
+                <Typography variant='subtitle2' color='text.secondary'>
+                  Ngày thanh toán
+                </Typography>
                 <Typography variant='body1'>
                   {firstItem?.paymentDate ? new Date(firstItem.paymentDate).toLocaleString('vi-VN') : '-'}
                 </Typography>
               </Box>
 
-              <Typography variant='h6' mt={6} mb={2}>Các hạng mục thu</Typography>
+              <Typography variant='h6' mt={6} mb={2}>
+                Các hạng mục thu
+              </Typography>
               <TableContainer>
                 <Table size='small'>
                   <TableHead>
@@ -278,9 +311,12 @@ return Number(d.amount) !== Number(it.amount) || Number(d.originalAmount) !== Nu
                     {items.map(item => (
                       <TableRow key={item.id}>
                         <TableCell>
-                          {item.description || 
-                           (item.type === 0 ? `Học phí ${item.forMonth}/${item.forYear}` :
-                            item.type === 1 ? 'Lệ phí thi' : 'Khác')}
+                          {item.description ||
+                            (item.type === 0
+                              ? `Học phí ${item.forMonth}/${item.forYear}`
+                              : item.type === 1
+                                ? 'Lệ phí thi'
+                                : 'Khác')}
                         </TableCell>
                         <TableCell>{paymentTypeLabels[item.type]}</TableCell>
                         <TableCell align='right'>
@@ -290,11 +326,11 @@ return Number(d.amount) !== Number(it.amount) || Number(d.originalAmount) !== Nu
                               type='number'
                               inputProps={{ min: 0 }}
                               value={draft[item.id]?.originalAmount ?? item.originalAmount ?? item.amount}
-                              onChange={e =>
+                              onChange={event =>
                                 setDraft(prev => ({
                                   ...prev,
                                   [item.id]: {
-                                    originalAmount: Number(e.target.value || 0),
+                                    originalAmount: Number(event.target.value || 0),
                                     amount: prev[item.id]?.amount ?? item.amount
                                   }
                                 }))
@@ -312,12 +348,12 @@ return Number(d.amount) !== Number(it.amount) || Number(d.originalAmount) !== Nu
                               type='number'
                               inputProps={{ min: 0 }}
                               value={draft[item.id]?.amount ?? item.amount}
-                              onChange={e =>
+                              onChange={event =>
                                 setDraft(prev => ({
                                   ...prev,
                                   [item.id]: {
                                     originalAmount: prev[item.id]?.originalAmount ?? item.originalAmount ?? item.amount,
-                                    amount: Number(e.target.value || 0)
+                                    amount: Number(event.target.value || 0)
                                   }
                                 }))
                               }
@@ -330,21 +366,30 @@ return Number(d.amount) !== Number(it.amount) || Number(d.originalAmount) !== Nu
                       </TableRow>
                     ))}
                     <TableRow>
-                      <TableCell colSpan={3} align='right'><Typography fontWeight='bold'>Tổng cộng:</Typography></TableCell>
-                      <TableCell align='right'><Typography fontWeight='bold' color='primary'>{formatCurrency(totalAmount)}</Typography></TableCell>
+                      <TableCell colSpan={3} align='right'>
+                        <Typography fontWeight='bold'>Tổng cộng:</Typography>
+                      </TableCell>
+                      <TableCell align='right'>
+                        <Typography fontWeight='bold' color='primary'>
+                          {formatCurrency(totalAmount)}
+                        </Typography>
+                      </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
               </TableContainer>
             </Grid>
+
             {firstItem?.transferProofImageUrl && (
               <Grid item xs={12} md={5}>
-                <Typography variant='h6' mb={2}>Ảnh minh chứng (Chuyển khoản)</Typography>
+                <Typography variant='h6' mb={2}>
+                  Ảnh minh chứng chuyển khoản
+                </Typography>
                 <Divider sx={{ mb: 4 }} />
-                <Box 
+                <Box
                   component='img'
                   src={firstItem.transferProofImageUrl}
-                  alt='Transfer Proof'
+                  alt='Ảnh minh chứng chuyển khoản'
                   sx={{
                     width: '100%',
                     maxHeight: '400px',
@@ -379,7 +424,9 @@ return Number(d.amount) !== Number(it.amount) || Number(d.originalAmount) !== Nu
             Hủy biên lai
           </Button>
         )}
-        <Button onClick={onClose} variant='outlined'>Đóng</Button>
+        <Button onClick={onClose} variant='outlined'>
+          Đóng
+        </Button>
       </DialogActions>
     </Dialog>
   )

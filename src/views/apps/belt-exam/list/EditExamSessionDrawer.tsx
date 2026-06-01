@@ -3,19 +3,19 @@
 import { useEffect, useState } from 'react'
 
 import Button from '@mui/material/Button'
-import Drawer from '@mui/material/Drawer'
 import Divider from '@mui/material/Divider'
+import Drawer from '@mui/material/Drawer'
+import FormControlLabel from '@mui/material/FormControlLabel'
 import Grid from '@mui/material/Grid2'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
 import Switch from '@mui/material/Switch'
-import FormControlLabel from '@mui/material/FormControlLabel'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
-import type { ExamSessionType } from '@/types/apps/beltExamTypes'
-import beltExamService from '@/services/beltExamService'
 import { useNotification } from '@/contexts/notificationContext'
+import beltExamService from '@/services/beltExamService'
+import type { ExamSessionType } from '@/types/apps/beltExamTypes'
 
 type Props = {
   open: boolean
@@ -24,30 +24,27 @@ type Props = {
   setData: React.Dispatch<React.SetStateAction<ExamSessionType[]>>
 }
 
-const toDateInput = (isoOrDate?: string) => {
-  if (!isoOrDate) return ''
+const toDateInput = (value?: string) => {
+  if (!value) return ''
 
-  // API returns DateOnly as ISO-like string, keep first 10 chars.
-  return isoOrDate.slice(0, 10)
+  return value.slice(0, 10)
 }
 
-const toDateTimeLocalInput = (iso?: string) => {
-  if (!iso) return ''
+const toDateTimeLocalInput = (value?: string) => {
+  if (!value) return ''
 
-  // Convert ISO -> yyyy-MM-ddTHH:mm for input datetime-local
-  const d = new Date(iso)
+  const date = new Date(value)
 
-  if (Number.isNaN(d.getTime())) return ''
-  const pad = (n: number) => String(n).padStart(2, '0')
+  if (Number.isNaN(date.getTime())) return ''
 
-  
-return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const pad = (input: number) => String(input).padStart(2, '0')
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
   const { showNotification } = useNotification()
   const [loading, setLoading] = useState(false)
-
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -60,6 +57,7 @@ const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
 
   useEffect(() => {
     if (!open || !session) return
+
     setFormData({
       name: session.name || '',
       description: session.description || '',
@@ -71,20 +69,21 @@ const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
     })
   }, [open, session])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
     if (!session) return
 
     if (!formData.name.trim() || !formData.examDate) {
       showNotification('Vui lòng điền đầy đủ thông tin bắt buộc.', 'error')
-      
-return
+
+      return
     }
 
     try {
       setLoading(true)
 
-      const res = await beltExamService.updateExamSession(session.id, {
+      const response = await beltExamService.updateExamSession(session.id, {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         examDate: formData.examDate,
@@ -94,15 +93,15 @@ return
         examFee: formData.examFee ? Number(formData.examFee) : undefined
       })
 
-      if (res.success && res.data) {
-        setData(prev => prev.map(x => (x.id === session.id ? res.data! : x)))
-        showNotification('Cập nhật kỳ thi thành công!', 'success')
-        onClose()
-      } else {
-        showNotification(res.message || 'Không thể cập nhật kỳ thi.', 'error')
+      if (!response.success || !response.data) {
+        showNotification(response.message || 'Không thể cập nhật kỳ thi.', 'error')
+
+        return
       }
-    } catch {
-      showNotification('Đã có lỗi khi cập nhật kỳ thi.', 'error')
+
+      setData(prev => prev.map(item => (item.id === session.id ? response.data as ExamSessionType : item)))
+      showNotification('Cập nhật kỳ thi thành công.', 'success')
+      onClose()
     } finally {
       setLoading(false)
     }
@@ -131,7 +130,7 @@ return
             fullWidth
             label='Tên kỳ thi *'
             value={formData.name}
-            onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            onChange={event => setFormData(prev => ({ ...prev, name: event.target.value }))}
           />
 
           <Grid container spacing={3}>
@@ -141,7 +140,7 @@ return
                 type='date'
                 label='Ngày thi *'
                 value={formData.examDate}
-                onChange={e => setFormData(prev => ({ ...prev, examDate: e.target.value }))}
+                onChange={event => setFormData(prev => ({ ...prev, examDate: event.target.value }))}
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
@@ -151,7 +150,7 @@ return
                 type='number'
                 label='Lệ phí thi (VND)'
                 value={formData.examFee}
-                onChange={e => setFormData(prev => ({ ...prev, examFee: e.target.value }))}
+                onChange={event => setFormData(prev => ({ ...prev, examFee: event.target.value }))}
                 inputProps={{ min: 0, step: 1000 }}
                 InputProps={{ endAdornment: <InputAdornment position='end'>VND</InputAdornment> }}
               />
@@ -162,16 +161,17 @@ return
             fullWidth
             label='Địa điểm thi'
             value={formData.location}
-            onChange={e => setFormData(prev => ({ ...prev, location: e.target.value }))}
+            onChange={event => setFormData(prev => ({ ...prev, location: event.target.value }))}
           />
 
           <TextField
             fullWidth
             type='datetime-local'
-            label='Hạn đăng ký (tùy chọn)'
+            label='Hạn đăng ký'
             value={formData.registrationDeadline}
-            onChange={e => setFormData(prev => ({ ...prev, registrationDeadline: e.target.value }))}
+            onChange={event => setFormData(prev => ({ ...prev, registrationDeadline: event.target.value }))}
             InputLabelProps={{ shrink: true }}
+            helperText='Đây là hạn dùng cho bước HLV đăng ký, không nhập lại ở lúc mở kỳ thi.'
           />
 
           <TextField
@@ -180,11 +180,16 @@ return
             rows={3}
             label='Mô tả'
             value={formData.description}
-            onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            onChange={event => setFormData(prev => ({ ...prev, description: event.target.value }))}
           />
 
           <FormControlLabel
-            control={<Switch checked={formData.isActive} onChange={e => setFormData(prev => ({ ...prev, isActive: e.target.checked }))} />}
+            control={
+              <Switch
+                checked={formData.isActive}
+                onChange={event => setFormData(prev => ({ ...prev, isActive: event.target.checked }))}
+              />
+            }
             label='Kích hoạt'
           />
 
@@ -203,4 +208,3 @@ return
 }
 
 export default EditExamSessionDrawer
-

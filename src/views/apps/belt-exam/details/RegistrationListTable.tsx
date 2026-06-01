@@ -1,31 +1,31 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-import Card from '@mui/material/Card'
-import Typography from '@mui/material/Typography'
-import Chip from '@mui/material/Chip'
-import IconButton from '@mui/material/IconButton'
-import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
-import { toast } from 'react-toastify'
+import Card from '@mui/material/Card'
+import Chip from '@mui/material/Chip'
+import CircularProgress from '@mui/material/CircularProgress'
+import Typography from '@mui/material/Typography'
 
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
-  useReactTable,
-  getPaginationRowModel
+  getPaginationRowModel,
+  useReactTable
 } from '@tanstack/react-table'
-
-import { logger } from '@/utils/logger'
 
 import beltExamService from '@/services/beltExamService'
 import type { ExamRegistrationType, ExamSessionStatus } from '@/types/apps/beltExamTypes'
+import { examRegistrationStatusColors, examRegistrationStatusLabels } from '@/types/apps/beltExamTypes'
+import { logger } from '@/utils/logger'
+import { fuzzyFilter } from '@/utils/tableHelpers'
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)
-}
+const columnHelper = createColumnHelper<ExamRegistrationType>()
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)
 
 interface Props {
   sessionId: string
@@ -33,158 +33,108 @@ interface Props {
   refreshTrigger: number
 }
 
-const columnHelper = createColumnHelper<ExamRegistrationType>()
-
-const statusColors: Record<string, 'warning' | 'success' | 'error' | 'secondary'> = {
-  Pending: 'warning',
-  Approved: 'success',
-  Rejected: 'error'
-}
-
 const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Props) => {
   const [data, setData] = useState<ExamRegistrationType[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchRegistrations = async () => {
-    setLoading(true)
-
-    try {
-      const res = await beltExamService.getExamRegistrations({ examSessionId: sessionId })
-
-      if (res.success && res.data) {
-        setData(res.data)
-      }
-    } catch (error) {
-      logger.error('RegistrationListTable', 'Li khi ly danh sch th sinh', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    fetchRegistrations()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, refreshTrigger])
+    const fetchRegistrations = async () => {
+      setLoading(true)
 
-  const deleteRegistration = async () => {
-    if (!confirm('Bạn có chắc chắn muốn xóa thí sinh này khỏi danh sách dự thi?')) return
-    alert('Tính năng xóa đang được phát triển') // TODO: call APi
-  }
+      try {
+        const result = await beltExamService.getExamRegistrations({ examSessionId: sessionId, pageSize: 1000 })
 
-  const rejectRegistration = async (id: string) => {
-    if (!confirm('Bạn có chắc chắn muốn từ chối/huỷ dự thi của học viên này? Thao tác này sẽ xoá luôn hoá đơn nếu học viên đã đóng tiền.')) return
-    
-    try {
-      const res = await beltExamService.rejectExamRegistration(id)
-
-      if (res.success) {
-        toast.success(res.message || 'Huỷ dự thi thành công')
-        fetchRegistrations()
-      } else {
-        toast.error(res.message || 'Có lỗi xảy ra')
+        if (result.success && result.data) {
+          setData(result.data)
+        } else {
+          setData([])
+        }
+      } catch (error) {
+        logger.error('RegistrationListTable', 'fetchRegistrations', error)
+        setData([])
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      logger.error('RegistrationListTable', 'error', error)
-      toast.error('Lỗi kết nối máy chủ')
     }
-  }
+
+    fetchRegistrations()
+  }, [refreshTrigger, sessionId])
 
   const columns = useMemo(
-    () => {
-      const cols = [
-        columnHelper.accessor('studentName', {
-          header: 'Học viên',
-          cell: ({ row }) => <Typography color='text.primary' fontWeight={500}>{row.original.studentName}</Typography>
-        }),
-        columnHelper.accessor('className', {
-          header: 'Lớp',
-          cell: ({ row }) => <Typography>{row.original.className}</Typography>
-        }),
-        columnHelper.accessor('currentBeltLevelName', {
-          header: 'Cấp hiện tại',
-          cell: ({ row }) => <Typography>{row.original.currentBeltLevelName || 'Không có'}</Typography>
-        }),
-        columnHelper.accessor('targetBeltLevelName', {
-          header: 'Cấp đai thi lên',
-          cell: ({ row }) => <Typography color='primary' fontWeight={500}>{row.original.targetBeltLevelName}</Typography>
-        }),
-        columnHelper.accessor('isFeePaid', {
-          header: 'Lệ phí',
-          cell: ({ row }) => {
-            const isPaid = row.original.isFeePaid
-
-            
-return (
-              <Box display='flex' flexDirection='column' alignItems='flex-start' gap={1}>
-                <Typography variant='body2'>{formatCurrency(row.original.feeAmount ?? 0)}</Typography>
-                <Chip
-                  label={isPaid ? 'Đã thu' : 'Chưa thu'}
-                  color={isPaid ? 'success' : 'error'}
-                  variant='tonal'
-                  size='small'
-                />
-              </Box>
-            )
-          }
-        }),
-        columnHelper.accessor('status', {
-          header: 'Trạng thái',
-          cell: ({ row }) => (
+    () => [
+      columnHelper.accessor('studentName', {
+        header: 'Học viên',
+        cell: ({ row }) => (
+          <Typography color='text.primary' fontWeight={500}>
+            {row.original.studentName}
+          </Typography>
+        )
+      }),
+      columnHelper.accessor('className', {
+        header: 'Lớp',
+        cell: ({ row }) => <Typography>{row.original.className}</Typography>
+      }),
+      columnHelper.accessor('currentBeltLevelName', {
+        header: 'Cấp hiện tại',
+        cell: ({ row }) => <Typography>{row.original.currentBeltLevelName || '—'}</Typography>
+      }),
+      columnHelper.accessor('targetBeltLevelName', {
+        header: 'Cấp thi',
+        cell: ({ row }) => (
+          <Typography color='primary.main' fontWeight={500}>
+            {row.original.targetBeltLevelName}
+          </Typography>
+        )
+      }),
+      columnHelper.accessor('isFeePaid', {
+        header: 'Lệ phí',
+        cell: ({ row }) => (
+          <Box display='flex' flexDirection='column' alignItems='flex-start' gap={1}>
+            <Typography variant='body2'>{formatCurrency(row.original.feeAmount ?? 0)}</Typography>
             <Chip
-              label={row.original.status}
-              color={statusColors[row.original.status] || 'secondary'}
+              label={row.original.isFeePaid ? 'Đã thu' : 'Chưa thu'}
+              color={row.original.isFeePaid ? 'success' : 'warning'}
               variant='tonal'
               size='small'
             />
-          )
-        })
-      ]
-
-      if (sessionStatus === 'Draft') {
-        cols.push(
-          columnHelper.display({
-            id: 'actions',
-            header: 'Hành động',
-            cell: () => (
-              <IconButton color='error' onClick={() => deleteRegistration()}>
-                <i className='ri-delete-bin-7-line' />
-              </IconButton>
-            )
-          }) as any
+          </Box>
         )
-      } else if (sessionStatus === 'Pending' || sessionStatus === 'Approved') {
-        cols.push(
-          columnHelper.display({
-            id: 'actions',
-            header: 'Hành động',
-            cell: ({ row }) => (
-              row.original.status !== 'Rejected' ? (
-                <IconButton color='error' title='Huỷ dự thi' onClick={() => rejectRegistration(row.original.id)}>
-                  <i className='ri-close-circle-line' />
-                </IconButton>
-              ) : null
-            )
-          }) as any
+      }),
+      columnHelper.accessor('status', {
+        header: 'Trạng thái',
+        cell: ({ row }) => (
+          <Chip
+            label={examRegistrationStatusLabels[row.original.status] ?? row.original.status}
+            color={examRegistrationStatusColors[row.original.status] ?? 'secondary'}
+            variant='tonal'
+            size='small'
+          />
         )
-      }
-
-      
-return cols
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sessionStatus]
+      })
+    ],
+    []
   )
 
   const table = useReactTable({
     data,
-    columns: columns as any,
-    filterFns: {} as any,
+    columns,
+    filterFns: { fuzzy: fuzzyFilter },
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: getPaginationRowModel()
   })
 
   return (
     <Card>
+      <Box className='flex items-center justify-between px-4 py-3'>
+        <Typography variant='h6'>Danh sách đăng ký</Typography>
+        <Chip
+          size='small'
+          variant='tonal'
+          color={sessionStatus === 'Locked' ? 'error' : sessionStatus === 'Open' ? 'primary' : 'secondary'}
+          label={sessionStatus === 'Locked' ? 'Chỉ xem' : sessionStatus === 'Open' ? 'Đang nhận đăng ký' : 'Bản nháp'}
+        />
+      </Box>
+
       {loading && data.length === 0 ? (
         <Box sx={{ p: 5, display: 'flex', justifyContent: 'center' }}>
           <CircularProgress />
@@ -216,7 +166,7 @@ return cols
               {data.length === 0 && !loading && (
                 <tr>
                   <td colSpan={columns.length} className='px-4 py-8 text-center text-textSecondary'>
-                    Chưa có học viên đăng ký
+                    Chưa có học viên đăng ký.
                   </td>
                 </tr>
               )}

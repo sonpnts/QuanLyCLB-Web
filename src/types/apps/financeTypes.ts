@@ -37,3 +37,16 @@ export type FinanceAmountSummaryType = {
   amount: number
   raw?: Record<string, unknown>
 }
+
+export type FinanceTransactionSummaryType = {
+  tuitionTotal: number
+  examFeeTotal: number
+  productSalesTotal: number
+  receiptTotal: number
+  handedOverTotal: number
+  fromDate?: string
+  toDate?: string
+  classId?: string
+  branchId?: string
+  instructorId?: string
+}

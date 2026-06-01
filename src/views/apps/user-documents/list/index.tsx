@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import Autocomplete from '@mui/material/Autocomplete'
+import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -38,6 +39,7 @@ import userDocumentService from '@/services/userDocumentService'
 import userService from '@/services/userService'
 import type { UsersType } from '@/types/apps/userTypes'
 import type { UserDocumentDto, UserDocumentType } from '@/types/apps/userDocumentTypes'
+import { documentStatusColors, documentStatusLabels } from '@/types/apps/userDocumentTypes'
 import { fuzzyFilter } from '@/utils/tableHelpers'
 import tableStyles from '@core/styles/table.module.css'
 
@@ -339,31 +341,31 @@ return (
       }
     },
 
-    // Trạng thái
-    // columnHelper.accessor(row => row.latest.status, {
-    //   id: 'status',
-    //   header: 'Trạng thái',
-    //   cell: ({ row }) => {
-    //     const doc = row.original.latest
-    //     return (
-    //       <Box className='flex flex-col gap-0.5'>
-    //         <Chip
-    //           label={documentStatusLabels[doc.status]}
-    //           size='small'
-    //           color={documentStatusColors[doc.status]}
-    //           variant='tonal'
-    //         />
-    //         {doc.status === 2 && doc.resubmissionReason && (
-    //           <Tooltip title={doc.resubmissionReason}>
-    //             <Typography variant='caption' color='error' noWrap sx={{ maxWidth: 140, cursor: 'help' }}>
-    //               {doc.resubmissionReason}
-    //             </Typography>
-    //           </Tooltip>
-    //         )}
-    //       </Box>
-    //     )
-    //   }
-    // }),
+    columnHelper.accessor(row => row.latest.status, {
+      id: 'status',
+      header: 'Trạng thái',
+      cell: ({ row }) => {
+        const doc = row.original.latest
+
+        return (
+          <Box className='flex flex-col gap-0.5'>
+            <Chip
+              label={documentStatusLabels[doc.status]}
+              size='small'
+              color={documentStatusColors[doc.status]}
+              variant='tonal'
+            />
+            {doc.status === 2 && doc.resubmissionReason && (
+              <Tooltip title={doc.resubmissionReason}>
+                <Typography variant='caption' color='error' noWrap sx={{ maxWidth: 180, cursor: 'help' }}>
+                  {doc.resubmissionReason}
+                </Typography>
+              </Tooltip>
+            )}
+          </Box>
+        )
+      }
+    }),
 
     // Lịch sử
     {
@@ -443,7 +445,7 @@ return (
       <Card>
         <CardHeader
           title='Quản lý tài liệu người dùng'
-          subheader='Hiển thị 1 ảnh/file mới nhất mỗi loại tài liệu theo từng người dùng'
+          subheader='Không còn bước duyệt. Admin chỉ xem tài liệu mới nhất và yêu cầu nộp lại khi cần chỉnh sửa.'
         />
 
         {/* Filters */}
@@ -826,6 +828,9 @@ return (
           <Typography variant='body2' color='text.secondary'>
             Email thông báo sẽ được gửi tự động đến người dùng sau khi xác nhận.
           </Typography>
+          {resubmitTarget?.resubmissionReason && (
+            <Alert severity='info'>Lý do hiện tại: {resubmitTarget.resubmissionReason}</Alert>
+          )}
           <TextField
             label='Lý do yêu cầu nộp lại *'
             fullWidth multiline rows={3}

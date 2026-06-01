@@ -12,9 +12,9 @@ import Divider from '@mui/material/Divider'
 import Typography from '@mui/material/Typography'
 
 import { useAuth } from '@/contexts/authContext'
-import financeService from '@/services/financeService'
+import classService from '@/services/classService'
 import paymentService from '@/services/paymentService'
-import type { InstructorClassCollectionType } from '@/types/apps/financeTypes'
+import studentAttendanceService from '@/services/studentAttendanceService'
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
@@ -22,136 +22,126 @@ import { hasAdminRole } from '@/utils/roleUtils'
 import InvoiceCard from '@/views/apps/invoice/list/InvoiceCard'
 import InvoiceListTable from '@/views/apps/invoice/list/InvoiceListTable'
 
-const getBreakdownAmount = (collections: InstructorClassCollectionType[], key: string) =>
-  collections.reduce(
-    (sum, item) => sum + Number(item.breakdown.find(detail => detail.key === key)?.amount || 0),
-    0
-  )
+type PaymentClassOption = {
+  id: string
+  name: string
+}
 
 const PaymentInvoiceMerged = () => {
   const router = useRouter()
   const { auth } = useAuth()
 
   const [payments, setPayments] = useState<PaymentRecordType[]>([])
-  const [pendingCollections, setPendingCollections] = useState<InstructorClassCollectionType[]>([])
   const [loading, setLoading] = useState(true)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [selectedClassId, setSelectedClassId] = useState('')
+  const [classOptions, setClassOptions] = useState<PaymentClassOption[]>([])
 
   const isAdmin = useMemo(
     () => hasPermission(auth?.permissions, 'Payment.Collect.ManageAll') || hasAdminRole(auth?.roles),
     [auth?.permissions, auth?.roles]
   )
 
+  useEffect(() => {
+    const loadClassOptions = async () => {
+      if (isAdmin) {
+        const result = await classService.getClassLookup({ isActive: true, pageSize: 1000 })
+
+        if (!result.success || !result.data) {
+          setClassOptions([])
+
+          return
+        }
+
+        setClassOptions(
+          result.data
+            .map(item => ({
+              id: item.id,
+              name: item.code ? `${item.name} (${item.code})` : item.name
+            }))
+            .sort((left, right) => left.name.localeCompare(right.name, 'vi'))
+        )
+
+        return
+      }
+
+      const result = await studentAttendanceService.getCoachClasses()
+
+      if (!result.success || !result.data) {
+        setClassOptions([])
+
+        return
+      }
+
+      setClassOptions(
+        result.data
+          .map(item => ({
+            id: item.classId,
+            name: item.classCode ? `${item.className} (${item.classCode})` : item.className
+          }))
+          .sort((left, right) => left.name.localeCompare(right.name, 'vi'))
+      )
+    }
+
+    loadClassOptions()
+  }, [isAdmin])
+
   const loadPayments = useCallback(async () => {
     setLoading(true)
 
     try {
-      const [paymentRes, collectionRes] = await Promise.all([
-        paymentService.getPayments({
-          pageSize: 1000,
-          paymentDateFrom: dateFrom || undefined,
-          paymentDateTo: dateTo || undefined
-        }),
-        isAdmin ? Promise.resolve({ success: true, data: [] as InstructorClassCollectionType[] }) : financeService.getMyClassCollections()
-      ])
+      const response = await paymentService.getPayments({
+        pageSize: 1000,
+        classId: selectedClassId || undefined,
+        collectedByUserId: isAdmin ? undefined : auth?.user?.id || undefined,
+        paymentDateFrom: dateFrom || undefined,
+        paymentDateTo: dateTo || undefined
+      })
 
-      const nextPayments = (paymentRes.data || []).sort(
-        (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+      const nextPayments = (response.data || []).sort(
+        (left, right) => new Date(right.paymentDate).getTime() - new Date(left.paymentDate).getTime()
       )
 
       setPayments(nextPayments)
-      setPendingCollections((collectionRes.data || []).filter(item => item.availableToHandover > 0))
     } finally {
       setLoading(false)
     }
-  }, [dateFrom, dateTo, isAdmin])
+  }, [auth?.user?.id, dateFrom, dateTo, isAdmin, selectedClassId])
 
   useEffect(() => {
     loadPayments()
   }, [loadPayments])
 
-  const paymentSummary = useMemo(() => {
+  const summary = useMemo(() => {
     const totalRevenue = payments.reduce((sum, item) => sum + Number(item.amount || 0), 0)
     const totalTuition = payments.filter(item => item.type === 0).reduce((sum, item) => sum + Number(item.amount || 0), 0)
     const totalExamFees = payments.filter(item => item.type === 1).reduce((sum, item) => sum + Number(item.amount || 0), 0)
 
-    return { paymentCount: payments.length, totalRevenue, totalTuition, totalExamFees }
-  }, [payments])
-
-  const pendingSummary = useMemo(() => {
-    const totalRevenue = pendingCollections.reduce((sum, item) => sum + Number(item.availableToHandover || 0), 0)
-    const totalTuition = getBreakdownAmount(pendingCollections, 'tuition')
-    const totalExamFees = getBreakdownAmount(pendingCollections, 'exam-fee')
-
     return {
-      paymentCount: pendingCollections.length,
+      paymentCount: payments.length,
       totalRevenue,
       totalTuition,
       totalExamFees
     }
-  }, [pendingCollections])
-
-  const summary = isAdmin ? paymentSummary : pendingSummary
-
-  const summaryStats = useMemo(() => {
-    if (isAdmin) return undefined
-
-    return [
-      {
-        title: loading ? '...' : String(pendingSummary.paymentCount),
-        subtitle: 'Lớp chưa bàn giao',
-        icon: 'ri-file-list-3-line'
-      },
-      {
-        title: loading
-          ? '...'
-          : new Intl.NumberFormat('vi-VN', {
-              style: 'currency',
-              currency: 'VND',
-              maximumFractionDigits: 0
-            }).format(pendingSummary.totalRevenue),
-        subtitle: 'Tổng chưa bàn giao',
-        icon: 'ri-wallet-line'
-      },
-      {
-        title: loading
-          ? '...'
-          : new Intl.NumberFormat('vi-VN', {
-              style: 'currency',
-              currency: 'VND',
-              maximumFractionDigits: 0
-            }).format(pendingSummary.totalTuition),
-        subtitle: 'Học phí chưa bàn giao',
-        icon: 'ri-money-dollar-circle-line'
-      },
-      {
-        title: loading
-          ? '...'
-          : new Intl.NumberFormat('vi-VN', {
-              style: 'currency',
-              currency: 'VND',
-              maximumFractionDigits: 0
-            }).format(pendingSummary.totalExamFees),
-        subtitle: 'Lệ phí thi chưa bàn giao',
-        icon: 'ri-shield-star-line'
-      }
-    ]
-  }, [isAdmin, loading, pendingSummary])
+  }, [payments])
 
   return (
     <Box className='flex flex-col gap-4'>
       <Box className='flex items-center justify-between gap-3 flex-wrap'>
         <Box>
-          <Typography variant='h5'>Lịch sử biên lai</Typography>
+          <Typography variant='h5'>Lịch sử thanh toán theo biên lai</Typography>
+          <Typography variant='body2' color='text.secondary'>
+            Danh sách này gộp các khoản thu theo từng biên lai để dễ xem lịch sử, người thu và minh chứng chuyển khoản.
+          </Typography>
         </Box>
 
         <Box className='flex gap-2 flex-wrap'>
-          {isAdmin ? (
+          {isAdmin && (
             <Button variant='outlined' color='warning' onClick={() => router.push('/apps/invoice/add?mode=replacement')}>
               Tạo hóa đơn thay
             </Button>
-          ) : null}
+          )}
           <Button variant='contained' onClick={() => router.push('/apps/invoice/add')}>
             Thêm thanh toán
           </Button>
@@ -161,14 +151,7 @@ const PaymentInvoiceMerged = () => {
       <Card>
         <CardContent>
           <Box className='flex flex-col gap-4'>
-            <InvoiceCard
-              loading={loading}
-              summary={summary}
-              dateFrom={dateFrom}
-              dateTo={dateTo}
-              rangeLabel={isAdmin ? undefined : 'Chưa bàn giao tới hiện tại'}
-              stats={summaryStats}
-            />
+            <InvoiceCard loading={loading} summary={summary} dateFrom={dateFrom} dateTo={dateTo} />
             <Divider />
             <InvoiceListTable
               payments={payments}
@@ -177,6 +160,10 @@ const PaymentInvoiceMerged = () => {
               dateTo={dateTo}
               onDateFromChange={setDateFrom}
               onDateToChange={setDateTo}
+              selectedClassId={selectedClassId}
+              onClassIdChange={setSelectedClassId}
+              classOptions={classOptions}
+              isAdmin={isAdmin}
             />
           </Box>
         </CardContent>

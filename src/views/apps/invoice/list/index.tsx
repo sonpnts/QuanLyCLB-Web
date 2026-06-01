@@ -19,6 +19,7 @@ const InvoiceList = () => {
   const [loading, setLoading] = useState(true)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [selectedClassId, setSelectedClassId] = useState('')
 
   const loadPayments = useCallback(async () => {
     setLoading(true)
@@ -76,6 +77,10 @@ const InvoiceList = () => {
           dateTo={dateTo}
           onDateFromChange={setDateFrom}
           onDateToChange={setDateTo}
+          selectedClassId={selectedClassId}
+          onClassIdChange={setSelectedClassId}
+          classOptions={[]}
+          isAdmin
         />
       </Grid>
     </Grid>

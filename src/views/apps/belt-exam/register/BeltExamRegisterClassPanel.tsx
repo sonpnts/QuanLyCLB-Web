@@ -38,7 +38,6 @@ import type {
   ExamSessionType
 } from '@/types/apps/beltExamTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
-import { registrationListStatusColors, registrationListStatusLabels } from '@/types/apps/beltExamTypes'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
 import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
@@ -84,7 +83,7 @@ const mapStudentsToRows = (
 }
 
 const isSessionReadOnly = (session: ExamSessionType) => {
-  if (session.isLocked || session.status === 'Locked' || session.status === 'Closed') return true
+  if (session.isLocked || session.status === 'Locked') return true
   if (!session.registrationDeadline) return false
 
   return new Date(session.registrationDeadline).getTime() <= Date.now()
@@ -115,7 +114,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
           const records = lookupResult.data
             .map(item => ({
               id: item.id,
-              name: item.code ? `${item.name} (${item.code})` : item.name
+              name: item.code ? `${item.name}` : item.name
             }))
             .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
 
@@ -338,17 +337,10 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
             title={
               <Box className='flex items-center gap-2'>
                 <Typography variant='h6'>Danh sách đã đăng ký</Typography>
-                <Chip
-                  label={registrationListStatusLabels[myList.status]}
-                  color={registrationListStatusColors[myList.status]}
-                  size='small'
-                />
-                {myList.isAutoSubmitted && <Chip label='Tự động khóa' color='warning' size='small' variant='outlined' />}
+                <Chip label={`${myList.paidCount}/${myList.totalStudents} đã đóng lệ phí`} color='primary' size='small' variant='tonal' />
               </Box>
             }
-            subheader={
-              myList.submittedAt ? `Cập nhật lúc: ${new Date(myList.submittedAt).toLocaleString('vi-VN')}` : undefined
-            }
+            subheader={`Tạo lúc: ${new Date(myList.createdAt).toLocaleString('vi-VN')}`}
           />
           <CardContent>
             <Alert severity='info' className='mb-3'>
@@ -405,7 +397,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
               >
                 {myList ? `Cập nhật danh sách (${selectedCount})` : `Lưu danh sách (${selectedCount})`}
               </Button>
-              
+
             </Box>
           }
         />

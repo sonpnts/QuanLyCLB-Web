@@ -138,21 +138,6 @@ return { success: true, data: [] }
     }
   }
 
-  async approveDocument(id: string): Promise<ResponseResult<UserDocumentDto>> {
-    try {
-      const res = await apiClient.post<any>(API_ENDPOINTS.userDocuments.approve(id))
-      const api = res.data
-
-      if (!api.isSuccess) return { success: false, message: api.message }
-      
-return { success: true, data: api.data, message: api.message }
-    } catch (error: any) {
-      logger.error('UserDocumentService', 'approveDocument', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
-    }
-  }
-
   async requestResubmission(id: string, reason: string): Promise<ResponseResult<UserDocumentDto>> {
     try {
       const res = await apiClient.post<any>(API_ENDPOINTS.userDocuments.requestResubmission(id), { reason })

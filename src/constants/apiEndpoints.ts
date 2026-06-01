@@ -27,13 +27,8 @@ export const API_ENDPOINTS = {
   beltExams: {
     sessions: '/belt-exams/sessions',
     sessionById: (id: string) => `/belt-exams/sessions/${id}`,
-    sessionSubmit: (id: string) => `/belt-exams/sessions/${id}/submit`,
-    sessionApprove: (id: string) => `/belt-exams/sessions/${id}/approve`,
-    sessionReject: (id: string) => `/belt-exams/sessions/${id}/reject`,
     registrations: '/belt-exams/registrations',
     registrationBatch: '/belt-exams/registrations/batch',
-    registrationApprove: (id: string) => `/belt-exams/registrations/${id}/approve`,
-    registrationReject: (id: string) => `/belt-exams/registrations/${id}/reject`,
     registrationResult: (id: string) => `/belt-exams/registrations/${id}/result`,
 
     // --- Luồng HLV đăng ký thi cấp (mới) ---
@@ -42,7 +37,6 @@ export const API_ENDPOINTS = {
       `/belt-exams/${sessionId}/eligible-students/${classId}`,
     registrationList: (sessionId: string) => `/belt-exams/${sessionId}/registration-list`,
     myRegistrationList: (sessionId: string) => `/belt-exams/${sessionId}/registration-list/mine`,
-    submitRegistrationList: (listId: string) => `/belt-exams/registration-list/${listId}/submit`,
     removeStudentFromList: (listId: string, studentId: string) =>
       `/belt-exams/registration-list/${listId}/student/${studentId}`,
     openSession: (sessionId: string) => `/belt-exams/sessions/${sessionId}/open`,
@@ -91,6 +85,7 @@ export const API_ENDPOINTS = {
     pending: '/class-transfers/pending'
   },
   finance: {
+    transactionSummary: '/finance/summary/transactions',
     classTuitionSummary: (classId: string) => `/finance/summary/class/${classId}/tuition`,
     productSalesSummary: '/finance/summary/product-sales',
     classInstructorSummary: (classId: string, instructorId: string) =>
@@ -265,7 +260,6 @@ export const API_ENDPOINTS = {
     // Admin
     root: '/user-documents',
     byId: (id: string) => `/user-documents/${id}`,
-    approve: (id: string) => `/user-documents/${id}/approve`,
     requestResubmission: (id: string) => `/user-documents/${id}/request-resubmission`,
   },
   zaloLinks: {

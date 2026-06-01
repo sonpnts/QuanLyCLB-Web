@@ -46,16 +46,16 @@ import ViewStudentDrawer from '@/views/apps/student/list/ViewStudentDrawer'
 
 const text = {
   title: 'Quản lý đăng ký thi cấp',
-  subtitle: 'Theo dõi trạng thái đăng ký, lệ phí thi, cấp đai hiện tại và cấp đai dự thi của học viên',
+  subtitle: 'Theo dõi danh sách đăng ký, trạng thái đóng lệ phí và cấp đai dự thi của học viên',
   examSession: 'Kỳ thi',
   selectSession: 'Chọn kỳ thi để xem danh sách',
   class: 'Lớp',
   allClasses: 'Tất cả lớp',
   status: 'Trạng thái',
   all: 'Tất cả',
-  pending: 'Chờ duyệt',
-  approved: 'Đã duyệt',
-  rejected: 'Từ chối',
+  pending: 'Chờ đóng lệ phí',
+  approved: 'Đã đóng lệ phí',
+  rejected: 'Đã loại',
   fee: 'Lệ phí',
   paid: 'Đã đóng',
   unpaid: 'Chưa đóng',
@@ -72,7 +72,7 @@ const text = {
   noBelt: 'Chưa có',
   export: 'Xuất Excel',
   exportSuccess: 'Đã xuất danh sách đăng ký thi cấp.',
-  selectPrompt: 'Không còn kỳ đăng ký nào đang mở. Vui lòng chọn kỳ thi trong danh sách để xem đăng ký.',
+  selectPrompt: 'Không còn kỳ thi nào đang mở. Vui lòng chọn kỳ thi trong danh sách để xem đăng ký.',
   latestOpen: 'Đang mặc định kỳ mới nhất còn nhận đăng ký'
 }
 
@@ -88,7 +88,7 @@ const statusColors: Record<string, 'warning' | 'success' | 'error' | 'secondary'
   Rejected: 'error'
 }
 
-const hiddenDefaultStatuses = new Set(['Cancelled', 'Closed', 'Completed', 'Locked', 'Rejected'])
+const hiddenDefaultStatuses = new Set(['Draft', 'Locked'])
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return ''
@@ -173,6 +173,7 @@ const getSessionSortTime = (session: ExamSessionType) =>
   new Date(session.registrationDeadline || session.examDate || session.createdAt).getTime()
 
 const isSessionAvailableForDefault = (session: ExamSessionType) => {
+  if (session.status !== 'Open') return false
   if (hiddenDefaultStatuses.has(session.status)) return false
   if (!session.registrationDeadline) return true
 
@@ -507,7 +508,7 @@ const BeltExamRegistrationsView = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>{renderSortHeader(text.student, 'studentName')}</TableCell>
-                  <TableCell>{renderSortHeader(text.examSession, 'examSessionName')}</TableCell>
+                  {/*<TableCell>{renderSortHeader(text.examSession, 'examSessionName')}</TableCell>*/}
                   <TableCell>{renderSortHeader(text.class, 'className')}</TableCell>
                   <TableCell>{renderSortHeader(text.registerStatus, 'status')}</TableCell>
                   <TableCell>{renderSortHeader(text.feePaid, 'isFeePaid')}</TableCell>
@@ -528,7 +529,7 @@ const BeltExamRegistrationsView = () => {
                         {formatDateTime(row.createdAt)}
                       </Typography>
                     </TableCell>
-                    <TableCell>{row.examSessionName}</TableCell>
+                    {/*<TableCell>{row.examSessionName}</TableCell>*/}
                     <TableCell>{row.className}</TableCell>
                     <TableCell>
                       <Tooltip title={row.rejectionReason || ''}>
