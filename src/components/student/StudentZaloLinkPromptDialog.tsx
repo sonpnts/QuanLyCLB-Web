@@ -11,6 +11,8 @@ import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import Typography from '@mui/material/Typography'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import { useTheme } from '@mui/material/styles'
 
 import { useNotification } from '@/contexts/notificationContext'
 import studentService from '@/services/studentService'
@@ -43,6 +45,8 @@ const StudentZaloLinkPromptDialog = ({
   onSkip,
   onLinked
 }: Props) => {
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const { showNotification } = useNotification()
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -64,8 +68,8 @@ const StudentZaloLinkPromptDialog = ({
 
       if (!response.success || !response.data) {
         showNotification(response.message || 'Không thể lưu liên kết Zalo.', 'error')
-        
-return
+
+        return
       }
 
       showNotification('Đã cập nhật liên kết Zalo.', 'success')
@@ -82,9 +86,20 @@ return
 
   return (
     <>
-      <Dialog open={open} onClose={saving ? undefined : onClose} maxWidth='xs' fullWidth>
+      <Dialog
+        open={open}
+        onClose={saving ? undefined : onClose}
+        maxWidth='xs'
+        fullWidth
+        fullScreen={fullScreen}
+        PaperProps={{
+          sx: {
+            borderRadius: fullScreen ? 0 : 3
+          }
+        }}
+      >
         <DialogTitle>{title}</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 } }}>
           {hasLinkedZalo ? (
             <Alert severity='success'>Học viên này đã có liên kết Zalo.</Alert>
           ) : (
@@ -103,11 +118,24 @@ return
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button variant='outlined' color='inherit' onClick={handleSkip} disabled={saving}>
+        <DialogActions
+          sx={{
+            px: { xs: 2, sm: 3 },
+            pb: { xs: 2.5, sm: 3 },
+            pt: 0,
+            flexDirection: { xs: 'column-reverse', sm: 'row' },
+            alignItems: 'stretch'
+          }}
+        >
+          <Button variant='outlined' color='inherit' onClick={handleSkip} disabled={saving} fullWidth={fullScreen}>
             {skipLabel}
           </Button>
-          <Button variant='contained' onClick={() => setVerifyOpen(true)} disabled={saving || hasLinkedZalo || !student}>
+          <Button
+            variant='contained'
+            onClick={() => setVerifyOpen(true)}
+            disabled={saving || hasLinkedZalo || !student}
+            fullWidth={fullScreen}
+          >
             {saving ? <CircularProgress size={18} color='inherit' /> : linkLabel}
           </Button>
         </DialogActions>

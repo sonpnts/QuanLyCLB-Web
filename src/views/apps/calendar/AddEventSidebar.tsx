@@ -27,6 +27,7 @@ import type { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTyp
 
 // Styled Component Imports
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import { formatDateTimeVN } from '@/utils/dateTime'
 
 // Slice Imports
 import { addEvent, updateEvent, selectedEvent, filterEvents } from '@/redux-store/slices/calendar'
@@ -247,13 +248,13 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
                     <Typography variant='body2' color='text.secondary' className='mbe-2'>
                       <strong>Thời gian bắt đầu:</strong>{' '}
                       {calendarStore.selectedEvent.start
-                        ? new Date(calendarStore.selectedEvent.start).toLocaleString('vi-VN')
+                        ? formatDateTimeVN(calendarStore.selectedEvent.start)
                         : '-'}
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
                       <strong>Thời gian kết thúc:</strong>{' '}
                       {calendarStore.selectedEvent.end
-                        ? new Date(calendarStore.selectedEvent.end).toLocaleString('vi-VN')
+                        ? formatDateTimeVN(calendarStore.selectedEvent.end)
                         : '-'}
                     </Typography>
                   </Box>

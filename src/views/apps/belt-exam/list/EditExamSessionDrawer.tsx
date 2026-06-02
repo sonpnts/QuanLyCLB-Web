@@ -45,6 +45,7 @@ const toDateTimeLocalInput = (value?: string) => {
 const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
   const { showNotification } = useNotification()
   const [loading, setLoading] = useState(false)
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -171,7 +172,8 @@ const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
             value={formData.registrationDeadline}
             onChange={event => setFormData(prev => ({ ...prev, registrationDeadline: event.target.value }))}
             InputLabelProps={{ shrink: true }}
-            helperText='Đây là hạn dùng cho bước HLV đăng ký, không nhập lại ở lúc mở kỳ thi.'
+
+            // helperText='Đây là hạn dùng cho bước HLV đăng ký, không nhập lại ở lúc mở kỳ thi.'
           />
 
           <TextField

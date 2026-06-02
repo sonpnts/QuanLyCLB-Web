@@ -19,7 +19,7 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
 
-import classService from '@/services/classService'
+import type { ClassType } from '@/types/apps/classTypes'
 import studentService, { type StudentImportResult } from '@/services/studentService'
 import { useNotification } from '@/contexts/notificationContext'
 
@@ -27,11 +27,11 @@ type Props = {
   open: boolean
   onClose: () => void
   onImported: () => void
+  classOptions?: ClassType[]
 }
 
-const ImportStudentsDialog = ({ open, onClose, onImported }: Props) => {
+const ImportStudentsDialog = ({ open, onClose, onImported, classOptions = [] }: Props) => {
   const { showNotification } = useNotification()
-  const [classes, setClasses] = useState<{ id: string; name: string }[]>([])
   const [classId, setClassId] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -40,14 +40,15 @@ const ImportStudentsDialog = ({ open, onClose, onImported }: Props) => {
   useEffect(() => {
     if (!open) return
 
-    ;(async () => {
-      const res = await classService.getClasses({ isActive: true, pageSize: 1000 })
-      const list = (res.data || []).map(x => ({ id: x.id, name: x.name }))
+    setResult(null)
+    setFile(null)
 
-      setClasses(list)
-      if (list.length > 0) setClassId(list[0].id)
-    })()
-  }, [open])
+    if (classOptions.length === 1) {
+      setClassId(classOptions[0].id)
+    } else if (!classOptions.some(item => item.id === classId)) {
+      setClassId(classOptions[0]?.id || '')
+    }
+  }, [classId, classOptions, open])
 
   const canSubmit = useMemo(() => !!classId && !!file && !loading, [classId, file, loading])
 
@@ -56,31 +57,33 @@ const ImportStudentsDialog = ({ open, onClose, onImported }: Props) => {
 
     if (!res.success || !res.data) {
       showNotification(res.message || 'Không thể tải file mẫu', 'error')
-      
-return
+
+      return
     }
 
     const url = window.URL.createObjectURL(res.data)
-    const a = document.createElement('a')
+    const anchor = document.createElement('a')
 
-    a.href = url
-    a.download = 'student-import-template.xlsx'
-    a.click()
+    anchor.href = url
+    anchor.download = 'student-import-template.xlsx'
+    anchor.click()
     window.URL.revokeObjectURL(url)
   }
 
   const handleImport = async () => {
     if (!file || !classId) return
+
     setLoading(true)
     setResult(null)
+
     const res = await studentService.importStudents(classId, file)
 
     setLoading(false)
 
     if (!res.success || !res.data) {
       showNotification(res.message || 'Import thất bại', 'error')
-      
-return
+
+      return
     }
 
     setResult(res.data)
@@ -93,18 +96,24 @@ return
       <DialogTitle>Import học viên từ Excel</DialogTitle>
       <DialogContent>
         <Typography variant='body2' color='text.secondary' className='mb-3'>
-          Tối đa 1000 dòng mỗi file. Chọn lớp để tự động ghi danh sau khi import.
+          Chọn lớp để tạo học viên đúng phạm vi được phân công và gửi kèm khi import.
         </Typography>
 
-        <div className='flex items-center gap-3 flex-wrap mb-4'>
+        <div className='mb-4 flex flex-wrap items-center gap-3'>
           <FormControl size='small' sx={{ minWidth: 260 }}>
             <InputLabel>Lớp</InputLabel>
-            <Select value={classId} label='Lớp' onChange={e => setClassId(e.target.value)}>
-              {classes.map(c => (
-                <MenuItem key={c.id} value={c.id}>
-                  {c.name}
+            <Select value={classId} label='Lớp' onChange={event => setClassId(event.target.value)} disabled={classOptions.length === 0}>
+              {classOptions.length === 0 ? (
+                <MenuItem disabled value=''>
+                  Không có lớp khả dụng
                 </MenuItem>
-              ))}
+              ) : (
+                classOptions.map(item => (
+                  <MenuItem key={item.id} value={item.id}>
+                    {item.name} ({item.code})
+                  </MenuItem>
+                ))
+              )}
             </Select>
           </FormControl>
 
@@ -112,13 +121,13 @@ return
             Tải file mẫu
           </Button>
 
-          <Button variant='outlined' component='label'>
+          <Button variant='outlined' component='label' disabled={classOptions.length === 0}>
             Chọn file Excel
             <input
               hidden
               type='file'
               accept='.xlsx'
-              onChange={e => setFile(e.target.files && e.target.files.length > 0 ? e.target.files[0] : null)}
+              onChange={event => setFile(event.target.files && event.target.files.length > 0 ? event.target.files[0] : null)}
             />
           </Button>
           <Typography variant='body2'>{file?.name || 'Chưa chọn file'}</Typography>
@@ -127,8 +136,8 @@ return
         {result && (
           <>
             <Typography variant='subtitle2' className='mb-2'>
-              Tổng dòng: {result.totalRows} | Tạo mới: {result.createdStudents} | Ghi danh: {result.enrolledStudents} |
-              Bỏ qua: {result.skippedRows}
+              Tổng dòng: {result.totalRows} | Tạo mới: {result.createdStudents} | Ghi danh: {result.enrolledStudents} | Bỏ qua:{' '}
+              {result.skippedRows}
             </Typography>
             <Table size='small'>
               <TableHead>
@@ -141,13 +150,13 @@ return
                 </TableRow>
               </TableHead>
               <TableBody>
-                {result.rows.slice(0, 50).map(r => (
-                  <TableRow key={`${r.rowNumber}-${r.code}`}>
-                    <TableCell>{r.rowNumber}</TableCell>
-                    <TableCell>{r.code}</TableCell>
-                    <TableCell>{r.fullName}</TableCell>
-                    <TableCell>{r.status}</TableCell>
-                    <TableCell>{r.message}</TableCell>
+                {result.rows.slice(0, 50).map(row => (
+                  <TableRow key={`${row.rowNumber}-${row.code}`}>
+                    <TableCell>{row.rowNumber}</TableCell>
+                    <TableCell>{row.code}</TableCell>
+                    <TableCell>{row.fullName}</TableCell>
+                    <TableCell>{row.status}</TableCell>
+                    <TableCell>{row.message}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -166,4 +175,3 @@ return
 }
 
 export default ImportStudentsDialog
-

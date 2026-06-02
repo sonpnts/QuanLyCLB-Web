@@ -35,6 +35,7 @@ import {
 import type { ColumnDef } from '@tanstack/react-table'
 
 import { fuzzyFilter } from '@/utils/tableHelpers'
+import { formatDateVN } from '@/utils/dateTime'
 import { exportToExcel, formatVnDate, formatVnCurrency } from '@/utils/exportToExcel'
 import { normalizePaymentMethod, isBankTransferMethod } from '@/utils/paymentMethod'
 import { normalizePaymentType } from '@/utils/paymentType'
@@ -252,7 +253,7 @@ return (
       columnHelper.accessor('paymentDate', {
         header: 'Ngày TT',
         cell: ({ row }) => (
-          <Typography variant='body2'>{new Date(row.original.paymentDate).toLocaleDateString('vi-VN')}</Typography>
+          <Typography variant='body2'>{formatDateVN(row.original.paymentDate)}</Typography>
         )
       }),
       columnHelper.accessor('method', {
@@ -525,4 +526,3 @@ return (
 }
 
 export default PaymentListTable
-

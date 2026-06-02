@@ -28,6 +28,7 @@ import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
 import { paymentMethodLabels, paymentTypeLabels } from '@/types/apps/paymentTypes'
 import { apiClient } from '@/utils/apiClient'
+import { formatDateTimeVN } from '@/utils/dateTime'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
 
@@ -290,7 +291,7 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
                   Ngày thanh toán
                 </Typography>
                 <Typography variant='body1'>
-                  {firstItem?.paymentDate ? new Date(firstItem.paymentDate).toLocaleString('vi-VN') : '-'}
+                  {formatDateTimeVN(firstItem?.paymentDate)}
                 </Typography>
               </Box>
 

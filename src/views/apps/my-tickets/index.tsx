@@ -20,6 +20,7 @@ import type { FilterFn } from '@tanstack/react-table'
 import attendanceService, { type GetUserAttendanceParams } from '@/services/attendanceService'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
+import { formatDateVN } from '@/utils/dateTime'
 
 // Column Helper
 const columnHelper = createColumnHelper<any>()
@@ -122,7 +123,7 @@ const MyTicketsView = () => {
         header: 'Ngày tạo',
         cell: ({ row }) => (
           <Typography variant='body2'>
-            {row.original.createdAt ? new Date(row.original.createdAt).toLocaleDateString('vi-VN') : '-'}
+            {formatDateVN(row.original.createdAt)}
           </Typography>
         )
       })

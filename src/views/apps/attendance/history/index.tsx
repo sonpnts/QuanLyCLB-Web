@@ -34,6 +34,7 @@ import studentAttendanceService, {
   type CoachClassOption,
   type StudentAttendanceSessionLogType
 } from '@/services/studentAttendanceService'
+import { formatDateTimeVN } from '@/utils/dateTime'
 import { hasAdminRole } from '@/utils/roleUtils'
 
 type FilterClass = {
@@ -70,9 +71,7 @@ const formatDate = (value: string) =>
   })
 
 const formatDateTime = (value?: string | null) => {
-  if (!value) return '-'
-
-  return new Date(value).toLocaleString('vi-VN')
+  return formatDateTimeVN(value)
 }
 
 const getStudentStatus = (student: AttendanceSheetStudentType) => {

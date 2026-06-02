@@ -25,6 +25,7 @@ import Typography from '@mui/material/Typography'
 
 import federationMemberService from '@/services/federationMemberService'
 import type { FederationMemberDto } from '@/services/federationMemberService'
+import { formatDateVN } from '@/utils/dateTime'
 
 interface Props {
   open: boolean
@@ -42,8 +43,8 @@ const formatDob = (dob?: string | null) => {
     const d = new Date(dob)
 
     if (isNaN(d.getTime())) return dob
-    
-return d.toLocaleDateString('vi-VN')
+
+    return formatDateVN(d)
   } catch {
     return dob
   }

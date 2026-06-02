@@ -40,7 +40,7 @@ import beltExamService from '@/services/beltExamService'
 import type { AdminExamSessionViewType, AdminExamStudentRowType } from '@/types/apps/beltExamTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
-import { examSessionStatusColors, examSessionStatusLabels } from '@/types/apps/beltExamTypes'
+import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
 import { exportToExcel } from '@/utils/exportToExcel'
 import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
 
@@ -49,13 +49,7 @@ interface Props {
 }
 
 const formatDate = (value?: string) => {
-  if (!value) return ''
-
-  return new Date(value).toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  })
+  return formatDateVN(value, '')
 }
 
 const formatGender = (value?: boolean) => {
@@ -622,6 +616,12 @@ return
     <Box>
       <Card className='mb-4'>
         <CardHeader
+          sx={{
+            pb: 2,
+            '& .MuiCardHeader-content': {
+              minWidth: 0
+            }
+          }}
           title={
             <Box className='flex items-center gap-3 flex-wrap'>
               <Typography variant='h5'>{data.sessionName}</Typography>
@@ -634,60 +634,74 @@ return
           }
           subheader={
             <Box className='flex gap-4 flex-wrap mt-1'>
-              <Typography variant='body2'>Ngày thi: {new Date(data.examDate).toLocaleDateString('vi-VN')}</Typography>
+              <Typography variant='body2'>Ngày thi: {formatDateVN(data.examDate)}</Typography>
               {data.registrationDeadline && (
                 <Typography variant='body2'>
-                  Hạn đăng ký: {new Date(data.registrationDeadline).toLocaleString('vi-VN')}
+                  Hạn đăng ký: {formatDateTimeVN(data.registrationDeadline)}
                 </Typography>
               )}
               {data.lockedAt && (
-                <Typography variant='body2'>Chốt lúc: {new Date(data.lockedAt).toLocaleString('vi-VN')}</Typography>
-              )}
-            </Box>
-          }
-          action={
-            <Box className='flex gap-2 flex-wrap'>
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<i className='ri-file-excel-line' />}
-                onClick={handleExportEligibleRegistrations}
-                disabled={exporting}
-              >
-                Xuất danh sách đủ phí
-              </Button>
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<i className='ri-file-list-3-line' />}
-                onClick={handleExportAllRegistrations}
-                disabled={exporting}
-              >
-                Xuất toàn bộ đăng ký
-              </Button>
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<i className='ri-download-2-line' />}
-                onClick={handleExportStudentImportData}
-                disabled={exporting}
-              >
-                Dữ liệu học viên import
-              </Button>
-              {!data.isLocked && (
-                <Button
-                  variant='contained'
-                  color='error'
-                  size='small'
-                  startIcon={<i className='ri-lock-line' />}
-                  onClick={() => setLockDialogOpen(true)}
-                >
-                  Chốt danh sách
-                </Button>
+                <Typography variant='body2'>Chốt lúc: {formatDateTimeVN(data.lockedAt)}</Typography>
               )}
             </Box>
           }
         />
+        <CardContent sx={{ pt: 0 }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                xl: data.isLocked ? 'repeat(3, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))'
+              },
+              gap: 1.5
+            }}
+          >
+            <Button
+              variant='outlined'
+              size='small'
+              startIcon={<i className='ri-file-excel-line' />}
+              onClick={handleExportEligibleRegistrations}
+              disabled={exporting}
+              fullWidth
+            >
+              Xuất danh sách đủ phí
+            </Button>
+            <Button
+              variant='outlined'
+              size='small'
+              startIcon={<i className='ri-file-list-3-line' />}
+              onClick={handleExportAllRegistrations}
+              disabled={exporting}
+              fullWidth
+            >
+              Xuất toàn bộ đăng ký
+            </Button>
+            <Button
+              variant='outlined'
+              size='small'
+              startIcon={<i className='ri-download-2-line' />}
+              onClick={handleExportStudentImportData}
+              disabled={exporting}
+              fullWidth
+            >
+              Dữ liệu học viên import
+            </Button>
+            {!data.isLocked && (
+              <Button
+                variant='contained'
+                color='error'
+                size='small'
+                startIcon={<i className='ri-lock-line' />}
+                onClick={() => setLockDialogOpen(true)}
+                fullWidth
+              >
+                Chốt danh sách
+              </Button>
+            )}
+          </Box>
+        </CardContent>
       </Card>
 
       <Box className='grid grid-cols-2 md:grid-cols-5 gap-4 mb-4'>

@@ -40,6 +40,7 @@ import type {
 import type { StudentType } from '@/types/apps/studentTypes'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
 import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
 
 interface Props {
@@ -308,9 +309,9 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
         <Box>
           <Typography variant='h6'>{session.name}</Typography>
           <Typography variant='body2' color='text.secondary'>
-            Ngày thi: {new Date(session.examDate).toLocaleDateString('vi-VN')}
+            Ngày thi: {formatDateVN(session.examDate)}
             {session.registrationDeadline && (
-              <> • Hạn đăng ký: {new Date(session.registrationDeadline).toLocaleDateString('vi-VN')}</>
+              <> • Hạn đăng ký: {formatDateVN(session.registrationDeadline)}</>
             )}
           </Typography>
         </Box>
@@ -340,7 +341,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                 <Chip label={`${myList.paidCount}/${myList.totalStudents} đã đóng lệ phí`} color='primary' size='small' variant='tonal' />
               </Box>
             }
-            subheader={`Tạo lúc: ${new Date(myList.createdAt).toLocaleString('vi-VN')}`}
+            subheader={`Tạo lúc: ${formatDateTimeVN(myList.createdAt)}`}
           />
           <CardContent>
             <Alert severity='info' className='mb-3'>
@@ -488,7 +489,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                         </TableCell>
                         <TableCell>
                           <Typography variant='body2'>
-                            {student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : '—'}
+                            {formatDateVN(student.dateOfBirth, '—')}
                           </Typography>
                         </TableCell>
                         <TableCell>{student.gender === true ? 'Nam' : student.gender === false ? 'Nữ' : '—'}</TableCell>
@@ -551,6 +552,5 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 }
 
 export default BeltExamRegisterClassPanel
-
 
 

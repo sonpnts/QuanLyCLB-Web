@@ -30,11 +30,10 @@ import Typography from '@mui/material/Typography'
 import cronJobLogService from '@/services/cronJobLogService'
 import type { CronJobLogType } from '@/types/apps/cronJobLogTypes'
 import { useNotification } from '@/contexts/notificationContext'
+import { formatDateTimeVN } from '@/utils/dateTime'
 
 const formatDateTime = (value?: string | null) => {
-  if (!value) return '-'
-  
-return new Date(value).toLocaleString('vi-VN')
+  return formatDateTimeVN(value)
 }
 
 const getStatusColor = (status?: string) => {

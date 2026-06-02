@@ -38,6 +38,7 @@ import type { UsersType } from '@/types/apps/userTypes'
 import type { InstructorClassCollectionType } from '@/types/apps/financeTypes'
 import cashHandoverService from '@/services/cashHandoverService'
 import type { GetCashHandoversParams } from '@/services/cashHandoverService'
+import { formatDateTimeVN } from '@/utils/dateTime'
 import classService from '@/services/classService'
 import userService from '@/services/userService'
 import financeService from '@/services/financeService'
@@ -338,7 +339,7 @@ return
         header: 'Ngày bàn giao',
         cell: ({ row }) => (
           <Typography>
-            {row.original.handoverAt ? new Date(row.original.handoverAt).toLocaleString('vi-VN') : '-'}
+            {formatDateTimeVN(row.original.handoverAt)}
           </Typography>
         )
       }),

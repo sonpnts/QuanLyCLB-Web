@@ -76,25 +76,25 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
     e.preventDefault()
 
     if (!classOptions.length) {
-      showNotification('Chua co lop hoc kha dung de tao hoc vien.', 'error')
+      showNotification('Chưa có lớp học khả dụng để tạo học viên.', 'error')
 
       return
     }
 
     if (!selectedClassId) {
-      showNotification('Vui long chon lop cho hoc vien.', 'error')
+      showNotification('Vui lòng chọn lớp cho học viên.', 'error')
 
       return
     }
 
     if (!formData.fullName.trim()) {
-      showNotification('Vui long nhap ho ten hoc vien.', 'error')
+      showNotification('Vui lòng nhập họ tên học viên.', 'error')
 
       return
     }
 
     if (!formData.educationLevel) {
-      showNotification('Vui long chon trinh do hoc van.', 'error')
+      showNotification('Vui lòng chọn trình độ học vấn.', 'error')
 
       return
     }
@@ -119,7 +119,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
         const createdStudent = response.data
 
         setData(prev => [...prev, createdStudent])
-        showNotification('Them hoc vien thanh cong!', 'success')
+        showNotification('Thêm học viên thành công!', 'success')
         onStudentCreated?.()
         handleReset()
 
@@ -128,11 +128,11 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
           setZaloPromptOpen(true)
         }
       } else {
-        showNotification(response.message || 'Khong the them hoc vien.', 'error')
+        showNotification(response.message || 'Không thể thêm học viên.', 'error')
       }
     } catch (error) {
       logger.error('AddStudentDrawer', 'Error creating student', error)
-      showNotification('Da co loi khi them hoc vien.', 'error')
+      showNotification('Đã có lỗi khi thêm học viên.', 'error')
     } finally {
       setLoading(false)
     }
@@ -149,7 +149,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
       address: info.address || prev.address
     }))
 
-    showNotification('Da ap dung thong tin tu lien doan.', 'info')
+    showNotification('Đã áp dụng thông tin từ liên đoàn.', 'info')
   }
 
   return (
@@ -163,7 +163,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
         sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 460 } } }}
       >
         <div className='flex items-center justify-between pli-5 plb-4'>
-          <Typography variant='h5'>Them hoc vien moi</Typography>
+          <Typography variant='h5'>Thêm học viên mới</Typography>
           <IconButton size='small' onClick={handleReset}>
             <i className='ri-close-line text-2xl' />
           </IconButton>
@@ -180,8 +180,8 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
             />
 
             <FormControl fullWidth required disabled={!classOptions.length}>
-              <InputLabel>Lop</InputLabel>
-              <Select label='Lop' value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)}>
+              <InputLabel>Lớp</InputLabel>
+              <Select label='Lớp' value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)}>
                 {classOptions.map(cls => (
                   <MenuItem key={cls.id} value={cls.id}>
                     {cls.name} ({cls.code})
@@ -193,7 +193,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
             <Grid container spacing={3}>
               <Grid size={{ xs: 12 }}>
                 <TextField
-                  label='Ho va ten *'
+                  label='Họ và tên *'
                   fullWidth
                   value={formData.fullName}
                   onChange={e => setFormData({ ...formData, fullName: e.target.value })}
@@ -201,7 +201,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
-                  label='CCCD / So dinh danh ca nhan'
+                  label='CCCD / Số định danh cá nhân'
                   fullWidth
                   value={formData.personalIdNumber}
                   onChange={e => setFormData({ ...formData, personalIdNumber: e.target.value })}
@@ -209,7 +209,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
-                  label='Dia chi'
+                  label='Địa chỉ'
                   fullWidth
                   value={formData.address}
                   onChange={e => setFormData({ ...formData, address: e.target.value })}
@@ -217,7 +217,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
-                  label='Ngay sinh'
+                  label='Ngày sinh'
                   type='date'
                   fullWidth
                   InputLabelProps={{ shrink: true }}
@@ -227,38 +227,38 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth required>
-                  <InputLabel>Trinh do hoc van</InputLabel>
+                  <InputLabel>Trình độ học vấn</InputLabel>
                   <Select
-                    label='Trinh do hoc van'
+                    label='Trình độ học vấn'
                     value={formData.educationLevel}
                     onChange={e => setFormData({ ...formData, educationLevel: e.target.value })}
                   >
-                    <MenuItem value=''>Chon trinh do</MenuItem>
+                    <MenuItem value=''>Chọn trình độ</MenuItem>
                     <MenuItem value='THCS'>THCS</MenuItem>
                     <MenuItem value='THPT'>THPT</MenuItem>
-                    <MenuItem value='TieuHoc'>Tieu hoc</MenuItem>
-                    <MenuItem value='ChuaDiHoc'>Chua di hoc</MenuItem>
-                    <MenuItem value='TrungCap'>Trung cap</MenuItem>
-                    <MenuItem value='CaoDang'>Cao dang</MenuItem>
-                    <MenuItem value='DaiHoc'>Dai hoc</MenuItem>
-                    <MenuItem value='ThacSi'>Thac si</MenuItem>
-                    <MenuItem value='TienSi'>Tien si</MenuItem>
+                    <MenuItem value='TieuHoc'>Tiểu học</MenuItem>
+                    <MenuItem value='ChuaDiHoc'>Chưa đi học</MenuItem>
+                    <MenuItem value='TrungCap'>Trung cấp</MenuItem>
+                    <MenuItem value='CaoDang'>Cao đẳng</MenuItem>
+                    <MenuItem value='DaiHoc'>Đại học</MenuItem>
+                    <MenuItem value='ThacSi'>Thạc sĩ</MenuItem>
+                    <MenuItem value='TienSi'>Tiến sĩ</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth>
-                  <InputLabel>Gioi tinh</InputLabel>
-                  <Select label='Gioi tinh' value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
-                    <MenuItem value=''>Chon gioi tinh</MenuItem>
+                  <InputLabel>Giới tính</InputLabel>
+                  <Select label='Giới tính' value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
+                    <MenuItem value=''>Chọn giới tính</MenuItem>
                     <MenuItem value='true'>Nam</MenuItem>
-                    <MenuItem value='false'>Nu</MenuItem>
+                    <MenuItem value='false'>Nữ</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
-                  label='Ghi chu'
+                  label='Ghi chú'
                   fullWidth
                   multiline
                   rows={3}
@@ -270,10 +270,10 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
 
             <div className='mt-2 flex items-center gap-4'>
               <Button variant='contained' type='submit' disabled={loading || !classOptions.length}>
-                {loading ? 'Dang xu ly...' : 'Them moi'}
+                {loading ? 'Đang xử lý...' : 'Thêm mới'}
               </Button>
               <Button variant='outlined' color='error' onClick={handleReset} disabled={loading}>
-                Huy
+                Hủy
               </Button>
             </div>
           </form>
@@ -283,8 +283,8 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
       <StudentZaloLinkPromptDialog
         open={zaloPromptOpen}
         student={zaloPromptStudent}
-        skipLabel='De sau'
-        message='Hay them lien ket Zalo cho hoc vien de gui xac nhan thanh toan va cac thong bao sau nay. Chon de sau neu ban chua muon lien ket ngay.'
+        skipLabel='Để sau'
+        message='Hãy thêm liên kết Zalo cho học viên để gửi xác nhận thanh toán và các thông báo sau này. Chọn để sau nếu bạn chưa muốn liên kết ngay.'
         onClose={() => {
           setZaloPromptOpen(false)
           setZaloPromptStudent(null)
