@@ -19,6 +19,7 @@ import Typography from '@mui/material/Typography'
 
 import type { CashHandoverType } from '@/types/apps/cashHandoverTypes'
 import { HandoverStatusLabel } from '@/types/apps/cashHandoverTypes'
+import { formatDateTimeVN } from '@/utils/dateTime'
 
 type Props = {
   open: boolean
@@ -55,7 +56,7 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
               <DetailRow label='Số lớp trong phiếu' value={String(data.classCount || data.details.length || 0)} />
               <DetailRow
                 label='Thời gian bàn giao'
-                value={data.handoverAt ? new Date(data.handoverAt).toLocaleString('vi-VN') : '-'}
+                value={formatDateTimeVN(data.handoverAt)}
               />
               <DetailRow label='Người tạo phiếu' value={data.createdByUserName || data.createdByUserId || '-'} />
               <DetailRow label='Học phí đã ghi nhận' value={formatCurrency(data.snapshotTuitionAmount)} />
@@ -97,7 +98,7 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
                   <DetailRow label='Xác nhận bởi' value={data.confirmedByUserName || data.confirmedByUserId || '-'} />
                   <DetailRow
                     label='Thời gian xác nhận'
-                    value={data.confirmedAt ? new Date(data.confirmedAt).toLocaleString('vi-VN') : '-'}
+                    value={formatDateTimeVN(data.confirmedAt)}
                   />
                 </>
               )}

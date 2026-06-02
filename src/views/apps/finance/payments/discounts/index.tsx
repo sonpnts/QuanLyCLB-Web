@@ -30,6 +30,7 @@ import classService from '@/services/classService'
 import paymentService from '@/services/paymentService'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
+import { formatDateTimeVN } from '@/utils/dateTime'
 
 type DiscountScope = 'manual' | 'approved' | 'combo' | 'mixed' | 'all'
 
@@ -44,7 +45,7 @@ const discountScopeOptions: Array<{ value: DiscountScope; label: string }> = [
 const formatCurrency = (amount?: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(amount || 0))
 
-const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString('vi-VN') : '-')
+const formatDateTime = (value?: string) => formatDateTimeVN(value)
 
 const getDiscountScopeLabel = (row: PaymentRecordType) => {
   const sourceCount = [row.hasManualDiscount, row.hasApprovedDiscount, row.hasComboDiscount].filter(Boolean).length

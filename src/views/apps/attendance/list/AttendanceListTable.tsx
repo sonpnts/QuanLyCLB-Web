@@ -36,6 +36,7 @@ import studentAttendanceService, {
   type CoachClassOption,
   type SaveAttendanceSheetStudentRequest
 } from '@/services/studentAttendanceService'
+import { formatDateTimeVN } from '@/utils/dateTime'
 
 const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
 
@@ -427,7 +428,7 @@ return
         <Box mt={6}>
           {sheet?.isSubmitted ? (
             <Alert severity='info' sx={{ mb: 3 }}>
-              Đã điểm danh lúc {new Date(sheet.submittedAt || '').toLocaleString('vi-VN')}
+              Đã điểm danh lúc {formatDateTimeVN(sheet.submittedAt)}
               {sheet.submittedByUserName ? ` - Người tạo: ${sheet.submittedByUserName}` : ''}
             </Alert>
           ) : null}

@@ -14,6 +14,7 @@ import Logo from '@components/layout/shared/Logo-Invoice'
 // Type Imports
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
 import { paymentMethodLabels, paymentTypeLabels } from '@/types/apps/paymentTypes'
+import { formatDateTimeVN } from '@/utils/dateTime'
 import { normalizePaymentMethod } from '@/utils/paymentMethod'
 import { normalizePaymentType } from '@/utils/paymentType'
 
@@ -25,14 +26,7 @@ const DESIGN_WIDTH = 980
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount)
 
-const formatDateTime = (dateStr: string) =>
-  new Date(dateStr).toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+const formatDateTime = (dateStr: string) => formatDateTimeVN(dateStr)
 
 type Props = {
   items: PaymentRecordType[]

@@ -33,6 +33,7 @@ import branchService from '@/services/branchService'
 import oneTimeFeeService from '@/services/oneTimeFeeService'
 import type { BranchType } from '@/types/apps/branchTypes'
 import type { FeeDefinitionType, FeePriceType } from '@/types/apps/oneTimeFeeTypes'
+import { formatDateVN } from '@/utils/dateTime'
 import ImportOneTimeFeePaidDialog from './ImportOneTimeFeePaidDialog'
 
 const BRANCH_SCOPED_FEE_CODES = new Set(['CSVC'])
@@ -458,7 +459,7 @@ return
                           </Typography>
                         </TableCell>
                         <TableCell>{formatCurrency(Number(price?.amount || 0))}</TableCell>
-                        <TableCell>{price?.effectiveFrom ? new Date(price.effectiveFrom).toLocaleDateString('vi-VN') : '-'}</TableCell>
+                        <TableCell>{formatDateVN(price?.effectiveFrom)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

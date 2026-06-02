@@ -40,6 +40,7 @@ import tableStyles from '@core/styles/table.module.css'
 
 import AddExamSessionDrawer from './AddExamSessionDrawer'
 import EditExamSessionDrawer from './EditExamSessionDrawer'
+import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
 
 const columnHelper = createColumnHelper<ExamSessionType>()
 
@@ -57,21 +58,6 @@ const parseDateTime = (value?: string | null) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
-const formatDateTime = (value?: string | null) => {
-  const parsed = parseDateTime(value)
-
-  if (!parsed) return '-'
-
-  return parsed.toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  })
-}
 
 const sortSessions = (sessions: ExamSessionType[]) =>
   [...sessions].sort((left, right) => {
@@ -162,11 +148,11 @@ const BeltExamListTable = () => {
       }),
       columnHelper.accessor('examDate', {
         header: 'Ngày thi',
-        cell: ({ row }) => <Typography>{formatDateTime(row.original.examDate)}</Typography>
+        cell: ({ row }) => <Typography>{formatDateVN(row.original.examDate)}</Typography>
       }),
       columnHelper.accessor('registrationDeadline', {
         header: 'Hạn đăng ký',
-        cell: ({ row }) => <Typography>{formatDateTime(row.original.registrationDeadline)}</Typography>
+        cell: ({ row }) => <Typography>{formatDateTimeVN(row.original.registrationDeadline)}</Typography>
       }),
       columnHelper.accessor('location', {
         header: 'Địa điểm',
@@ -324,9 +310,9 @@ const BeltExamListTable = () => {
           <Typography>
             Kỳ thi <strong>{selectedExam?.name}</strong> sẽ chuyển sang trạng thái mở đăng ký.
           </Typography>
-          <Typography variant='body2' color='text.secondary' sx={{ mt: 2 }}>
-            Hạn đăng ký sẽ dùng đúng giá trị đã nhập khi tạo hoặc chỉnh sửa kỳ thi, không cần nhập lại ở bước này.
-          </Typography>
+          {/*<Typography variant='body2' color='text.secondary' sx={{ mt: 2 }}>*/}
+          {/*  Hạn đăng ký sẽ dùng đúng giá trị đã nhập khi tạo hoặc chỉnh sửa kỳ thi, không cần nhập lại ở bước này.*/}
+          {/*</Typography>*/}
         </DialogContent>
         <DialogActions>
           <Button

@@ -57,6 +57,7 @@ import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole, isInstructorUser } from '@/utils/roleUtils'
 import { buildModulePermissionMap } from '@/utils/rbac'
 import { logger } from '@/utils/logger'
+import { formatDateVN } from '@/utils/dateTime'
 import { exportToExcel, formatVnDate, formatBool } from '@/utils/exportToExcel'
 
 import tableStyles from '@core/styles/table.module.css'
@@ -475,7 +476,7 @@ return
       header: 'Ngày sinh',
         cell: ({ row }) => (
           <Typography>
-            {row.original.dateOfBirth ? new Date(row.original.dateOfBirth).toLocaleDateString('vi-VN') : '-'}
+            {formatDateVN(row.original.dateOfBirth)}
           </Typography>
         )
       }),
@@ -508,7 +509,7 @@ return
                   size='small'
                   color='primary'
                   variant='tonal'
-              title={`Đăng ký: ${cls.enrollmentDate ? new Date(cls.enrollmentDate).toLocaleDateString('vi-VN') : ''}`}
+              title={`Đăng ký: ${formatDateVN(cls.enrollmentDate, '')}`}
                 />
               ))}
             </div>
@@ -856,6 +857,7 @@ return data
             setSelectedStudent(null)
           }}
           student={selectedStudent}
+          classOptions={assignedClasses}
           onEnrolled={handleEnrolled}
         />
       )}
@@ -872,7 +874,7 @@ return data
         />
       )}
 
-      <ImportStudentsDialog open={importOpen} onClose={() => setImportOpen(false)} onImported={reloadData} />
+      <ImportStudentsDialog open={importOpen} onClose={() => setImportOpen(false)} onImported={reloadData} classOptions={assignedClasses} />
     </>
   )
 }

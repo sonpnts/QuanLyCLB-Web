@@ -36,6 +36,7 @@ import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 // Type Imports
 import type { AuditLogType } from '@/types/apps/auditLogTypes'
 import { AuditActionColors, auditActionLabels } from '@/types/apps/auditLogTypes'
+import { formatDateTimeVN } from '@/utils/dateTime'
 
 // Component Imports
 import TableFilters from './TableFilters'
@@ -160,7 +161,7 @@ const AuditLogListTable = () => {
         header: 'Thời gian',
         cell: ({ row }) => (
           <Typography variant='body2'>
-            {new Date(row.original.timestamp).toLocaleString('vi-VN')}
+            {formatDateTimeVN(row.original.timestamp)}
           </Typography>
         )
       }),
@@ -314,7 +315,7 @@ const AuditLogListTable = () => {
               <Box className='grid grid-cols-2 gap-4'>
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>Thời gian</Typography>
-                  <Typography>{new Date(selectedLog.timestamp).toLocaleString('vi-VN')}</Typography>
+                  <Typography>{formatDateTimeVN(selectedLog.timestamp)}</Typography>
                 </Box>
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>Người dùng</Typography>

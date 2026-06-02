@@ -26,6 +26,7 @@ import systemConfigService from '@/services/systemConfigService'
 
 // Context Imports
 import { useNotification } from '@/contexts/notificationContext'
+import { formatDateTimeVN } from '@/utils/dateTime'
 
 const CONFIG_DISPLAY: Record<string, string> = {
   timeLateness: 'Thời gian cho phép đi trễ (phút)',
@@ -160,9 +161,7 @@ const SystemConfigView = () => {
   }
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '-'
-
-    return new Date(dateStr).toLocaleString('vi-VN')
+    return formatDateTimeVN(dateStr)
   }
 
   return (

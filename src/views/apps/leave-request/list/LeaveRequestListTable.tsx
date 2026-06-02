@@ -31,7 +31,8 @@ import studentAttendanceService from '@/services/studentAttendanceService'
 import type { GetStudentAbsencesParams, StudentAbsenceType } from '@/services/studentAttendanceService'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
-import useConfirmAction from '@/hooks/useConfirmAction'
+import useConfirmActionDialog from '@/hooks/useConfirmAction'
+import { formatDateVN } from '@/utils/dateTime'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { buildModulePermissionMap } from '@/utils/rbac'
 
@@ -83,7 +84,7 @@ const LeaveRequestListTable = () => {
   )
 
   const { showNotification } = useNotification()
-  const { confirm, confirmDialog } = useConfirmAction()
+  const { confirm, confirmDialog } = useConfirmActionDialog()
   const showNotificationRef = useRef(showNotification)
 
   showNotificationRef.current = showNotification
@@ -140,7 +141,7 @@ const LeaveRequestListTable = () => {
     loadAbsences()
   }, [loadAbsences])
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     const confirmed = await confirm({
       title: 'Xác nhận xóa nghỉ phép',
       description: 'Bạn có chắc chắn muốn xóa dòng xin nghỉ phép này?',
@@ -159,7 +160,7 @@ return
 
     setData(prev => prev.filter(item => item.id !== id))
     showNotificationRef.current('Đã xóa dòng xin nghỉ phép.', 'success')
-  }
+  }, [confirm])
 
   const columns = useMemo<ColumnDef<StudentAbsenceType, any>[]>(() => {
     const nextColumns: ColumnDef<StudentAbsenceType, any>[] = [
@@ -180,7 +181,7 @@ return
       }),
       columnHelper.accessor('attendanceDate', {
         header: 'Buổi nghỉ',
-        cell: ({ row }) => <Typography>{new Date(row.original.attendanceDate).toLocaleDateString('vi-VN')}</Typography>
+        cell: ({ row }) => <Typography>{formatDateVN(row.original.attendanceDate)}</Typography>
       }),
       columnHelper.accessor('isExcused', {
         header: 'Loại vắng',
@@ -220,7 +221,7 @@ return
     }
 
     return nextColumns
-  }, [leaveRequestPermissions.canDelete])
+  }, [handleDelete, leaveRequestPermissions.canDelete])
 
   const table = useReactTable({
     data,

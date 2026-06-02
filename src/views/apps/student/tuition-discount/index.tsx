@@ -23,6 +23,7 @@ import Chip from '@mui/material/Chip'
 import studentService, { type TuitionDiscountRequestRow } from '@/services/studentService'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { useNotification } from '@/contexts/notificationContext'
+import { formatDateTimeVN } from '@/utils/dateTime'
 
 const formatVnd = (n: number) => `${Math.round(n).toLocaleString('vi-VN')}đ`
 
@@ -246,7 +247,7 @@ return
                     <TableCell>{statusChip(r.status)}</TableCell>
                     <TableCell>
                       <Typography variant='body2'>
-                        {r.requestedAt ? new Date(r.requestedAt).toLocaleString('vi-VN') : '—'}
+                        {formatDateTimeVN(r.requestedAt, '—')}
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -261,4 +262,3 @@ return
 }
 
 export default StudentTuitionDiscountPage
-

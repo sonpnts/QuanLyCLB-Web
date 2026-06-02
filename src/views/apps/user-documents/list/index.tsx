@@ -38,6 +38,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import userDocumentService from '@/services/userDocumentService'
 import userService from '@/services/userService'
 import type { UsersType } from '@/types/apps/userTypes'
+import { formatDateVN } from '@/utils/dateTime'
 import type { UserDocumentDto, UserDocumentType } from '@/types/apps/userDocumentTypes'
 import { documentStatusColors, documentStatusLabels } from '@/types/apps/userDocumentTypes'
 import { fuzzyFilter } from '@/utils/tableHelpers'
@@ -230,7 +231,6 @@ return () => { if (userSearchRef.current) clearTimeout(userSearchRef.current) }
   }, [filterType, selectedUser])
 
   useEffect(() => {
-    if (loadedRef.current && filterType === '' && !selectedUser) return
     loadedRef.current = true
     load()
   }, [load])
@@ -333,7 +333,7 @@ return (
                 <Typography variant='body2' noWrap sx={{ maxWidth: 160 }}>{doc.fileName}</Typography>
               </Tooltip>
               <Typography variant='caption' color='text.secondary'>
-                {new Date(doc.createdAt).toLocaleDateString('vi-VN')}
+                {formatDateVN(doc.createdAt)}
               </Typography>
             </Box>
           </Box>
@@ -600,7 +600,7 @@ return (
             </Typography>
           </Box>
           <Typography variant='caption' color='text.disabled' display='block' sx={{ mt: 0.25 }}>
-            {previewDoc?.fileName} · {previewDoc && new Date(previewDoc.createdAt).toLocaleDateString('vi-VN')}
+            {previewDoc?.fileName} · {previewDoc && formatDateVN(previewDoc.createdAt)}
           </Typography>
           <IconButton sx={{ position: 'absolute', right: 8, top: 8 }} onClick={() => setPreviewDoc(null)}>
             <i className='ri-close-line' />
@@ -758,7 +758,7 @@ return (
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant='body2' fontWeight={500} noWrap>{doc.fileName}</Typography>
                     <Typography variant='caption' color='text.secondary'>
-                      Tải lên: {new Date(doc.createdAt).toLocaleDateString('vi-VN')}
+                      Tải lên: {formatDateVN(doc.createdAt)}
                     </Typography>
                   </Box>
 

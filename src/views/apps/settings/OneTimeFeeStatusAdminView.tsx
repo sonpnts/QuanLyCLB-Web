@@ -34,11 +34,12 @@ import type {
   FeeDefinitionType,
   OneTimeFeeAdminStatusType
 } from '@/types/apps/oneTimeFeeTypes'
+import { formatDateTimeVN } from '@/utils/dateTime'
 
 const formatCurrency = (amount?: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(amount || 0))
 
-const formatDateTime = (value?: string | null) => (value ? new Date(value).toLocaleString('vi-VN') : '-')
+const formatDateTime = (value?: string | null) => formatDateTimeVN(value)
 
 const translatePaidSource = (value?: string | null) => {
   switch (value) {

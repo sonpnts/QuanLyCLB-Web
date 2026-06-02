@@ -26,6 +26,7 @@ import Typography from '@mui/material/Typography'
 
 import { useNotification } from '@/contexts/notificationContext'
 import studentService, { type PaginatedResult, type TuitionDiscountRequestRow } from '@/services/studentService'
+import { formatDateTimeVN } from '@/utils/dateTime'
 
 const formatVnd = (n: number) => `${Math.round(n).toLocaleString('vi-VN')}đ`
 
@@ -44,7 +45,7 @@ const getStatusChip = (status: TuitionDiscountRequestRow['status']) => {
     return <Chip label='Chờ duyệt' color='warning' size='small' />
   }
 
-  return <Chip label='—' size='small' variant='outlined' />
+  return <Chip label='-' size='small' variant='outlined' />
 }
 
 const emptyPagedResult = (): PaginatedResult<TuitionDiscountRequestRow> => ({
@@ -149,10 +150,7 @@ const StudentTuitionDiscountApprovalsPage = () => {
 
       showNotification(res.message || 'Đã cập nhật', 'success')
       setDecideOpen(false)
-      await Promise.all([
-        loadPending(0, pendingRowsPerPage),
-        loadHistory(0, historyRowsPerPage)
-      ])
+      await Promise.all([loadPending(0, pendingRowsPerPage), loadHistory(0, historyRowsPerPage)])
       setPendingPage(0)
       setHistoryPage(0)
     } finally {
@@ -181,7 +179,7 @@ const StudentTuitionDiscountApprovalsPage = () => {
 
       <Card>
         <CardContent>
-          <Box className='flex items-center justify-between gap-3 flex-wrap' sx={{ mb: 2 }}>
+          <Box className='mb-2 flex items-center justify-between gap-3 flex-wrap'>
             <Tabs value={tab} onChange={(_event, value) => setTab(value)}>
               <Tab label='Chờ duyệt' />
               <Tab label='Lịch sử' />
@@ -244,18 +242,18 @@ const StudentTuitionDiscountApprovalsPage = () => {
                         {row.studentName}
                       </Typography>
                       <Typography variant='caption' color='text.secondary'>
-                        {row.studentCode || '—'}
+                        {row.studentCode || '-'}
                       </Typography>
                     </TableCell>
 
-                    <TableCell>{row.className || '—'}</TableCell>
+                    <TableCell>{row.className || '-'}</TableCell>
                     <TableCell align='right'>{formatVnd(row.discountAmount || 0)}</TableCell>
 
                     {tab === 0 ? (
                       <>
                         <TableCell>{row.reason}</TableCell>
-                        <TableCell>{row.requestedByName || '—'}</TableCell>
-                        <TableCell>{row.requestedAt ? new Date(row.requestedAt).toLocaleString('vi-VN') : '—'}</TableCell>
+                        <TableCell>{row.requestedByName || '-'}</TableCell>
+                        <TableCell>{formatDateTimeVN(row.requestedAt)}</TableCell>
                         <TableCell align='right'>
                           <Box className='flex items-center justify-end gap-2'>
                             <Button size='small' variant='contained' color='success' onClick={() => openDecide(row.studentId, true)}>
@@ -270,10 +268,10 @@ const StudentTuitionDiscountApprovalsPage = () => {
                     ) : (
                       <>
                         <TableCell>{getStatusChip(row.status)}</TableCell>
-                        <TableCell>{row.requestedByName || '—'}</TableCell>
-                        <TableCell>{row.decidedByName || '—'}</TableCell>
-                        <TableCell>{row.decisionNote || '—'}</TableCell>
-                        <TableCell>{row.decidedAt ? new Date(row.decidedAt).toLocaleString('vi-VN') : '—'}</TableCell>
+                        <TableCell>{row.requestedByName || '-'}</TableCell>
+                        <TableCell>{row.decidedByName || '-'}</TableCell>
+                        <TableCell>{row.decisionNote || '-'}</TableCell>
+                        <TableCell>{formatDateTimeVN(row.decidedAt)}</TableCell>
                       </>
                     )}
                   </TableRow>

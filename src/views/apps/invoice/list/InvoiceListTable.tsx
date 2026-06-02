@@ -26,6 +26,7 @@ import Typography from '@mui/material/Typography'
 
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
 import { paymentMethodLabels, paymentTypeLabels } from '@/types/apps/paymentTypes'
+import { formatDateTimeVN } from '@/utils/dateTime'
 import { exportToExcel, formatVnCurrency, formatVnDate } from '@/utils/exportToExcel'
 
 import tableStyles from '@core/styles/table.module.css'
@@ -66,14 +67,7 @@ type Props = {
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount)
 
-const formatDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+const formatDate = (dateStr: string) => formatDateTimeVN(dateStr)
 
 const typeColorMap: Record<number, 'primary' | 'info' | 'success' | 'secondary' | 'warning'> = {
   0: 'primary',
@@ -118,6 +112,7 @@ const InvoiceListTable = ({
     const rows: ReceiptRow[] = Array.from(grouped.entries()).map(([receiptNumber, items]) => {
       const first = items[0]
       const classNames = [...new Set(items.map(item => item.className).filter(Boolean) as string[])]
+
       const periods = [
         ...new Set(
           items

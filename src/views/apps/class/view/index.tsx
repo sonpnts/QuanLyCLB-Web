@@ -1,4 +1,4 @@
-﻿﻿'use client'
+﻿'use client'
 
 import { useEffect, useState, useRef } from 'react'
 
@@ -38,6 +38,7 @@ import classService from '@/services/classService'
 import studentService from '@/services/studentService'
 
 // Utils
+import { formatDateVN } from '@/utils/dateTime'
 import { getDayName } from '@/utils/constants'
 
 // Components
@@ -360,7 +361,7 @@ const ClassViewPage = ({ classId }: Props) => {
                           >
                             <TableCell>{student.fullName}</TableCell>
                             <TableCell>
-                              {student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : '-'}
+                              {formatDateVN(student.dateOfBirth)}
                             </TableCell>
                             <TableCell>
                               {student.gender === true ? 'Nam' : student.gender === false ? 'Nữ' : '-'}

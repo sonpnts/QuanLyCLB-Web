@@ -40,6 +40,7 @@ import oneTimeFeeService from '@/services/oneTimeFeeService'
 import { useNotification } from '@/contexts/notificationContext'
 import { savePaymentInvoiceDraft } from '@/utils/paymentDraft'
 import { logger } from '@/utils/logger'
+import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 import TransferStudentDialog from './TransferStudentDialog'
@@ -91,8 +92,8 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2)
 
-const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateString('vi-VN') : '-')
-const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString('vi-VN') : '-')
+const formatDate = (value?: string) => formatDateVN(value)
+const formatDateTime = (value?: string) => formatDateTimeVN(value)
 const formatCurrency = (value?: number) => `${Number(value || 0).toLocaleString('vi-VN')}đ`
 
 const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume, onTransferred }: Props) => {
@@ -227,6 +228,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
 
     try {
       setLoadingAttendance(true)
+
       const response = await studentService.getStudentAttendance(activeStudent.id, {
         pageNumber: attendancePage + 1,
         pageSize: attendanceRowsPerPage

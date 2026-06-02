@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import { TICKET_REASONS } from '@/types/apps/attendanceTypes'
 import { buildModulePermissionMap } from '@/utils/rbac'
+import { formatDateVN } from '@/utils/dateTime'
 import { logger } from '@/utils/logger'
 
 const columnHelper = createColumnHelper<any>()
@@ -186,7 +187,7 @@ const AttendanceTicketsTable = () => {
       }),
       columnHelper.accessor('createdAt', {
         header: 'Ngày tạo',
-        cell: ({ row }) => <Typography variant='body2'>{new Date(row.original.createdAt).toLocaleDateString('vi-VN')}</Typography>
+        cell: ({ row }) => <Typography variant='body2'>{formatDateVN(row.original.createdAt)}</Typography>
       }),
       columnHelper.display({
         id: 'actions',

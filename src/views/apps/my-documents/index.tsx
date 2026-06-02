@@ -24,6 +24,7 @@ import Typography from '@mui/material/Typography'
 import { useNotification } from '@/contexts/notificationContext'
 import userDocumentService from '@/services/userDocumentService'
 import type { UserDocumentDto, UserDocumentType } from '@/types/apps/userDocumentTypes'
+import { formatDateVN } from '@/utils/dateTime'
 import {
   documentStatusColors,
   documentStatusLabels,
@@ -277,7 +278,7 @@ const MyDocumentsView = () => {
             )}
           </Box>
           <Typography variant='caption' color='text.secondary' display='block' sx={{ mt: 0.25 }}>
-            {previewDoc?.fileName} · {previewDoc && new Date(previewDoc.createdAt).toLocaleDateString('vi-VN')}
+            {previewDoc?.fileName} · {previewDoc && formatDateVN(previewDoc.createdAt)}
           </Typography>
           <IconButton sx={{ position: 'absolute', right: 8, top: 8 }} onClick={() => setPreviewDoc(null)}>
             <i className='ri-close-line' />
@@ -718,7 +719,7 @@ const CertificatesCard = ({
                     mt: 'auto'
                   }}>
                     <Typography variant='caption' color='text.secondary' noWrap sx={{ flex: 1, fontSize: 11 }}>
-                      {new Date(doc.createdAt).toLocaleDateString('vi-VN')}
+                      {formatDateVN(doc.createdAt)}
                     </Typography>
                     <Tooltip title='Xem'>
                       <IconButton size='small' onClick={() => onPreview(doc)}>

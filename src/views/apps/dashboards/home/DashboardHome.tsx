@@ -31,14 +31,11 @@ import CustomAvatar from '@core/components/mui/Avatar'
 import { useAuth } from '@/contexts/authContext'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { formatDateVN } from '@/utils/dateTime'
 
 const formatMoney = (value: number) => new Intl.NumberFormat('vi-VN').format(value)
 
-const formatSmallDate = (value?: string | null) => {
-  if (!value) return ''
-
-  return new Date(value).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
+const formatSmallDate = (value?: string | null) => formatDateVN(value, '')
 
 const StatCard = ({
   title,

@@ -31,6 +31,7 @@ import type { BranchType } from '@/types/apps/branchTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { InstructorClassCollectionType } from '@/types/apps/financeTypes'
 import type { UsersType } from '@/types/apps/userTypes'
+import { formatDateVN } from '@/utils/dateTime'
 import { exportToExcel, formatVnCurrency, formatVnDate } from '@/utils/exportToExcel'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
@@ -293,6 +294,7 @@ return
 
     try {
       setLoading(true)
+
       const summaryParams = {
         classId: filters.statisticsMode === 'class' ? filters.classId || undefined : undefined,
         branchId: filters.statisticsMode === 'branch' ? filters.branchId || undefined : undefined,
@@ -324,7 +326,7 @@ return
     } finally {
       setLoading(false)
     }
-  }, [filters.branchId, filters.classId, filters.fromDate, filters.instructorId, filters.statisticsMode, filters.toDate, loadCollectionsForMode, modeRequiresSelection, selectedBranchClassIds, showNotification])
+  }, [filters.branchId, filters.classId, filters.fromDate, filters.instructorId, filters.statisticsMode, filters.toDate, loadCollectionsForMode, modeRequiresSelection, showNotification])
 
   useEffect(() => {
     loadSummary()
@@ -688,7 +690,7 @@ return
                           </td>
                           <td>
                             <Typography variant='body2' color='text.secondary'>
-                              {item.asOf ? new Date(item.asOf).toLocaleDateString('vi-VN') : '-'}
+                              {formatDateVN(item.asOf)}
                             </Typography>
                           </td>
                         </tr>

@@ -17,6 +17,7 @@ import Divider from '@mui/material/Divider'
 import payrollService from '@/services/payrollService'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
+import { formatDateVN } from '@/utils/dateTime'
 
 const MyPayrollView = () => {
   // States
@@ -109,17 +110,7 @@ return new Intl.NumberFormat('vi-VN', {
 
   // Format date
   const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return '-'
-
-    try {
-      return new Date(dateString).toLocaleDateString('vi-VN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    } catch {
-      return dateString
-    }
+    return formatDateVN(dateString)
   }
 
   return (
