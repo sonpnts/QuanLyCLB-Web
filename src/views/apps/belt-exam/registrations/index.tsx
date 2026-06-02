@@ -217,12 +217,7 @@ const BeltExamRegistrationsView = () => {
 
       if (result.success && result.data) {
         setSelectedStudent(result.data)
-
-        if (studentPermissions.canUpdate) {
-          setEditStudentOpen(true)
-        } else {
-          setViewStudentOpen(true)
-        }
+        setViewStudentOpen(true)
       } else {
         showNotification(result.message || 'Không thể tải thông tin học viên', 'error')
       }
@@ -288,10 +283,6 @@ const BeltExamRegistrationsView = () => {
     }
   }, [classId, examSessionId, feePaid, keyword, showNotification, status])
 
-  const handleStudentUpdated = (updated: StudentType) => {
-    setSelectedStudent(updated)
-  }
-
   useEffect(() => {
     loadFilters()
   }, [loadFilters])
@@ -309,6 +300,10 @@ const BeltExamRegistrationsView = () => {
   useEffect(() => {
     loadRegistrations()
   }, [loadRegistrations])
+
+  const handleStudentUpdated = (updated: StudentType) => {
+    setSelectedStudent(updated)
+  }
 
   useEffect(() => {
     setPage(0)
@@ -637,5 +632,3 @@ const BeltExamRegistrationsView = () => {
 }
 
 export default BeltExamRegistrationsView
-
-
