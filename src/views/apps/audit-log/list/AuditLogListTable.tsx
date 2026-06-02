@@ -17,6 +17,7 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
 import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
@@ -168,14 +169,9 @@ const AuditLogListTable = () => {
       columnHelper.accessor('userName', {
         header: 'Người dùng',
         cell: ({ row }) => (
-          <Box>
-            <Typography className='font-medium' color='text.primary'>
-              {row.original.userName}
-            </Typography>
-            <Typography variant='caption' color='text.secondary'>
-              {row.original.userRole}
-            </Typography>
-          </Box>
+          <Typography className='font-medium' color='text.primary'>
+            {row.original.userName}
+          </Typography>
         )
       }),
       columnHelper.accessor('action', {
@@ -307,19 +303,25 @@ const AuditLogListTable = () => {
       </Card>
 
       {/* Detail Dialog */}
-      <Dialog open={detailDialogOpen} onClose={() => setDetailDialogOpen(false)} maxWidth='md' fullWidth>
+      <Dialog open={detailDialogOpen} onClose={() => setDetailDialogOpen(false)} maxWidth='lg' fullWidth>
         <DialogTitle>Chi tiết nhật ký</DialogTitle>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
           {selectedLog && (
-            <Box className='flex flex-col gap-4'>
-              <Box className='grid grid-cols-2 gap-4'>
+            <Stack spacing={2.5}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                  gap: 2
+                }}
+              >
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>Thời gian</Typography>
-                  <Typography>{formatDateTimeVN(selectedLog.timestamp)}</Typography>
+                  <Typography sx={{ overflowWrap: 'anywhere' }}>{formatDateTimeVN(selectedLog.timestamp)}</Typography>
                 </Box>
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>Người dùng</Typography>
-                  <Typography>{selectedLog.userName} ({selectedLog.userRole})</Typography>
+                  <Typography sx={{ overflowWrap: 'anywhere' }}>{selectedLog.userName}</Typography>
                 </Box>
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>Hành động</Typography>
@@ -345,25 +347,44 @@ const AuditLogListTable = () => {
                 </Box>
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>ID đối tượng</Typography>
-                  <Typography>{selectedLog.entityId || '-'}</Typography>
+                  <Typography sx={{ overflowWrap: 'anywhere' }}>{selectedLog.entityId || '-'}</Typography>
                 </Box>
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>Địa chỉ IP</Typography>
-                  <Typography>{selectedLog.ipAddress || '-'}</Typography>
+                  <Typography sx={{ overflowWrap: 'anywhere' }}>{selectedLog.ipAddress || '-'}</Typography>
                 </Box>
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>User Agent</Typography>
-                  <Typography variant='body2' className='break-all'>{selectedLog.userAgent || '-'}</Typography>
+                  <Typography
+                    variant='body2'
+                    sx={{ overflowWrap: 'anywhere', wordBreak: 'break-word', whiteSpace: 'normal' }}
+                  >
+                    {selectedLog.userAgent || '-'}
+                  </Typography>
                 </Box>
               </Box>
               <Box>
                 <Typography variant='subtitle2' color='text.secondary'>Mô tả</Typography>
-                <Typography>{selectedLog.description}</Typography>
+                <Typography sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>{selectedLog.description}</Typography>
               </Box>
               {selectedLog.oldValues && (
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>Giá trị cũ</Typography>
-                  <Box component='pre' className='bg-gray-100 p-3 rounded text-sm overflow-auto max-h-40'>
+                  <Box
+                    component='pre'
+                    sx={{
+                      m: 0,
+                      p: 2,
+                      borderRadius: 1.5,
+                      bgcolor: 'grey.100',
+                      fontSize: 13,
+                      overflow: 'auto',
+                      maxHeight: 240,
+                      whiteSpace: 'pre-wrap',
+                      overflowWrap: 'anywhere',
+                      wordBreak: 'break-word'
+                    }}
+                  >
                     {formatJson(selectedLog.oldValues)}
                   </Box>
                 </Box>
@@ -371,12 +392,26 @@ const AuditLogListTable = () => {
               {selectedLog.newValues && (
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>Giá trị mới</Typography>
-                  <Box component='pre' className='bg-gray-100 p-3 rounded text-sm overflow-auto max-h-40'>
+                  <Box
+                    component='pre'
+                    sx={{
+                      m: 0,
+                      p: 2,
+                      borderRadius: 1.5,
+                      bgcolor: 'grey.100',
+                      fontSize: 13,
+                      overflow: 'auto',
+                      maxHeight: 240,
+                      whiteSpace: 'pre-wrap',
+                      overflowWrap: 'anywhere',
+                      wordBreak: 'break-word'
+                    }}
+                  >
                     {formatJson(selectedLog.newValues)}
                   </Box>
                 </Box>
               )}
-            </Box>
+            </Stack>
           )}
         </DialogContent>
         <DialogActions>
