@@ -31,6 +31,26 @@ import { exportToExcel, formatVnCurrency, formatVnDate } from '@/utils/exportToE
 
 import tableStyles from '@core/styles/table.module.css'
 
+const toInputDate = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+const buildRange = (days: number) => {
+  const today = new Date()
+  const from = new Date(today)
+
+  from.setDate(today.getDate() - (days - 1))
+
+  return {
+    from: toInputDate(from),
+    to: toInputDate(today)
+  }
+}
+
 type ReceiptRow = {
   receiptNumber: string
   studentName: string
@@ -98,6 +118,11 @@ const InvoiceListTable = ({
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [proofImageUrl, setProofImageUrl] = useState<string | null>(null)
   const [proofImageOpen, setProofImageOpen] = useState(false)
+  const preset30 = useMemo(() => buildRange(30), [])
+  const preset60 = useMemo(() => buildRange(60), [])
+  const isPreset30 = dateFrom === preset30.from && dateTo === preset30.to
+  const isPreset60 = dateFrom === preset60.from && dateTo === preset60.to
+  const isCustomRange = !isPreset30 && !isPreset60
 
   const receipts = useMemo(() => {
     const grouped = new Map<string, PaymentRecordType[]>()
@@ -161,12 +186,18 @@ const InvoiceListTable = ({
   const paged = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
   const handleResetFilters = () => {
-    onDateFromChange('')
-    onDateToChange('')
+    onDateFromChange(preset30.from)
+    onDateToChange(preset30.to)
     onClassIdChange('')
     setMethodFilter('')
     setTypeFilter('')
     setSearch('')
+    setPage(0)
+  }
+
+  const applyQuickRange = (from: string, to: string) => {
+    onDateFromChange(from)
+    onDateToChange(to)
     setPage(0)
   }
 
@@ -237,6 +268,23 @@ const InvoiceListTable = ({
 
         <CardContent className='pt-0'>
           <div className='flex gap-3 flex-wrap items-center'>
+            <Button size='small' variant={isPreset30 ? 'contained' : 'outlined'} onClick={() => applyQuickRange(preset30.from, preset30.to)}>
+              1 tháng trước
+            </Button>
+            <Button size='small' variant={isPreset60 ? 'contained' : 'outlined'} onClick={() => applyQuickRange(preset60.from, preset60.to)}>
+              2 tháng trước
+            </Button>
+            <Button
+              size='small'
+              variant={isCustomRange ? 'contained' : 'outlined'}
+              onClick={() => {
+                onDateFromChange('')
+                onDateToChange('')
+                setPage(0)
+              }}
+            >
+              Tùy chỉnh
+            </Button>
             <TextField
               size='small'
               label='Từ ngày'

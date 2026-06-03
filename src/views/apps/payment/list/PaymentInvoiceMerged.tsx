@@ -27,14 +27,35 @@ type PaymentClassOption = {
   name: string
 }
 
+const toInputDate = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+const getDefaultDateRange = () => {
+  const today = new Date()
+  const from = new Date(today)
+
+  from.setDate(today.getDate() - 29)
+
+  return {
+    dateFrom: toInputDate(from),
+    dateTo: toInputDate(today)
+  }
+}
+
 const PaymentInvoiceMerged = () => {
   const router = useRouter()
   const { auth } = useAuth()
+  const defaultRange = useMemo(() => getDefaultDateRange(), [])
 
   const [payments, setPayments] = useState<PaymentRecordType[]>([])
   const [loading, setLoading] = useState(true)
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const [dateFrom, setDateFrom] = useState(defaultRange.dateFrom)
+  const [dateTo, setDateTo] = useState(defaultRange.dateTo)
   const [selectedClassId, setSelectedClassId] = useState('')
   const [classOptions, setClassOptions] = useState<PaymentClassOption[]>([])
 
@@ -131,9 +152,9 @@ const PaymentInvoiceMerged = () => {
       <Box className='flex items-center justify-between gap-3 flex-wrap'>
         <Box>
           <Typography variant='h5'>Lịch sử thanh toán theo biên lai</Typography>
-          <Typography variant='body2' color='text.secondary'>
-            Danh sách này gộp các khoản thu theo từng biên lai để dễ xem lịch sử, người thu và minh chứng chuyển khoản.
-          </Typography>
+          {/*<Typography variant='body2' color='text.secondary'>*/}
+          {/*  Danh sách này gộp các khoản thu theo từng biên lai để dễ xem lịch sử, người thu và minh chứng chuyển khoản.*/}
+          {/*</Typography>*/}
         </Box>
 
         <Box className='flex gap-2 flex-wrap'>
