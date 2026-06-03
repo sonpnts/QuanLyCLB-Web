@@ -63,7 +63,6 @@ import { useAuth } from '@/contexts/authContext'
 
 // Role utils
 import { hasAdminRole, isInstructorUser } from '@/utils/roleUtils'
-import { hasPermission } from '@/utils/permissionUtils'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -127,7 +126,7 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
 
   // Auth & role detection
   const { auth } = useAuth()
-  const isAdmin = useMemo(() => hasPermission(auth?.permissions, 'Class.ManageAll') || hasAdminRole(auth?.roles), [auth])
+  const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth])
   const isInstructor = useMemo(() => isInstructorUser(auth?.roles), [auth])
   const userId = auth?.user?.id
 

@@ -1,9 +1,7 @@
 export const API_ENDPOINTS = {
   auth: {
-    password: process.env.NEXT_PUBLIC_LOGINPASS_ENDPOINT ?? '/Auth/password',
     google: process.env.NEXT_PUBLIC_LOGGING_ENDPOINT ?? '/Auth/google',
-    refresh: process.env.NEXT_PUBLIC_REFRESH_ENDPOINT ?? '/Auth/refresh',
-    register: '/Auth/register'
+    refresh: process.env.NEXT_PUBLIC_REFRESH_ENDPOINT ?? '/Auth/refresh'
   },
   attendance: {
     checkIn: '/Attendance/check-in',
@@ -23,6 +21,10 @@ export const API_ENDPOINTS = {
     byUser: (userId: string) => `/audit-logs/user/${userId}`,
     byEntity: (entityType: string, entityId: string) => `/audit-logs/entity/${entityType}/${entityId}`,
     cronJobs: '/audit-logs/cron-jobs'
+  },
+  znsLogs: {
+    root: '/zns-logs',
+    retry: (id: string) => `/zns-logs/${id}/retry`
   },
   beltExams: {
     sessions: '/belt-exams/sessions',
@@ -127,6 +129,8 @@ export const API_ENDPOINTS = {
     bulk: '/payments/bulk',
     byId: (id: string) => `/payments/${id}`,
     byReceipt: (receiptNumber: string) => `/payments/receipt/${receiptNumber}`,
+    receiptZnsStatus: (receiptNumber: string) => `/payments/receipt/${receiptNumber}/zns-status`,
+    receiptZnsRetry: (receiptNumber: string) => `/payments/receipt/${receiptNumber}/zns-retry`,
     restore: (id: string) => `/payments/${id}/restore`,
     byStudent: (studentId: string) => `/payments/by-student/${studentId}`,
     byClass: (classId: string) => `/payments/by-class/${classId}`,

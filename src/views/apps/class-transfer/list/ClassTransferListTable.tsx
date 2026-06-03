@@ -100,7 +100,7 @@ const ClassTransferListTable = () => {
 
   const { showNotification } = useNotification()
   const { auth } = useAuth()
-  const isAdmin = hasPermission(auth?.permissions, 'ClassTransfer.ManageAll') || hasAdminRole(auth?.roles)
+  const isAdmin = hasPermission(auth?.permissions, 'ClassTransfer.Approve') || hasAdminRole(auth?.roles)
 
   // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
@@ -200,7 +200,7 @@ return
     }
   }
 
-  const handleCancel = async (id: string) => {
+  const handleCancel = useCallback(async (id: string) => {
     try {
       setLoading(true)
       const response = await classTransferService.cancelClassTransfer(id)
@@ -216,7 +216,7 @@ return
     } finally {
       setLoading(false)
     }
-  }
+  }, [showNotification])
 
   const columns = useMemo<ColumnDef<ClassTransferType, any>[]>(
     () => [
@@ -324,7 +324,7 @@ return (
         }
       }
     ],
-    [isAdmin]
+    [handleCancel, isAdmin]
   )
 
   const table = useReactTable({

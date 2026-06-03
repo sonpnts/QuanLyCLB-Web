@@ -93,7 +93,13 @@ const isSessionReadOnly = (session: ExamSessionType) => {
 const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
-  const isAdmin = hasPermission(auth?.permissions, 'BeltExam.ManageAll') || hasAdminRole(auth?.roles)
+
+  const isAdmin =
+    hasPermission(auth?.permissions, 'BeltExam.Admin.View') ||
+    hasPermission(auth?.permissions, 'BeltExam.Admin.Create') ||
+    hasPermission(auth?.permissions, 'BeltExam.Admin.Update') ||
+    hasPermission(auth?.permissions, 'BeltExam.Admin.Approve') ||
+    hasAdminRole(auth?.roles)
 
   const [myClasses, setMyClasses] = useState<{ id: string; name: string }[]>([])
   const [selectedClassId, setSelectedClassId] = useState<string>('')
@@ -552,5 +558,3 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 }
 
 export default BeltExamRegisterClassPanel
-
-

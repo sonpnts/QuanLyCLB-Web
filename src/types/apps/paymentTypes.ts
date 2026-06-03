@@ -46,6 +46,19 @@ export type PaymentRecordType = {
   discountScope?: 'manual' | 'approved' | 'combo' | 'mixed' | 'all' | 'unknown' | string
 }
 
+export type ReceiptZnsStatusType = {
+  logId?: string | null
+  receiptNumber: string
+  notificationType: string
+  hasLog: boolean
+  isSent: boolean
+  status: number
+  errorMessage?: string | null
+  messageId?: string | null
+  sentAtUtc?: string | null
+  canRetry: boolean
+}
+
 export type DiscountedReceiptPagedResultType = {
   totalRecords: number
   records: PaymentRecordType[]

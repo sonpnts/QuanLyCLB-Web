@@ -15,11 +15,6 @@ import { apiClient } from '@/utils/apiClient'
 import { authStorage } from '@/utils/authStorage'
 import type { AuthSnapshot, AuthUser } from '@/utils/authStorage'
 
-type LoginPayload = {
-  username: string
-  password: string
-}
-
 type ApiAuthResponse = {
   accessToken?: string
   refreshToken?: string
@@ -50,7 +45,6 @@ type AuthContextValue = {
   auth: AuthSnapshot | null
   isAuthenticated: boolean
   isInitialized: boolean
-  login: (payload: LoginPayload) => Promise<LoginResult>
   loginWithGoogle: (authorizationCode: string) => Promise<LoginResult>
   logout: () => void
 }
@@ -128,27 +122,6 @@ export const AuthProvider = ({ children }: ChildrenType) => {
     }
   }, [])
 
-  const login = useCallback(
-    async (payload: LoginPayload): Promise<LoginResult> => {
-      try {
-        const response = await apiClient.post<ApiLoginResponse>(API_ENDPOINTS.auth.password, payload)
-
-        return persistAuth(
-          response.data?.data,
-          {
-            id: payload.username,
-            fullName: payload.username,
-            email: payload.username
-          },
-          response.data?.message
-        )
-      } catch (error) {
-        return handleLoginError(error)
-      }
-    },
-    [handleLoginError, persistAuth]
-  )
-
   const loginWithGoogle = useCallback(
     async (authorizationCode: string): Promise<LoginResult> => {
       try {
@@ -172,11 +145,10 @@ export const AuthProvider = ({ children }: ChildrenType) => {
       auth,
       isAuthenticated: Boolean(auth?.accessToken),
       isInitialized,
-      login,
       loginWithGoogle,
       logout
     }),
-    [auth, isInitialized, login, loginWithGoogle, logout]
+    [auth, isInitialized, loginWithGoogle, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -1,7 +1,6 @@
 const VN_TIMEZONE = 'Asia/Ho_Chi_Minh'
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
-const VN_UTC_OFFSET_HOURS = 7
 
 type DateValue = Date | string | number | null | undefined
 
@@ -18,15 +17,27 @@ const toVietnamDateParts = (value: DateValue) => {
 
   if (!date) return null
 
-  const vnDate = new Date(date.getTime() + VN_UTC_OFFSET_HOURS * 60 * 60 * 1000)
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: VN_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  })
+
+  const parts = formatter.formatToParts(date)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find(item => item.type === type)?.value ?? ''
 
   return {
-    day: pad2(vnDate.getUTCDate()),
-    month: pad2(vnDate.getUTCMonth() + 1),
-    year: String(vnDate.getUTCFullYear()),
-    hour: pad2(vnDate.getUTCHours()),
-    minute: pad2(vnDate.getUTCMinutes()),
-    second: pad2(vnDate.getUTCSeconds())
+    day: part('day'),
+    month: part('month'),
+    year: part('year'),
+    hour: part('hour'),
+    minute: part('minute'),
+    second: part('second')
   }
 }
 

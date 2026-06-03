@@ -18,7 +18,6 @@ import {
 
 import beltExamService from '@/services/beltExamService'
 import type { ExamRegistrationType, ExamSessionStatus } from '@/types/apps/beltExamTypes'
-import { examRegistrationStatusColors, examRegistrationStatusLabels } from '@/types/apps/beltExamTypes'
 import { logger } from '@/utils/logger'
 import { fuzzyFilter } from '@/utils/tableHelpers'
 
@@ -100,17 +99,6 @@ const RegistrationListTable = ({ sessionId, sessionStatus, refreshTrigger }: Pro
           </Box>
         )
       }),
-      columnHelper.accessor('status', {
-        header: 'Trạng thái',
-        cell: ({ row }) => (
-          <Chip
-            label={examRegistrationStatusLabels[row.original.status] ?? row.original.status}
-            color={examRegistrationStatusColors[row.original.status] ?? 'secondary'}
-            variant='tonal'
-            size='small'
-          />
-        )
-      })
     ],
     []
   )

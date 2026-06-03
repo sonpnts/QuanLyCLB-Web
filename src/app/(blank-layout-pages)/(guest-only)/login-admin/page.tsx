@@ -1,22 +1,7 @@
-// Next Imports
-import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 
-// Component Imports
-import LoginAdmin from '@views/LoginAdmin'
-
-// Server Action Imports
-import { getServerMode } from '@core/utils/serverHelpers'
-
-export const metadata: Metadata = {
-  title: 'Login',
-  description: 'Login to your account'
+const LoginAdminPage = () => {
+  notFound()
 }
 
-const LoginPage = async () => {
-  // Vars
-  const mode = await getServerMode()
-
-  return <LoginAdmin mode={mode} />
-}
-
-export default LoginPage
+export default LoginAdminPage

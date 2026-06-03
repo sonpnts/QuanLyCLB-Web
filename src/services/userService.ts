@@ -26,7 +26,6 @@ export interface CreateUserRequest {
   email: string
   username?: string
   roles?: string[]
-  password?: string
   phoneNumber?: string
   isActive?: boolean
   memberCode?: string | null

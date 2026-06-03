@@ -25,7 +25,6 @@ import TablePagination from '@mui/material/TablePagination'
 import TableRow from '@mui/material/TableRow'
 import TableSortLabel from '@mui/material/TableSortLabel'
 import TextField from '@mui/material/TextField'
-import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 
 import { useAuth } from '@/contexts/authContext'
@@ -51,11 +50,7 @@ const text = {
   selectSession: 'Chọn kỳ thi để xem danh sách',
   class: 'Lớp',
   allClasses: 'Tất cả lớp',
-  status: 'Trạng thái',
   all: 'Tất cả',
-  pending: 'Chờ đóng lệ phí',
-  approved: 'Đã đóng lệ phí',
-  rejected: 'Đã loại',
   fee: 'Lệ phí',
   paid: 'Đã đóng',
   unpaid: 'Chưa đóng',
@@ -63,9 +58,7 @@ const text = {
   empty: 'Chưa có đăng ký thi cấp phù hợp với bộ lọc.',
   loadError: 'Không thể tải danh sách đăng ký thi cấp',
   student: 'Học viên',
-  registerStatus: 'Trạng thái đăng ký',
-  feePaid: 'Lệ phí thi',
-  requiredFees: 'Phí bắt buộc',
+  registrationStatus: 'Trạng thái đăng ký',
   currentBelt: 'Cấp đai hiện tại',
   targetBelt: 'Cấp đai dự thi',
   registeredBy: 'Người đăng ký',
@@ -74,18 +67,6 @@ const text = {
   exportSuccess: 'Đã xuất danh sách đăng ký thi cấp.',
   selectPrompt: 'Không còn kỳ thi nào đang mở. Vui lòng chọn kỳ thi trong danh sách để xem đăng ký.',
   latestOpen: 'Đang mặc định kỳ mới nhất còn nhận đăng ký'
-}
-
-const statusLabels: Record<string, string> = {
-  Pending: text.pending,
-  Approved: text.approved,
-  Rejected: text.rejected
-}
-
-const statusColors: Record<string, 'warning' | 'success' | 'error' | 'secondary'> = {
-  Pending: 'warning',
-  Approved: 'success',
-  Rejected: 'error'
 }
 
 const hiddenDefaultStatuses = new Set(['Draft', 'Locked'])
@@ -106,9 +87,7 @@ type RegistrationSortField =
   | 'studentName'
   | 'examSessionName'
   | 'className'
-  | 'status'
-  | 'isFeePaid'
-  | 'oneTimeFeesCompleted'
+  | 'registrationFeeStatus'
   | 'currentBeltLevelOrder'
   | 'targetBeltLevelOrder'
   | 'registeredByUserName'
@@ -121,10 +100,20 @@ const compareText = (left?: string | null, right?: string | null) =>
 
 const compareNumber = (left?: number | null, right?: number | null) => (left ?? -1) - (right ?? -1)
 
-const compareBoolean = (left?: boolean, right?: boolean) => Number(left ?? false) - Number(right ?? false)
-
 const compareDate = (left?: string | null, right?: string | null) =>
   new Date(left || 0).getTime() - new Date(right || 0).getTime()
+
+const getRegistrationFeeStatus = (row: ExamRegistrationType) => {
+  if (row.isFeePaid && row.oneTimeFeesCompleted) {
+    return { label: 'Đã hoàn thành phí', color: 'success' as const, sortValue: 0 }
+  }
+
+  if (!row.isFeePaid) {
+    return { label: 'Chưa đóng lệ phí', color: 'warning' as const, sortValue: 1 }
+  }
+
+  return { label: 'Chưa đóng phí 1 lần', color: 'warning' as const, sortValue: 2 }
+}
 
 const sortRegistrations = (
   rows: ExamRegistrationType[],
@@ -139,12 +128,11 @@ const sortRegistrations = (
         return compareText(left.examSessionName, right.examSessionName)
       case 'className':
         return compareText(left.className, right.className)
-      case 'status':
-        return compareText(left.status, right.status)
-      case 'isFeePaid':
-        return compareBoolean(left.isFeePaid, right.isFeePaid) || compareDate(left.paidAt, right.paidAt)
-      case 'oneTimeFeesCompleted':
-        return compareBoolean(left.oneTimeFeesCompleted, right.oneTimeFeesCompleted)
+      case 'registrationFeeStatus':
+        return (
+          getRegistrationFeeStatus(left).sortValue - getRegistrationFeeStatus(right).sortValue ||
+          compareDate(left.paidAt, right.paidAt)
+        )
       case 'currentBeltLevelOrder':
         return (
           compareNumber(left.currentBeltLevelOrder, right.currentBeltLevelOrder) ||
@@ -183,7 +171,13 @@ const isSessionAvailableForDefault = (session: ExamSessionType) => {
 const BeltExamRegistrationsView = () => {
   const { showNotification } = useNotification()
   const { auth } = useAuth()
-  const isAdmin = hasPermission(auth?.permissions, 'BeltExam.ManageAll') || hasAdminRole(auth?.roles)
+
+  const isAdmin =
+    hasPermission(auth?.permissions, 'BeltExam.Admin.View') ||
+    hasPermission(auth?.permissions, 'BeltExam.Admin.Create') ||
+    hasPermission(auth?.permissions, 'BeltExam.Admin.Update') ||
+    hasPermission(auth?.permissions, 'BeltExam.Admin.Approve') ||
+    hasAdminRole(auth?.roles)
 
   const studentPermissions = useMemo(
     () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'Student'),
@@ -198,7 +192,6 @@ const BeltExamRegistrationsView = () => {
 
   const [examSessionId, setExamSessionId] = useState('')
   const [classId, setClassId] = useState('')
-  const [status, setStatus] = useState('')
   const [feePaid, setFeePaid] = useState('')
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(0)
@@ -266,7 +259,6 @@ const BeltExamRegistrationsView = () => {
       }
 
       if (classId) params.classId = classId
-      if (status) params.status = status
       if (feePaid) params.isFeePaid = feePaid === 'paid'
       if (keyword.trim()) params.keyword = keyword.trim()
 
@@ -281,7 +273,7 @@ const BeltExamRegistrationsView = () => {
     } finally {
       setLoading(false)
     }
-  }, [classId, examSessionId, feePaid, keyword, showNotification, status])
+  }, [classId, examSessionId, feePaid, keyword, showNotification])
 
   useEffect(() => {
     loadFilters()
@@ -307,7 +299,7 @@ const BeltExamRegistrationsView = () => {
 
   useEffect(() => {
     setPage(0)
-  }, [examSessionId, classId, status, feePaid, keyword])
+  }, [examSessionId, classId, feePaid, keyword])
 
   const handleSort = (field: RegistrationSortField) => {
     if (sortBy === field) {
@@ -355,9 +347,7 @@ const BeltExamRegistrationsView = () => {
           { header: 'Học viên', accessor: 'studentName', width: 28 },
           { header: 'Kỳ thi', accessor: 'examSessionName', width: 24 },
           { header: 'Lớp', accessor: 'className', width: 18 },
-          { header: 'Trạng thái đăng ký', accessor: 'status', width: 18 },
-          { header: 'Lệ phí thi', accessor: 'feePaid', width: 14 },
-          { header: 'Phí bắt buộc', accessor: 'requiredFees', width: 18 },
+          { header: text.registrationStatus, accessor: 'registrationStatus', width: 24 },
           { header: 'Cấp đai hiện tại', accessor: 'currentBelt', width: 18 },
           { header: 'Số cấp đai hiện tại', accessor: 'currentBeltOrder', width: 18 },
           { header: 'Cấp đai dự thi', accessor: 'targetBelt', width: 18 },
@@ -370,9 +360,7 @@ const BeltExamRegistrationsView = () => {
           studentName: row.studentName,
           examSessionName: row.examSessionName,
           className: row.className,
-          status: statusLabels[row.status] || row.status,
-          feePaid: row.isFeePaid ? text.paid : text.unpaid,
-          requiredFees: row.oneTimeFeesCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành',
+          registrationStatus: getRegistrationFeeStatus(row).label,
           currentBelt: row.currentBeltLevelName || text.noBelt,
           currentBeltOrder: row.currentBeltLevelOrder ?? '',
           targetBelt: row.targetBeltLevelName,
@@ -435,17 +423,6 @@ const BeltExamRegistrationsView = () => {
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
             <FormControl fullWidth size='small'>
-              <InputLabel>{text.status}</InputLabel>
-              <Select value={status} label={text.status} onChange={e => setStatus(e.target.value)}>
-                <MenuItem value=''>{text.all}</MenuItem>
-                <MenuItem value='Pending'>{text.pending}</MenuItem>
-                <MenuItem value='Approved'>{text.approved}</MenuItem>
-                <MenuItem value='Rejected'>{text.rejected}</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <FormControl fullWidth size='small'>
               <InputLabel>{text.fee}</InputLabel>
               <Select value={feePaid} label={text.fee} onChange={e => setFeePaid(e.target.value)}>
                 <MenuItem value=''>{text.all}</MenuItem>
@@ -454,7 +431,7 @@ const BeltExamRegistrationsView = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size='small'
@@ -505,9 +482,7 @@ const BeltExamRegistrationsView = () => {
                   <TableCell>{renderSortHeader(text.student, 'studentName')}</TableCell>
                   {/*<TableCell>{renderSortHeader(text.examSession, 'examSessionName')}</TableCell>*/}
                   <TableCell>{renderSortHeader(text.class, 'className')}</TableCell>
-                  <TableCell>{renderSortHeader(text.registerStatus, 'status')}</TableCell>
-                  <TableCell>{renderSortHeader(text.feePaid, 'isFeePaid')}</TableCell>
-                  <TableCell>{renderSortHeader(text.requiredFees, 'oneTimeFeesCompleted')}</TableCell>
+                  <TableCell>{renderSortHeader(text.registrationStatus, 'registrationFeeStatus')}</TableCell>
                   <TableCell>{renderSortHeader(text.currentBelt, 'currentBeltLevelOrder')}</TableCell>
                   <TableCell>{renderSortHeader(text.targetBelt, 'targetBeltLevelOrder')}</TableCell>
                   <TableCell>{renderSortHeader(text.registeredBy, 'registeredByUserName')}</TableCell>
@@ -527,20 +502,10 @@ const BeltExamRegistrationsView = () => {
                     {/*<TableCell>{row.examSessionName}</TableCell>*/}
                     <TableCell>{row.className}</TableCell>
                     <TableCell>
-                      <Tooltip title={row.rejectionReason || ''}>
-                        <Chip
-                          label={statusLabels[row.status] || row.status}
-                          color={statusColors[row.status] || 'secondary'}
-                          size='small'
-                          variant='tonal'
-                        />
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>
                       <Box className='flex flex-col items-start gap-1'>
                         <Chip
-                          label={row.isFeePaid ? text.paid : text.unpaid}
-                          color={row.isFeePaid ? 'success' : 'warning'}
+                          label={getRegistrationFeeStatus(row).label}
+                          color={getRegistrationFeeStatus(row).color}
                           size='small'
                           variant='tonal'
                         />
@@ -550,14 +515,6 @@ const BeltExamRegistrationsView = () => {
                           </Typography>
                         )}
                       </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={row.oneTimeFeesCompleted ? 'Hoàn thành' : 'Chưa'}
-                        color={row.oneTimeFeesCompleted ? 'success' : 'warning'}
-                        size='small'
-                        variant='tonal'
-                      />
                     </TableCell>
                     <TableCell>{row.currentBeltLevelName || text.noBelt}</TableCell>
                     <TableCell>
