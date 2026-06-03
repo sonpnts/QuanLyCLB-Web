@@ -1,7 +1,6 @@
 import type { ThemeColor } from '@core/types'
 
 export type ExamSessionStatus = 'Draft' | 'Open' | 'Locked'
-export type ExamRegistrationStatus = 'Pending' | 'Approved' | 'Rejected'
 export type ExamResult = 'Passed' | 'Failed' | null
 
 export type ExamSessionType = {
@@ -36,7 +35,6 @@ export type ExamRegistrationType = {
   targetBeltLevelName: string
   classId: string
   className: string
-  status: ExamRegistrationStatus
   result: ExamResult
   score?: number
   resultNotes?: string
@@ -90,7 +88,6 @@ export type RegistrationListItemType = {
   targetBeltLevelName: string
   isFeePaid: boolean
   paymentRecordId?: string
-  status: ExamRegistrationStatus | string
 }
 
 export type BeltExamRegistrationListType = {
@@ -179,18 +176,6 @@ export const examSessionStatusLabels: Record<ExamSessionStatus, string> = {
 }
 
 export const examSessionStatusObj = examSessionStatusColors
-
-export const examRegistrationStatusLabels: Record<ExamRegistrationStatus, string> = {
-  Pending: 'Chờ đóng lệ phí',
-  Approved: 'Đã đóng lệ phí',
-  Rejected: 'Đã loại khỏi danh sách'
-}
-
-export const examRegistrationStatusColors: Record<ExamRegistrationStatus, ThemeColor> = {
-  Pending: 'warning',
-  Approved: 'success',
-  Rejected: 'error'
-}
 
 export const examResultLabels: Record<Exclude<ExamResult, null>, string> = {
   Passed: 'Đạt',

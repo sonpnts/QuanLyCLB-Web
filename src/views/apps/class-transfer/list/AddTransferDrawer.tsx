@@ -55,7 +55,7 @@ return classNames ? `${s.fullName}  –  ${classNames}` : s.fullName
 
 const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
   const { auth } = useAuth()
-  const isAdmin = hasPermission(auth?.permissions, 'ClassTransfer.ManageAll') || hasAdminRole(auth?.roles)
+  const isAdmin = hasPermission(auth?.permissions, 'ClassTransfer.Approve') || hasAdminRole(auth?.roles)
   const currentUserId = auth?.user.id
 
   // ── Form state ────────────────────────────────────────────────────────────

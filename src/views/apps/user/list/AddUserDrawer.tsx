@@ -53,7 +53,6 @@ type FormValidateType = {
   email: string
   username?: string
   role: string
-  password?: string
   phoneNumber?: string
   isActive: boolean
   memberCode?: string
@@ -83,7 +82,6 @@ const AddUserDrawer = (props: Props) => {
       email: '',
       username: '',
       role: '',
-      password: '',
       phoneNumber: '',
       isActive: true,
       memberCode: ''
@@ -125,7 +123,6 @@ const AddUserDrawer = (props: Props) => {
         email: data.email,
         username: data.username || undefined,
         roles: [roleName],
-        password: data.password || undefined,
         phoneNumber: data.phoneNumber || undefined,
         isActive: data.isActive,
         memberCode: memberCode.trim() || null
@@ -199,16 +196,6 @@ const AddUserDrawer = (props: Props) => {
               {...register('username')}
               error={!!errors.username}
               helperText={errors.username?.message}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              label='Mật khẩu'
-              type='password'
-              {...register('password')}
-              error={!!errors.password}
-              helperText={errors.password?.message}
             />
           </Grid>
           <Grid size={{ xs: 12 }}>

@@ -4,7 +4,7 @@ import type { AxiosError, AxiosRequestConfig } from 'axios'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 import { authStorage } from './authStorage'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.trim() ?? ''
 
 const baseUrlWithoutTrailingSlash = API_BASE_URL.replace(/\/+$/, '')
 const baseUrlHasApiSuffix = baseUrlWithoutTrailingSlash.toLowerCase().endsWith('/api')

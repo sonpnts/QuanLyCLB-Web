@@ -89,7 +89,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { settings } = useSettings()
-  const { login, loginWithGoogle } = useAuth()
+  const { loginWithGoogle } = useAuth()
 
   // const {
   //   // control,
@@ -164,7 +164,7 @@ const Login = ({ mode }: { mode: Mode }) => {
 
   // const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
-  const handleLoginResult = (result: Awaited<ReturnType<typeof login>>) => {
+  const handleLoginResult = (result: Awaited<ReturnType<typeof loginWithGoogle>>) => {
     if (result.success) {
       const redirectURL = searchParams.get('redirectTo') ?? '/check-in'
 

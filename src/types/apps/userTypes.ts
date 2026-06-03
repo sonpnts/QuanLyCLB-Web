@@ -33,7 +33,6 @@ export type ApiUserResponse = {
   phoneNumber?: string
   avatarUrl?: string | null
   isActive: boolean
-  hasPassword?: boolean
   isGoogleAccount?: boolean
   roles: string[]
 
