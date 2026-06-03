@@ -116,7 +116,8 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                         BIÊN LAI THU TIỀN
                       </Typography>
                       <Typography color='text.secondary' variant='body2'>
-                        Số biên lai: <strong style={{ color: 'var(--mui-palette-text-primary)' }}>{receiptNumber}</strong>
+                        Số biên lai:{' '}
+                        <strong style={{ color: 'var(--mui-palette-text-primary)' }}>{receiptNumber}</strong>
                       </Typography>
                       <Typography color='text.secondary' variant='body2'>
                         Ngày thu:{' '}
@@ -198,7 +199,10 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                         return (
                           <tr key={item.id ?? index}>
                             <td>
-                              <Typography color='text.primary' sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              <Typography
+                                color='text.primary'
+                                sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                              >
                                 {description}
                               </Typography>
                             </td>
@@ -361,7 +365,7 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                 </Box>
 
                 <Typography variant='body2' color='text.secondary' textAlign='center' sx={{ whiteSpace: 'nowrap' }}>
-                  Khoản phí đã thanh toán sẽ không được hoàn lại và chỉ được bảo lưu 1 lần.
+                  Lưu ý: Học phí đã đóng không được hoàn lại và chỉ được bảo lưu 01 lần theo quy định của câu lạc bộ.
                 </Typography>
               </Box>
             </CardContent>
