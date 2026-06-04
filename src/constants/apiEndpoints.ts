@@ -273,6 +273,12 @@ export const API_ENDPOINTS = {
     coachOverview: '/zalo-links/coach/overview',
     coachStudents: '/zalo-links/coach/students'
   },
+  miniAppLinks: {
+    classes: '/mini-app-links/classes',
+    students: '/mini-app-links/students',
+    root: '/mini-app-links',
+    byId: (id: string) => `/mini-app-links/${id}`
+  },
   oneTimeFees: {
     options: '/one-time-fees/options',
     studentStatuses: (studentId: string) => `/one-time-fees/students/${studentId}`,
