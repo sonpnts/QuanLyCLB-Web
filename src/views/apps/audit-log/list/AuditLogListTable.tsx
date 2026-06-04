@@ -22,22 +22,20 @@ import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
 import classnames from 'classnames'
-import { rankItem } from '@tanstack/match-sorter-utils'
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel
 } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 
 // Type Imports
 import type { AuditLogType } from '@/types/apps/auditLogTypes'
 import { AuditActionColors, auditActionLabels } from '@/types/apps/auditLogTypes'
 import { formatDateTimeVN } from '@/utils/dateTime'
+import { fuzzyFilter } from '@/utils/tableHelpers'
 
 // Component Imports
 import TableFilters from './TableFilters'
@@ -51,14 +49,6 @@ import { useNotification } from '@/contexts/notificationContext'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(row.getValue(columnId), value)
-
-  addMeta({ itemRank })
-  
-return itemRank.passed
-}
 
 const DebouncedInput = ({
   value: initialValue,
@@ -91,55 +81,58 @@ const columnHelper = createColumnHelper<AuditLogType>()
 const AuditLogListTable = () => {
   // States
   const [data, setData] = useState<AuditLogType[]>([])
-  const [globalFilter, setGlobalFilter] = useState('')
+  const [keyword, setKeyword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
   const [filterParams, setFilterParams] = useState<GetAuditLogsParams>({})
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
   const [selectedLog, setSelectedLog] = useState<AuditLogType | null>(null)
 
   const { showNotification } = useNotification()
 
-  // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
 
   showNotificationRef.current = showNotification
-  const dataLoadedRef = useRef(false)
-  const currentFilterRef = useRef<string>('')
 
   const handleFilterChange = useCallback((params: GetAuditLogsParams) => {
+    setPage(0)
     setFilterParams(params)
   }, [])
 
   // Load audit logs
   useEffect(() => {
-    const filterKey = JSON.stringify(filterParams)
-
-    if (dataLoadedRef.current && currentFilterRef.current === filterKey) {
-      return
-    }
-
     const loadAuditLogs = async () => {
       try {
         setLoading(true)
-        currentFilterRef.current = filterKey
-        dataLoadedRef.current = true
 
-        const response = await auditLogService.getAuditLogs(filterParams)
+        const response = await auditLogService.getAuditLogsPaged({
+          ...filterParams,
+          keyword: keyword.trim() || undefined,
+          pageNumber: page + 1,
+          pageSize
+        })
 
         if (response.success && response.data) {
-          setData(response.data)
+          setData(response.data.items || [])
+          setTotalCount(response.data.totalCount || 0)
         } else {
+          setData([])
+          setTotalCount(0)
           showNotificationRef.current(response.message || 'Không thể tải danh sách nhật ký.', 'error')
         }
       } catch (error) {
+        setData([])
+        setTotalCount(0)
         showNotificationRef.current('Đã có lỗi khi tải dữ liệu.', 'error')
       } finally {
         setLoading(false)
       }
     }
 
-    loadAuditLogs()
-  }, [filterParams])
+    void loadAuditLogs()
+  }, [filterParams, keyword, page, pageSize])
 
   const handleViewDetail = (log: AuditLogType) => {
     setSelectedLog(log)
@@ -224,14 +217,8 @@ const AuditLogListTable = () => {
     data,
     columns,
     filterFns: { fuzzy: fuzzyFilter },
-    state: { globalFilter },
-    initialState: { pagination: { pageSize: 10 } },
-    globalFilterFn: fuzzyFilter,
     getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel()
+    getSortedRowModel: getSortedRowModel()
   })
 
   return (
@@ -242,8 +229,11 @@ const AuditLogListTable = () => {
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <DebouncedInput
-            value={globalFilter ?? ''}
-            onChange={value => setGlobalFilter(String(value))}
+            value={keyword}
+            onChange={value => {
+              setPage(0)
+              setKeyword(String(value))
+            }}
             placeholder='Tìm kiếm...'
             className='max-sm:is-full'
           />
@@ -272,7 +262,7 @@ const AuditLogListTable = () => {
               ))}
             </thead>
             <tbody>
-              {table.getFilteredRowModel().rows.length === 0 ? (
+              {table.getRowModel().rows.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className='text-center'>
                     {loading ? 'Đang tải...' : 'Không có dữ liệu'}
@@ -294,11 +284,14 @@ const AuditLogListTable = () => {
           rowsPerPageOptions={[10, 25, 50, 100]}
           component='div'
           className='border-bs'
-          count={table.getPrePaginationRowModel().rows.length}
-          rowsPerPage={table.getState().pagination.pageSize}
-          page={table.getState().pagination.pageIndex}
-          onPageChange={(_, page) => table.setPageIndex(page)}
-          onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+          count={totalCount}
+          rowsPerPage={pageSize}
+          page={page}
+          onPageChange={(_, nextPage) => setPage(nextPage)}
+          onRowsPerPageChange={e => {
+            setPageSize(Number(e.target.value))
+            setPage(0)
+          }}
         />
       </Card>
 

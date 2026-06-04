@@ -26,11 +26,9 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getFilteredRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFacetedMinMaxValues,
-  getPaginationRowModel,
   getSortedRowModel
 } from '@tanstack/react-table'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -62,7 +60,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 
 // Role utils
-import { hasAdminRole, isInstructorUser } from '@/utils/roleUtils'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -115,11 +113,14 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   const [selectedClass, setSelectedClass] = useState<ClassType | null>(null)
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<ClassType[]>([])
-  const [filteredData, setFilteredData] = useState<ClassType[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
   const [filterParams, setFilterParams] = useState<GetClassesParams>({})
   const [users, setUsers] = useState<any[]>([])
+  const [reloadKey, setReloadKey] = useState(0)
 
   // Notification Hook
   const { showNotification } = useNotification()
@@ -127,20 +128,30 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   // Auth & role detection
   const { auth } = useAuth()
   const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth])
-  const isInstructor = useMemo(() => isInstructorUser(auth?.roles), [auth])
   const userId = auth?.user?.id
 
   // Handle filter change from TableFilters
   const handleFilterChange = useCallback((params: GetClassesParams) => {
+    setPage(0)
     setFilterParams(params)
   }, [])
+
+  const requestParams = useMemo<GetClassesParams>(
+    () => ({
+      ...filterParams,
+      keyword: globalFilter.trim() || filterParams.keyword,
+      pageNumber: page + 1,
+      pageSize: rowsPerPage
+    }),
+    [filterParams, globalFilter, page, rowsPerPage]
+  )
 
   // Load classes – re-runs whenever filterParams or auth/role changes
   useEffect(() => {
     // If caller provided server-side data, skip client-side fetch
     if (tableData && tableData.length > 0) {
       setData(tableData)
-      setFilteredData(tableData)
+      setTotalCount(tableData.length)
 
 return
     }
@@ -151,22 +162,18 @@ return
       try {
         setLoading(true)
 
-        const response = await classService.getClasses({
-          pageNumber: 1,
-          pageSize: 1000,
-          ...filterParams
-        })
+        const response = await classService.getClassesPaged(requestParams)
 
         if (!cancelled) {
-          setData(response.data || [])
-          setFilteredData(response.data || [])
+          setData(response.data?.records || [])
+          setTotalCount(response.data?.totalRecords || 0)
         }
       } catch (err) {
         logger.error('ClassListTable', 'Error loading classes', err)
 
         if (!cancelled) {
           setData([])
-          setFilteredData([])
+          setTotalCount(0)
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -178,12 +185,7 @@ return
     return () => {
       cancelled = true
     }
-  }, [filterParams, isInstructor, tableData, userId])
-
-  // Update filteredData when data changes
-  useEffect(() => {
-    setFilteredData(data)
-  }, [data])
+  }, [requestParams, reloadKey, tableData, userId])
 
   // Load users for display (coaches/instructors) – only once
   useEffect(() => {
@@ -193,7 +195,7 @@ return
 
     const loadUsers = async () => {
       try {
-        const response = await userService.getUsers({})
+        const response = await userService.getUsers({ PageNumber: 1, PageSize: 1000 })
 
         if (!cancelled && response.success && response.data) {
           setUsers(response.data)
@@ -470,28 +472,16 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
   )
 
   const table = useReactTable({
-    data: filteredData as ClassType[],
+    data: data as ClassTypeWithAction[],
     columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
+    filterFns: { fuzzy: fuzzyFilter },
     state: {
-      rowSelection,
-      globalFilter
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10
-      }
+      rowSelection
     },
     enableRowSelection: true,
-    globalFilterFn: fuzzyFilter,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues()
@@ -560,7 +550,10 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
-              onChange={value => setGlobalFilter(String(value))}
+              onChange={value => {
+                setPage(0)
+                setGlobalFilter(String(value))
+              }}
               placeholder='Tìm kiếm...'
               className='max-sm:is-full'
             />
@@ -608,7 +601,7 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
                   </td>
                 </tr>
               </tbody>
-            ) : table.getFilteredRowModel().rows.length === 0 ? (
+            ) : table.getRowModel().rows.length === 0 ? (
               <tbody>
                 <tr>
                   <td colSpan={table.getVisibleFlatColumns().length} className='text-center py-8'>
@@ -648,13 +641,16 @@ return (
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
-          count={table.getPrePaginationRowModel().rows.length}
-          rowsPerPage={table.getState().pagination.pageSize}
-          page={table.getState().pagination.pageIndex}
-          onPageChange={(_, page) => {
-            table.setPageIndex(page)
+          count={totalCount}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(_, nextPage) => {
+            setPage(nextPage)
           }}
-          onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+          onRowsPerPageChange={e => {
+            setRowsPerPage(Number(e.target.value))
+            setPage(0)
+          }}
         />
       </Card>
       {isAdmin && (
@@ -676,7 +672,6 @@ return (
             classData={selectedClass}
             onClassUpdated={updatedClass => {
               setData(prevData => prevData.map(c => (c.id === updatedClass.id ? updatedClass : c)))
-              setFilteredData(prevData => prevData.map(c => (c.id === updatedClass.id ? updatedClass : c)))
             }}
           />
           <AddClassScheduleDrawer
@@ -707,8 +702,7 @@ return (
             }}
             classData={selectedClass}
             onStudentsAdded={() => {
-              // Re-fetch with current filter
-              setFilterParams(prev => ({ ...prev }))
+              setReloadKey(prev => prev + 1)
             }}
           />
           <ClassPermissionDialog

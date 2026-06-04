@@ -170,7 +170,7 @@ class StudentService {
 
       if (!apiResponse.isSuccess) return { success: true, data: [] }
 
-      return { success: true, data: apiResponse.data?.items || apiResponse.data?.records || [] }
+      return { success: true, data: unwrapList(apiResponse.data) as StudentType[] }
     } catch (error) {
       logger.error('StudentService', 'getStudents', error)
       

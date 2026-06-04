@@ -8,6 +8,7 @@ import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 export interface GetAuditLogsParams {
   pageNumber?: number
   pageSize?: number
+  keyword?: string
   userId?: string
   userRole?: string
   action?: string
@@ -16,6 +17,13 @@ export interface GetAuditLogsParams {
   timestampFrom?: string
   timestampTo?: string
   isSuccess?: boolean
+}
+
+export interface AuditLogsPagedResult {
+  items: AuditLogType[]
+  totalCount: number
+  pageNumber: number
+  pageSize: number
 }
 
 class AuditLogService {
@@ -36,6 +44,52 @@ class AuditLogService {
       logger.error('AuditLogService', 'getAuditLogs', error)
       
 return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getAuditLogsPaged(params?: GetAuditLogsParams): Promise<ResponseResult<AuditLogsPagedResult>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.auditLogs.root, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message,
+          data: {
+            items: [],
+            totalCount: 0,
+            pageNumber: params?.pageNumber || 1,
+            pageSize: params?.pageSize || 20
+          }
+        }
+      }
+
+      const payload = apiResponse.data || {}
+      const items = payload.items || payload.Items || payload.records || payload.Records || []
+
+      return {
+        success: true,
+        data: {
+          items,
+          totalCount: Number(payload.totalCount ?? payload.TotalCount ?? payload.totalRecords ?? payload.TotalRecords ?? items.length),
+          pageNumber: Number(payload.pageNumber ?? payload.PageNumber ?? params?.pageNumber ?? 1),
+          pageSize: Number(payload.pageSize ?? payload.PageSize ?? params?.pageSize ?? 20)
+        }
+      }
+    } catch (error: any) {
+      logger.error('AuditLogService', 'getAuditLogsPaged', error)
+
+      return {
+        success: false,
+        message: error?.response?.data?.message || 'Lá»—i káº¿t ná»‘i mÃ¡y chá»§',
+        data: {
+          items: [],
+          totalCount: 0,
+          pageNumber: params?.pageNumber || 1,
+          pageSize: params?.pageSize || 20
+        }
+      }
     }
   }
 
