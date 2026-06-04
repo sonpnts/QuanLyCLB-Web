@@ -589,7 +589,9 @@ return
         gender: formatGender(student.gender),
         phoneNumber: student.phoneNumber || '—',
         personalIdNumber: student.personalIdNumber || '',
-        educationLevel: formatEducationLevel(student.educationLevel)
+        educationLevel: formatEducationLevel(student.educationLevel),
+        class: student.className,
+        coachName: student.coachName
       }))
 
       exportToExcel({
@@ -601,7 +603,9 @@ return
           { header: 'Giới tính (Nam/Nữ)', accessor: 'gender', width: 18 },
           { header: 'Số điện thoại', accessor: 'phoneNumber', width: 18 },
           { header: 'CMND/CCCD', accessor: 'personalIdNumber', width: 18 },
-          { header: 'Trình độ văn hóa', accessor: 'educationLevel', width: 18 }
+          { header: 'Trình độ văn hóa', accessor: 'educationLevel', width: 18 },
+          { header: 'Lớp', accessor: 'class', width: 18 },
+          { header: 'HLV', accessor: 'coachName', width: 20 }
         ],
         rows
       })
