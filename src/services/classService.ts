@@ -15,6 +15,21 @@ const unwrapList = (payload: any): any[] => {
   return []
 }
 
+const unwrapPagedResult = <T>(payload: any): PagedResult<T> => {
+  const records = unwrapList(payload) as T[]
+  const totalRecords =
+    payload?.totalRecords ??
+    payload?.TotalRecords ??
+    payload?.totalCount ??
+    payload?.TotalCount ??
+    records.length
+
+  return {
+    totalRecords: Number(totalRecords || 0),
+    records
+  }
+}
+
 // Query parameters for GET /api/Classes - Theo API Documentation
 export interface GetClassesParams {
   pageNumber?: number
@@ -150,13 +165,38 @@ class ClassService {
 
       if (!apiResponse.isSuccess) return { success: true, data: [] }
 
-      const records: ApiClassResponse[] = apiResponse.data?.records || []
+      const records = unwrapList(apiResponse.data) as ApiClassResponse[]
 
       return { success: true, data: records.map(this.mapApiClassToClassType) }
     } catch (error) {
       logger.error('ClassService', 'getClasses', error)
       
 return { success: true, data: [] }
+    }
+  }
+
+  async getClassesPaged(params?: GetClassesParams): Promise<ResponseResult<PagedResult<ClassType>>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.classes.root, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: true, data: { totalRecords: 0, records: [] } }
+      }
+
+      const paged = unwrapPagedResult<ApiClassResponse>(apiResponse.data)
+
+      return {
+        success: true,
+        data: {
+          totalRecords: paged.totalRecords,
+          records: paged.records.map(this.mapApiClassToClassType)
+        }
+      }
+    } catch (error) {
+      logger.error('ClassService', 'getClassesPaged', error)
+
+      return { success: true, data: { totalRecords: 0, records: [] } }
     }
   }
 

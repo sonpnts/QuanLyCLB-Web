@@ -122,6 +122,10 @@ const matchesRegistrationBucket = (student: AdminExamStudentRowType, bucket: Reg
 
 const isEligibleStudent = (student: AdminExamStudentRowType) => student.hasPaid && student.oneTimeFeesCompleted
 
+const hasStudentCode = (student: AdminExamStudentRowType) => String(student.studentCode || '').trim().length > 0
+
+const isMissingStudentCode = (student: AdminExamStudentRowType) => !hasStudentCode(student)
+
 const getGroupKey = (coachId: string, classId: string) => `${coachId}-${classId}`
 
 const sortAdminStudents = (
@@ -473,6 +477,61 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
     }
   }
 
+  const handleExportEligibleRegistrationsWithStudentCode = async () => {
+    try {
+      setExporting(true)
+      const fullData = await fetchFullAdminView()
+
+      const exportStudents = fullData.coachGroups
+        .flatMap(group => group.students)
+        .filter(isEligibleStudent)
+        .filter(hasStudentCode)
+
+      if (exportStudents.length === 0) {
+        showNotification('Không có học viên đủ điều kiện nào đã có mã HV để xuất danh sách thi.', 'info')
+
+        return
+      }
+
+      const rows = exportStudents.map((student, index) => ({
+        stt: index + 1,
+        studentName: student.studentName,
+        studentCode: student.studentCode?.trim() || '—',
+        dateOfBirth: formatDate(student.dateOfBirth),
+        gender: formatGender(student.gender),
+        phoneNumber: student.phoneNumber || '—',
+        currentBeltLevelOrder: formatBeltOrder(student.currentBeltLevelOrder),
+        targetBeltLevelOrder: formatBeltOrder(student.targetBeltLevelOrder, ''),
+        className: student.className,
+        coachName: student.coachName
+      }))
+
+      exportToExcel({
+        filename: `Danh-sach-thi-HV-co-ma-${fullData.sessionName}`,
+        sheetName: 'DanhSachThiHVCoMa',
+        columns: [
+          { header: 'STT', accessor: 'stt', width: 8 },
+          { header: 'Tên', accessor: 'studentName', width: 28 },
+          { header: 'Mã HV', accessor: 'studentCode', width: 16 },
+          { header: 'Ngày sinh', accessor: 'dateOfBirth', width: 16 },
+          { header: 'Giới tính', accessor: 'gender', width: 12 },
+          { header: 'SĐT', accessor: 'phoneNumber', width: 16 },
+          { header: 'Cấp đai hiện tại', accessor: 'currentBeltLevelOrder', width: 20 },
+          { header: 'Cấp đai dự thi', accessor: 'targetBeltLevelOrder', width: 20 },
+          { header: 'Lớp', accessor: 'className', width: 18 },
+          { header: 'HLV', accessor: 'coachName', width: 20 }
+        ],
+        rows
+      })
+
+      showNotification('Đã xuất danh sách thi của học viên đã có mã HV.', 'success')
+    } catch (error: any) {
+      showNotification(error?.message || 'Không thể xuất danh sách thi của học viên đã có mã HV.', 'error')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const handleExportAllRegistrations = async () => {
     try {
       setExporting(true)
@@ -515,8 +574,8 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
 
       const missingCodeStudents = fullData.coachGroups
         .flatMap(group => group.students)
-        .filter(student => student.hasPaid && student.oneTimeFeesCompleted)
-        .filter(student => !String(student.studentCode || '—').trim())
+        .filter(isEligibleStudent)
+        .filter(isMissingStudentCode)
 
       if (missingCodeStudents.length === 0) {
         showNotification('Không có học viên nào thiếu mã HV để xuất file import.', 'info')
@@ -667,6 +726,16 @@ return
               fullWidth
             >
               Xuất danh sách đủ phí
+            </Button>
+            <Button
+              variant='outlined'
+              size='small'
+              startIcon={<i className='ri-shield-user-line' />}
+              onClick={handleExportEligibleRegistrationsWithStudentCode}
+              disabled={exporting}
+              fullWidth
+            >
+              DS thi HV có mã
             </Button>
             <Button
               variant='outlined'

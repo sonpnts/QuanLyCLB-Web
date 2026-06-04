@@ -30,7 +30,6 @@ import {
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFacetedMinMaxValues,
-  getPaginationRowModel,
   getSortedRowModel
 } from '@tanstack/react-table'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -99,23 +98,6 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2)
 
-const getSortedClassNames = (student: StudentType) =>
-  (student.classes || [])
-    .filter(c => !c.status || c.status === 'Active')
-    .map(c => c.className || '')
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b, 'vi'))
-
-const getCoachClassSortIndex = (student: StudentType, orderedClassIds: string[]) => {
-  const activeClassIds = (student.classes || [])
-    .filter(c => !c.status || c.status === 'Active')
-    .map(c => c.classId)
-
-  const firstMatchedIndex = orderedClassIds.findIndex(classId => activeClassIds.includes(classId))
-
-  return firstMatchedIndex >= 0 ? firstMatchedIndex : Number.MAX_SAFE_INTEGER
-}
-
 const columnHelper = createColumnHelper<StudentType>()
 
 const StudentListTable = () => {
@@ -131,12 +113,16 @@ const StudentListTable = () => {
   const [assignedClasses, setAssignedClasses] = useState<ClassType[]>([])
   const [searchKeyword, setSearchKeyword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
   const [filterParams, setFilterParams] = useState<GetStudentsParams>({})
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
   const [suspendTarget, setSuspendTarget] = useState<StudentType | null>(null)
   const [suspendReason, setSuspendReason] = useState('')
   const [suspendLoading, setSuspendLoading] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
 
   const { showNotification } = useNotification()
   const { auth } = useAuth()
@@ -154,10 +140,8 @@ const StudentListTable = () => {
 
   showNotificationRef.current = showNotification
 
-  const studentsLoadedRef = useRef(false)
-  const currentFilterRef = useRef<string>('')
-
   const handleFilterChange = useCallback((params: GetStudentsParams) => {
+    setPage(0)
     setFilterParams(params)
   }, [])
 
@@ -174,96 +158,73 @@ return p
   }, [filterParams, searchKeyword, statusFilter])
 
   useEffect(() => {
-    const filterKey = JSON.stringify(effectiveParams) + `|${userId}|${isInstructor}|${isAdmin}`
+    let cancelled = false
 
-    if (studentsLoadedRef.current && currentFilterRef.current === filterKey) return
+    const loadAssignedClasses = async () => {
+      try {
+        const response =
+          !isAdmin && userId
+            ? await classService.getClassesByUserId(userId, { isActive: true, pageNumber: 1, pageSize: 1000 })
+            : await classService.getClasses({ isActive: true, pageNumber: 1, pageSize: 1000 })
+
+        if (!cancelled) {
+          setAssignedClasses(
+            (response.data || [])
+              .filter(cls => cls.isActive !== false)
+              .sort((left, right) => (left.name || '').localeCompare(right.name || '', 'vi'))
+          )
+        }
+      } catch (error) {
+        logger.error('StudentListTable', 'loadAssignedClasses', error)
+        if (!cancelled) setAssignedClasses([])
+      }
+    }
+
+    void loadAssignedClasses()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isAdmin, userId])
+
+  useEffect(() => {
+    let cancelled = false
 
     const loadStudents = async () => {
       try {
         setLoading(true)
-        currentFilterRef.current = filterKey
-        studentsLoadedRef.current = true
 
-        if (!isAdmin && userId) {
-          const classRes = await classService.getClassesByUserId(userId, { isActive: true, pageSize: 1000 })
+        const response = await studentService.getStudentsPaged({
+          ...effectiveParams,
+          pageNumber: page + 1,
+          pageSize: rowsPerPage
+        })
 
-          const activeClasses = (classRes.data || [])
-            .filter(c => c.isActive !== false)
-            .sort((left, right) => (left.name || '').localeCompare(right.name || '', 'vi'))
+        if (cancelled) return
 
-          const classIds = activeClasses.map(c => c.id)
-
-          setAssignedClasses(activeClasses)
-
-          const targetClassIds = effectiveParams.classId ? [effectiveParams.classId] : classIds
-
-          if (targetClassIds.length === 0) {
-            setData([])
-            
-return
-          }
-
-          const results = await Promise.all(
-            targetClassIds.map(classId =>
-              studentService.getStudents({
-                classId,
-                pageSize: 1000,
-                keyword: effectiveParams.keyword,
-                gender: effectiveParams.gender,
-                enrollmentStatus: effectiveParams.enrollmentStatus,
-                isSuspended: effectiveParams.isSuspended
-              })
-            )
-          )
-
-          const studentMap = new Map<string, StudentType>()
-
-          for (const res of results) {
-            for (const student of res.data || []) {
-              studentMap.set(student.id, student)
-            }
-          }
-
-          const sortedStudents = Array.from(studentMap.values()).sort((left, right) => {
-            const leftClassIndex = getCoachClassSortIndex(left, targetClassIds)
-            const rightClassIndex = getCoachClassSortIndex(right, targetClassIds)
-
-            if (leftClassIndex !== rightClassIndex) return leftClassIndex - rightClassIndex
-
-            const leftClassName = getSortedClassNames(left)[0] || ''
-            const rightClassName = getSortedClassNames(right)[0] || ''
-            const classNameCompare = leftClassName.localeCompare(rightClassName, 'vi')
-
-            if (classNameCompare !== 0) return classNameCompare
-
-            return left.fullName.localeCompare(right.fullName, 'vi')
-          })
-
-          setData(sortedStudents)
-        } else {
-          const [response, classesResponse] = await Promise.all([
-            studentService.getStudents(effectiveParams),
-            classService.getClasses({ isActive: true, pageNumber: 1, pageSize: 1000 })
-          ])
-
-          setAssignedClasses((classesResponse.data || []).filter(cls => cls.isActive !== false))
-          setData(response.data || [])
-        }
+        setData(response.data?.records || [])
+        setTotalCount(response.data?.totalRecords || 0)
       } catch (error) {
         logger.error('StudentListTable', 'loadStudents', error)
-        setData([])
+
+        if (!cancelled) {
+          setData([])
+          setTotalCount(0)
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
-    loadStudents()
-  }, [effectiveParams, isAdmin, isInstructor, userId])
+    void loadStudents()
+
+    return () => {
+      cancelled = true
+    }
+  }, [effectiveParams, page, reloadKey, rowsPerPage])
 
   const reloadData = useCallback(() => {
-    studentsLoadedRef.current = false
-    currentFilterRef.current = ''
-    setFilterParams(prev => ({ ...prev }))
+    setReloadKey(prev => prev + 1)
   }, [])
 
   const handleDelete = useCallback(async (id: string) => {
@@ -273,9 +234,10 @@ return
 
       if (response.success) {
         setData(prev => prev.filter(s => s.id !== id))
-      showNotificationRef.current('Xóa học viên thành công!', 'success')
+        setTotalCount(prev => Math.max(0, prev - 1))
+        showNotificationRef.current('Xóa học viên thành công!', 'success')
       } else {
-      showNotificationRef.current(response.message || 'Không thể xóa học viên.', 'error')
+        showNotificationRef.current(response.message || 'Không thể xóa học viên.', 'error')
       }
     } catch (error) {
       logger.error('StudentListTable', 'handleDelete', error)
@@ -574,27 +536,15 @@ return (
     ]
   )
 
-  const displayData = useMemo(() => {
-    if (!isInstructor) return data
-    if (statusFilter === 'suspended') return data.filter(s => s.isSuspended)
-    if (statusFilter === 'active') return data.filter(s => !s.isSuspended)
-    
-return data
-  }, [data, isInstructor, statusFilter])
-
-  const suspendedCount = data.filter(s => s.isSuspended).length
-
   const table = useReactTable({
-    data: displayData,
+    data,
     columns,
     filterFns: { fuzzy: fuzzyFilter },
     state: { rowSelection },
-    initialState: { pagination: { pageSize: 10 } },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues()
@@ -620,9 +570,8 @@ return data
             exclusive
             onChange={(_, v) => {
               if (v) {
+                setPage(0)
                 setStatusFilter(v)
-                studentsLoadedRef.current = false
-                currentFilterRef.current = ''
               }
             }}
             size='small'
@@ -632,17 +581,17 @@ return data
             <ToggleButton value='active'>Đang học</ToggleButton>
             <ToggleButton value='suspended'>
             Tạm nghỉ
-              {suspendedCount > 0 && statusFilter !== 'suspended' && (
-                <Chip label={suspendedCount} size='small' color='warning' sx={{ ml: 1, height: 18, fontSize: 11 }} />
-              )}
             </ToggleButton>
           </ToggleButtonGroup>
 
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={searchKeyword}
-              onChange={value => setSearchKeyword(String(value))}
-          placeholder='Tìm kiếm học viên'
+              onChange={value => {
+                setPage(0)
+                setSearchKeyword(String(value))
+              }}
+              placeholder='Tìm kiếm học viên'
               className='max-sm:is-full'
             />
 
@@ -767,16 +716,19 @@ return data
         </div>
 
         <TablePagination
-            labelRowsPerPage='Số dòng mỗi trang:'
+          labelRowsPerPage='Số dòng mỗi trang:'
           labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
-          count={table.getPrePaginationRowModel().rows.length}
-          rowsPerPage={table.getState().pagination.pageSize}
-          page={table.getState().pagination.pageIndex}
-          onPageChange={(_, page) => table.setPageIndex(page)}
-          onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+          count={totalCount}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(_, nextPage) => setPage(nextPage)}
+          onRowsPerPageChange={e => {
+            setRowsPerPage(Number(e.target.value))
+            setPage(0)
+          }}
         />
       </Card>
 
