@@ -302,7 +302,7 @@ export default function MiniAppLinkManagementView() {
                                 key={`${student.studentId}_${item.classId}`}
                                 size='small'
                                 variant='tonal'
-                                label={`${item.classCode} - ${item.className}`}
+                                label={`${item.classCode}`}
                               />
                             ))}
                           </Stack>
