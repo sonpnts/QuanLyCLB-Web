@@ -35,6 +35,7 @@ export const RBAC_MODULE_META: Record<string, ModulePermissionMeta> = {
   LeaveRequest: { label: 'Xin nghi phep', actions: ['View', 'Create', 'Update', 'Delete', 'Approve'] },
   Payment: { label: 'Thanh toan', actions: ['View', 'Create', 'Update', 'Delete'] },
   'Payment.Collect': { label: 'Thu tien lop', actions: ['View', 'Create', 'Update', 'Delete'] },
+  'Payment.ReceiptZns': { label: 'Gui lai ZNS bien lai', actions: ['Update'] },
   Finance: { label: 'Thong ke tai chinh', actions: ['View'] },
   CashHandover: { label: 'Ban giao tien', actions: ['View', 'Create', 'Update', 'Delete'] },
   Payroll: { label: 'Bang luong', actions: ['View', 'Create', 'Update', 'Delete', 'Approve'] },
