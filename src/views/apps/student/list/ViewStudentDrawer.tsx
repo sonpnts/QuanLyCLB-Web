@@ -315,7 +315,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     const loadPendingOneTimeFees = async () => {
       if (!open || !activeStudent?.id || !effectiveClassId) {
         setPendingOneTimeFees([])
-        
+
 return
       }
 
@@ -402,7 +402,7 @@ return
 
     if (!response.success || !response.data) {
       showNotification(response.message || 'Không thể cập nhật liên kết Zalo.', 'error')
-      
+
 return
     }
 
@@ -439,7 +439,9 @@ return
             <Box className='flex items-center gap-2 flex-wrap'>
               <Typography variant='h6'>{activeStudent.fullName}</Typography>
               {activeStudent.isSuspended && <Chip label='Tạm nghỉ' size='small' color='warning' variant='tonal' />}
-              {activeStudent.code && <Chip label={`Mã HV: ${activeStudent.code}`} size='small' color='secondary' variant='tonal' />}
+              {activeStudent.code && (
+                <Chip label={`Mã HV: ${activeStudent.code}`} size='small' color='secondary' variant='tonal' />
+              )}
             </Box>
 
             <Typography variant='body2' color='text.secondary'>
@@ -447,7 +449,9 @@ return
             </Typography>
 
             <Box className='flex gap-2 mt-1 flex-wrap items-center'>
-              {activeStudent.beltLevelName && <Chip label={activeStudent.beltLevelName} size='small' color='warning' variant='tonal' />}
+              {activeStudent.beltLevelName && (
+                <Chip label={activeStudent.beltLevelName} size='small' color='warning' variant='tonal' />
+              )}
               {activeStudent.userIdZalo ? (
                 <Chip label='Đã liên kết Zalo' size='small' color='success' variant='tonal' />
               ) : (
@@ -457,17 +461,34 @@ return
 
             <Box className='flex gap-2 mt-2 flex-wrap'>
               {onEdit && (
-                <Button size='small' variant='contained' startIcon={<i className='ri-edit-box-line' />} onClick={() => onEdit(activeStudent)}>
+                <Button
+                  size='small'
+                  variant='contained'
+                  startIcon={<i className='ri-edit-box-line' />}
+                  onClick={() => onEdit(activeStudent)}
+                >
                   Chỉnh sửa
                 </Button>
               )}
 
               {activeStudent.isSuspended ? (
-                <Button size='small' variant='outlined' color='success' startIcon={<i className='ri-play-circle-line' />} onClick={() => onResume?.(activeStudent)}>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='success'
+                  startIcon={<i className='ri-play-circle-line' />}
+                  onClick={() => onResume?.(activeStudent)}
+                >
                   Khôi phục
                 </Button>
               ) : (
-                <Button size='small' variant='outlined' color='warning' startIcon={<i className='ri-pause-circle-line' />} onClick={() => onSuspend?.(activeStudent)}>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='warning'
+                  startIcon={<i className='ri-pause-circle-line' />}
+                  onClick={() => onSuspend?.(activeStudent)}
+                >
                   Tạm nghỉ
                 </Button>
               )}
@@ -510,40 +531,111 @@ return
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>Mã học viên</Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Mã học viên
+                    </Typography>
                     <Typography variant='body1'>{activeStudent.code || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>CCCD / Số định danh</Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      CCCD / Số định danh
+                    </Typography>
                     <Typography variant='body1'>{activeStudent.personalIdNumber || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>Giới tính</Typography>
-                    <Typography variant='body1'>{activeStudent.gender === true ? 'Nam' : activeStudent.gender === false ? 'Nữ' : '-'}</Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Giới tính
+                    </Typography>
+                    <Typography variant='body1'>
+                      {activeStudent.gender === true ? 'Nam' : activeStudent.gender === false ? 'Nữ' : '-'}
+                    </Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>Ngày sinh</Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Ngày sinh
+                    </Typography>
                     <Typography variant='body1'>{formatDate(activeStudent.dateOfBirth)}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>Số điện thoại</Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Số điện thoại
+                    </Typography>
                     <Typography variant='body1'>{activeStudent.phoneNumber || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>Cấp đai liên đoàn</Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Cấp đai liên đoàn
+                    </Typography>
                     <Typography variant='body1'>{activeStudent.beltLevelName || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 12 }}>
-                    <Typography variant='body2' color='text.secondary'>Địa chỉ</Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Địa chỉ
+                    </Typography>
                     <Typography variant='body1'>{activeStudent.address || '-'}</Typography>
                   </Grid>
                   {activeStudent.notes && (
                     <Grid size={{ xs: 12 }}>
-                      <Typography variant='body2' color='text.secondary'>Ghi chú</Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        Ghi chú
+                      </Typography>
                       <Typography variant='body1'>{activeStudent.notes}</Typography>
                     </Grid>
                   )}
                 </Grid>
+              </CardContent>
+            </Card>
+
+            <Card variant='outlined'>
+              <CardContent>
+                <Typography variant='subtitle1' className='font-medium mb-3'>
+                  Lớp đang học
+                </Typography>
+
+                {loadingEnrollments ? (
+                  <Box className='flex justify-center py-4'>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : studentClasses.length === 0 && enrollments.length === 0 ? (
+                  <Typography variant='body2' color='text.secondary'>
+                    Chưa đăng ký lớp nào.
+                  </Typography>
+                ) : (
+                  <List dense disablePadding>
+                    {(studentClasses.length > 0 ? studentClasses : enrollments).map((item: any) => (
+                      <ListItem key={item.enrollmentId || item.id || item.classId} disablePadding className='mb-2'>
+                        <ListItemText
+                          primary={item.className || 'Lớp không xác định'}
+                          secondary={
+                            <Box className='flex items-center gap-2 mt-1 flex-wrap'>
+                              <Chip
+                                label={
+                                  item.status === 'Active' || item.status === 0
+                                    ? 'Đang học'
+                                    : item.status === 'Inactive' || item.status === 1
+                                      ? 'Tạm nghỉ'
+                                      : 'Hoàn thành'
+                                }
+                                size='small'
+                                color={
+                                  item.status === 'Active' || item.status === 0
+                                    ? 'success'
+                                    : item.status === 'Inactive' || item.status === 1
+                                      ? 'warning'
+                                      : 'info'
+                                }
+                                variant='tonal'
+                              />
+                              <Typography variant='caption' color='text.secondary'>
+                                Từ {formatDate(item.enrollmentDate)}
+                              </Typography>
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
               </CardContent>
             </Card>
 
@@ -553,23 +645,36 @@ return
                   <Typography variant='subtitle1' className='font-medium'>
                     Liên kết Zalo
                   </Typography>
-                  <Button variant='outlined' size='small' startIcon={<i className='ri-links-line' />} onClick={() => setZaloModalOpen(true)}>
+                  <Button
+                    variant='outlined'
+                    size='small'
+                    startIcon={<i className='ri-links-line' />}
+                    onClick={() => setZaloModalOpen(true)}
+                  >
                     Cập nhật Zalo
                   </Button>
                 </Box>
 
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>SĐT liên kết</Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      SĐT liên kết
+                    </Typography>
                     <Typography variant='body1'>{activeStudent.phoneNumber || '-'}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>Trạng thái</Typography>
-                    <Typography variant='body1'>{activeStudent.userIdZalo ? 'Đã liên kết' : 'Chưa liên kết'}</Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Trạng thái
+                    </Typography>
+                    <Typography variant='body1'>
+                      {activeStudent.userIdZalo ? 'Đã liên kết' : 'Chưa liên kết'}
+                    </Typography>
                   </Grid>
                   {activeStudent.userIdZalo && (
                     <Grid size={{ xs: 12 }}>
-                      <Typography variant='body2' color='text.secondary'>Zalo User ID</Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        Zalo User ID
+                      </Typography>
                       <Typography variant='body1'>{activeStudent.userIdZalo}</Typography>
                     </Grid>
                   )}
@@ -584,62 +689,46 @@ return
                 </Typography>
 
                 {loadingOneTimeFees ? (
-                  <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
+                  <Box className='flex justify-center py-4'>
+                    <CircularProgress size={24} />
+                  </Box>
                 ) : oneTimeFeeStatuses.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>Chưa có khoản phí 1 lần nào được ghi nhận.</Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Chưa có khoản phí 1 lần nào được ghi nhận.
+                  </Typography>
                 ) : (
                   <List dense disablePadding>
                     {oneTimeFeeStatuses.map(item => (
-                      <ListItem key={`${item.feeCode}-${item.paymentRecordId || item.paidAt}`} disablePadding className='mb-2'>
+                      <ListItem
+                        key={`${item.feeCode}-${item.paymentRecordId || item.paidAt}`}
+                        disablePadding
+                        className='mb-2'
+                      >
                         <ListItemText
                           primary={
                             <Box className='flex items-center justify-between gap-2 flex-wrap'>
                               <Typography variant='body1'>{item.feeName}</Typography>
-                              <Chip label={formatCurrency(item.amount)} size='small' color='secondary' variant='tonal' />
+                              <Chip
+                                label={formatCurrency(item.amount)}
+                                size='small'
+                                color='secondary'
+                                variant='tonal'
+                              />
                             </Box>
                           }
                           secondary={
                             <Box className='flex flex-col gap-1 mt-1'>
-                              <Typography variant='caption' color='text.secondary'>Đã thu: {formatDateTime(item.paidAt)}</Typography>
-                              <Typography variant='caption' color='text.secondary'>Người thu: {item.recordedByUserName || '-'}</Typography>
-                              {item.note && <Typography variant='caption' color='text.secondary'>Ghi chú: {item.note}</Typography>}
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card variant='outlined'>
-              <CardContent>
-                <Typography variant='subtitle1' className='font-medium mb-3'>
-                  Lớp đang học
-                </Typography>
-
-                {loadingEnrollments ? (
-                  <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
-                ) : studentClasses.length === 0 && enrollments.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>Chưa đăng ký lớp nào.</Typography>
-                ) : (
-                  <List dense disablePadding>
-                    {(studentClasses.length > 0 ? studentClasses : enrollments).map((item: any) => (
-                      <ListItem key={item.enrollmentId || item.id || item.classId} disablePadding className='mb-2'>
-                        <ListItemText
-                          primary={item.className || 'Lớp không xác định'}
-                          secondary={
-                            <Box className='flex items-center gap-2 mt-1 flex-wrap'>
-                              <Chip
-                                label={item.status === 'Active' || item.status === 0 ? 'Đang học' : item.status === 'Inactive' || item.status === 1 ? 'Tạm nghỉ' : 'Hoàn thành'}
-                                size='small'
-                                color={item.status === 'Active' || item.status === 0 ? 'success' : item.status === 'Inactive' || item.status === 1 ? 'warning' : 'info'}
-                                variant='tonal'
-                              />
                               <Typography variant='caption' color='text.secondary'>
-                                Từ {formatDate(item.enrollmentDate)}
+                                Đã thu: {formatDateTime(item.paidAt)}
                               </Typography>
+                              <Typography variant='caption' color='text.secondary'>
+                                Người thu: {item.recordedByUserName || '-'}
+                              </Typography>
+                              {item.note && (
+                                <Typography variant='caption' color='text.secondary'>
+                                  Ghi chú: {item.note}
+                                </Typography>
+                              )}
                             </Box>
                           }
                         />
@@ -670,7 +759,12 @@ return
                   <Typography variant='subtitle1' className='font-medium'>
                     Lịch sử thanh toán
                   </Typography>
-                  <Button variant='contained' size='small' startIcon={<i className='ri-bank-card-line' />} onClick={handleOpenInvoice}>
+                  <Button
+                    variant='contained'
+                    size='small'
+                    startIcon={<i className='ri-bank-card-line' />}
+                    onClick={handleOpenInvoice}
+                  >
                     Thêm thanh toán
                   </Button>
                 </Box>
@@ -710,12 +804,19 @@ return
                               primary={
                                 <Box className='flex items-center justify-between gap-2 flex-wrap'>
                                   <Typography variant='body1'>{item.feeName}</Typography>
-                                  <Chip label={formatCurrency(item.amount)} size='small' color='warning' variant='tonal' />
+                                  <Chip
+                                    label={formatCurrency(item.amount)}
+                                    size='small'
+                                    color='warning'
+                                    variant='tonal'
+                                  />
                                 </Box>
                               }
                               secondary={
                                 <Typography variant='caption' color='text.secondary'>
-                                  {item.isRequiredForExam ? 'Khoản phí bắt buộc trước khi thi.' : 'Khoản phí 1 lần đang chờ thu.'}
+                                  {item.isRequiredForExam
+                                    ? 'Khoản phí bắt buộc trước khi thi.'
+                                    : 'Khoản phí 1 lần đang chờ thu.'}
                                 </Typography>
                               }
                             />
@@ -727,9 +828,13 @@ return
                 </Card>
 
                 {loadingPayments ? (
-                  <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
+                  <Box className='flex justify-center py-4'>
+                    <CircularProgress size={24} />
+                  </Box>
                 ) : payments.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>Chưa có lịch sử thanh toán.</Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Chưa có lịch sử thanh toán.
+                  </Typography>
                 ) : (
                   <TableContainer>
                     <Table size='small'>
@@ -770,9 +875,13 @@ return
                 </Typography>
 
                 {loadingAttendance ? (
-                  <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
+                  <Box className='flex justify-center py-4'>
+                    <CircularProgress size={24} />
+                  </Box>
                 ) : attendance.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>Chưa có record nghỉ học nào.</Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Chưa có record nghỉ học nào.
+                  </Typography>
                 ) : (
                   <>
                     <TableContainer>
@@ -831,9 +940,13 @@ return
                 </Typography>
 
                 {loadingExamHistory ? (
-                  <Box className='flex justify-center py-4'><CircularProgress size={24} /></Box>
+                  <Box className='flex justify-center py-4'>
+                    <CircularProgress size={24} />
+                  </Box>
                 ) : examHistory.length === 0 ? (
-                  <Typography variant='body2' color='text.secondary'>Chưa có lịch sử thi cấp.</Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Chưa có lịch sử thi cấp.
+                  </Typography>
                 ) : (
                   <TableContainer>
                     <Table size='small'>
