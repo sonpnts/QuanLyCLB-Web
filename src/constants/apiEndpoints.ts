@@ -128,6 +128,8 @@ export const API_ENDPOINTS = {
   payments: {
     root: '/payments',
     discountedReceipts: '/payments/discounted-receipts',
+    receipts: '/payments/receipts',
+    receiptsSummary: '/payments/receipts/summary',
     bulk: '/payments/bulk',
     byId: (id: string) => `/payments/${id}`,
     byReceipt: (receiptNumber: string) => `/payments/receipt/${receiptNumber}`,

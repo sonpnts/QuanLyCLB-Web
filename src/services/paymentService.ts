@@ -3,6 +3,9 @@ import { logger } from '@/utils/logger'
 import type {
   PaymentRecordType,
   DiscountedReceiptPagedResultType,
+  ReceiptListPagedResultType,
+  ReceiptListItemType,
+  CollectedPaymentSummaryType,
   PaymentSummaryType,
   MonthlyReportType,
 } from '@/types/apps/paymentTypes'
@@ -32,6 +35,19 @@ export interface GetDiscountedReceiptsParams {
   paymentDateFrom?: string
   paymentDateTo?: string
   discountScope?: string
+}
+
+export interface GetReceiptListParams {
+  pageNumber?: number
+  pageSize?: number
+  classId?: string
+  collectedByUserId?: string
+  keyword?: string
+  type?: number
+  method?: number
+  isActive?: boolean
+  paymentDateFrom?: string
+  paymentDateTo?: string
 }
 
 export interface CreatePaymentRequest {
@@ -132,6 +148,11 @@ const unwrapList = (payload: any): any[] => {
   return []
 }
 
+const unwrapPagedPayload = (payload: any) => ({
+  totalRecords: Number(payload?.totalRecords ?? payload?.TotalRecords ?? payload?.totalCount ?? payload?.TotalCount ?? 0),
+  records: unwrapList(payload)
+})
+
 const normalizeNumber = (value: unknown) => {
   if (typeof value === 'number' && Number.isFinite(value)) return value
 
@@ -143,6 +164,59 @@ const normalizeNumber = (value: unknown) => {
 
   return null
 }
+
+const normalizeReceiptListItem = (payload: any): ReceiptListItemType | null => {
+  if (!payload || typeof payload !== 'object') return null
+
+  const receiptNumber = payload.receiptNumber ?? payload.ReceiptNumber
+  const studentId = payload.studentId ?? payload.StudentId
+  const studentName = payload.studentName ?? payload.StudentName
+  const paymentDate = payload.paymentDate ?? payload.PaymentDate
+  const method = normalizeNumber(payload.method ?? payload.Method)
+  const totalAmount = normalizeNumber(payload.totalAmount ?? payload.TotalAmount)
+  const collectedByUserName = payload.collectedByUserName ?? payload.CollectedByUserName
+  const itemCount = normalizeNumber(payload.itemCount ?? payload.ItemCount)
+  const types = Array.isArray(payload.types ?? payload.Types) ? (payload.types ?? payload.Types).map((item: any) => Number(item)) : []
+  const periods = Array.isArray(payload.periods ?? payload.Periods) ? (payload.periods ?? payload.Periods).map(String) : []
+  const classNames = Array.isArray(payload.classNames ?? payload.ClassNames) ? (payload.classNames ?? payload.ClassNames).map(String) : []
+  const transferProofImageUrl = payload.transferProofImageUrl ?? payload.TransferProofImageUrl ?? undefined
+
+  if (
+    typeof receiptNumber !== 'string' ||
+    typeof studentId !== 'string' ||
+    typeof studentName !== 'string' ||
+    typeof paymentDate !== 'string' ||
+    method === null ||
+    totalAmount === null ||
+    typeof collectedByUserName !== 'string' ||
+    itemCount === null
+  ) {
+    return null
+  }
+
+  return {
+    receiptNumber,
+    studentId,
+    studentName,
+    paymentDate,
+    method: method as ReceiptListItemType['method'],
+    types,
+    periods,
+    totalAmount,
+    collectedByUserName,
+    classNames,
+    transferProofImageUrl: typeof transferProofImageUrl === 'string' ? transferProofImageUrl : undefined,
+    itemCount
+  }
+}
+
+const normalizeCollectedPaymentSummary = (payload: any): CollectedPaymentSummaryType => ({
+  receiptCount: Number(payload?.receiptCount ?? payload?.ReceiptCount ?? 0),
+  totalTuition: Number(payload?.totalTuition ?? payload?.TotalTuition ?? 0),
+  totalExamFees: Number(payload?.totalExamFees ?? payload?.TotalExamFees ?? 0),
+  totalOtherFees: Number(payload?.totalOtherFees ?? payload?.TotalOtherFees ?? 0),
+  grandTotal: Number(payload?.grandTotal ?? payload?.GrandTotal ?? 0)
+})
 
 const normalizeTuitionQuote = (payload: any): TuitionQuoteType | null => {
   if (!payload || typeof payload !== 'object') return null
@@ -209,6 +283,79 @@ class PaymentService {
       logger.error('PaymentService', 'getPayments', error)
       
 return { success: true, data: [] }
+    }
+  }
+
+  async getReceiptList(params?: GetReceiptListParams): Promise<ResponseResult<ReceiptListPagedResultType>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.receipts, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message,
+          data: { totalRecords: 0, records: [] }
+        }
+      }
+
+      const payload = unwrapPagedPayload(apiResponse.data)
+
+      return {
+        success: true,
+        data: {
+          totalRecords: payload.totalRecords,
+          records: payload.records.map(normalizeReceiptListItem).filter((item): item is ReceiptListItemType => item !== null)
+        }
+      }
+    } catch (error: any) {
+      logger.error('PaymentService', 'getReceiptList', error)
+
+      return {
+        success: false,
+        message: error?.response?.data?.message || 'Loi ket noi may chu',
+        data: { totalRecords: 0, records: [] }
+      }
+    }
+  }
+
+  async getReceiptSummary(params?: GetReceiptListParams): Promise<ResponseResult<CollectedPaymentSummaryType>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.receiptsSummary, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message,
+          data: {
+            receiptCount: 0,
+            totalTuition: 0,
+            totalExamFees: 0,
+            totalOtherFees: 0,
+            grandTotal: 0
+          }
+        }
+      }
+
+      return {
+        success: true,
+        data: normalizeCollectedPaymentSummary(apiResponse.data)
+      }
+    } catch (error: any) {
+      logger.error('PaymentService', 'getReceiptSummary', error)
+
+      return {
+        success: false,
+        message: error?.response?.data?.message || 'Loi ket noi may chu',
+        data: {
+          receiptCount: 0,
+          totalTuition: 0,
+          totalExamFees: 0,
+          totalOtherFees: 0,
+          grandTotal: 0
+        }
+      }
     }
   }
 

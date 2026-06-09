@@ -58,6 +58,7 @@ const text = {
   empty: 'Chưa có đăng ký thi cấp phù hợp với bộ lọc.',
   loadError: 'Không thể tải danh sách đăng ký thi cấp',
   student: 'Học viên',
+  code: 'Mã',
   registrationStatus: 'Trạng thái đăng ký',
   currentBelt: 'Cấp đai hiện tại',
   targetBelt: 'Cấp đai dự thi',
@@ -344,6 +345,7 @@ const BeltExamRegistrationsView = () => {
         sheetName: 'DangKyThiCap',
         columns: [
           { header: 'STT', accessor: 'stt', width: 8 },
+          { header: 'Mã HV', accessor: 'studentCode', width: 14 },
           { header: 'Học viên', accessor: 'studentName', width: 28 },
           { header: 'Kỳ thi', accessor: 'examSessionName', width: 24 },
           { header: 'Lớp', accessor: 'className', width: 18 },
@@ -357,6 +359,7 @@ const BeltExamRegistrationsView = () => {
         ],
         rows: sortedRegistrations.map((row, index) => ({
           stt: index + 1,
+          studentCode: row.studentCode || '-',
           studentName: row.studentName,
           examSessionName: row.examSessionName,
           className: row.className,
@@ -476,31 +479,72 @@ const BeltExamRegistrationsView = () => {
       ) : (
         <>
           <TableContainer>
-            <Table>
+            <Table
+              size='small'
+              sx={{
+                minWidth: 980,
+                tableLayout: 'fixed',
+                '& .MuiTableCell-root': {
+                  px: 1.5,
+                  py: 1,
+                  fontSize: '0.825rem',
+                  lineHeight: 1.35,
+                  verticalAlign: 'top'
+                },
+                '& .MuiTableHead-root .MuiTableCell-root': {
+                  py: 1.25,
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap'
+                },
+                '& .MuiChip-root': {
+                  height: 24
+                }
+              }}
+            >
               <TableHead>
                 <TableRow>
-                  <TableCell>{renderSortHeader(text.student, 'studentName')}</TableCell>
+                  <TableCell sx={{ width: 110 }}>{text.code}</TableCell>
+                  <TableCell sx={{ width: 220 }}>{renderSortHeader(text.student, 'studentName')}</TableCell>
                   {/*<TableCell>{renderSortHeader(text.examSession, 'examSessionName')}</TableCell>*/}
-                  <TableCell>{renderSortHeader(text.class, 'className')}</TableCell>
-                  <TableCell>{renderSortHeader(text.registrationStatus, 'registrationFeeStatus')}</TableCell>
-                  <TableCell>{renderSortHeader(text.currentBelt, 'currentBeltLevelOrder')}</TableCell>
-                  <TableCell>{renderSortHeader(text.targetBelt, 'targetBeltLevelOrder')}</TableCell>
-                  <TableCell>{renderSortHeader(text.registeredBy, 'registeredByUserName')}</TableCell>
+                  <TableCell sx={{ width: 170 }}>{renderSortHeader(text.class, 'className')}</TableCell>
+                  <TableCell sx={{ width: 180 }}>
+                    {renderSortHeader(text.registrationStatus, 'registrationFeeStatus')}
+                  </TableCell>
+                  <TableCell sx={{ width: 150 }}>
+                    {renderSortHeader(text.currentBelt, 'currentBeltLevelOrder')}
+                  </TableCell>
+                  <TableCell sx={{ width: 150 }}>{renderSortHeader(text.targetBelt, 'targetBeltLevelOrder')}</TableCell>
+                  <TableCell sx={{ width: 210 }}>
+                    {renderSortHeader(text.registeredBy, 'registeredByUserName')}
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {pagedRows.map(row => (
-                  <TableRow key={row.id} hover onClick={() => openStudentDrawer(row.studentId)} sx={{ cursor: 'pointer' }}>
+                  <TableRow
+                    key={row.id}
+                    hover
+                    onClick={() => openStudentDrawer(row.studentId)}
+                    sx={{ cursor: 'pointer', '&:last-of-type td': { borderBottom: 0 } }}
+                  >
                     <TableCell>
-                      <Typography color='text.primary' fontWeight={600}>
-                        {row.studentName}
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        {formatDateTime(row.createdAt)}
+                      <Typography variant='body2' fontWeight={600} color='text.secondary'>
+                        {row.studentCode || '-'}
                       </Typography>
                     </TableCell>
+                    <TableCell>
+                      <Typography variant='body2' color='text.primary' fontWeight={600}>
+                        {row.studentName}
+                      </Typography>
+                      {/*<Typography variant='caption' color='text.secondary'>*/}
+                      {/*  {formatDateTime(row.createdAt)}*/}
+                      {/*</Typography>*/}
+                    </TableCell>
                     {/*<TableCell>{row.examSessionName}</TableCell>*/}
-                    <TableCell>{row.className}</TableCell>
+                    <TableCell>
+                      <Typography variant='body2'>{row.className}</Typography>
+                    </TableCell>
                     <TableCell>
                       <Box className='flex flex-col items-start gap-1'>
                         <Chip
@@ -509,20 +553,27 @@ const BeltExamRegistrationsView = () => {
                           size='small'
                           variant='tonal'
                         />
-                        {row.isFeePaid && row.paidAt && (
-                          <Typography variant='caption' color='text.secondary'>
-                            {formatDateTime(row.paidAt)}
-                          </Typography>
-                        )}
+                        {/*{row.isFeePaid && row.paidAt && (*/}
+                        {/*  <Typography variant='caption' color='text.secondary'>*/}
+                        {/*    /!*{formatDateTime(row.paidAt)}*!/*/}
+                        {/*  </Typography>*/}
+                        {/*)}*/}
                       </Box>
                     </TableCell>
-                    <TableCell>{row.currentBeltLevelName || text.noBelt}</TableCell>
                     <TableCell>
-                      <Typography color='primary.main' fontWeight={600}>
+                      <Typography variant='body2'>{row.currentBeltLevelName || text.noBelt}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant='body2' color='primary.main' fontWeight={600}>
                         {row.targetBeltLevelName}
                       </Typography>
                     </TableCell>
-                    <TableCell>{row.registeredByUserName || '-'}</TableCell>
+                    <TableCell>
+                      <Typography variant='body2'>
+                        {row.registeredByUserName || '-'} {formatDateTime(row.createdAt)}
+                      </Typography>
+
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

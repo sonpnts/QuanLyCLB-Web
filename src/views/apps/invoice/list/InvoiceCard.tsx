@@ -12,16 +12,10 @@ import type { Theme } from '@mui/material/styles'
 import classnames from 'classnames'
 
 import CustomAvatar from '@/@core/components/mui/Avatar'
+import type { CollectedPaymentSummaryType } from '@/types/apps/paymentTypes'
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount)
-
-type InvoiceSummary = {
-  paymentCount: number
-  totalRevenue: number
-  totalTuition: number
-  totalExamFees: number
-}
 
 type InvoiceStat = {
   title: string
@@ -31,7 +25,7 @@ type InvoiceStat = {
 
 type Props = {
   loading: boolean
-  summary: InvoiceSummary
+  summary: CollectedPaymentSummaryType
   dateFrom?: string
   dateTo?: string
   rangeLabel?: string
@@ -45,14 +39,9 @@ const InvoiceCard = ({ loading, summary, dateFrom, dateTo, rangeLabel: customRan
 
   const defaultStats: InvoiceStat[] = [
     {
-      title: loading ? '...' : String(summary.paymentCount),
-      subtitle: dateFrom || dateTo ? 'Giao dịch trong khoảng' : 'Giao dịch mới nhất',
+      title: loading ? '...' : String(summary.receiptCount),
+      subtitle: dateFrom || dateTo ? 'Biên lai trong khoảng' : 'Biên lai mới nhất',
       icon: 'ri-file-list-3-line'
-    },
-    {
-      title: loading ? '...' : formatCurrency(summary.totalRevenue),
-      subtitle: 'Tổng doanh thu',
-      icon: 'ri-wallet-line'
     },
     {
       title: loading ? '...' : formatCurrency(summary.totalTuition),
@@ -63,6 +52,11 @@ const InvoiceCard = ({ loading, summary, dateFrom, dateTo, rangeLabel: customRan
       title: loading ? '...' : formatCurrency(summary.totalExamFees),
       subtitle: 'Lệ phí thi',
       icon: 'ri-shield-star-line'
+    },
+    {
+      title: loading ? '...' : formatCurrency(summary.totalOtherFees),
+      subtitle: 'Phí khác',
+      icon: 'ri-wallet-3-line'
     }
   ]
 

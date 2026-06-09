@@ -586,7 +586,7 @@ return
               </CardContent>
             </Card>
 
-            <Card variant='outlined'>
+            <Card variant='outlined' className='mb-4'>
               <CardContent>
                 <Typography variant='subtitle1' className='font-medium mb-3'>
                   Lớp đang học
@@ -769,63 +769,63 @@ return
                   </Button>
                 </Box>
 
-                <Card variant='outlined' className='mb-4'>
-                  <CardContent>
-                    <Box className='flex items-center justify-between gap-3 flex-wrap mb-3'>
-                      <Typography variant='subtitle2' className='font-medium'>
-                        Phí 1 lần chưa thu
-                      </Typography>
-                      <Button
-                        variant='outlined'
-                        size='small'
-                        startIcon={<i className='ri-price-tag-3-line' />}
-                        onClick={handleOpenOneTimeFeeInvoice}
-                        disabled={!effectiveClassId || pendingOneTimeFees.length === 0}
-                      >
-                        Thu phí 1 lần
-                      </Button>
-                    </Box>
+                {/*<Card variant='outlined' className='mb-4'>*/}
+                {/*  <CardContent>*/}
+                {/*    <Box className='flex items-center justify-between gap-3 flex-wrap mb-3'>*/}
+                {/*      <Typography variant='subtitle2' className='font-medium'>*/}
+                {/*        Phí 1 lần chưa thu*/}
+                {/*      </Typography>*/}
+                {/*      <Button*/}
+                {/*        variant='outlined'*/}
+                {/*        size='small'*/}
+                {/*        startIcon={<i className='ri-price-tag-3-line' />}*/}
+                {/*        onClick={handleOpenOneTimeFeeInvoice}*/}
+                {/*        disabled={!effectiveClassId || pendingOneTimeFees.length === 0}*/}
+                {/*      >*/}
+                {/*        Thu phí 1 lần*/}
+                {/*      </Button>*/}
+                {/*    </Box>*/}
 
-                    {!effectiveClassId ? (
-                      <Alert severity='info'>Học viên chưa có lớp hiện tại để kiểm tra phí 1 lần cần thu.</Alert>
-                    ) : loadingPendingOneTimeFees ? (
-                      <Box className='flex justify-center py-4'>
-                        <CircularProgress size={24} />
-                      </Box>
-                    ) : pendingOneTimeFees.length === 0 ? (
-                      <Typography variant='body2' color='text.secondary'>
-                        Không còn khoản phí 1 lần nào cần thu.
-                      </Typography>
-                    ) : (
-                      <List dense disablePadding>
-                        {pendingOneTimeFees.map(item => (
-                          <ListItem key={item.feeCode} disablePadding className='mb-2'>
-                            <ListItemText
-                              primary={
-                                <Box className='flex items-center justify-between gap-2 flex-wrap'>
-                                  <Typography variant='body1'>{item.feeName}</Typography>
-                                  <Chip
-                                    label={formatCurrency(item.amount)}
-                                    size='small'
-                                    color='warning'
-                                    variant='tonal'
-                                  />
-                                </Box>
-                              }
-                              secondary={
-                                <Typography variant='caption' color='text.secondary'>
-                                  {item.isRequiredForExam
-                                    ? 'Khoản phí bắt buộc trước khi thi.'
-                                    : 'Khoản phí 1 lần đang chờ thu.'}
-                                </Typography>
-                              }
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                    )}
-                  </CardContent>
-                </Card>
+                {/*    /!*{!effectiveClassId ? (*!/*/}
+                {/*    /!*  <Alert severity='info'>Học viên chưa có lớp hiện tại để kiểm tra phí 1 lần cần thu.</Alert>*!/*/}
+                {/*    /!*) : loadingPendingOneTimeFees ? (*!/*/}
+                {/*    /!*  <Box className='flex justify-center py-4'>*!/*/}
+                {/*    /!*    <CircularProgress size={24} />*!/*/}
+                {/*    /!*  </Box>*!/*/}
+                {/*    /!*) : pendingOneTimeFees.length === 0 ? (*!/*/}
+                {/*    /!*  <Typography variant='body2' color='text.secondary'>*!/*/}
+                {/*    /!*    Không còn khoản phí 1 lần nào cần thu.*!/*/}
+                {/*    /!*  </Typography>*!/*/}
+                {/*    /!*) : (*!/*/}
+                {/*    /!*  <List dense disablePadding>*!/*/}
+                {/*    /!*    {pendingOneTimeFees.map(item => (*!/*/}
+                {/*    /!*      <ListItem key={item.feeCode} disablePadding className='mb-2'>*!/*/}
+                {/*    /!*        <ListItemText*!/*/}
+                {/*    /!*          primary={*!/*/}
+                {/*    /!*            <Box className='flex items-center justify-between gap-2 flex-wrap'>*!/*/}
+                {/*    /!*              <Typography variant='body1'>{item.feeName}</Typography>*!/*/}
+                {/*    /!*              <Chip*!/*/}
+                {/*    /!*                label={formatCurrency(item.amount)}*!/*/}
+                {/*    /!*                size='small'*!/*/}
+                {/*    /!*                color='warning'*!/*/}
+                {/*    /!*                variant='tonal'*!/*/}
+                {/*    /!*              />*!/*/}
+                {/*    /!*            </Box>*!/*/}
+                {/*    /!*          }*!/*/}
+                {/*    /!*          secondary={*!/*/}
+                {/*    /!*            <Typography variant='caption' color='text.secondary'>*!/*/}
+                {/*    /!*              {item.isRequiredForExam*!/*/}
+                {/*    /!*                ? 'Khoản phí bắt buộc trước khi thi.'*!/*/}
+                {/*    /!*                : 'Khoản phí 1 lần đang chờ thu.'}*!/*/}
+                {/*    /!*            </Typography>*!/*/}
+                {/*    /!*          }*!/*/}
+                {/*    /!*        />*!/*/}
+                {/*    /!*      </ListItem>*!/*/}
+                {/*    /!*    ))}*!/*/}
+                {/*    /!*  </List>*!/*/}
+                {/*    /!*)}*!/*/}
+                {/*  </CardContent>*/}
+                {/*</Card>*/}
 
                 {loadingPayments ? (
                   <Box className='flex justify-center py-4'>
