@@ -27,14 +27,12 @@ import TableRow from '@mui/material/TableRow'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
+import { useNotification } from '@/contexts/notificationContext'
 import cronJobLogService from '@/services/cronJobLogService'
 import type { CronJobLogType } from '@/types/apps/cronJobLogTypes'
-import { useNotification } from '@/contexts/notificationContext'
 import { formatDateTimeVN } from '@/utils/dateTime'
 
-const formatDateTime = (value?: string | null) => {
-  return formatDateTimeVN(value)
-}
+const formatDateTime = (value?: string | null) => formatDateTimeVN(value)
 
 const getStatusColor = (status?: string) => {
   const normalized = (status || '').toLowerCase()
@@ -42,9 +40,11 @@ const getStatusColor = (status?: string) => {
   if (normalized === 'success') return 'success'
   if (normalized === 'failed') return 'error'
   if (normalized === 'running') return 'warning'
-  
-return 'default'
+
+  return 'default'
 }
+
+type ManualAction = 'zns' | 'federation' | null
 
 export default function CronJobLogListView() {
   const { showNotification } = useNotification()
@@ -60,6 +60,7 @@ export default function CronJobLogListView() {
   const [scheduledFrom, setScheduledFrom] = useState('')
   const [scheduledTo, setScheduledTo] = useState('')
   const [selectedRow, setSelectedRow] = useState<CronJobLogType | null>(null)
+  const [manualAction, setManualAction] = useState<ManualAction>(null)
 
   const jobOptions = useMemo(
     () =>
@@ -84,9 +85,8 @@ export default function CronJobLogListView() {
       if (!response.success || !response.data) {
         setRows([])
         setTotalCount(0)
-        showNotification(response.message || 'Không thể tải nhật ký cronjob.', 'error')
-        
-return
+        showNotification(response.message || 'Không thể tải nhật kí cronjob.', 'error')
+        return
       }
 
       setRows(response.data.items || [])
@@ -94,7 +94,7 @@ return
     } catch {
       setRows([])
       setTotalCount(0)
-      showNotification('Không thể tải nhật ký cronjob.', 'error')
+      showNotification('Không thể tải nhật kí cronjob.', 'error')
     } finally {
       setLoading(false)
     }
@@ -104,12 +104,49 @@ return
     loadData()
   }, [loadData])
 
+  const handleManualRun = useCallback(
+    async (action: Exclude<ManualAction, null>) => {
+      try {
+        setManualAction(action)
+
+        const response =
+          action === 'zns' ? await cronJobLogService.runZnsTuitionDue() : await cronJobLogService.runFederationSync()
+
+        if (!response.success) {
+          showNotification(
+            response.message ||
+              (action === 'zns' ? 'Không thể chạy job ZNS học phí.' : 'Không thể chạy đồng bộ federation.'),
+            'error'
+          )
+          return
+        }
+
+        showNotification(
+          response.message || (action === 'zns' ? 'Đã chạy job ZNS học phí.' : 'Đã chạy đồng bộ federation.'),
+          'success'
+        )
+
+        await loadData()
+      } catch {
+        showNotification(
+          action === 'zns' ? 'Không thể chạy job ZNS học phí.' : 'Không thể chạy đồng bộ federation.',
+          'error'
+        )
+      } finally {
+        setManualAction(null)
+      }
+    },
+    [loadData, showNotification]
+  )
+
+  const isManualRunning = manualAction !== null
+
   return (
     <>
       <Card>
         <CardHeader
-          title='Nhật ký cronjob'
-          subheader='Theo dõi các job nền tự chạy hằng ngày, xem trạng thái thành công / thất bại và lỗi nếu có.'
+          title='Nhật kí cronjob'
+          subheader='Theo dõi các job nền và cho phép chạy tay ZNS học phí hoặc đồng bộ federation ngay trên màn hình này.'
         />
         <CardContent>
           <Box className='flex flex-wrap gap-4 items-center'>
@@ -201,6 +238,31 @@ return
               Xóa lọc
             </Button>
           </Box>
+
+          <Box className='flex flex-wrap gap-3 items-center mt-4'>
+            <Typography variant='body2' color='text.secondary'>
+              Tác vụ thủ công:
+            </Typography>
+
+            <Button
+              variant='contained'
+              disabled={loading || isManualRunning}
+              onClick={() => handleManualRun('zns')}
+            >
+              {manualAction === 'zns' ? 'Đang chạy ZNS...' : 'Chạy ZNS học phí'}
+            </Button>
+
+            <Button
+              variant='contained'
+              color='secondary'
+              disabled={loading || isManualRunning}
+              onClick={() => handleManualRun('federation')}
+            >
+              {manualAction === 'federation' ? 'Đang sync...' : 'Sync federation'}
+            </Button>
+
+            {isManualRunning ? <CircularProgress size={20} /> : null}
+          </Box>
         </CardContent>
       </Card>
 
@@ -287,16 +349,36 @@ return
         <DialogTitle>Chi tiết cronjob</DialogTitle>
         <DialogContent dividers>
           <Box className='space-y-3'>
-            <Typography><b>Job:</b> {selectedRow?.jobKey}</Typography>
-            <Typography><b>Lịch chạy:</b> {formatDateTime(selectedRow?.scheduledAtLocal)}</Typography>
-            <Typography><b>Trạng thái:</b> {selectedRow?.status}</Typography>
-            <Typography><b>StartedAtUtc:</b> {formatDateTime(selectedRow?.startedAtUtc)}</Typography>
-            <Typography><b>FinishedAtUtc:</b> {formatDateTime(selectedRow?.finishedAtUtc)}</Typography>
-            <Typography><b>Attempt:</b> {selectedRow?.attemptCount}</Typography>
-            <Typography><b>TotalCandidates:</b> {selectedRow?.totalCandidates}</Typography>
-            <Typography><b>TotalSent:</b> {selectedRow?.totalSent}</Typography>
-            <Typography><b>TotalSkippedAlreadySent:</b> {selectedRow?.totalSkippedAlreadySent}</Typography>
-            <Typography><b>TotalFailed:</b> {selectedRow?.totalFailed}</Typography>
+            <Typography>
+              <b>Job:</b> {selectedRow?.jobKey}
+            </Typography>
+            <Typography>
+              <b>Lịch chạy:</b> {formatDateTime(selectedRow?.scheduledAtLocal)}
+            </Typography>
+            <Typography>
+              <b>Trạng thái:</b> {selectedRow?.status}
+            </Typography>
+            <Typography>
+              <b>StartedAtUtc:</b> {formatDateTime(selectedRow?.startedAtUtc)}
+            </Typography>
+            <Typography>
+              <b>FinishedAtUtc:</b> {formatDateTime(selectedRow?.finishedAtUtc)}
+            </Typography>
+            <Typography>
+              <b>Attempt:</b> {selectedRow?.attemptCount}
+            </Typography>
+            <Typography>
+              <b>TotalCandidates:</b> {selectedRow?.totalCandidates}
+            </Typography>
+            <Typography>
+              <b>TotalSent:</b> {selectedRow?.totalSent}
+            </Typography>
+            <Typography>
+              <b>TotalSkippedAlreadySent:</b> {selectedRow?.totalSkippedAlreadySent}
+            </Typography>
+            <Typography>
+              <b>TotalFailed:</b> {selectedRow?.totalFailed}
+            </Typography>
             <TextField
               fullWidth
               label='Lỗi'

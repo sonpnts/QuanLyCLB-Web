@@ -2,8 +2,6 @@
 
 import { useMemo, useState } from 'react'
 
-import { useRouter } from 'next/navigation'
-
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -28,6 +26,7 @@ import type { PaymentRecordType } from '@/types/apps/paymentTypes'
 import { paymentMethodLabels, paymentTypeLabels } from '@/types/apps/paymentTypes'
 import { formatDateTimeVN } from '@/utils/dateTime'
 import { exportToExcel, formatVnCurrency, formatVnDate } from '@/utils/exportToExcel'
+import ReceiptPreviewDialog from '@/views/apps/invoice/preview/ReceiptPreviewDialog'
 
 import tableStyles from '@core/styles/table.module.css'
 
@@ -110,7 +109,6 @@ const InvoiceListTable = ({
   classOptions,
   isAdmin
 }: Props) => {
-  const router = useRouter()
   const [search, setSearch] = useState('')
   const [methodFilter, setMethodFilter] = useState<string>('')
   const [typeFilter, setTypeFilter] = useState<string>('')
@@ -118,6 +116,8 @@ const InvoiceListTable = ({
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [proofImageUrl, setProofImageUrl] = useState<string | null>(null)
   const [proofImageOpen, setProofImageOpen] = useState(false)
+  const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false)
+  const [selectedReceiptNumber, setSelectedReceiptNumber] = useState<string | null>(null)
   const preset30 = useMemo(() => buildRange(30), [])
   const preset60 = useMemo(() => buildRange(60), [])
   const isPreset30 = dateFrom === preset30.from && dateTo === preset30.to
@@ -206,6 +206,11 @@ const InvoiceListTable = ({
 
     setProofImageUrl(imageUrl)
     setProofImageOpen(true)
+  }
+
+  const openReceiptPreview = (receiptNumber: string) => {
+    setSelectedReceiptNumber(receiptNumber)
+    setReceiptPreviewOpen(true)
   }
 
   return (
@@ -422,7 +427,7 @@ const InvoiceListTable = ({
                   {paged.map(row => (
                     <tr
                       key={row.receiptNumber}
-                      onClick={() => router.push(`/apps/invoice/preview/${encodeURIComponent(row.receiptNumber)}`)}
+                      onClick={() => openReceiptPreview(row.receiptNumber)}
                       style={{ cursor: 'pointer' }}
                     >
                       <td>
@@ -561,6 +566,15 @@ const InvoiceListTable = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ReceiptPreviewDialog
+        open={receiptPreviewOpen}
+        receiptNumber={selectedReceiptNumber}
+        onClose={() => {
+          setReceiptPreviewOpen(false)
+          setSelectedReceiptNumber(null)
+        }}
+      />
     </>
   )
 }
