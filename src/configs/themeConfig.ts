@@ -58,12 +58,12 @@ const themeConfig: Config = {
   templateName: 'Hệ thống quản lý câu lạc bộ (CMIS) - Tấn Đạt Taekwondo',
   name: 'Câu lạc bộ võ thuật Tấn Đạt Taekwondo',
   homePageUrl: '/dashboards/home',
-  settingsCookieName: 'mis-tandattaekwondo',
+  settingsCookieName: 'cmis-tandattaekwondo',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
   semiDark: false, // true, false
   layout: 'vertical', // 'vertical', 'collapsed', 'horizontal'
-  layoutPadding: 24, // Common padding for header, content, footer layout components (in px)
+  layoutPadding: 14, // Common padding for header, content, footer layout components (in px)
   compactContentWidth: 1440, // in px
   navbar: {
     type: 'fixed', // 'fixed', 'static'
@@ -72,7 +72,7 @@ const themeConfig: Config = {
     detached: true, //! true, false (This will not work in the Horizontal Layout or floating navbar is enabled)
     blur: true // true, false
   },
-  contentWidth: 'compact', // 'compact', 'wide'
+  contentWidth: 'wide', // 'compact', 'wide'
   footer: {
     type: 'static', // 'fixed', 'static'
     contentWidth: 'compact', // 'compact', 'wide'

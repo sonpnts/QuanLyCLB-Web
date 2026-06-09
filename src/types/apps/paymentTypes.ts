@@ -64,6 +64,34 @@ export type DiscountedReceiptPagedResultType = {
   records: PaymentRecordType[]
 }
 
+export type ReceiptListItemType = {
+  receiptNumber: string
+  studentId: string
+  studentName: string
+  paymentDate: string
+  method: PaymentMethod
+  types: number[]
+  periods: string[]
+  totalAmount: number
+  collectedByUserName: string
+  classNames: string[]
+  transferProofImageUrl?: string | null
+  itemCount: number
+}
+
+export type ReceiptListPagedResultType = {
+  totalRecords: number
+  records: ReceiptListItemType[]
+}
+
+export type CollectedPaymentSummaryType = {
+  receiptCount: number
+  totalTuition: number
+  totalExamFees: number
+  totalOtherFees: number
+  grandTotal: number
+}
+
 export type PaymentSummaryType = {
   classId: string
   className?: string

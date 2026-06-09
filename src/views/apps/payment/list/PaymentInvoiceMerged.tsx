@@ -15,7 +15,7 @@ import { useAuth } from '@/contexts/authContext'
 import classService from '@/services/classService'
 import paymentService from '@/services/paymentService'
 import studentAttendanceService from '@/services/studentAttendanceService'
-import type { PaymentRecordType } from '@/types/apps/paymentTypes'
+import type { CollectedPaymentSummaryType, ReceiptListItemType } from '@/types/apps/paymentTypes'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
 
@@ -25,6 +25,14 @@ import InvoiceListTable from '@/views/apps/invoice/list/InvoiceListTable'
 type PaymentClassOption = {
   id: string
   name: string
+}
+
+const emptySummary: CollectedPaymentSummaryType = {
+  receiptCount: 0,
+  totalTuition: 0,
+  totalExamFees: 0,
+  totalOtherFees: 0,
+  grandTotal: 0
 }
 
 const toInputDate = (date: Date) => {
@@ -52,8 +60,16 @@ const PaymentInvoiceMerged = () => {
   const { auth } = useAuth()
   const defaultRange = useMemo(() => getDefaultDateRange(), [])
 
-  const [payments, setPayments] = useState<PaymentRecordType[]>([])
+  const [receipts, setReceipts] = useState<ReceiptListItemType[]>([])
+  const [summary, setSummary] = useState<CollectedPaymentSummaryType>(emptySummary)
   const [loading, setLoading] = useState(true)
+  const [summaryLoading, setSummaryLoading] = useState(true)
+  const [totalCount, setTotalCount] = useState(0)
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [search, setSearch] = useState('')
+  const [methodFilter, setMethodFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState('')
   const [dateFrom, setDateFrom] = useState(defaultRange.dateFrom)
   const [dateTo, setDateTo] = useState(defaultRange.dateTo)
   const [selectedClassId, setSelectedClassId] = useState('')
@@ -108,53 +124,61 @@ const PaymentInvoiceMerged = () => {
     loadClassOptions()
   }, [isAdmin])
 
-  const loadPayments = useCallback(async () => {
+  const buildSharedFilters = useCallback(
+    () => ({
+      classId: selectedClassId || undefined,
+      collectedByUserId: isAdmin ? undefined : auth?.user?.id || undefined,
+      paymentDateFrom: dateFrom || undefined,
+      paymentDateTo: dateTo || undefined
+    }),
+    [auth?.user?.id, dateFrom, dateTo, isAdmin, selectedClassId]
+  )
+
+  const loadReceipts = useCallback(async () => {
     setLoading(true)
 
     try {
-      const response = await paymentService.getPayments({
-        pageSize: 1000,
-        classId: selectedClassId || undefined,
-        collectedByUserId: isAdmin ? undefined : auth?.user?.id || undefined,
-        paymentDateFrom: dateFrom || undefined,
-        paymentDateTo: dateTo || undefined
+      const response = await paymentService.getReceiptList({
+        ...buildSharedFilters(),
+        pageNumber: page + 1,
+        pageSize: rowsPerPage,
+        keyword: search.trim() || undefined,
+        method: methodFilter !== '' ? Number(methodFilter) : undefined,
+        type: typeFilter !== '' ? Number(typeFilter) : undefined
       })
 
-      const nextPayments = (response.data || []).sort(
-        (left, right) => new Date(right.paymentDate).getTime() - new Date(left.paymentDate).getTime()
-      )
-
-      setPayments(nextPayments)
+      setReceipts(response.data?.records || [])
+      setTotalCount(Number(response.data?.totalRecords || 0))
     } finally {
       setLoading(false)
     }
-  }, [auth?.user?.id, dateFrom, dateTo, isAdmin, selectedClassId])
+  }, [buildSharedFilters, methodFilter, page, rowsPerPage, search, typeFilter])
+
+  const loadSummary = useCallback(async () => {
+    setSummaryLoading(true)
+
+    try {
+      const response = await paymentService.getReceiptSummary(buildSharedFilters())
+
+      setSummary(response.data || emptySummary)
+    } finally {
+      setSummaryLoading(false)
+    }
+  }, [buildSharedFilters])
 
   useEffect(() => {
-    loadPayments()
-  }, [loadPayments])
+    loadReceipts()
+  }, [loadReceipts])
 
-  const summary = useMemo(() => {
-    const totalRevenue = payments.reduce((sum, item) => sum + Number(item.amount || 0), 0)
-    const totalTuition = payments.filter(item => item.type === 0).reduce((sum, item) => sum + Number(item.amount || 0), 0)
-    const totalExamFees = payments.filter(item => item.type === 1).reduce((sum, item) => sum + Number(item.amount || 0), 0)
-
-    return {
-      paymentCount: payments.length,
-      totalRevenue,
-      totalTuition,
-      totalExamFees
-    }
-  }, [payments])
+  useEffect(() => {
+    loadSummary()
+  }, [loadSummary])
 
   return (
     <Box className='flex flex-col gap-4'>
       <Box className='flex items-center justify-between gap-3 flex-wrap'>
         <Box>
           <Typography variant='h5'>Lịch sử thanh toán theo biên lai</Typography>
-          {/*<Typography variant='body2' color='text.secondary'>*/}
-          {/*  Danh sách này gộp các khoản thu theo từng biên lai để dễ xem lịch sử, người thu và minh chứng chuyển khoản.*/}
-          {/*</Typography>*/}
         </Box>
 
         <Box className='flex gap-2 flex-wrap'>
@@ -172,13 +196,24 @@ const PaymentInvoiceMerged = () => {
       <Card>
         <CardContent>
           <Box className='flex flex-col gap-4'>
-            <InvoiceCard loading={loading} summary={summary} dateFrom={dateFrom} dateTo={dateTo} />
+            <InvoiceCard loading={summaryLoading} summary={summary} dateFrom={dateFrom} dateTo={dateTo} />
             <Divider />
             <InvoiceListTable
-              payments={payments}
+              receipts={receipts}
               loading={loading}
+              totalCount={totalCount}
+              page={page}
+              rowsPerPage={rowsPerPage}
+              search={search}
+              methodFilter={methodFilter}
+              typeFilter={typeFilter}
               dateFrom={dateFrom}
               dateTo={dateTo}
+              onSearchChange={setSearch}
+              onMethodFilterChange={setMethodFilter}
+              onTypeFilterChange={setTypeFilter}
+              onPageChange={setPage}
+              onRowsPerPageChange={setRowsPerPage}
               onDateFromChange={setDateFrom}
               onDateToChange={setDateTo}
               selectedClassId={selectedClassId}

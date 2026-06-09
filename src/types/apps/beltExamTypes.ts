@@ -27,6 +27,7 @@ export type ExamRegistrationType = {
   examSessionName: string
   studentId: string
   studentName: string
+  studentCode?: string
   currentBeltLevelId?: string
   currentBeltLevelName?: string
   currentBeltLevelOrder?: number
