@@ -20,7 +20,9 @@ export const API_ENDPOINTS = {
     byId: (id: string) => `/audit-logs/${id}`,
     byUser: (userId: string) => `/audit-logs/user/${userId}`,
     byEntity: (entityType: string, entityId: string) => `/audit-logs/entity/${entityType}/${entityId}`,
-    cronJobs: '/audit-logs/cron-jobs'
+    cronJobs: '/audit-logs/cron-jobs',
+    runZnsTuitionDue: '/audit-logs/cron-jobs/run-zns-tuition-due',
+    runFederationSync: '/audit-logs/cron-jobs/run-federation-sync'
   },
   znsLogs: {
     root: '/zns-logs',

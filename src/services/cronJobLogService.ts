@@ -21,6 +21,21 @@ export interface CronJobLogsPagedResult {
   pageSize: number
 }
 
+export interface CronJobManualRunResult {
+  id: string
+  jobKey: string
+  scheduledAtLocal: string
+  forMonth?: number | null
+  forYear?: number | null
+  status: string
+  attemptCount: number
+  totalCandidates: number
+  totalSent: number
+  totalSkippedAlreadySent: number
+  totalFailed: number
+  errorMessage?: string | null
+}
+
 class CronJobLogService {
   async getCronJobLogs(params?: GetCronJobLogsParams): Promise<ResponseResult<CronJobLogsPagedResult>> {
     try {
@@ -45,8 +60,35 @@ class CronJobLogService {
       }
     } catch (error: any) {
       logger.error('CronJobLogService', 'getCronJobLogs', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async runZnsTuitionDue(): Promise<ResponseResult<CronJobManualRunResult>> {
+    return this.runJob(API_ENDPOINTS.auditLogs.runZnsTuitionDue, 'runZnsTuitionDue')
+  }
+
+  async runFederationSync(): Promise<ResponseResult<CronJobManualRunResult>> {
+    return this.runJob(API_ENDPOINTS.auditLogs.runFederationSync, 'runFederationSync')
+  }
+
+  private async runJob(endpoint: string, action: string): Promise<ResponseResult<CronJobManualRunResult>> {
+    try {
+      const response = await apiClient.post<any>(endpoint)
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message, data: apiResponse.data }
+      }
+
+      return {
+        success: true,
+        message: apiResponse.message,
+        data: apiResponse.data
+      }
+    } catch (error: any) {
+      logger.error('CronJobLogService', action, error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 }

@@ -33,6 +33,7 @@ import paymentService, { type ExamFeeOptionType, type TuitionQuoteType } from '@
 import productService from '@/services/productService'
 import studentService from '@/services/studentService'
 import StudentZaloLinkPromptDialog from '@/components/student/StudentZaloLinkPromptDialog'
+import ReceiptPreviewDialog from '@/views/apps/invoice/preview/ReceiptPreviewDialog'
 import type { ClassType , ClassUserAssignment } from '@/types/apps/classTypes'
 import type { OneTimeFeeOptionType } from '@/types/apps/oneTimeFeeTypes'
 import type { ProductBundleType, ProductType, ProductVariantType } from '@/types/apps/productTypes'
@@ -147,6 +148,8 @@ const PaymentInvoiceCreateView = () => {
   const [proofPreview, setProofPreview] = useState<string | null>(null)
   const [draftInfo, setDraftInfo] = useState<ReturnType<typeof readPaymentInvoiceDraft>>(null)
   const [zaloPromptOpen, setZaloPromptOpen] = useState(false)
+  const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false)
+  const [previewReceiptNumber, setPreviewReceiptNumber] = useState<string | null>(null)
   const initializedDraftRef = useRef(false)
   const tuitionTouchedRef = useRef(false)
   const examTouchedRef = useRef(false)
@@ -743,7 +746,8 @@ return
         }
 
         clearPaymentInvoiceDraft(draftKey)
-        router.push(`/apps/invoice/preview/${encodeURIComponent(response.data.receiptNumber)}`)
+        setPreviewReceiptNumber(response.data.receiptNumber)
+        setReceiptPreviewOpen(true)
         
 return
       }
@@ -768,7 +772,8 @@ return
       }
 
       clearPaymentInvoiceDraft(draftKey)
-      router.push(`/apps/invoice/preview/${encodeURIComponent(receiptNumber)}`)
+      setPreviewReceiptNumber(receiptNumber)
+      setReceiptPreviewOpen(true)
     } finally {
       setSubmitting(false)
       setUploading(false)
@@ -1461,6 +1466,15 @@ return
           setSelectedStudent(updatedStudent)
           setZaloPromptOpen(false)
           void handleSubmit(true)
+        }}
+      />
+
+      <ReceiptPreviewDialog
+        open={receiptPreviewOpen}
+        receiptNumber={previewReceiptNumber}
+        onClose={() => {
+          setReceiptPreviewOpen(false)
+          setPreviewReceiptNumber(null)
         }}
       />
     </Stack>
