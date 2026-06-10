@@ -10,6 +10,10 @@ export interface TuitionDiscountRequestPayload {
   discountAmount: number
   reason: string
   isExempt?: boolean
+  applyFromMonth?: number
+  applyFromYear?: number
+  applyToMonth?: number
+  applyToYear?: number
 }
 
 export interface DecideTuitionDiscountPayload {
@@ -18,6 +22,7 @@ export interface DecideTuitionDiscountPayload {
 }
 
 export interface TuitionDiscountRequestRow {
+  id: string
   studentId: string
   studentCode: string
   studentName: string
@@ -26,6 +31,12 @@ export interface TuitionDiscountRequestRow {
   discountAmount: number
   reason: string
   status: TuitionDiscountStatus
+  applyFromMonth?: number | null
+  applyFromYear?: number | null
+  applyToMonth?: number | null
+  applyToYear?: number | null
+  isPermanent: boolean
+  periodLabel: string
   requestedAt?: string
   requestedByUserId?: string
   requestedByName?: string
@@ -469,9 +480,9 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
     }
   }
 
-  async decideTuitionDiscount(studentId: string, payload: DecideTuitionDiscountPayload): Promise<ResponseResult<StudentType>> {
+  async decideTuitionDiscount(discountId: string, payload: DecideTuitionDiscountPayload): Promise<ResponseResult<StudentType>> {
     try {
-      const response = await apiClient.post<any>(API_ENDPOINTS.students.tuitionDiscountDecide(studentId), payload)
+      const response = await apiClient.post<any>(API_ENDPOINTS.students.tuitionDiscountDecide(discountId), payload)
       const apiResponse = response.data
 
       if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
@@ -481,6 +492,21 @@ return { success: true, data: apiResponse.data, message: apiResponse.message }
       logger.error('StudentService', 'decideTuitionDiscount', error)
       
 return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async deleteTuitionDiscount(discountId: string): Promise<ResponseResult<void>> {
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.students.tuitionDiscountDelete(discountId))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('StudentService', 'deleteTuitionDiscount', error)
+
+      return { success: false, message: error?.response?.data?.message || 'Lá»—i káº¿t ná»‘i mÃ¡y chá»§' }
     }
   }
 

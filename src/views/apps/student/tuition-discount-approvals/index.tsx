@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
 
@@ -28,22 +28,14 @@ import { useNotification } from '@/contexts/notificationContext'
 import studentService, { type PaginatedResult, type TuitionDiscountRequestRow } from '@/services/studentService'
 import { formatDateTimeVN } from '@/utils/dateTime'
 
-const formatVnd = (n: number) => `${Math.round(n).toLocaleString('vi-VN')}đ`
+const formatVnd = (value: number) => `${Math.round(value || 0).toLocaleString('vi-VN')}đ`
 
 const getStatusChip = (status: TuitionDiscountRequestRow['status']) => {
   const value = typeof status === 'string' ? status.toLowerCase() : String(status)
 
-  if (value.includes('approved') || value === '2') {
-    return <Chip label='Đã duyệt' color='success' size='small' />
-  }
-
-  if (value.includes('rejected') || value === '3') {
-    return <Chip label='Từ chối' color='error' size='small' />
-  }
-
-  if (value.includes('pending') || value === '1') {
-    return <Chip label='Chờ duyệt' color='warning' size='small' />
-  }
+  if (value.includes('approved') || value === '2') return <Chip label='Đã duyệt' color='success' size='small' />
+  if (value.includes('rejected') || value === '3') return <Chip label='Từ chối' color='error' size='small' />
+  if (value.includes('pending') || value === '1') return <Chip label='Chờ duyệt' color='warning' size='small' />
 
   return <Chip label='-' size='small' variant='outlined' />
 }
@@ -58,22 +50,20 @@ const StudentTuitionDiscountApprovalsPage = () => {
 
   const [tab, setTab] = useState(0)
   const [keyword, setKeyword] = useState('')
-
   const [pendingPage, setPendingPage] = useState(0)
   const [pendingRowsPerPage, setPendingRowsPerPage] = useState(10)
   const [pendingData, setPendingData] = useState<PaginatedResult<TuitionDiscountRequestRow>>(emptyPagedResult)
   const [pendingLoading, setPendingLoading] = useState(false)
-
   const [historyPage, setHistoryPage] = useState(0)
   const [historyRowsPerPage, setHistoryRowsPerPage] = useState(10)
   const [historyData, setHistoryData] = useState<PaginatedResult<TuitionDiscountRequestRow>>(emptyPagedResult)
   const [historyLoading, setHistoryLoading] = useState(false)
-
   const [decideOpen, setDecideOpen] = useState(false)
-  const [decideStudentId, setDecideStudentId] = useState<string | null>(null)
+  const [decideDiscountId, setDecideDiscountId] = useState<string | null>(null)
   const [decideApprove, setDecideApprove] = useState(true)
   const [decideNote, setDecideNote] = useState('')
   const [deciding, setDeciding] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const loadPending = useCallback(async (page = pendingPage, pageSize = pendingRowsPerPage, search = keyword) => {
     setPendingLoading(true)
@@ -113,48 +103,63 @@ const StudentTuitionDiscountApprovalsPage = () => {
   }, [keyword])
 
   useEffect(() => {
-    if (tab === 0) {
-      loadPending(pendingPage, pendingRowsPerPage)
-    }
-  }, [pendingPage, pendingRowsPerPage, tab, loadPending])
+    if (tab === 0) loadPending(pendingPage, pendingRowsPerPage)
+  }, [loadPending, pendingPage, pendingRowsPerPage, tab])
 
   useEffect(() => {
-    if (tab === 1) {
-      loadHistory(historyPage, historyRowsPerPage)
-    }
-  }, [historyPage, historyRowsPerPage, tab, loadHistory])
+    if (tab === 1) loadHistory(historyPage, historyRowsPerPage)
+  }, [historyPage, historyRowsPerPage, loadHistory, tab])
 
-  const openDecide = (studentId: string, approve: boolean) => {
-    setDecideStudentId(studentId)
+  const openDecide = (discountId: string, approve: boolean) => {
+    setDecideDiscountId(discountId)
     setDecideApprove(approve)
     setDecideNote('')
     setDecideOpen(true)
   }
 
   const submitDecide = async () => {
-    if (!decideStudentId) return
+    if (!decideDiscountId) return
 
     setDeciding(true)
 
     try {
-      const res = await studentService.decideTuitionDiscount(decideStudentId, {
+      const res = await studentService.decideTuitionDiscount(decideDiscountId, {
         approve: decideApprove,
         note: decideNote.trim() || undefined
       })
 
       if (!res.success) {
         showNotification(res.message || 'Không cập nhật được', 'error')
-
         return
       }
 
       showNotification(res.message || 'Đã cập nhật', 'success')
       setDecideOpen(false)
-      await Promise.all([loadPending(0, pendingRowsPerPage), loadHistory(0, historyRowsPerPage)])
       setPendingPage(0)
       setHistoryPage(0)
+      await Promise.all([loadPending(0, pendingRowsPerPage), loadHistory(0, historyRowsPerPage)])
     } finally {
       setDeciding(false)
+    }
+  }
+
+  const handleDelete = async (discountId: string) => {
+    if (!window.confirm('Xóa cấu hình giảm học phí này để về giá gốc?')) return
+
+    setDeletingId(discountId)
+
+    try {
+      const res = await studentService.deleteTuitionDiscount(discountId)
+
+      if (!res.success) {
+        showNotification(res.message || 'Không xóa được cấu hình', 'error')
+        return
+      }
+
+      showNotification(res.message || 'Đã xóa cấu hình giảm học phí', 'success')
+      await Promise.all([loadPending(pendingPage, pendingRowsPerPage), loadHistory(historyPage, historyRowsPerPage)])
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -172,7 +177,7 @@ const StudentTuitionDiscountApprovalsPage = () => {
             Duyệt giảm trừ / miễn học phí
           </Typography>
           <Typography variant='body2' color='text.secondary'>
-            Quản lý yêu cầu chờ duyệt và xem lại các yêu cầu đã xử lý.
+            Quản lý yêu cầu chờ duyệt, theo dõi kỳ áp dụng và cho phép xóa cấu hình đã duyệt.
           </Typography>
         </CardContent>
       </Card>
@@ -205,6 +210,7 @@ const StudentTuitionDiscountApprovalsPage = () => {
                     <TableCell>Học viên</TableCell>
                     <TableCell>Lớp</TableCell>
                     <TableCell align='right'>Giảm</TableCell>
+                    <TableCell>Kỳ áp dụng</TableCell>
                     <TableCell>Lý do</TableCell>
                     <TableCell>Người tạo</TableCell>
                     <TableCell>Thời gian</TableCell>
@@ -215,11 +221,13 @@ const StudentTuitionDiscountApprovalsPage = () => {
                     <TableCell>Học viên</TableCell>
                     <TableCell>Lớp</TableCell>
                     <TableCell align='right'>Giảm</TableCell>
+                    <TableCell>Kỳ áp dụng</TableCell>
                     <TableCell>Kết quả</TableCell>
                     <TableCell>Người tạo</TableCell>
                     <TableCell>Người duyệt</TableCell>
                     <TableCell>Ghi chú</TableCell>
                     <TableCell>Thời gian xử lý</TableCell>
+                    <TableCell align='right'>Tác vụ</TableCell>
                   </TableRow>
                 )}
               </TableHead>
@@ -227,7 +235,7 @@ const StudentTuitionDiscountApprovalsPage = () => {
               <TableBody>
                 {!activeLoading && activeRows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={tab === 0 ? 7 : 8}>
+                    <TableCell colSpan={tab === 0 ? 8 : 10}>
                       <Typography variant='body2' color='text.secondary'>
                         {tab === 0 ? 'Không có yêu cầu nào đang chờ duyệt.' : 'Chưa có yêu cầu lịch sử nào.'}
                       </Typography>
@@ -236,7 +244,7 @@ const StudentTuitionDiscountApprovalsPage = () => {
                 )}
 
                 {activeRows.map(row => (
-                  <TableRow key={row.studentId}>
+                  <TableRow key={row.id}>
                     <TableCell>
                       <Typography variant='body2' sx={{ fontWeight: 600 }}>
                         {row.studentName}
@@ -245,9 +253,9 @@ const StudentTuitionDiscountApprovalsPage = () => {
                         {row.studentCode || '-'}
                       </Typography>
                     </TableCell>
-
                     <TableCell>{row.className || '-'}</TableCell>
                     <TableCell align='right'>{formatVnd(row.discountAmount || 0)}</TableCell>
+                    <TableCell>{row.periodLabel}</TableCell>
 
                     {tab === 0 ? (
                       <>
@@ -256,10 +264,10 @@ const StudentTuitionDiscountApprovalsPage = () => {
                         <TableCell>{formatDateTimeVN(row.requestedAt)}</TableCell>
                         <TableCell align='right'>
                           <Box className='flex items-center justify-end gap-2'>
-                            <Button size='small' variant='contained' color='success' onClick={() => openDecide(row.studentId, true)}>
+                            <Button size='small' variant='contained' color='success' onClick={() => openDecide(row.id, true)}>
                               Duyệt
                             </Button>
-                            <Button size='small' variant='outlined' color='error' onClick={() => openDecide(row.studentId, false)}>
+                            <Button size='small' variant='outlined' color='error' onClick={() => openDecide(row.id, false)}>
                               Từ chối
                             </Button>
                           </Box>
@@ -272,6 +280,11 @@ const StudentTuitionDiscountApprovalsPage = () => {
                         <TableCell>{row.decidedByName || '-'}</TableCell>
                         <TableCell>{row.decisionNote || '-'}</TableCell>
                         <TableCell>{formatDateTimeVN(row.decidedAt)}</TableCell>
+                        <TableCell align='right'>
+                          <Button size='small' color='error' variant='outlined' onClick={() => handleDelete(row.id)} disabled={deletingId === row.id}>
+                            {deletingId === row.id ? 'Đang xóa...' : 'Xóa'}
+                          </Button>
+                        </TableCell>
                       </>
                     )}
                   </TableRow>
@@ -287,7 +300,6 @@ const StudentTuitionDiscountApprovalsPage = () => {
             onPageChange={(_event, newPage) => {
               if (tab === 0) {
                 setPendingPage(newPage)
-
                 return
               }
 
@@ -300,7 +312,6 @@ const StudentTuitionDiscountApprovalsPage = () => {
               if (tab === 0) {
                 setPendingRowsPerPage(nextValue)
                 setPendingPage(0)
-
                 return
               }
 

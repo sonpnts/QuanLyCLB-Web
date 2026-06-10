@@ -22,6 +22,14 @@ import { formatDateVN } from '@/utils/dateTime'
 
 import BeltExamRegisterClassPanel from './BeltExamRegisterClassPanel'
 
+const isSessionVisibleForRegistration = (session: ExamSessionType) => {
+  if (session.isLocked || session.status === 'Locked') return false
+  if (session.status !== 'Open') return false
+  if (!session.registrationDeadline) return true
+
+  return new Date(session.registrationDeadline).getTime() > Date.now()
+}
+
 const BeltExamRegisterView = () => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
@@ -36,7 +44,7 @@ const BeltExamRegisterView = () => {
         const result = await beltExamService.getOpenSessions()
 
         if (result.success) {
-          setSessions(result.data || [])
+          setSessions((result.data || []).filter(isSessionVisibleForRegistration))
         } else {
           showNotification(result.message || 'Không thể tải danh sách kỳ thi.', 'error')
         }

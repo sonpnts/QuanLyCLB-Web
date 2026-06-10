@@ -9,6 +9,22 @@ export type StudentClassInfo = {
   status?: string
 }
 
+export type StudentTuitionDiscountType = {
+  id: string
+  discountAmount: number
+  reason: string
+  status: number | string
+  applyFromMonth?: number | null
+  applyFromYear?: number | null
+  applyToMonth?: number | null
+  applyToYear?: number | null
+  isPermanent: boolean
+  periodLabel: string
+  requestedAt?: string
+  decidedAt?: string
+  decisionNote?: string
+}
+
 export type StudentType = {
   id: string
   code?: string
@@ -39,6 +55,7 @@ export type StudentType = {
   tuitionDiscountRequestedAt?: string
   tuitionDiscountDecidedAt?: string
   tuitionDiscountDecisionNote?: string
+  tuitionDiscounts?: StudentTuitionDiscountType[]
 }
 
 export type EnrollmentStatus = 'Active' | 'Inactive' | 'Completed'
