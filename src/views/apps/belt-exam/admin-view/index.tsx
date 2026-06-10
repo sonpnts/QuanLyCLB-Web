@@ -38,6 +38,7 @@ import classService from '@/services/classService'
 import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import type { AdminExamSessionViewType, AdminExamStudentRowType } from '@/types/apps/beltExamTypes'
+import { getEffectiveExamSessionStatusDisplay } from '@/types/apps/beltExamTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
@@ -673,6 +674,7 @@ return
     return <Alert severity='error'>Không tìm thấy kỳ thi.</Alert>
   }
 
+  const statusDisplay = getEffectiveExamSessionStatusDisplay(data)
   let stt = 0
 
   return (
@@ -688,11 +690,13 @@ return
           title={
             <Box className='flex items-center gap-3 flex-wrap'>
               <Typography variant='h5'>{data.sessionName}</Typography>
-              {/*<Chip*/}
-              {/*  label={examSessionStatusLabels[data.status] ?? data.status}*/}
-              {/*  color={examSessionStatusColors[data.status] ?? 'default'}*/}
-              {/*/>*/}
-              {data.isLocked && <Chip label='Đã chốt' color='error' icon={<i className='ri-lock-line' />} />}
+              <Chip
+                label={statusDisplay.label}
+                color={statusDisplay.color}
+                icon={
+                  <i className={statusDisplay.status === 'Locked' ? 'ri-lock-line' : 'ri-time-line'} />
+                }
+              />
             </Box>
           }
           subheader={

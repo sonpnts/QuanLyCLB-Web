@@ -452,11 +452,6 @@ const BeltExamRegistrationsView = () => {
           </Grid>
         </Grid>
 
-        {!latestOpenSession && !examSessionId && (
-          <Alert severity='info' sx={{ mt: 4 }}>
-            {text.selectPrompt}
-          </Alert>
-        )}
         {latestOpenSession && examSessionId === latestOpenSession.id && (
           <Alert severity='success' sx={{ mt: 4 }}>
             {text.latestOpen}: <strong>{latestOpenSession.name}</strong>

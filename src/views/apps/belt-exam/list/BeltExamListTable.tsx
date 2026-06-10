@@ -34,7 +34,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import type { ExamSessionType } from '@/types/apps/beltExamTypes'
-import { examSessionStatusColors, examSessionStatusLabels } from '@/types/apps/beltExamTypes'
+import { getEffectiveExamSessionStatusDisplay } from '@/types/apps/beltExamTypes'
 import { fuzzyFilter } from '@/utils/tableHelpers'
 import tableStyles from '@core/styles/table.module.css'
 
@@ -172,14 +172,18 @@ const BeltExamListTable = () => {
       }),
       columnHelper.accessor('status', {
         header: 'Trạng thái',
-        cell: ({ row }) => (
-          <Chip
-            label={examSessionStatusLabels[row.original.status] ?? row.original.status}
-            size='small'
-            color={examSessionStatusColors[row.original.status] ?? 'default'}
-            variant='tonal'
-          />
-        )
+        cell: ({ row }) => {
+          const statusDisplay = getEffectiveExamSessionStatusDisplay(row.original)
+
+          return (
+            <Chip
+              label={statusDisplay.label}
+              size='small'
+              color={statusDisplay.color}
+              variant='tonal'
+            />
+          )
+        }
       }),
       {
         id: 'actions',

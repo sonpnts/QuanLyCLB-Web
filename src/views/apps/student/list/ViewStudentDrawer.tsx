@@ -502,16 +502,16 @@ return
           </Alert>
         )}
 
-        {activeStudent.tuitionDiscountAmount && activeStudent.tuitionDiscountAmount > 0 && (
+        {!!activeStudent.tuitionDiscounts?.length && (
           <Alert severity='info' sx={{ mb: 3 }}>
-            <Typography variant='body2' sx={{ fontWeight: 600 }}>
-              Giảm trừ học phí: -{Number(activeStudent.tuitionDiscountAmount).toLocaleString('vi-VN')}đ
+            <Typography variant='body2' sx={{ fontWeight: 600, mb: 1 }}>
+              Các cấu hình giảm trừ học phí đang có
             </Typography>
-            {activeStudent.tuitionDiscountReason && (
-              <Typography variant='caption' color='text.secondary'>
-                Lý do: {activeStudent.tuitionDiscountReason}
+            {activeStudent.tuitionDiscounts.map(discount => (
+              <Typography key={discount.id} variant='caption' color='text.secondary' display='block'>
+                -{Number(discount.discountAmount || 0).toLocaleString('vi-VN')}đ | {discount.periodLabel} | {discount.reason}
               </Typography>
-            )}
+            ))}
           </Alert>
         )}
 

@@ -1,40 +1,51 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import Autocomplete from '@mui/material/Autocomplete'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import Typography from '@mui/material/Typography'
-import Box from '@mui/material/Box'
-import TextField from '@mui/material/TextField'
-import Button from '@mui/material/Button'
-import Switch from '@mui/material/Switch'
-import FormControlLabel from '@mui/material/FormControlLabel'
+import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
-import Autocomplete from '@mui/material/Autocomplete'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Switch from '@mui/material/Switch'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
-import Chip from '@mui/material/Chip'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
 
+import { useNotification } from '@/contexts/notificationContext'
 import studentService, { type TuitionDiscountRequestRow } from '@/services/studentService'
 import type { StudentType } from '@/types/apps/studentTypes'
-import { useNotification } from '@/contexts/notificationContext'
 import { formatDateTimeVN } from '@/utils/dateTime'
 
-const formatVnd = (n: number) => `${Math.round(n).toLocaleString('vi-VN')}đ`
+const formatVnd = (value: number) => `${Math.round(value || 0).toLocaleString('vi-VN')}đ`
+const toMonthValue = (month?: number | null, year?: number | null) => (month && year ? `${year}-${String(month).padStart(2, '0')}` : '')
 
-const statusChip = (s: any) => {
-  const v = typeof s === 'string' ? s : String(s)
+const parseMonthValue = (value: string) => {
+  if (!value) return {}
 
-  if (v.toLowerCase().includes('approved') || v === '2') return <Chip label='Đã duyệt' color='success' size='small' />
-  if (v.toLowerCase().includes('rejected') || v === '3') return <Chip label='Từ chối' color='error' size='small' />
-  if (v.toLowerCase().includes('pending') || v === '1') return <Chip label='Chờ duyệt' color='warning' size='small' />
-  
-return <Chip label='—' size='small' variant='outlined' />
+  const [year, month] = value.split('-').map(Number)
+
+  if (!year || !month) return {}
+
+  return { year, month }
+}
+
+const statusChip = (status: string | number) => {
+  const value = typeof status === 'string' ? status.toLowerCase() : String(status)
+
+  if (value.includes('approved') || value === '2') return <Chip label='Đã duyệt' color='success' size='small' />
+  if (value.includes('rejected') || value === '3') return <Chip label='Từ chối' color='error' size='small' />
+  if (value.includes('pending') || value === '1') return <Chip label='Chờ duyệt' color='warning' size='small' />
+
+  return <Chip label='-' size='small' variant='outlined' />
 }
 
 const StudentTuitionDiscountPage = () => {
@@ -43,12 +54,13 @@ const StudentTuitionDiscountPage = () => {
   const [studentKeyword, setStudentKeyword] = useState('')
   const [studentOptions, setStudentOptions] = useState<StudentType[]>([])
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
-
   const [isExempt, setIsExempt] = useState(false)
-  const [discountAmount, setDiscountAmount] = useState<string>('')
-  const [reason, setReason] = useState<string>('')
+  const [discountAmount, setDiscountAmount] = useState('')
+  const [reason, setReason] = useState('')
+  const [applyForever, setApplyForever] = useState(true)
+  const [applyFrom, setApplyFrom] = useState('')
+  const [applyTo, setApplyTo] = useState('')
   const [submitting, setSubmitting] = useState(false)
-
   const [rows, setRows] = useState<TuitionDiscountRequestRow[]>([])
   const [loadingRows, setLoadingRows] = useState(false)
 
@@ -57,7 +69,6 @@ const StudentTuitionDiscountPage = () => {
 
     try {
       const res = await studentService.getMyTuitionDiscountRequests({ pageSize: 50 })
-
       setRows(res.data || [])
     } finally {
       setLoadingRows(false)
@@ -72,15 +83,14 @@ const StudentTuitionDiscountPage = () => {
     let active = true
 
     const run = async () => {
-      const kw = studentKeyword.trim()
+      const keyword = studentKeyword.trim()
 
-      if (!kw) {
+      if (!keyword) {
         setStudentOptions([])
-        
-return
+        return
       }
 
-      const res = await studentService.getStudents({ keyword: kw, pageSize: 20 })
+      const res = await studentService.getStudents({ keyword, pageSize: 20 })
 
       if (!active) return
       setStudentOptions(res.data || [])
@@ -88,8 +98,7 @@ return
 
     run()
 
-    
-return () => {
+    return () => {
       active = false
     }
   }, [studentKeyword])
@@ -97,31 +106,34 @@ return () => {
   const canSubmit = useMemo(() => {
     if (!selectedStudent) return false
     if (!reason.trim()) return false
+    if (!applyForever && (!applyFrom || !applyTo)) return false
     if (isExempt) return true
-    const amt = Number(discountAmount || 0)
 
-    
-return amt > 0
-  }, [selectedStudent, reason, isExempt, discountAmount])
+    return Number(discountAmount || 0) > 0
+  }, [applyForever, applyFrom, applyTo, discountAmount, isExempt, reason, selectedStudent])
 
   const handleSubmit = useCallback(async () => {
     if (!selectedStudent) return
 
+    const fromValue = parseMonthValue(applyFrom)
+    const toValue = parseMonthValue(applyTo)
+
     setSubmitting(true)
 
     try {
-      const payload = {
+      const res = await studentService.requestTuitionDiscount(selectedStudent.id, {
         discountAmount: isExempt ? 0 : Number(discountAmount || 0),
         reason: reason.trim(),
-        isExempt
-      }
-
-      const res = await studentService.requestTuitionDiscount(selectedStudent.id, payload)
+        isExempt,
+        applyFromMonth: applyForever ? undefined : fromValue.month,
+        applyFromYear: applyForever ? undefined : fromValue.year,
+        applyToMonth: applyForever ? undefined : toValue.month,
+        applyToYear: applyForever ? undefined : toValue.year
+      })
 
       if (!res.success) {
         showNotification(res.message || 'Không gửi được yêu cầu', 'error')
-        
-return
+        return
       }
 
       showNotification(res.message || 'Đã gửi yêu cầu', 'success')
@@ -130,11 +142,14 @@ return
       setDiscountAmount('')
       setReason('')
       setIsExempt(false)
+      setApplyForever(true)
+      setApplyFrom('')
+      setApplyTo('')
       await loadMyRows()
     } finally {
       setSubmitting(false)
     }
-  }, [selectedStudent, isExempt, discountAmount, reason, showNotification, loadMyRows])
+  }, [applyForever, applyFrom, applyTo, discountAmount, isExempt, loadMyRows, reason, selectedStudent, showNotification])
 
   return (
     <Box className='flex flex-col gap-6'>
@@ -144,29 +159,29 @@ return
             Tạo yêu cầu giảm trừ / miễn học phí
           </Typography>
           <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-            Yêu cầu sẽ ở trạng thái chờ duyệt cho tới khi Admin phê duyệt.
+            Có thể chọn áp dụng vĩnh viễn hoặc theo kỳ tháng/năm cụ thể.
           </Typography>
 
           <Box className='flex flex-col gap-4'>
             <Autocomplete
               options={studentOptions}
               value={selectedStudent}
-              onChange={(_e, v) => setSelectedStudent(v)}
+              onChange={(_event, value) => setSelectedStudent(value)}
               inputValue={studentKeyword}
-              onInputChange={(_e, v) => setStudentKeyword(v)}
-              getOptionLabel={o => `${o.fullName}${o.code ? ` (${o.code})` : ''}${o.phoneNumber ? ` - ${o.phoneNumber}` : ''}`}
-              renderInput={params => <TextField {...params} label='Chọn học viên' placeholder='Tìm theo tên/mã/sđt...' />}
+              onInputChange={(_event, value) => setStudentKeyword(value)}
+              getOptionLabel={option => `${option.fullName}${option.code ? ` (${option.code})` : ''}${option.phoneNumber ? ` - ${option.phoneNumber}` : ''}`}
+              renderInput={params => <TextField {...params} label='Chọn học viên' placeholder='Tìm theo tên / mã / SĐT' />}
             />
 
             <FormControlLabel
-              control={<Switch checked={isExempt} onChange={e => setIsExempt(e.target.checked)} />}
+              control={<Switch checked={isExempt} onChange={event => setIsExempt(event.target.checked)} />}
               label='Miễn học phí'
             />
 
             <TextField
               label='Số tiền giảm (VNĐ)'
               value={discountAmount}
-              onChange={e => setDiscountAmount(e.target.value)}
+              onChange={event => setDiscountAmount(event.target.value)}
               disabled={isExempt}
               placeholder='Ví dụ: 200000'
               inputMode='numeric'
@@ -175,21 +190,41 @@ return
             <TextField
               label='Lý do'
               value={reason}
-              onChange={e => setReason(e.target.value)}
-              placeholder='Nhập lý do giảm/miễn học phí...'
+              onChange={event => setReason(event.target.value)}
+              placeholder='Nhập lý do giảm / miễn học phí...'
               multiline
               minRows={3}
               required
             />
 
-            <Box className='flex items-center gap-2'>
-              <Button variant='contained' onClick={handleSubmit} disabled={!canSubmit || submitting}>
+            <FormControlLabel
+              control={<Switch checked={applyForever} onChange={event => setApplyForever(event.target.checked)} />}
+              label='Áp dụng vĩnh viễn'
+            />
+
+            {!applyForever && (
+              <Box className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <TextField label='Từ kỳ' type='month' value={applyFrom} onChange={event => setApplyFrom(event.target.value)} InputLabelProps={{ shrink: true }} />
+                <TextField label='Đến kỳ' type='month' value={applyTo} onChange={event => setApplyTo(event.target.value)} InputLabelProps={{ shrink: true }} />
+              </Box>
+            )}
+
+            <Box className='flex flex-col gap-2'>
+              <Button variant='contained' onClick={handleSubmit} disabled={!canSubmit || submitting} sx={{ alignSelf: 'flex-start' }}>
                 {submitting ? 'Đang gửi...' : 'Gửi yêu cầu'}
               </Button>
-              {selectedStudent?.tuitionDiscountStatus && (
-                <Typography variant='caption' color='text.secondary'>
-                  Học viên đang có cấu hình giảm trừ: {selectedStudent.tuitionDiscountAmount ? formatVnd(selectedStudent.tuitionDiscountAmount) : '—'}
-                </Typography>
+
+              {!!selectedStudent?.tuitionDiscounts?.length && (
+                <Box className='flex flex-col gap-1'>
+                  <Typography variant='caption' color='text.secondary'>
+                    Học viên đang có các cấu hình giảm trừ:
+                  </Typography>
+                  {selectedStudent.tuitionDiscounts.map(discount => (
+                    <Typography key={discount.id} variant='caption' color='text.secondary'>
+                      {formatVnd(discount.discountAmount)} - {discount.periodLabel} - {discount.reason}
+                    </Typography>
+                  ))}
+                </Box>
               )}
             </Box>
           </Box>
@@ -209,6 +244,7 @@ return
                 <TableRow>
                   <TableCell>Học viên</TableCell>
                   <TableCell align='right'>Giảm</TableCell>
+                  <TableCell>Kỳ áp dụng</TableCell>
                   <TableCell>Lý do</TableCell>
                   <TableCell>Trạng thái</TableCell>
                   <TableCell>Thời gian</TableCell>
@@ -217,7 +253,7 @@ return
               <TableBody>
                 {!loadingRows && rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={6}>
                       <Typography variant='body2' color='text.secondary'>
                         Chưa có yêu cầu nào.
                       </Typography>
@@ -225,31 +261,28 @@ return
                   </TableRow>
                 )}
 
-                {rows.map(r => (
-                  <TableRow key={r.studentId}>
+                {rows.map(row => (
+                  <TableRow key={row.id}>
                     <TableCell>
                       <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                        {r.studentName}
+                        {row.studentName}
                       </Typography>
                       <Typography variant='caption' color='text.secondary'>
-                        {r.studentCode || '—'}
+                        {row.studentCode || '-'}
                       </Typography>
                     </TableCell>
-                    <TableCell align='right'>{formatVnd(r.discountAmount || 0)}</TableCell>
+                    <TableCell align='right'>{formatVnd(row.discountAmount || 0)}</TableCell>
+                    <TableCell>{row.periodLabel}</TableCell>
                     <TableCell>
-                      <Typography variant='body2'>{r.reason}</Typography>
-                      {r.decisionNote && (
+                      <Typography variant='body2'>{row.reason}</Typography>
+                      {row.decisionNote && (
                         <Typography variant='caption' color='text.secondary'>
-                          Ghi chú: {r.decisionNote}
+                          Ghi chú: {row.decisionNote}
                         </Typography>
                       )}
                     </TableCell>
-                    <TableCell>{statusChip(r.status)}</TableCell>
-                    <TableCell>
-                      <Typography variant='body2'>
-                        {formatDateTimeVN(r.requestedAt, '—')}
-                      </Typography>
-                    </TableCell>
+                    <TableCell>{statusChip(row.status)}</TableCell>
+                    <TableCell>{formatDateTimeVN(row.requestedAt, '-')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

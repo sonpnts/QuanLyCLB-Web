@@ -1,6 +1,7 @@
 import type { ThemeColor } from '@core/types'
 
 export type ExamSessionStatus = 'Draft' | 'Open' | 'Locked'
+export type EffectiveExamSessionStatus = ExamSessionStatus | 'Expired'
 export type ExamResult = 'Passed' | 'Failed' | null
 
 export type ExamSessionType = {
@@ -177,6 +178,58 @@ export const examSessionStatusLabels: Record<ExamSessionStatus, string> = {
 }
 
 export const examSessionStatusObj = examSessionStatusColors
+
+export const effectiveExamSessionStatusColors: Record<EffectiveExamSessionStatus, ThemeColor> = {
+  ...examSessionStatusColors,
+  Expired: 'warning'
+}
+
+export const effectiveExamSessionStatusLabels: Record<EffectiveExamSessionStatus, string> = {
+  ...examSessionStatusLabels,
+  Expired: 'Đã hết hạn'
+}
+
+type ExamSessionStatusLike = {
+  status: ExamSessionStatus
+  registrationDeadline?: string
+  isLocked?: boolean
+}
+
+export const isExamSessionExpired = (session: ExamSessionStatusLike): boolean => {
+  if (session.isLocked || session.status === 'Locked' || !session.registrationDeadline) {
+    return false
+  }
+
+  const deadline = new Date(session.registrationDeadline)
+
+  if (Number.isNaN(deadline.getTime())) {
+    return false
+  }
+
+  return deadline.getTime() <= Date.now()
+}
+
+export const getEffectiveExamSessionStatus = (session: ExamSessionStatusLike): EffectiveExamSessionStatus => {
+  if (session.isLocked || session.status === 'Locked') {
+    return 'Locked'
+  }
+
+  if (isExamSessionExpired(session)) {
+    return 'Expired'
+  }
+
+  return session.status
+}
+
+export const getEffectiveExamSessionStatusDisplay = (session: ExamSessionStatusLike) => {
+  const status = getEffectiveExamSessionStatus(session)
+
+  return {
+    status,
+    label: effectiveExamSessionStatusLabels[status],
+    color: effectiveExamSessionStatusColors[status]
+  }
+}
 
 export const examResultLabels: Record<Exclude<ExamResult, null>, string> = {
   Passed: 'Đạt',
