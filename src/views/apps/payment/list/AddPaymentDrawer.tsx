@@ -23,17 +23,17 @@ import TextField from '@mui/material/TextField'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 
+import { useAuth } from '@/contexts/authContext'
+import { useNotification } from '@/contexts/notificationContext'
+import classService from '@/services/classService'
+import paymentService, { type ExamFeeOptionType, type TuitionQuoteType } from '@/services/paymentService'
+import productService from '@/services/productService'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
 import type { ProductType } from '@/types/apps/productTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
-import classService from '@/services/classService'
-import paymentService, { type ExamFeeOptionType, type TuitionQuoteType } from '@/services/paymentService'
-import productService from '@/services/productService'
-import { useAuth } from '@/contexts/authContext'
-import { useNotification } from '@/contexts/notificationContext'
-import { hasAdminRole } from '@/utils/roleUtils'
 import { hasPermission } from '@/utils/permissionUtils'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 type Props = {
   open: boolean
@@ -46,6 +46,12 @@ type AddOnProductItem = {
   id: string
   productId: string
   quantity: number
+}
+
+type TuitionMonthItem = {
+  id: string
+  month: number
+  year: number
 }
 
 const PAYMENT_TYPE_TUITION = 0
@@ -62,6 +68,12 @@ const createEmptyAddOnProduct = (): AddOnProductItem => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   productId: '',
   quantity: 1
+})
+
+const createTuitionMonthItem = (month = new Date().getMonth() + 1, year = new Date().getFullYear()): TuitionMonthItem => ({
+  id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  month,
+  year
 })
 
 const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props) => {
@@ -81,7 +93,8 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null)
   const [selectedExamOptionId, setSelectedExamOptionId] = useState('')
-  const [tuitionQuote, setTuitionQuote] = useState<TuitionQuoteType | null>(null)
+  const [tuitionMonths, setTuitionMonths] = useState<TuitionMonthItem[]>([createTuitionMonthItem()])
+  const [tuitionQuotes, setTuitionQuotes] = useState<Record<string, TuitionQuoteType | null>>({})
 
   const [loadingInit, setLoadingInit] = useState(false)
   const [loadingStudents, setLoadingStudents] = useState(false)
@@ -99,8 +112,6 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     type: PAYMENT_TYPE_TUITION,
     paymentDate: new Date().toISOString().split('T')[0],
     method: PAYMENT_METHOD_CASH,
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
     productId: '',
     examRegistrationId: '',
     discountAmount: '',
@@ -113,19 +124,33 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     [examFeeOptions, selectedExamOptionId]
   )
 
+  const tuitionMonthSummaries = useMemo(
+    () =>
+      tuitionMonths.map(item => ({
+        item,
+        quote: tuitionQuotes[item.id] || null
+      })),
+    [tuitionMonths, tuitionQuotes]
+  )
+
   const originalAmount = useMemo(() => {
-    if (formData.type === PAYMENT_TYPE_TUITION) return Number(tuitionQuote?.monthlyFee || 0)
+    if (formData.type === PAYMENT_TYPE_TUITION) {
+      return tuitionMonthSummaries.reduce((sum, entry) => sum + Number(entry.quote?.monthlyFee || 0), 0)
+    }
+
     if (formData.type === PAYMENT_TYPE_EXAM_FEE) return Number(selectedExamOption?.feeAmount || 0)
     if (formData.type === PAYMENT_TYPE_PRODUCT) return Number(selectedProduct?.unitPrice || 0)
 
     return 0
-  }, [formData.type, selectedExamOption?.feeAmount, selectedProduct?.unitPrice, tuitionQuote?.monthlyFee])
+  }, [formData.type, selectedExamOption?.feeAmount, selectedProduct?.unitPrice, tuitionMonthSummaries])
 
   const payableAmount = useMemo(() => {
-    if (formData.type === PAYMENT_TYPE_TUITION) return Number(tuitionQuote?.finalAmount || 0)
+    if (formData.type === PAYMENT_TYPE_TUITION) {
+      return tuitionMonthSummaries.reduce((sum, entry) => sum + Number(entry.quote?.finalAmount || 0), 0)
+    }
 
     return originalAmount
-  }, [formData.type, originalAmount, tuitionQuote?.finalAmount])
+  }, [formData.type, originalAmount, tuitionMonthSummaries])
 
   const discountAmount = Number(formData.discountAmount || 0)
   const finalAmount = Math.max(0, payableAmount - discountAmount)
@@ -150,7 +175,8 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     setSelectedStudent(null)
     setSelectedProduct(null)
     setSelectedExamOptionId('')
-    setTuitionQuote(null)
+    setTuitionMonths([createTuitionMonthItem()])
+    setTuitionQuotes({})
     setProofImageFile(null)
     setAddOnProducts([])
     setFormData({
@@ -161,8 +187,6 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
       type: PAYMENT_TYPE_TUITION,
       paymentDate: new Date().toISOString().split('T')[0],
       method: PAYMENT_METHOD_CASH,
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear(),
       productId: '',
       examRegistrationId: '',
       discountAmount: '',
@@ -183,6 +207,34 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     setAddOnProducts(prev => prev.map(item => (item.id === rowId ? { ...item, ...payload } : item)))
   }
 
+  const addTuitionMonthRow = () => {
+    setTuitionMonths(prev => {
+      const lastRow = prev[prev.length - 1]
+
+      if (!lastRow) return [createTuitionMonthItem()]
+
+      const nextMonth = lastRow.month === 12 ? 1 : lastRow.month + 1
+      const nextYear = lastRow.month === 12 ? lastRow.year + 1 : lastRow.year
+
+      return [...prev, createTuitionMonthItem(nextMonth, nextYear)]
+    })
+  }
+
+  const removeTuitionMonthRow = (rowId: string) => {
+    setTuitionMonths(prev => (prev.length === 1 ? prev : prev.filter(x => x.id !== rowId)))
+    setTuitionQuotes(prev => {
+      const next = { ...prev }
+
+      delete next[rowId]
+
+      return next
+    })
+  }
+
+  const updateTuitionMonthRow = (rowId: string, payload: Partial<Omit<TuitionMonthItem, 'id'>>) => {
+    setTuitionMonths(prev => prev.map(item => (item.id === rowId ? { ...item, ...payload } : item)))
+  }
+
   useEffect(() => {
     const loadInitData = async () => {
       setLoadingInit(true)
@@ -197,10 +249,10 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
           const filteredClasses = isAdmin
             ? classRes.data
             : classRes.data.filter(
-              item =>
-                item.instructorId === auth?.user.id ||
-                (Array.isArray(item.coachIds) && item.coachIds.includes(auth?.user.id || ''))
-            )
+                item =>
+                  item.instructorId === auth?.user.id ||
+                  (Array.isArray(item.coachIds) && item.coachIds.includes(auth?.user.id || ''))
+              )
 
           setClasses(filteredClasses)
         }
@@ -208,7 +260,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
         if (productRes.success && productRes.data) {
           setProducts(productRes.data.filter(item => item.isActive))
         }
-      } catch (error) {
+      } catch {
         showNotification('Không thể tải dữ liệu tạo thanh toán.', 'error')
       } finally {
         setLoadingInit(false)
@@ -222,12 +274,9 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     }
   }, [open, auth?.user.id, isAdmin, showNotification])
 
-  // Replacement invoice: admin can choose collector
   useEffect(() => {
     const loadCollectors = async () => {
-      if (!open) return
-      if (!isAdmin) return
-      if (mode !== 'replacement') return
+      if (!open || !isAdmin || mode !== 'replacement') return
 
       try {
         const userService = (await import('@/services/userService')).default
@@ -243,14 +292,10 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     loadCollectors()
   }, [open, isAdmin, mode])
 
-  // Replacement invoice: pick lead coach as default + default collector = coach
   useEffect(() => {
-    if (!open) return
-    if (mode !== 'replacement') return
-    if (!formData.classId) return
+    if (!open || mode !== 'replacement' || !formData.classId) return
 
     const cls = classes.find(x => x.id === formData.classId)
-
     const leadId =
       cls?.leadInstructorId ||
       cls?.instructorId ||
@@ -262,8 +307,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
       const nextCoachId = prev.coachId || leadId || ''
       const nextCollectorId = prev.collectedByUserId || nextCoachId || auth?.user?.id || ''
 
-      
-return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
+      return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
     })
   }, [open, mode, formData.classId, classes, auth?.user?.id])
 
@@ -288,7 +332,7 @@ return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
           setStudents([])
           showNotification(response.message || 'Không thể tải danh sách học viên của lớp.', 'error')
         }
-      } catch (error) {
+      } catch {
         setStudents([])
         showNotification('Không thể tải danh sách học viên của lớp.', 'error')
       } finally {
@@ -301,11 +345,14 @@ return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
     }
   }, [formData.classId, open, showNotification])
 
-  // Tải báo giá học phí và tự động điền giảm trừ gợi ý
   useEffect(() => {
-    const loadTuitionQuote = async () => {
+    let ignore = false
+
+    const loadTuitionQuotes = async () => {
       if (formData.type !== PAYMENT_TYPE_TUITION || !formData.classId || !formData.studentId) {
-        setTuitionQuote(null)
+        if (!ignore) {
+          setTuitionQuotes({})
+        }
 
         return
       }
@@ -313,34 +360,48 @@ return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
       setLoadingQuote(true)
 
       try {
-        const response = await paymentService.getTuitionQuote(
-          formData.classId,
-          formData.studentId,
-          formData.month,
-          formData.year,
-          formData.paymentDate
+        const quoteEntries = await Promise.all(
+          tuitionMonths.map(async item => {
+            const response = await paymentService.getTuitionQuote(
+              formData.classId,
+              formData.studentId,
+              item.month,
+              item.year,
+              formData.paymentDate
+            )
+
+            return [item.id, response.success ? response.data || null : null] as const
+          })
         )
 
-        if (response.success && response.data) {
-          setTuitionQuote(response.data)
+        if (ignore) return
 
-          // Tự động điền giảm trừ gợi ý nếu > 0
-        } else {
-          setTuitionQuote(null)
-          showNotification(response.message || 'Không thể tính học phí.', 'error')
+        const nextQuotes: Record<string, TuitionQuoteType | null> = {}
+
+        for (const [itemId, quote] of quoteEntries) {
+          nextQuotes[itemId] = quote
         }
-      } catch (error) {
-        setTuitionQuote(null)
-        showNotification('Không thể tính học phí.', 'error')
+
+        setTuitionQuotes(nextQuotes)
+      } catch {
+        if (!ignore) {
+          setTuitionQuotes({})
+        }
       } finally {
-        setLoadingQuote(false)
+        if (!ignore) {
+          setLoadingQuote(false)
+        }
       }
     }
 
     if (open) {
-      loadTuitionQuote()
+      void loadTuitionQuotes()
     }
-  }, [formData.classId, formData.studentId, formData.month, formData.year, formData.paymentDate, formData.type, open, showNotification])
+
+    return () => {
+      ignore = true
+    }
+  }, [formData.classId, formData.studentId, formData.paymentDate, formData.type, open, tuitionMonths])
 
   useEffect(() => {
     const loadExamFeeOptions = async () => {
@@ -362,7 +423,7 @@ return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
           setExamFeeOptions([])
           showNotification(response.message || 'Không tìm thấy danh sách thi cấp chưa đóng phí.', 'error')
         }
-      } catch (error) {
+      } catch {
         setExamFeeOptions([])
         showNotification('Không tìm thấy danh sách thi cấp chưa đóng phí.', 'error')
       } finally {
@@ -371,7 +432,7 @@ return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
     }
 
     if (open) {
-      loadExamFeeOptions()
+      void loadExamFeeOptions()
     }
   }, [formData.classId, formData.studentId, formData.type, open, showNotification])
 
@@ -394,8 +455,8 @@ return { ...prev, coachId: nextCoachId, collectedByUserId: nextCollectorId }
 
     if (mode === 'replacement' && !formData.coachId) {
       showNotification('Vui lòng chọn coach của lớp.', 'error')
-      
-return
+
+      return
     }
 
     if (!formData.studentId) {
@@ -404,23 +465,56 @@ return
       return
     }
 
-    if (formData.type === PAYMENT_TYPE_TUITION && tuitionQuote?.alreadyPaid) {
-      showNotification('Học phí tháng này đã thanh toán, không thể tạo thu trùng.', 'error')
-
-      return
-    }
-
     if (formData.type === PAYMENT_TYPE_TUITION) {
-      if (formData.month < 1 || formData.month > 12) {
-        showNotification('Tháng không hợp lệ (1–12).', 'error')
+      const currentYear = new Date().getFullYear()
+      const duplicatePeriods = new Set<string>()
+
+      for (const row of tuitionMonths) {
+        if (row.month < 1 || row.month > 12) {
+          showNotification('Tháng không hợp lệ (1-12).', 'error')
+
+          return
+        }
+
+        if (row.year < currentYear - 2 || row.year > currentYear + 1) {
+          showNotification('Năm không hợp lệ.', 'error')
+
+          return
+        }
+
+        const periodKey = `${row.month}/${row.year}`
+
+        if (duplicatePeriods.has(periodKey)) {
+          showNotification(`Đã chọn trùng học phí tháng ${periodKey}.`, 'error')
+
+          return
+        }
+
+        duplicatePeriods.add(periodKey)
+      }
+
+      if (loadingQuote) {
+        showNotification('Đang tính học phí, vui lòng chờ xong rồi tạo biên lai.', 'error')
 
         return
       }
 
-      const currentYear = new Date().getFullYear()
+      for (const entry of tuitionMonthSummaries) {
+        if (!entry.quote) {
+          showNotification(`Không thể tính học phí tháng ${entry.item.month}/${entry.item.year}.`, 'error')
 
-      if (formData.year < currentYear - 2 || formData.year > currentYear + 1) {
-        showNotification('Năm không hợp lệ.', 'error')
+          return
+        }
+
+        if (entry.quote.alreadyPaid) {
+          showNotification(`Học phí tháng ${entry.item.month}/${entry.item.year} đã thanh toán, không thể tạo thu trùng.`, 'error')
+
+          return
+        }
+      }
+
+      if (discountAmount > 0 && tuitionMonths.length > 1) {
+        showNotification('Giảm trừ thủ công chỉ hỗ trợ khi thu 1 tháng học phí trong một biên lai.', 'error')
 
         return
       }
@@ -489,32 +583,44 @@ return
       }
 
       const hasAddOnProducts = addOnProducts.length > 0
+      const tuitionItems =
+        formData.type === PAYMENT_TYPE_TUITION
+          ? tuitionMonths.map((item, index) => ({
+              type: PAYMENT_TYPE_TUITION,
+              classId: formData.classId,
+              forMonth: item.month,
+              forYear: item.year,
+              description: formData.description.trim()
+                ? `Học phí tháng ${item.month}/${item.year} - ${formData.description.trim()}`
+                : `Học phí tháng ${item.month}/${item.year}`,
+              discountAmount: discountAmount > 0 && index === 0 ? discountAmount : undefined,
+              discountReason: discountAmount > 0 && index === 0 ? formData.discountReason.trim() : undefined
+            }))
+          : []
 
-      if (hasAddOnProducts) {
+      const addOnItems = addOnProducts.flatMap(item => {
+        const product = products.find(x => x.id === item.productId)
+        const description = product ? `Thu kèm sản phẩm: ${product.name}` : 'Thu kèm sản phẩm'
+
+        return Array.from({ length: item.quantity }).map(() => ({
+          type: PAYMENT_TYPE_PRODUCT,
+          classId: formData.classId,
+          productId: item.productId,
+          description
+        }))
+      })
+
+      if (hasAddOnProducts || tuitionItems.length > 1) {
         const baseItem = {
           type: formData.type,
           amount: originalAmount,
           description: formData.description.trim() || undefined,
           classId: formData.classId,
           productId: formData.type === PAYMENT_TYPE_PRODUCT ? formData.productId : undefined,
-          forMonth: formData.type === PAYMENT_TYPE_TUITION ? formData.month : undefined,
-          forYear: formData.type === PAYMENT_TYPE_TUITION ? formData.year : undefined,
           examRegistrationId: formData.type === PAYMENT_TYPE_EXAM_FEE ? selectedExamOptionId : undefined,
           discountAmount: discountAmount > 0 ? discountAmount : undefined,
           discountReason: discountAmount > 0 ? formData.discountReason.trim() : undefined
         }
-
-        const addOnItems = addOnProducts.flatMap(item => {
-          const product = products.find(x => x.id === item.productId)
-          const description = product ? `Thu kèm sản phẩm: ${product.name}` : 'Thu kèm sản phẩm'
-
-          return Array.from({ length: item.quantity }).map(() => ({
-            type: PAYMENT_TYPE_PRODUCT,
-            classId: formData.classId,
-            productId: item.productId,
-            description
-          }))
-        })
 
         const bulkResponse = await paymentService.createBulkPayment({
           studentId: formData.studentId,
@@ -522,7 +628,10 @@ return
           method: formData.method,
           transferProofImageUrl,
           collectedByUserId,
-          items: [baseItem, ...addOnItems]
+          items:
+            formData.type === PAYMENT_TYPE_TUITION
+              ? [...tuitionItems, ...addOnItems]
+              : [baseItem, ...addOnItems]
         })
 
         if (bulkResponse.success) {
@@ -535,35 +644,38 @@ return
         } else {
           showNotification(bulkResponse.message || 'Không thể tạo thanh toán.', 'error')
         }
-      } else {
-        const response = await paymentService.createPayment({
-          studentId: formData.studentId,
-          classId: formData.classId,
-          type: formData.type,
-          amount: originalAmount,
-          paymentDate: formData.paymentDate,
-          method: formData.method,
-          forMonth: formData.type === PAYMENT_TYPE_TUITION ? formData.month : undefined,
-          forYear: formData.type === PAYMENT_TYPE_TUITION ? formData.year : undefined,
-          productId: formData.type === PAYMENT_TYPE_PRODUCT ? formData.productId : undefined,
-          examRegistrationId: formData.type === PAYMENT_TYPE_EXAM_FEE ? selectedExamOptionId : undefined,
-          discountAmount: discountAmount > 0 ? discountAmount : undefined,
-          discountReason: discountAmount > 0 ? formData.discountReason.trim() : undefined,
-          transferProofImageUrl,
-          description: formData.description.trim() || undefined,
-          collectedByUserId
-        })
 
-        if (response.success && response.data) {
-          setData(prev => [response.data!, ...prev])
-          showNotification('Tạo thanh toán thành công.', 'success')
-          resetForm()
-          handleClose()
-        } else {
-          showNotification(response.message || 'Không thể tạo thanh toán.', 'error')
-        }
+        return
       }
-    } catch (error) {
+
+      const firstTuitionMonth = tuitionMonths[0]
+      const response = await paymentService.createPayment({
+        studentId: formData.studentId,
+        classId: formData.classId,
+        type: formData.type,
+        amount: originalAmount,
+        paymentDate: formData.paymentDate,
+        method: formData.method,
+        forMonth: formData.type === PAYMENT_TYPE_TUITION ? firstTuitionMonth?.month : undefined,
+        forYear: formData.type === PAYMENT_TYPE_TUITION ? firstTuitionMonth?.year : undefined,
+        productId: formData.type === PAYMENT_TYPE_PRODUCT ? formData.productId : undefined,
+        examRegistrationId: formData.type === PAYMENT_TYPE_EXAM_FEE ? selectedExamOptionId : undefined,
+        discountAmount: discountAmount > 0 ? discountAmount : undefined,
+        discountReason: discountAmount > 0 ? formData.discountReason.trim() : undefined,
+        transferProofImageUrl,
+        description: formData.description.trim() || undefined,
+        collectedByUserId
+      })
+
+      if (response.success && response.data) {
+        setData(prev => [response.data!, ...prev])
+        showNotification('Tạo thanh toán thành công.', 'success')
+        resetForm()
+        handleClose()
+      } else {
+        showNotification(response.message || 'Không thể tạo thanh toán.', 'error')
+      }
+    } catch {
       showNotification('Đã có lỗi khi tạo thanh toán.', 'error')
     } finally {
       setLoadingSubmit(false)
@@ -596,11 +708,10 @@ return
         ) : (
           <Stack spacing={4}>
             <Typography variant='body2' color='text.secondary'>
-              Chọn theo luồng: Lớp hiện tại → Học viên → Loại thanh toán.
+              Chọn theo luồng: Lớp hiện tại {'->'} Học viên {'->'} Loại thanh toán.
             </Typography>
 
             <Grid container spacing={4}>
-              {/* Lớp học */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth>
                   <InputLabel>Lớp hiện tại *</InputLabel>
@@ -618,7 +729,6 @@ return
                 </FormControl>
               </Grid>
 
-              {/* Coach lớp + Người thu (replacement only) */}
               {mode === 'replacement' && (
                 <>
                   <Grid size={{ xs: 12, md: 6 }}>
@@ -665,7 +775,6 @@ return
                 </>
               )}
 
-              {/* Học viên */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Autocomplete
                   options={students}
@@ -688,22 +797,29 @@ return
                 />
               </Grid>
 
-              {/* Loại thanh toán */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth>
                   <InputLabel>Loại thanh toán *</InputLabel>
                   <Select
                     label='Loại thanh toán *'
                     value={String(formData.type)}
-                    onChange={e =>
+                    onChange={e => {
+                      const nextType = Number(e.target.value)
+
                       setFormData(prev => ({
                         ...prev,
-                        type: Number(e.target.value),
+                        type: nextType,
                         productId: '',
                         examRegistrationId: '',
-                        discountAmount: ''
+                        discountAmount: '',
+                        discountReason: ''
                       }))
-                    }
+
+                      if (nextType !== PAYMENT_TYPE_TUITION) {
+                        setTuitionMonths([createTuitionMonthItem()])
+                        setTuitionQuotes({})
+                      }
+                    }}
                   >
                     <MenuItem value={String(PAYMENT_TYPE_TUITION)}>Học phí tháng</MenuItem>
                     <MenuItem value={String(PAYMENT_TYPE_EXAM_FEE)}>Lệ phí cấp</MenuItem>
@@ -712,7 +828,6 @@ return
                 </FormControl>
               </Grid>
 
-              {/* Ngày thanh toán */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
@@ -724,34 +839,87 @@ return
                 />
               </Grid>
 
-              {/* Học phí - chọn tháng/năm */}
               {formData.type === PAYMENT_TYPE_TUITION && (
-                <>
-                  <Grid size={{ xs: 12, md: 3 }}>
-                    <TextField
-                      fullWidth
-                      label='Tháng *'
-                      type='number'
-                      inputProps={{ min: 1, max: 12 }}
-                      value={formData.month}
-                      onChange={e => setFormData(prev => ({ ...prev, month: Number(e.target.value) }))}
-                      error={formData.month < 1 || formData.month > 12}
-                      helperText={formData.month < 1 || formData.month > 12 ? 'Tháng phải từ 1–12' : undefined}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 3 }}>
-                    <TextField
-                      fullWidth
-                      label='Năm *'
-                      type='number'
-                      value={formData.year}
-                      onChange={e => setFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
-                    />
-                  </Grid>
-                </>
+                <Grid size={{ xs: 12 }}>
+                  <Paper variant='outlined' sx={{ p: 2 }}>
+                    <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mb: 2 }}>
+                      <Typography variant='subtitle2'>Các tháng học phí</Typography>
+                      <Button size='small' variant='outlined' onClick={addTuitionMonthRow}>
+                        + Thêm học phí tháng
+                      </Button>
+                    </Stack>
+
+                    <Stack spacing={2}>
+                      {tuitionMonths.map((row, index) => {
+                        const quote = tuitionQuotes[row.id]
+
+                        return (
+                          <Grid container spacing={2} key={row.id}>
+                            <Grid size={{ xs: 12, md: 3 }}>
+                              <TextField
+                                fullWidth
+                                label='Tháng *'
+                                type='number'
+                                inputProps={{ min: 1, max: 12 }}
+                                value={row.month}
+                                onChange={e => updateTuitionMonthRow(row.id, { month: Number(e.target.value) })}
+                                error={row.month < 1 || row.month > 12}
+                                helperText={row.month < 1 || row.month > 12 ? 'Tháng phải từ 1-12' : `Dòng học phí ${index + 1}`}
+                              />
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 3 }}>
+                              <TextField
+                                fullWidth
+                                label='Năm *'
+                                type='number'
+                                value={row.year}
+                                onChange={e => updateTuitionMonthRow(row.id, { year: Number(e.target.value) })}
+                              />
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 5 }}>
+                              <TextField
+                                fullWidth
+                                label='Tạm tính'
+                                value={
+                                  loadingQuote
+                                    ? 'Đang tính...'
+                                    : quote
+                                      ? formatVND(Number(quote.finalAmount || 0))
+                                      : 'Chưa có dữ liệu'
+                                }
+                                InputProps={{ readOnly: true }}
+                                helperText={
+                                  quote?.alreadyPaid
+                                    ? 'Tháng này đã thanh toán'
+                                    : quote?.suggestedDiscountAmount
+                                      ? `Có giảm trừ duyệt sẵn: ${formatVND(Number(quote.suggestedDiscountAmount || 0))}`
+                                      : undefined
+                                }
+                              />
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 1 }} sx={{ display: 'flex', alignItems: 'center' }}>
+                              <IconButton
+                                color='error'
+                                onClick={() => removeTuitionMonthRow(row.id)}
+                                disabled={tuitionMonths.length === 1}
+                              >
+                                <i className='ri-delete-bin-6-line' />
+                              </IconButton>
+                            </Grid>
+                          </Grid>
+                        )
+                      })}
+                    </Stack>
+
+                    {discountAmount > 0 && tuitionMonths.length > 1 && (
+                      <Alert severity='info' sx={{ mt: 2 }}>
+                        Giảm trừ thủ công chỉ áp dụng khi thu một tháng trong một biên lai.
+                      </Alert>
+                    )}
+                  </Paper>
+                </Grid>
               )}
 
-              {/* Lệ phí thi cấp */}
               {formData.type === PAYMENT_TYPE_EXAM_FEE && (
                 <Grid size={{ xs: 12 }}>
                   <FormControl fullWidth>
@@ -768,7 +936,7 @@ return
                       ) : (
                         examFeeOptions.map(item => (
                           <MenuItem key={item.registrationId} value={item.registrationId}>
-                            {item.examSessionName} – {item.targetBeltLevelName} ({formatVND(item.feeAmount)})
+                            {item.examSessionName} - {item.targetBeltLevelName} ({formatVND(item.feeAmount)})
                           </MenuItem>
                         ))
                       )}
@@ -777,7 +945,6 @@ return
                 </Grid>
               )}
 
-              {/* Mua sản phẩm */}
               {formData.type === PAYMENT_TYPE_PRODUCT && (
                 <Grid size={{ xs: 12 }}>
                   <FormControl fullWidth>
@@ -795,7 +962,7 @@ return
                     >
                       {products.map(item => (
                         <MenuItem key={item.id} value={item.id}>
-                          {item.name} – {formatVND(item.unitPrice)}
+                          {item.name} - {formatVND(item.unitPrice)}
                         </MenuItem>
                       ))}
                     </Select>
@@ -834,7 +1001,7 @@ return
                                 >
                                   {products.map(item => (
                                     <MenuItem key={item.id} value={item.id}>
-                                      {item.name} – {formatVND(item.unitPrice)}
+                                      {item.name} - {formatVND(item.unitPrice)}
                                     </MenuItem>
                                   ))}
                                 </Select>
@@ -873,7 +1040,6 @@ return
                 </Paper>
               </Grid>
 
-              {/* Info card học phí tháng */}
               {formData.type === PAYMENT_TYPE_TUITION && formData.classId && formData.studentId && (
                 <Grid size={{ xs: 12 }}>
                   {loadingQuote ? (
@@ -883,51 +1049,64 @@ return
                         Đang tính học phí...
                       </Typography>
                     </Box>
-                  ) : tuitionQuote ? (
+                  ) : (
                     <Paper variant='outlined' sx={{ p: 2 }}>
                       <Typography variant='subtitle2' gutterBottom>
-                        Thông tin học phí tháng {formData.month}/{formData.year}
+                        Thông tin học phí theo biên lai
                       </Typography>
                       <Divider sx={{ mb: 1 }} />
-                      <Stack spacing={0.5}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant='body2' color='text.secondary'>
-                            Học phí gốc:
-                          </Typography>
-                          <Typography variant='body2' fontWeight='medium'>
-                            {formatVND(tuitionQuote.monthlyFee)}
-                          </Typography>
-                        </Box>
-                        {tuitionQuote.suggestedDiscountAmount > 0 && (
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant='body2' color='text.secondary'>
-                              Giảm trừ gợi ý:
-                            </Typography>
-                            <Typography variant='body2' color='warning.main' fontWeight='medium'>
-                              -{formatVND(tuitionQuote.suggestedDiscountAmount)}
-                            </Typography>
+                      <Stack spacing={1}>
+                        {tuitionMonthSummaries.map(({ item, quote }) => (
+                          <Box key={item.id} sx={{ borderRadius: 1, border: theme => `1px solid ${theme.palette.divider}`, p: 1.5 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+                              <Typography variant='body2' fontWeight='bold'>
+                                Tháng {item.month}/{item.year}
+                              </Typography>
+                              <Typography variant='body2' color={quote?.alreadyPaid ? 'warning.main' : 'success.main'} fontWeight='medium'>
+                                {quote ? formatVND(quote.finalAmount) : 'Chưa tính được'}
+                              </Typography>
+                            </Box>
+
+                            {quote && (
+                              <Stack spacing={0.5} sx={{ mt: 1 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <Typography variant='body2' color='text.secondary'>
+                                    Học phí gốc:
+                                  </Typography>
+                                  <Typography variant='body2'>{formatVND(quote.monthlyFee)}</Typography>
+                                </Box>
+                                {quote.suggestedDiscountAmount > 0 && (
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant='body2' color='text.secondary'>
+                                      Giảm trừ duyệt sẵn:
+                                    </Typography>
+                                    <Typography variant='body2' color='warning.main'>
+                                      -{formatVND(quote.suggestedDiscountAmount)}
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Stack>
+                            )}
+
+                            {!quote && (
+                              <Alert severity='error' sx={{ mt: 1 }}>
+                                Không thể tính học phí cho tháng này.
+                              </Alert>
+                            )}
+
+                            {quote?.alreadyPaid && (
+                              <Alert severity='warning' sx={{ mt: 1 }}>
+                                Học phí tháng này đã được thanh toán.
+                              </Alert>
+                            )}
                           </Box>
-                        )}
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant='body2' fontWeight='bold'>
-                            Thực thu:
-                          </Typography>
-                          <Typography variant='body2' fontWeight='bold' color='success.main'>
-                            {formatVND(tuitionQuote.finalAmount)}
-                          </Typography>
-                        </Box>
+                        ))}
                       </Stack>
-                      {tuitionQuote.alreadyPaid && (
-                        <Alert severity='warning' sx={{ mt: 1 }}>
-                          Học phí tháng này đã được thanh toán!
-                        </Alert>
-                      )}
                     </Paper>
-                  ) : null}
+                  )}
                 </Grid>
               )}
 
-              {/* Số tiền gốc / Giảm trừ / Thực thu */}
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
                   fullWidth
@@ -993,7 +1172,6 @@ return
                 />
               </Grid>
 
-              {/* Phương thức thanh toán */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth>
                   <InputLabel>Phương thức thanh toán</InputLabel>
@@ -1008,27 +1186,20 @@ return
                 </FormControl>
               </Grid>
 
-              {/* Upload ảnh chuyển khoản */}
               {formData.method === PAYMENT_METHOD_BANK_TRANSFER && (
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Stack direction='row' spacing={2} alignItems='center'>
                     <Button component='label' variant='outlined' color={proofImageFile ? 'success' : 'primary'}>
                       {proofImageFile ? 'Đổi ảnh minh chứng' : 'Upload ảnh chuyển khoản *'}
-                      <input
-                        hidden
-                        type='file'
-                        accept='image/*'
-                        onChange={e => setProofImageFile(e.target.files?.[0] || null)}
-                      />
+                      <input hidden type='file' accept='image/*' onChange={e => setProofImageFile(e.target.files?.[0] || null)} />
                     </Button>
                     <Typography variant='body2' color={proofImageFile ? 'success.main' : 'text.secondary'}>
-                      {proofImageFile ? `✓ ${proofImageFile.name}` : 'Chưa chọn ảnh'}
+                      {proofImageFile ? `Da chon: ${proofImageFile.name}` : 'Chưa chọn ảnh'}
                     </Typography>
                   </Stack>
                 </Grid>
               )}
 
-              {/* Ghi chú */}
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
@@ -1041,25 +1212,12 @@ return
               </Grid>
             </Grid>
 
-            {formData.type === PAYMENT_TYPE_TUITION && tuitionQuote?.alreadyPaid && (
-              <Alert severity='error'>Học phí tháng này đã thanh toán, hệ thống sẽ không cho phép thu thêm.</Alert>
-            )}
-
-            <Box className='flex items-center gap-3'>
-              <Button
-                type='submit'
-                variant='contained'
-                disabled={
-                  loadingSubmit ||
-                  loadingQuote ||
-                  (formData.type === PAYMENT_TYPE_TUITION && !!tuitionQuote?.alreadyPaid) ||
-                  discountAmount > originalAmount
-                }
-              >
-                {loadingSubmit ? 'Đang tạo...' : 'Tạo thanh toán'}
-              </Button>
-              <Button variant='outlined' color='secondary' onClick={handleClose}>
+            <Box className='flex justify-end gap-3'>
+              <Button variant='outlined' color='secondary' onClick={handleClose} disabled={loadingSubmit}>
                 Hủy
+              </Button>
+              <Button type='submit' variant='contained' disabled={loadingSubmit}>
+                {loadingSubmit ? <CircularProgress size={18} color='inherit' /> : `Tạo biên lai ${formatVND(totalCollectAmount)}`}
               </Button>
             </Box>
           </Stack>
