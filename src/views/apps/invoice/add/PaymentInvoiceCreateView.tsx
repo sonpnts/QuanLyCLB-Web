@@ -71,7 +71,19 @@ type OtherFeeRow = {
   amount: number
 }
 
+type TuitionMonthRow = {
+  id: string
+  month: number
+  year: number
+}
+
 const createRowId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+
+const createTuitionMonthRow = (month = new Date().getMonth() + 1, year = new Date().getFullYear()): TuitionMonthRow => ({
+  id: createRowId(),
+  month,
+  year
+})
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
@@ -134,7 +146,8 @@ const PaymentInvoiceCreateView = () => {
   const [products, setProducts] = useState<ProductType[]>([])
   const [bundles, setBundles] = useState<ProductBundleType[]>([])
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
-  const [tuitionQuote, setTuitionQuote] = useState<TuitionQuoteType | null>(null)
+  const [tuitionMonths, setTuitionMonths] = useState<TuitionMonthRow[]>([createTuitionMonthRow()])
+  const [tuitionQuotes, setTuitionQuotes] = useState<Record<string, TuitionQuoteType | null>>({})
   const [loadingQuote, setLoadingQuote] = useState(false)
   const [examFeeOptions, setExamFeeOptions] = useState<ExamFeeOptionType[]>([])
   const [loadingExamOptions, setLoadingExamOptions] = useState(false)
@@ -160,8 +173,6 @@ const PaymentInvoiceCreateView = () => {
     collectedByUserId: '',
     method: PAYMENT_METHOD_CASH,
     note: '',
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
     tuitionEnabled: false,
     discountAmount: '',
     discountReason: '',
@@ -206,11 +217,13 @@ const PaymentInvoiceCreateView = () => {
       classId: draftInfo.classId || prev.classId,
       studentId: draftInfo.studentId || prev.studentId,
       collectedByUserId: auth?.user?.id || prev.collectedByUserId,
-      month: draftInfo.forMonth || prev.month,
-      year: draftInfo.forYear || prev.year,
       tuitionEnabled: draftInfo.initialMode === 'tuition',
       examEnabled: draftInfo.initialMode === 'exam'
     }))
+
+    if (draftInfo.forMonth && draftInfo.forYear) {
+      setTuitionMonths([createTuitionMonthRow(draftInfo.forMonth, draftInfo.forYear)])
+    }
   }, [auth?.user?.id, draftInfo, loadingInit])
 
   useEffect(() => {
@@ -246,7 +259,8 @@ return
 
   useEffect(() => {
     tuitionTouchedRef.current = false
-    setTuitionQuote(null)
+    setTuitionQuotes({})
+    setTuitionMonths([createTuitionMonthRow()])
     setForm(prev => ({
       ...prev,
       tuitionEnabled: false,
@@ -267,37 +281,36 @@ return
   useEffect(() => {
     const loadTuitionQuote = async () => {
       if (!form.classId || !form.studentId) {
-        setTuitionQuote(null)
+        setTuitionQuotes({})
         
 return
       }
 
       try {
         setLoadingQuote(true)
+        const quoteEntries = await Promise.all(
+          tuitionMonths.map(async item => {
+            const response = await paymentService.getTuitionQuote(form.classId, form.studentId, item.month, item.year, undefined)
 
-        const response = await paymentService.getTuitionQuote(
-          form.classId,
-          form.studentId,
-          form.month,
-          form.year,
-          undefined
+            return [item.id, response.success ? response.data || null : null] as const
+          })
         )
 
-        if (response.success && response.data) {
-          setTuitionQuote(response.data)
+        const nextQuotes: Record<string, TuitionQuoteType | null> = {}
 
-          if (!tuitionTouchedRef.current && !response.data.alreadyPaid) {
-            setForm(prev => ({ ...prev, tuitionEnabled: true }))
-          }
-        } else {
-          setTuitionQuote(null)
+        for (const [itemId, quote] of quoteEntries) {
+          nextQuotes[itemId] = quote
+        }
 
-          if (!tuitionTouchedRef.current) {
-            setForm(prev => ({ ...prev, tuitionEnabled: false }))
-          }
+        setTuitionQuotes(nextQuotes)
+
+        if (!tuitionTouchedRef.current) {
+          const hasPayableMonth = Object.values(nextQuotes).some(item => item && !item.alreadyPaid)
+
+          setForm(prev => ({ ...prev, tuitionEnabled: hasPayableMonth }))
         }
       } catch {
-        setTuitionQuote(null)
+        setTuitionQuotes({})
 
         if (!tuitionTouchedRef.current) {
           setForm(prev => ({ ...prev, tuitionEnabled: false }))
@@ -308,7 +321,7 @@ return
     }
 
     loadTuitionQuote()
-  }, [form.classId, form.studentId, form.month, form.year, form.discountAmount])
+  }, [form.classId, form.studentId, tuitionMonths])
 
   useEffect(() => {
     const loadExamOptions = async () => {
@@ -395,6 +408,15 @@ return
     [examFeeOptions, form.selectedExamRegistrationId]
   )
 
+  const tuitionMonthSummaries = useMemo(
+    () =>
+      tuitionMonths.map(item => ({
+        row: item,
+        quote: tuitionQuotes[item.id] || null
+      })),
+    [tuitionMonths, tuitionQuotes]
+  )
+
   useEffect(() => {
     if (!form.examEnabled || oneTimeFeeOptions.length === 0) return
 
@@ -468,7 +490,7 @@ return
     [selectedOneTimeItems]
   )
 
-  const tuitionPayableAmount = Number(tuitionQuote?.finalAmount || 0)
+  const tuitionPayableAmount = tuitionMonthSummaries.reduce((sum, item) => sum + Number(item.quote?.finalAmount || 0), 0)
   const discountAmount = Number(form.discountAmount || 0)
   const tuitionNetAmount = Math.max(0, tuitionPayableAmount - discountAmount)
   const examFeeAmount = Number(selectedExamOption?.feeAmount || 0)
@@ -481,6 +503,34 @@ return
     oneTimeFeeTotal +
     productTotal +
     otherFeeTotal
+
+  const addTuitionMonth = () => {
+    setTuitionMonths(prev => {
+      const lastRow = prev[prev.length - 1]
+
+      if (!lastRow) return [createTuitionMonthRow()]
+
+      const nextMonth = lastRow.month === 12 ? 1 : lastRow.month + 1
+      const nextYear = lastRow.month === 12 ? lastRow.year + 1 : lastRow.year
+
+      return [...prev, createTuitionMonthRow(nextMonth, nextYear)]
+    })
+  }
+
+  const updateTuitionMonth = (id: string, payload: Partial<Omit<TuitionMonthRow, 'id'>>) => {
+    setTuitionMonths(prev => prev.map(item => (item.id === id ? { ...item, ...payload } : item)))
+  }
+
+  const removeTuitionMonth = (id: string) => {
+    setTuitionMonths(prev => (prev.length === 1 ? prev : prev.filter(item => item.id !== id)))
+    setTuitionQuotes(prev => {
+      const next = { ...prev }
+
+      delete next[id]
+
+      return next
+    })
+  }
 
   const addProductRow = () => {
     setProductRows(prev => [...prev, { id: createRowId(), productId: '', productVariantId: '', quantity: 1 }])
@@ -620,14 +670,16 @@ return
     }> = []
 
     if (form.tuitionEnabled) {
-      items.push({
-        type: PAYMENT_TYPE_TUITION,
-        classId: form.classId,
-        forMonth: form.month,
-        forYear: form.year,
-        description: `Học phí tháng ${form.month}/${form.year}`,
-        discountAmount: discountAmount > 0 ? discountAmount : undefined,
-        discountReason: discountAmount > 0 ? form.discountReason.trim() : undefined
+      tuitionMonths.forEach((row, index) => {
+        items.push({
+          type: PAYMENT_TYPE_TUITION,
+          classId: form.classId,
+          forMonth: row.month,
+          forYear: row.year,
+          description: `Học phí tháng ${row.month}/${row.year}`,
+          discountAmount: discountAmount > 0 && index === 0 ? discountAmount : undefined,
+          discountReason: discountAmount > 0 && index === 0 ? form.discountReason.trim() : undefined
+        })
       })
     }
 
@@ -802,16 +854,36 @@ return
     }
 
     if (form.tuitionEnabled) {
-      if (!tuitionQuote) {
-        showNotification('Chưa tải được học phí tháng này.', 'error')
-        
-return
+      const duplicatePeriods = new Set<string>()
+
+      for (const entry of tuitionMonthSummaries) {
+        const periodKey = `${entry.row.month}/${entry.row.year}`
+
+        if (duplicatePeriods.has(periodKey)) {
+          showNotification(`Đã chọn trùng học phí tháng ${periodKey}.`, 'error')
+
+          return
+        }
+
+        duplicatePeriods.add(periodKey)
+
+        if (!entry.quote) {
+          showNotification(`Chưa tải được học phí tháng ${periodKey}.`, 'error')
+
+          return
+        }
+
+        if (entry.quote.alreadyPaid) {
+          showNotification(`Học phí tháng ${periodKey} đã thanh toán, không thể thu trùng.`, 'error')
+
+          return
+        }
       }
 
-      if (tuitionQuote.alreadyPaid) {
-        showNotification('Học phí tháng này đã thanh toán, không thể thu trùng.', 'error')
-        
-return
+      if (discountAmount > 0 && tuitionMonths.length > 1) {
+        showNotification('Giảm trừ thủ công chỉ áp dụng khi thu một tháng học phí trong một biên lai.', 'error')
+
+        return
       }
     }
 
@@ -1046,56 +1118,105 @@ return
                       label='Thu học phí tháng'
                     />
                     {form.tuitionEnabled && (
-                      <Grid container spacing={3}>
-                        <Grid size={{ xs: 12, md: 3 }}>
-                          <FormControl fullWidth>
-                            <InputLabel>Tháng</InputLabel>
-                            <Select label='Tháng' value={String(form.month)} onChange={event => setForm(prev => ({ ...prev, month: Number(event.target.value) }))}>
-                              {Array.from({ length: 12 }, (_, index) => index + 1).map(month => (
-                                <MenuItem key={month} value={String(month)}>
-                                  Tháng {month}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
+                      <Stack spacing={3}>
+                        <Box className='flex justify-end'>
+                          <Button variant='outlined' size='small' onClick={addTuitionMonth} startIcon={<i className='ri-add-line' />}>
+                            Thêm học phí tháng
+                          </Button>
+                        </Box>
+                        <Grid container spacing={3}>
+                          {tuitionMonths.map(row => {
+                            const quote = tuitionQuotes[row.id]
+                            const periodLabel = `${row.month}/${row.year}`
+
+                            return (
+                              <Grid size={{ xs: 12 }} key={row.id}>
+                                <Paper variant='outlined' className='p-3'>
+                                  <Grid container spacing={3} alignItems='center'>
+                                    <Grid size={{ xs: 12, md: 3 }}>
+                                      <FormControl fullWidth>
+                                        <InputLabel>Tháng</InputLabel>
+                                        <Select
+                                          label='Tháng'
+                                          value={String(row.month)}
+                                          onChange={event => updateTuitionMonth(row.id, { month: Number(event.target.value) })}
+                                        >
+                                          {Array.from({ length: 12 }, (_, index) => index + 1).map(month => (
+                                            <MenuItem key={month} value={String(month)}>
+                                              Tháng {month}
+                                            </MenuItem>
+                                          ))}
+                                        </Select>
+                                      </FormControl>
+                                    </Grid>
+                                    <Grid size={{ xs: 12, md: 3 }}>
+                                      <FormControl fullWidth>
+                                        <InputLabel>Năm</InputLabel>
+                                        <Select
+                                          label='Năm'
+                                          value={String(row.year)}
+                                          onChange={event => updateTuitionMonth(row.id, { year: Number(event.target.value) })}
+                                        >
+                                          {YEARS.map(year => (
+                                            <MenuItem key={year} value={String(year)}>
+                                              {year}
+                                            </MenuItem>
+                                          ))}
+                                        </Select>
+                                      </FormControl>
+                                    </Grid>
+                                    <Grid size={{ xs: 12, md: 5 }}>
+                                      {loadingQuote ? (
+                                        <Alert severity='info'>Đang tính học phí...</Alert>
+                                      ) : quote ? (
+                                        <Stack spacing={0.5}>
+                                          <Typography>Học phí gốc {periodLabel}: {formatCurrency(Number(quote.monthlyFee || 0))}</Typography>
+                                          {Number(quote.suggestedDiscountAmount || 0) > 0 && (
+                                            <Typography color='warning.main'>
+                                              Giảm học phí đã duyệt: {formatCurrency(Number(quote.suggestedDiscountAmount || 0))}
+                                            </Typography>
+                                          )}
+                                          <Typography color='primary.main' fontWeight={700}>
+                                            Số tiền thu: {formatCurrency(Number(quote.finalAmount || 0))}
+                                          </Typography>
+                                          {quote.alreadyPaid ? <Alert severity='warning'>Học phí tháng này đã thanh toán.</Alert> : null}
+                                        </Stack>
+                                      ) : (
+                                        <Alert severity='info'>Chọn lớp và học viên để tính học phí.</Alert>
+                                      )}
+                                    </Grid>
+                                    <Grid size={{ xs: 12, md: 1 }} className='flex justify-end'>
+                                      <IconButton color='error' onClick={() => removeTuitionMonth(row.id)} disabled={tuitionMonths.length === 1}>
+                                        <i className='ri-delete-bin-line' />
+                                      </IconButton>
+                                    </Grid>
+                                  </Grid>
+                                </Paper>
+                              </Grid>
+                            )
+                          })}
+                          <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField
+                              fullWidth
+                              label='Giảm trừ'
+                              type='number'
+                              value={form.discountAmount}
+                              onChange={event => setForm(prev => ({ ...prev, discountAmount: event.target.value }))}
+                              disabled={tuitionMonths.length > 1}
+                              helperText={tuitionMonths.length > 1 ? 'Giảm trừ thủ công chỉ áp dụng khi thu 1 tháng.' : undefined}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField
+                              fullWidth
+                              label='Lý do giảm trừ'
+                              value={form.discountReason}
+                              onChange={event => setForm(prev => ({ ...prev, discountReason: event.target.value }))}
+                              disabled={tuitionMonths.length > 1}
+                            />
+                          </Grid>
                         </Grid>
-                        <Grid size={{ xs: 12, md: 3 }}>
-                          <FormControl fullWidth>
-                            <InputLabel>Năm</InputLabel>
-                            <Select label='Năm' value={String(form.year)} onChange={event => setForm(prev => ({ ...prev, year: Number(event.target.value) }))}>
-                              {YEARS.map(year => (
-                                <MenuItem key={year} value={String(year)}>
-                                  {year}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 3 }}>
-                          <TextField fullWidth label='Giảm trừ' type='number' value={form.discountAmount} onChange={event => setForm(prev => ({ ...prev, discountAmount: event.target.value }))} />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 3 }}>
-                          <TextField fullWidth label='Lý do giảm trừ' value={form.discountReason} onChange={event => setForm(prev => ({ ...prev, discountReason: event.target.value }))} />
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
-                          {loadingQuote ? (
-                            <Alert severity='info'>Đang tính học phí...</Alert>
-                          ) : tuitionQuote ? (
-                            <Stack spacing={1}>
-                              <Typography>Học phí gốc: {formatCurrency(Number(tuitionQuote.monthlyFee || 0))}</Typography>
-                              {Number(tuitionQuote.suggestedDiscountAmount || 0) > 0 && (
-                                <Typography color='warning.main'>Giảm học phí đã duyệt: {formatCurrency(Number(tuitionQuote.suggestedDiscountAmount || 0))}</Typography>
-                              )}
-                              <Typography color='primary.main' fontWeight={700}>
-                                Số tiền thu: {formatCurrency(tuitionNetAmount)}
-                              </Typography>
-                              {tuitionQuote.alreadyPaid && <Alert severity='warning'>Học phí tháng này đã thanh toán.</Alert>}
-                            </Stack>
-                          ) : (
-                            <Alert severity='info'>Chọn lớp và học viên để tính học phí.</Alert>
-                          )}
-                        </Grid>
-                      </Grid>
+                      </Stack>
                     )}
                   </Stack>
                 </CardContent>
