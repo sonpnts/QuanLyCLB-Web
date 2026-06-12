@@ -145,6 +145,11 @@ const StudentListTable = () => {
     setFilterParams(params)
   }, [])
 
+  const handleSearchChange = useCallback((value: string | number) => {
+    setPage(0)
+    setSearchKeyword(String(value))
+  }, [])
+
   const effectiveParams = useMemo<GetStudentsParams>(() => {
     const p = { ...filterParams }
 
@@ -587,10 +592,7 @@ return (
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={searchKeyword}
-              onChange={value => {
-                setPage(0)
-                setSearchKeyword(String(value))
-              }}
+              onChange={handleSearchChange}
               placeholder='Tìm kiếm học viên'
               className='max-sm:is-full'
             />
