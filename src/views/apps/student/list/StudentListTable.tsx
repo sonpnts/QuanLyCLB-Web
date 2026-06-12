@@ -83,7 +83,7 @@ const DebouncedInput = ({
   useEffect(() => {
     const timeout = setTimeout(() => onChange(value), debounce)
 
-    
+
 return () => clearTimeout(timeout)
   }, [value, debounce, onChange])
 
@@ -153,7 +153,7 @@ const StudentListTable = () => {
     else delete p.isSuspended
     if (searchKeyword.trim()) p.keyword = searchKeyword.trim()
     else delete p.keyword
-    
+
 return p
   }, [filterParams, searchKeyword, statusFilter])
 
@@ -484,7 +484,7 @@ return p
         cell: ({ row }) => {
           const activeClasses = (row.original.classes || []).filter(c => !c.status || c.status === 'Active')
 
-          
+
 return (
             <div className='flex items-center' onClick={event => event.stopPropagation()}>
               {studentPermissions.canUpdate && !row.original.isSuspended ? (
@@ -617,7 +617,7 @@ return (
       formatter: v => (v === true ? 'Nam' : v === false ? 'Nữ' : '')
                     },
     { header: 'Ngày sinh', accessor: 'dateOfBirth', formatter: formatVnDate },
-    { header: 'Cấp đai', accessor: 'currentBeltLevelName' as any },
+    { header: 'Cấp đai', accessor: 'beltLevelName' as any },
                     {
       header: 'Lớp đang học',
                       accessor: r =>

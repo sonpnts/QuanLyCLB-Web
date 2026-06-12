@@ -12,7 +12,6 @@ import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import TablePagination from '@mui/material/TablePagination'
 import Box from '@mui/material/Box'
@@ -52,6 +51,7 @@ import AddStudentsToClassDrawer from './AddStudentsToClassDrawer'
 
 // Service Imports
 import classService from '@/services/classService'
+import reportService from '@/services/reportService'
 import userService from '@/services/userService'
 import type { GetClassesParams } from '@/services/classService'
 
@@ -111,10 +111,10 @@ const ClassListTable = ({ tableData }: { tableData?: ClassType[] }) => {
   const [permissionDialogOpen, setPermissionDialogOpen] = useState(false)
   const [addStudentsOpen, setAddStudentsOpen] = useState(false)
   const [selectedClass, setSelectedClass] = useState<ClassType | null>(null)
-  const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<ClassType[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(false)
+  const [exportingClassId, setExportingClassId] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [totalCount, setTotalCount] = useState(0)
@@ -213,31 +213,44 @@ return
   }, [isAdmin])
 
   // Hooks
+  const handleExportClassStudents = useCallback(
+    async (classItem: ClassType) => {
+      if (!classItem.id) {
+        showNotification('Không xác định được lớp để xuất Excel', 'error')
+
+        return
+      }
+
+      try {
+        setExportingClassId(classItem.id)
+        const response = await reportService.exportClassStudentsExcel(classItem.id, classItem.code)
+
+        if (!response.success || !response.data) {
+          showNotification(response.message || 'Xuất Excel thất bại', 'error')
+
+          return
+        }
+
+        const url = window.URL.createObjectURL(response.data.blob)
+        const anchor = document.createElement('a')
+
+        anchor.href = url
+        anchor.download = response.data.fileName
+        document.body.appendChild(anchor)
+        anchor.click()
+        anchor.remove()
+        window.URL.revokeObjectURL(url)
+
+        showNotification(`Đã xuất Excel lớp ${classItem.code || classItem.name}`, 'success')
+      } finally {
+        setExportingClassId(null)
+      }
+    },
+    [showNotification]
+  )
+
   const columns = useMemo<ColumnDef<ClassTypeWithAction, any>[]>(
     () => [
-      {
-        id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
-
       /*columnHelper.accessor('name', {
         header: 'Tên',
         cell: ({ row }) => {
@@ -438,6 +451,27 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
 
               {/* Row click handles "view" */}
 
+              {!isInactive && (
+                <IconButton
+                  onClick={() => router.push(`/apps/class/view/${row.original.id}`)}
+                  title='Xem chi tiết lớp'
+                  color='primary'
+                >
+                  <i className='ri-eye-line' />
+                </IconButton>
+              )}
+
+              {!isInactive && (
+                <IconButton
+                  onClick={() => void handleExportClassStudents(row.original)}
+                  title='Xuất Excel học viên'
+                  color='success'
+                  disabled={exportingClassId === row.original.id}
+                >
+                  <i className='ri-file-excel-2-line' />
+                </IconButton>
+              )}
+
               {isAdmin && !isInactive && (
                 <IconButton
                   onClick={() => {
@@ -468,18 +502,13 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
       })
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, showNotification, users, isAdmin]
+    [data, exportingClassId, handleExportClassStudents, showNotification, users, isAdmin]
   )
 
   const table = useReactTable({
     data: data as ClassTypeWithAction[],
     columns,
     filterFns: { fuzzy: fuzzyFilter },
-    state: {
-      rowSelection
-    },
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
@@ -499,54 +528,56 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
         )}
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
-          <Button
-            color='success'
-            variant='outlined'
-            startIcon={<i className='ri-file-excel-2-line text-xl' />}
-            className='max-sm:is-full'
-            disabled={data.length === 0}
-            onClick={() => {
-              exportToExcel({
-                filename: 'danh-sach-lop-hoc',
-                rows: data,
-                columns: [
-                  { header: 'Mã lớp', accessor: 'code' as any },
-                  { header: 'Tên lớp', accessor: 'name' as any },
-                  { header: 'Mô tả', accessor: 'description' as any },
-                  {
-                    header: 'HLV chính',
-                    accessor: 'branchName' as any
-                  },
-                  {
-                    header: 'HLV chính',
-                    accessor: r =>
-                      Array.isArray((r as any).coaches)
-                        ? (r as any).coaches.find((c: any) => c.isLeadInstructor)?.fullName ||
-                          (r as any).coaches[0]?.fullName ||
-                          ''
-                        : ''
-                  },
-                  {
-                    header: 'HLV phụ',
-                    accessor: r =>
-                      Array.isArray((r as any).coaches)
-                        ? (r as any).coaches.filter((c: any) => !c.isLeadInstructor).map((c: any) => c.fullName).join(', ')
-                        : ''
-                  },
-                  {
-                    header: 'Trợ giảng',
-                    accessor: r =>
-                      Array.isArray((r as any).assistants)
-                        ? (r as any).assistants.map((a: any) => a.fullName).join(', ')
-                        : ''
-                  },
-                  { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }
-                ]
-              })
-            }}
-          >
-            Xuất Excel
-          </Button>
+          <Box className='flex flex-wrap items-center gap-2 max-sm:is-full'>
+            <Button
+              color='success'
+              variant='outlined'
+              startIcon={<i className='ri-file-excel-2-line text-xl' />}
+              className='max-sm:is-full'
+              disabled={data.length === 0}
+              onClick={() => {
+                exportToExcel({
+                  filename: 'danh-sach-lop-hoc',
+                  rows: data,
+                  columns: [
+                    { header: 'Mã lớp', accessor: 'code' as any },
+                    { header: 'Tên lớp', accessor: 'name' as any },
+                    { header: 'Mô tả', accessor: 'description' as any },
+                    {
+                      header: 'HLV chính',
+                      accessor: 'branchName' as any
+                    },
+                    {
+                      header: 'HLV chính',
+                      accessor: r =>
+                        Array.isArray((r as any).coaches)
+                          ? (r as any).coaches.find((c: any) => c.isLeadInstructor)?.fullName ||
+                            (r as any).coaches[0]?.fullName ||
+                            ''
+                          : ''
+                    },
+                    {
+                      header: 'HLV phụ',
+                      accessor: r =>
+                        Array.isArray((r as any).coaches)
+                          ? (r as any).coaches.filter((c: any) => !c.isLeadInstructor).map((c: any) => c.fullName).join(', ')
+                          : ''
+                    },
+                    {
+                      header: 'Trợ giảng',
+                      accessor: r =>
+                        Array.isArray((r as any).assistants)
+                          ? (r as any).assistants.map((a: any) => a.fullName).join(', ')
+                          : ''
+                    },
+                    { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }
+                  ]
+                })
+              }}
+            >
+              Xuất Excel danh sách lớp
+            </Button>
+          </Box>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
@@ -616,14 +647,10 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
                   .rows.map(row => {
                     const isInactive = row.original.isActive === false
 
-
 return (
                       <tr
                         key={row.id}
-                        className={classnames({ selected: row.getIsSelected() })}
-                        onClick={() => router.push(`/apps/class/view/${row.original.id}`)}
                         style={{
-                          cursor: 'pointer',
                           ...(isInactive ? { opacity: 0.6, backgroundColor: 'rgba(0,0,0,0.02)' } : {})
                         }}
                       >
