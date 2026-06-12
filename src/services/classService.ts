@@ -17,6 +17,7 @@ const unwrapList = (payload: any): any[] => {
 
 const unwrapPagedResult = <T>(payload: any): PagedResult<T> => {
   const records = unwrapList(payload) as T[]
+
   const totalRecords =
     payload?.totalRecords ??
     payload?.TotalRecords ??
@@ -575,3 +576,4 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
 const classService = new ClassService()
 
 export default classService
+

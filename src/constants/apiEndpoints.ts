@@ -165,6 +165,10 @@ export const API_ENDPOINTS = {
     byId: (id: string) => `/product-sales/${id}`,
     restore: (id: string) => `/product-sales/${id}/restore`
   },
+  reports: {
+    studentList: '/reports/students/list',
+    classFinancial: '/reports/financial/class'
+  },
   products: {
     root: '/products',
     saleOptions: '/products/sale-options',
