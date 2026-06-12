@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
@@ -34,8 +35,10 @@ import classService from '@/services/classService'
 import studentAttendanceService, {
   type AttendanceSheetType,
   type CoachClassOption,
+  type MissingAttendanceOverviewType,
   type SaveAttendanceSheetStudentRequest
 } from '@/services/studentAttendanceService'
+import { hasAdminRole } from '@/utils/roleUtils'
 import { formatDateTimeVN } from '@/utils/dateTime'
 
 const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
@@ -100,19 +103,30 @@ const pickPreferredDate = (dates: string[]) => {
   return dates[0] ?? ''
 }
 
+const isDateMatchingScheduleDay = (value: string, scheduleDays: number[]) => scheduleDays.includes(parseDateString(value).getDay())
+
+const ensureDateOption = (dates: string[], value: string) =>
+  dates.includes(value) ? dates : [...dates, value].sort((left, right) => right.localeCompare(left))
+
 const AttendanceListTable = () => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
+  const searchParams = useSearchParams()
+  const isAdmin = useMemo(() => hasAdminRole(auth?.roles), [auth?.roles])
+  const preselectedClassId = searchParams.get('classId') || ''
+  const preselectedDate = searchParams.get('date') || ''
 
   const [coachClasses, setCoachClasses] = useState<CoachClassOption[]>([])
   const [availableDates, setAvailableDates] = useState<string[]>([])
   const [selectedClassId, setSelectedClassId] = useState('')
   const [selectedDate, setSelectedDate] = useState('')
   const [search, setSearch] = useState('')
+  const [missingOverview, setMissingOverview] = useState<MissingAttendanceOverviewType | null>(null)
 
   const [sheet, setSheet] = useState<AttendanceSheetType | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadingDates, setLoadingDates] = useState(false)
+  const [loadingMissingSessions, setLoadingMissingSessions] = useState(false)
   const [saving, setSaving] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
 
@@ -139,7 +153,7 @@ const AttendanceListTable = () => {
   )
 
   const loadClassAttendanceContext = useCallback(
-    async (classId: string, keyword?: string) => {
+    async (classId: string, keyword?: string, preferredDateOverride?: string) => {
       setSelectedClassId(classId)
       setSheet(null)
       setIsEditMode(false)
@@ -168,9 +182,13 @@ return
         }
 
         const nextAvailableDates = buildAttendanceDateOptions(scheduleDays)
-        const preferredDate = pickPreferredDate(nextAvailableDates)
+        const preferredDate =
+          preferredDateOverride && isDateMatchingScheduleDay(preferredDateOverride, scheduleDays)
+            ? preferredDateOverride
+            : pickPreferredDate(nextAvailableDates)
+        const resolvedDates = preferredDate ? ensureDateOption(nextAvailableDates, preferredDate) : nextAvailableDates
 
-        setAvailableDates(nextAvailableDates)
+        setAvailableDates(resolvedDates)
         setSelectedDate(preferredDate)
 
         if (!preferredDate) {
@@ -187,9 +205,26 @@ return
     [loadSheet, showNotification]
   )
 
+  const loadMissingSessions = useCallback(async () => {
+    setLoadingMissingSessions(true)
+
+    const response = await studentAttendanceService.getMissingSessions()
+
+    if (response.success && response.data) {
+      setMissingOverview(response.data)
+    } else {
+      setMissingOverview(null)
+
+      if (response.message) {
+        showNotification(response.message, 'error')
+      }
+    }
+
+    setLoadingMissingSessions(false)
+  }, [showNotification])
+
   useEffect(() => {
     const initialize = async () => {
-      const today = getTodayDateString()
       const classesRes = await studentAttendanceService.getCoachClasses()
       const rawClasses = classesRes.success && classesRes.data ? classesRes.data : []
       const classes = rawClasses
@@ -206,6 +241,12 @@ return
         return
       }
 
+      if (preselectedClassId && classes.some(cls => cls.classId === preselectedClassId)) {
+        await loadClassAttendanceContext(preselectedClassId, undefined, preselectedDate || undefined)
+        return
+      }
+
+      const today = getTodayDateString()
       let initialClassId = classes[0].classId
 
       for (const cls of classes) {
@@ -223,7 +264,13 @@ return
     if (auth?.user?.id) {
       initialize()
     }
-  }, [auth?.user?.id, loadClassAttendanceContext])
+  }, [auth?.user?.id, loadClassAttendanceContext, preselectedClassId, preselectedDate])
+
+  useEffect(() => {
+    if (auth?.user?.id) {
+      loadMissingSessions()
+    }
+  }, [auth?.user?.id, loadMissingSessions])
 
   const absentCount = useMemo(() => (sheet ? sheet.students.filter(student => student.isAbsent).length : 0), [sheet])
 
@@ -233,6 +280,36 @@ return
   )
 
   const isSheetLocked = Boolean(sheet?.isSubmitted && !isEditMode)
+
+  const missingSessionGroups = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        classId: string
+        classCode: string
+        className: string
+        sessions: MissingAttendanceOverviewType['sessions']
+      }
+    >()
+
+    for (const session of missingOverview?.sessions ?? []) {
+      const existing = groups.get(session.classId)
+
+      if (existing) {
+        existing.sessions.push(session)
+        continue
+      }
+
+      groups.set(session.classId, {
+        classId: session.classId,
+        classCode: session.classCode,
+        className: session.className,
+        sessions: [session]
+      })
+    }
+
+    return Array.from(groups.values())
+  }, [missingOverview])
 
   const updateStudentState = (
     studentId: string,
@@ -320,7 +397,7 @@ return
 
     if (response.success) {
       showNotification('Đã lưu điểm danh', 'success')
-      await loadSheet(sheet.classId, sheet.selectedDate, search)
+      await Promise.all([loadSheet(sheet.classId, sheet.selectedDate, search), loadMissingSessions()])
     } else {
       showNotification(response.message || 'Lưu điểm danh thất bại', 'error')
     }
@@ -341,23 +418,83 @@ return
         }
       />
       <CardContent>
+        <Box mb={4}>
+          {loadingMissingSessions ? (
+            <Alert severity='info'>Đang kiểm tra các buổi điểm danh còn thiếu...</Alert>
+          ) : null}
+
+          {!loadingMissingSessions && (missingOverview?.totalMissingSessions ?? 0) > 0 ? (
+            <Alert severity='warning' sx={{ alignItems: 'flex-start' }}>
+              <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 1 }}>
+                {isAdmin
+                  ? `Hiện có ${missingOverview?.totalMissingSessions} buổi điểm danh còn thiếu ở ${missingOverview?.totalClassesWithMissing} lớp.`
+                  : `Bạn đang thiếu ${missingOverview?.totalMissingSessions} buổi điểm danh ở ${missingOverview?.totalClassesWithMissing} lớp được phân công.`}
+              </Typography>
+              <Typography variant='body2' sx={{ mb: 2 }}>
+                Chọn một buổi bên dưới để mở nhanh đúng lớp và ngày cần điểm danh.
+              </Typography>
+              <Box className='flex flex-col gap-3'>
+                {missingSessionGroups.map(group => (
+                  <Box
+                    key={group.classId}
+                    sx={{
+                      p: 2,
+                      border: theme => `1px dashed ${theme.palette.warning.light}`,
+                      borderRadius: 2,
+                      bgcolor: 'background.paper'
+                    }}
+                  >
+                    <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                      {`${group.classCode} - ${group.className} (${group.sessions.length} buổi thiếu)`}
+                    </Typography>
+                    <Box className='flex flex-wrap gap-2'>
+                      {group.sessions.map(session => (
+                        <Button
+                          key={`${session.classId}-${session.attendanceDate}`}
+                          size='small'
+                          variant='outlined'
+                          color='warning'
+                          onClick={async () => {
+                            setSearch('')
+                            await loadClassAttendanceContext(session.classId, undefined, session.attendanceDate)
+                          }}
+                        >
+                          {formatAttendanceDateLabel(session.attendanceDate)}
+                        </Button>
+                      ))}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Alert>
+          ) : null}
+
+          {!loadingMissingSessions &&
+          coachClasses.length > 0 &&
+          (missingOverview?.totalMissingSessions ?? 0) === 0 &&
+          missingOverview ? (
+            <Alert severity='success'>Không có buổi điểm danh nào còn thiếu đến hết ngày hôm qua.</Alert>
+          ) : null}
+        </Box>
+
         <Grid container spacing={4}>
           <Grid size={{ xs: 12, md: 4 }}>
             <FormControl fullWidth>
-              <InputLabel>Lớp được phân công</InputLabel>
+              <InputLabel>Lớp điểm danh</InputLabel>
               <Select
                 value={selectedClassId}
-                label='Lớp được phân công'
+                label='Lớp điểm danh'
                 onChange={async (event: SelectChangeEvent) => {
                   await loadClassAttendanceContext(event.target.value, search)
                 }}
               >
                 {coachClasses.map(cls => (
                   <MenuItem key={cls.classId} value={cls.classId}>
-                    {`${cls.classCode}`}
+                    {`${cls.classCode} - ${cls.className}`}
                   </MenuItem>
                 ))}
               </Select>
+              <FormHelperText>{isAdmin ? 'Admin xem toàn bộ lớp đang hoạt động.' : 'HLV và trợ giảng chỉ xem các lớp được phân công.'}</FormHelperText>
             </FormControl>
           </Grid>
 
@@ -444,7 +581,9 @@ return
           ) : null}
 
           {!loading && !loadingDates && coachClasses.length === 0 ? (
-            <Typography color='text.secondary'>Hiện bạn chưa được phân công lớp nào để điểm danh.</Typography>
+            <Typography color='text.secondary'>
+              {isAdmin ? 'Hiện chưa có lớp nào để điểm danh.' : 'Hiện bạn chưa được phân công lớp nào để điểm danh.'}
+            </Typography>
           ) : null}
 
           {!loading && !loadingDates && selectedClassId && availableDates.length === 0 ? (

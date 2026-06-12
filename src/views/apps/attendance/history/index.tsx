@@ -2,8 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
+import Link from 'next/link'
+
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
@@ -32,6 +35,7 @@ import studentAttendanceService, {
   type AttendanceSheetStudentType,
   type AttendanceSheetType,
   type CoachClassOption,
+  type MissingAttendanceOverviewType,
   type StudentAttendanceSessionLogType
 } from '@/services/studentAttendanceService'
 import { formatDateTimeVN } from '@/utils/dateTime'
@@ -52,6 +56,8 @@ type DailyLogGroup = {
   logs: StudentAttendanceSessionLogType[]
 }
 
+const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
+
 const today = new Date().toISOString().slice(0, 10)
 
 const oneMonthAgo = (() => {
@@ -62,6 +68,12 @@ const oneMonthAgo = (() => {
   return date.toISOString().slice(0, 10)
 })()
 
+const parseDateString = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number)
+
+  return new Date(year, month - 1, day)
+}
+
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString('vi-VN', {
     weekday: 'short',
@@ -70,9 +82,13 @@ const formatDate = (value: string) =>
     year: 'numeric'
   })
 
-const formatDateTime = (value?: string | null) => {
-  return formatDateTimeVN(value)
+const formatAttendanceDateLabel = (value: string) => {
+  const date = parseDateString(value)
+
+  return `${WEEKDAY_LABELS[date.getDay()]}, ${date.toLocaleDateString('vi-VN')}`
 }
+
+const formatDateTime = (value?: string | null) => formatDateTimeVN(value)
 
 const getStudentStatus = (student: AttendanceSheetStudentType) => {
   if (!student.isAbsent) {
@@ -100,11 +116,13 @@ const AttendanceHistoryView = () => {
   const isAdmin = hasAdminRole(auth?.roles)
 
   const [loading, setLoading] = useState(false)
+  const [loadingMissingSessions, setLoadingMissingSessions] = useState(false)
   const [classOptions, setClassOptions] = useState<FilterClass[]>([])
   const [selectedClassId, setSelectedClassId] = useState('')
   const [fromDate, setFromDate] = useState(oneMonthAgo)
   const [toDate, setToDate] = useState(today)
   const [logs, setLogs] = useState<StudentAttendanceSessionLogType[]>([])
+  const [missingOverview, setMissingOverview] = useState<MissingAttendanceOverviewType | null>(null)
 
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -165,6 +183,26 @@ const AttendanceHistoryView = () => {
     loadLogs()
   }, [selectedClassId, fromDate, toDate])
 
+  useEffect(() => {
+    const loadMissingSessions = async () => {
+      setLoadingMissingSessions(true)
+
+      const response = await studentAttendanceService.getMissingSessions()
+
+      if (response.success && response.data) {
+        setMissingOverview(response.data)
+      } else {
+        setMissingOverview(null)
+      }
+
+      setLoadingMissingSessions(false)
+    }
+
+    if (auth?.user?.id) {
+      loadMissingSessions()
+    }
+  }, [auth?.user?.id])
+
   const summary = useMemo(() => {
     const totalSessions = logs.length
     const totalStudents = logs.reduce((sum, row) => sum + row.totalStudents, 0)
@@ -205,6 +243,36 @@ const AttendanceHistoryView = () => {
         logs: rows.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       }))
   }, [logs])
+
+  const missingSessionGroups = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        classId: string
+        classCode: string
+        className: string
+        sessions: MissingAttendanceOverviewType['sessions']
+      }
+    >()
+
+    for (const session of missingOverview?.sessions ?? []) {
+      const existing = groups.get(session.classId)
+
+      if (existing) {
+        existing.sessions.push(session)
+        continue
+      }
+
+      groups.set(session.classId, {
+        classId: session.classId,
+        classCode: session.classCode,
+        className: session.className,
+        sessions: [session]
+      })
+    }
+
+    return Array.from(groups.values())
+  }, [missingOverview])
 
   const detailRows = useMemo(() => {
     if (!selectedSheet?.students) return []
@@ -251,7 +319,7 @@ const AttendanceHistoryView = () => {
       <Box className='flex flex-col gap-6'>
         <Card>
           <CardHeader
-            title='Quản lý điểm danh coach'
+            title='Lịch sử điểm danh'
             subheader='Theo dõi lịch sử điểm danh theo ngày, lớp và xem lại chi tiết từng buổi.'
           />
           <CardContent>
@@ -290,6 +358,66 @@ const AttendanceHistoryView = () => {
                 />
               </Grid>
             </Grid>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader title='Buổi điểm danh còn thiếu' />
+          <CardContent>
+            {loadingMissingSessions ? (
+              <Alert severity='info'>Đang kiểm tra các buổi điểm danh còn thiếu...</Alert>
+            ) : null}
+
+            {!loadingMissingSessions && (missingOverview?.totalMissingSessions ?? 0) > 0 ? (
+              <Alert severity='warning' sx={{ alignItems: 'flex-start' }}>
+                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 1 }}>
+                  {isAdmin
+                    ? `Hiện có ${missingOverview?.totalMissingSessions} buổi điểm danh còn thiếu ở ${missingOverview?.totalClassesWithMissing} lớp.`
+                    : `Bạn đang thiếu ${missingOverview?.totalMissingSessions} buổi điểm danh ở ${missingOverview?.totalClassesWithMissing} lớp được phân công.`}
+                </Typography>
+                <Typography variant='body2' sx={{ mb: 2 }}>
+                  Chọn một buổi bên dưới để mở nhanh đúng lớp và ngày cần điểm danh.
+                </Typography>
+                <Box className='flex flex-col gap-3'>
+                  {missingSessionGroups.map(group => (
+                    <Box
+                      key={group.classId}
+                      sx={{
+                        p: 2,
+                        border: theme => `1px dashed ${theme.palette.warning.light}`,
+                        borderRadius: 2,
+                        bgcolor: 'background.paper'
+                      }}
+                    >
+                      <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                        {`${group.classCode} - ${group.className} (${group.sessions.length} buổi thiếu)`}
+                      </Typography>
+                      <Box className='flex flex-wrap gap-2'>
+                        {group.sessions.map(session => (
+                          <Button
+                            key={`${session.classId}-${session.attendanceDate}`}
+                            component={Link}
+                            href={`/apps/attendance/list?classId=${session.classId}&date=${session.attendanceDate}`}
+                            size='small'
+                            variant='outlined'
+                            color='warning'
+                          >
+                            {formatAttendanceDateLabel(session.attendanceDate)}
+                          </Button>
+                        ))}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Alert>
+            ) : null}
+
+            {!loadingMissingSessions &&
+            classOptions.length > 0 &&
+            (missingOverview?.totalMissingSessions ?? 0) === 0 &&
+            missingOverview ? (
+              <Alert severity='success'>Không có buổi điểm danh nào còn thiếu đến hết ngày hôm qua.</Alert>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -404,12 +532,7 @@ const AttendanceHistoryView = () => {
                           const presentCount = Math.max(0, row.totalStudents - row.absentCount)
 
                           return (
-                            <TableRow
-                              hover
-                              key={row.id}
-                              onClick={() => openDetail(row)}
-                              sx={{ cursor: 'pointer' }}
-                            >
+                            <TableRow hover key={row.id} onClick={() => openDetail(row)} sx={{ cursor: 'pointer' }}>
                               <TableCell>
                                 <Stack spacing={0.5}>
                                   <Typography color='primary.main' fontWeight={600}>

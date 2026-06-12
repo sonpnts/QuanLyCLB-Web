@@ -220,6 +220,7 @@ export const API_ENDPOINTS = {
     byId: (id: string) => `/student-attendance/${id}`,
     absences: '/student-attendance/absences',
     sessionLogs: '/student-attendance/session-logs',
+    missingSessions: '/student-attendance/missing-sessions',
     coachClasses: '/student-attendance/coach/classes',
     coachSuggestedDate: (classId: string) => `/student-attendance/coach/class/${classId}/suggested-date`,
     coachSheet: (classId: string, date: string) => `/student-attendance/coach/class/${classId}/sheet/${date}`,

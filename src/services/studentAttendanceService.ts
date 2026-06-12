@@ -101,6 +101,19 @@ export interface GetAttendanceSessionLogsParams {
   toDate?: string
 }
 
+export interface MissingAttendanceSessionType {
+  classId: string
+  classCode: string
+  className: string
+  attendanceDate: string
+}
+
+export interface MissingAttendanceOverviewType {
+  totalMissingSessions: number
+  totalClassesWithMissing: number
+  sessions: MissingAttendanceSessionType[]
+}
+
 interface SuggestedDatePayload {
   classId?: string
   selectedDate?: string
@@ -116,7 +129,7 @@ const unwrapList = (payload: any): any[] => {
 }
 
 const toDateString = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null
+  if (typeof value !== "string") return null
 
   const trimmed = value.trim()
 
@@ -136,8 +149,8 @@ class StudentAttendanceService {
       return { success: true, data: unwrapList(apiResponse.data) }
     } catch (error) {
       logger.error('StudentAttendanceService', 'getAbsences', error)
-      
-return { success: true, data: [] }
+
+      return { success: true, data: [] }
     }
   }
 
@@ -151,8 +164,8 @@ return { success: true, data: [] }
       return { success: true, data: unwrapList(apiResponse.data), message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentAttendanceService', 'createExcusedAbsences', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -166,8 +179,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentAttendanceService', 'deleteAttendance', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -181,8 +194,23 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: unwrapList(apiResponse.data) }
     } catch (error) {
       logger.error('StudentAttendanceService', 'getCoachClasses', error)
-      
-return { success: true, data: [] }
+
+      return { success: true, data: [] }
+    }
+  }
+
+  async getMissingSessions(): Promise<ResponseResult<MissingAttendanceOverviewType>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.studentAttendance.missingSessions)
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('StudentAttendanceService', 'getMissingSessions', error)
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -198,13 +226,13 @@ return { success: true, data: [] }
       const normalizedDate =
         toDateString(payload) ?? toDateString((payload as SuggestedDatePayload | null)?.selectedDate ?? null)
 
-      if (!normalizedDate) return { success: false, message: 'Khong xac dinh duoc ngay diem danh goi y' }
+      if (!normalizedDate) return { success: false, message: 'Không xác định được ngày điểm danh gợi ý' }
 
       return { success: true, data: normalizedDate }
     } catch (error: any) {
       logger.error('StudentAttendanceService', 'getSuggestedDate', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -212,7 +240,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
     try {
       const normalizedDate = toDateString(date)
 
-      if (!normalizedDate) return { success: false, message: 'Ngay diem danh khong hop le' }
+      if (!normalizedDate) return { success: false, message: 'Ngày điểm danh không hợp lệ' }
 
       const response = await apiClient.get<any>(API_ENDPOINTS.studentAttendance.coachSheet(classId, normalizedDate), {
         params: search ? { search } : undefined
@@ -225,8 +253,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('StudentAttendanceService', 'getCoachSheet', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
@@ -240,8 +268,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('StudentAttendanceService', 'saveCoachSheet', error)
-      
-return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 
