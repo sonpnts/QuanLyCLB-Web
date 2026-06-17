@@ -91,14 +91,17 @@ const PaymentInvoiceMerged = () => {
           return
         }
 
-        setClassOptions(
-          result.data
-            .map(item => ({
-              id: item.id,
-              name: item.code ? `${item.name} (${item.code})` : item.name
-            }))
-            .sort((left, right) => left.name.localeCompare(right.name, 'vi'))
-        )
+        const list = result.data
+          .map(item => ({
+            id: item.id,
+            name: item.code ? `${item.name} (${item.code})` : item.name
+          }))
+          .sort((left, right) => left.name.localeCompare(right.name, 'vi'))
+
+        setClassOptions([
+          { id: '00000000-0000-0000-0000-000000000000', name: 'Khách lẻ' },
+          ...list
+        ])
 
         return
       }
@@ -111,14 +114,17 @@ const PaymentInvoiceMerged = () => {
         return
       }
 
-      setClassOptions(
-        result.data
-          .map(item => ({
-            id: item.classId,
-            name: item.classCode ? `${item.className} (${item.classCode})` : item.className
-          }))
-          .sort((left, right) => left.name.localeCompare(right.name, 'vi'))
-      )
+      const list = result.data
+        .map(item => ({
+          id: item.classId,
+          name: item.classCode ? `${item.className} (${item.classCode})` : item.className
+        }))
+        .sort((left, right) => left.name.localeCompare(right.name, 'vi'))
+
+      setClassOptions([
+        { id: '00000000-0000-0000-0000-000000000000', name: 'Khách lẻ' },
+        ...list
+      ])
     }
 
     loadClassOptions()

@@ -163,11 +163,11 @@ const InvoiceListTable = ({
         <CardContent className='flex justify-between gap-4 flex-wrap flex-col sm:flex-row items-start sm:items-center'>
           <Box>
             <Typography variant='h6'>Danh sách biên lai</Typography>
-            <Typography variant='body2' color='text.secondary'>
-              {isAdmin
-                ? 'Xem lịch sử thu tiền toàn hệ thống theo từng biên lai gộp.'
-                : 'Chỉ hiển thị các biên lai do bạn trực tiếp thu, có thể lọc tiếp theo lớp phụ trách.'}
-            </Typography>
+            {/*<Typography variant='body2' color='text.secondary'>*/}
+            {/*  {isAdmin*/}
+            {/*    ? 'Xem lịch sử thu tiền toàn hệ thống theo từng biên lai gộp.'*/}
+            {/*    : 'Chỉ hiển thị các biên lai do bạn trực tiếp thu, có thể lọc tiếp theo lớp phụ trách.'}*/}
+            {/*</Typography>*/}
           </Box>
           <Button
             variant='outlined'

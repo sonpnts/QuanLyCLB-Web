@@ -17,6 +17,7 @@ import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Grid from '@mui/material/Grid2'
 import IconButton from '@mui/material/IconButton'
+import FormHelperText from '@mui/material/FormHelperText'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Paper from '@mui/material/Paper'
@@ -55,15 +56,25 @@ const PAYMENT_METHOD_BANK_TRANSFER = 1
 
 const YEARS = Array.from({ length: 4 }, (_, index) => new Date().getFullYear() - 1 + index)
 
-type ProductRow = {
-  id: string
-  productId: string
-  productVariantId: string
-  quantity: number
-  bundleDiscountAmount?: number
-  bundleId?: string
-  bundleName?: string
-}
+type ProductRow =
+  | {
+      id: string
+      type: 'product'
+      productId: string
+      productVariantId: string
+      quantity: number
+    }
+  | {
+      id: string
+      type: 'combo'
+      bundleId: string
+      items: Array<{
+        productId: string
+        productVariantId: string
+        quantity: number
+        bundleDiscountAmount: number
+      }>
+    }
 
 type OtherFeeRow = {
   id: string
@@ -122,8 +133,8 @@ const getProductDisplayName = (product?: ProductType | null, variantId?: string)
   return variant ? `${product.name} - ${variant.label}` : product.name
 }
 
-const getProductRowUnitPrice = (product: ProductType | null | undefined, row: ProductRow) =>
-  Math.max(0, getProductUnitPrice(product, row.productVariantId) - Number(row.bundleDiscountAmount || 0))
+const getProductRowUnitPrice = (product: ProductType | null | undefined, row: Extract<ProductRow, { type: 'product' }>) =>
+  Math.max(0, getProductUnitPrice(product, row.productVariantId))
 
 const PaymentInvoiceCreateView = () => {
   const router = useRouter()
@@ -156,7 +167,7 @@ const PaymentInvoiceCreateView = () => {
   const [selectedOneTimeFees, setSelectedOneTimeFees] = useState<Record<string, boolean>>({})
   const [productRows, setProductRows] = useState<ProductRow[]>([])
   const [otherFeeRows, setOtherFeeRows] = useState<OtherFeeRow[]>([])
-  const [selectedBundleId, setSelectedBundleId] = useState('')
+  const [isGuest, setIsGuest] = useState(false)
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [proofPreview, setProofPreview] = useState<string | null>(null)
   const [draftInfo, setDraftInfo] = useState<ReturnType<typeof readPaymentInvoiceDraft>>(null)
@@ -238,7 +249,7 @@ const PaymentInvoiceCreateView = () => {
       if (!form.classId) {
         setStudents([])
         setSelectedStudent(null)
-        
+
 return
       }
 
@@ -282,7 +293,7 @@ return
     const loadTuitionQuote = async () => {
       if (!form.classId || !form.studentId) {
         setTuitionQuotes({})
-        
+
 return
       }
 
@@ -332,7 +343,7 @@ return
           examEnabled: false,
           selectedExamRegistrationId: ''
         }))
-        
+
 return
       }
 
@@ -368,7 +379,7 @@ return
       if (!form.classId || !form.studentId) {
         setOneTimeFeeOptions([])
         setSelectedOneTimeFees({})
-        
+
 return
       }
 
@@ -471,13 +482,23 @@ return
   const productTotal = useMemo(
     () =>
       productRows.reduce((sum, row) => {
-        const product = products.find(item => item.id === row.productId)
-
-        if (!product) return sum
-
-        return sum + getProductRowUnitPrice(product, row) * Number(row.quantity || 0)
+        if (row.type === 'product') {
+          const product = products.find(item => item.id === row.productId)
+          if (!product) return sum
+          return sum + getProductRowUnitPrice(product, row) * Number(row.quantity || 0)
+        } else {
+          const bundle = bundles.find(b => b.id === row.bundleId)
+          if (!bundle) return sum
+          const comboItemsTotal = row.items.reduce((itemSum, item) => {
+            const product = products.find(p => p.id === item.productId)
+            if (!product) return itemSum
+            const unitPrice = Math.max(0, getProductUnitPrice(product, item.productVariantId) - Number(item.bundleDiscountAmount || 0))
+            return itemSum + unitPrice * Number(item.quantity || 0)
+          }, 0)
+          return sum + comboItemsTotal
+        }
       }, 0),
-    [productRows, products]
+    [productRows, products, bundles]
   )
 
   const otherFeeTotal = useMemo(
@@ -533,57 +554,60 @@ return
   }
 
   const addProductRow = () => {
-    setProductRows(prev => [...prev, { id: createRowId(), productId: '', productVariantId: '', quantity: 1 }])
+    setProductRows(prev => [...prev, { id: createRowId(), type: 'product', productId: '', productVariantId: '', quantity: 1 }])
   }
 
-  const addBundleRows = () => {
-    const selectedBundle = bundles.find(item => item.id === selectedBundleId)
+  const addComboRow = () => {
+    setProductRows(prev => [...prev, { id: createRowId(), type: 'combo', bundleId: '', items: [] }])
+  }
 
+  const handleComboChange = (rowId: string, bundleId: string) => {
+    const selectedBundle = bundles.find(item => item.id === bundleId)
     if (!selectedBundle) {
-      showNotification('Vui long chon combo truoc khi them vao bien lai.', 'error')
-      
-return
-    }
-
-    const reservedByProduct = productRows.reduce<Record<string, number>>((accumulator, row) => {
-      accumulator[row.productId] = (accumulator[row.productId] || 0) + Number(row.quantity || 0)
-      
-return accumulator
-    }, {})
-
-    for (const item of selectedBundle.items) {
-      const product = products.find(row => row.id === item.productId)
-      const availableStock = getAvailableProductStock(product)
-      const remainingStock = availableStock - Number(reservedByProduct[item.productId] || 0)
-
-      if (remainingStock < item.quantity) {
-        showNotification(`Ton kho cua "${item.productName}" khong du de them combo nay.`, 'error')
-        
-return
-      }
-    }
-
-    setProductRows(prev => [
-      ...prev,
-      ...selectedBundle.items.flatMap(item =>
-        Array.from({ length: Number(item.quantity || 0) }, () => ({
-          id: createRowId(),
-          productId: item.productId,
-          productVariantId: '',
-          quantity: 1,
-          bundleDiscountAmount: Number(item.discountAmount || 0),
-          bundleId: selectedBundle.id,
-          bundleName: selectedBundle.name
-        }))
+      setProductRows(prev =>
+        prev.map(row => (row.id === rowId && row.type === 'combo' ? { ...row, bundleId: '', items: [] } : row))
       )
-    ])
+      return
+    }
 
-    setSelectedBundleId('')
-    showNotification(`Da them combo "${selectedBundle.name}" vao bien lai.`, 'success')
+    const items = selectedBundle.items.map(item => {
+      const product = products.find(p => p.id === item.productId)
+      const variants = getActiveProductVariants(product)
+      let defaultVariantId = ''
+
+      if (product?.hasVariants && variants.length === 1 && Number(variants[0].stockQuantity || 0) > 0) {
+        defaultVariantId = variants[0].id
+      }
+
+      return {
+        productId: item.productId,
+        productVariantId: defaultVariantId,
+        quantity: Number(item.quantity || 1),
+        bundleDiscountAmount: Number(item.discountAmount || 0)
+      }
+    })
+
+    setProductRows(prev =>
+      prev.map(row => (row.id === rowId && row.type === 'combo' ? { ...row, bundleId, items } : row))
+    )
   }
 
-  const updateProductRow = (id: string, payload: Partial<ProductRow>) => {
-    setProductRows(prev => prev.map(row => (row.id === id ? { ...row, ...payload } : row)))
+  const handleComboVariantChange = (rowId: string, productId: string, productVariantId: string) => {
+    setProductRows(prev =>
+      prev.map(row => {
+        if (row.id === rowId && row.type === 'combo') {
+          const nextItems = row.items.map(item =>
+            item.productId === productId ? { ...item, productVariantId } : item
+          )
+          return { ...row, items: nextItems }
+        }
+        return row
+      })
+    )
+  }
+
+  const updateProductRow = (id: string, payload: Partial<Extract<ProductRow, { type: 'product' }>>) => {
+    setProductRows(prev => prev.map(row => (row.id === id && row.type === 'product' ? { ...row, ...payload } : row)))
   }
 
   const handleProductChange = (id: string, productId: string) => {
@@ -592,11 +616,8 @@ return
 
     updateProductRow(id, {
       productId,
-      productVariantId: selectedProduct?.hasVariants ? '' : '',
-      quantity: 1,
-      bundleDiscountAmount: undefined,
-      bundleId: undefined,
-      bundleName: undefined
+      productVariantId: '',
+      quantity: 1
     })
 
     if (selectedProduct && selectedProduct.hasVariants && variants.length === 1 && Number(variants[0].stockQuantity || 0) > 0) {
@@ -613,7 +634,7 @@ return
   }
 
   const updateOtherFeeRow = (id: string, payload: Partial<OtherFeeRow>) => {
-    setOtherFeeRows(prev => prev.map(row => (row.id === id ? { ...row, ...payload } : row)))
+    setOtherFeeRows(prev => otherFeeRows.map(row => (row.id === id ? { ...row, ...payload } : row)))
   }
 
   const removeOtherFeeRow = (id: string) => {
@@ -625,7 +646,7 @@ return
       const examName = selectedExamOption?.examSessionName || 'kỳ thi đã đăng ký'
 
       showNotification(`Do tồn tại đăng ký "${examName}" nên không thể loại bỏ các khoản phí bắt buộc.`, 'error')
-      
+
 return
     }
 
@@ -642,7 +663,7 @@ return
 
     if (!file.type.startsWith('image/')) {
       showNotification('Vui lòng chọn file ảnh cho minh chứng chuyển khoản.', 'error')
-      
+
 return
     }
 
@@ -669,11 +690,13 @@ return
       discountReason?: string
     }> = []
 
+    const effectiveClassId = isGuest ? undefined : (form.classId || undefined)
+
     if (form.tuitionEnabled) {
       tuitionMonths.forEach((row, index) => {
         items.push({
           type: PAYMENT_TYPE_TUITION,
-          classId: form.classId,
+          classId: effectiveClassId,
           forMonth: row.month,
           forYear: row.year,
           description: `Học phí tháng ${row.month}/${row.year}`,
@@ -686,7 +709,7 @@ return
     if (form.examEnabled && form.selectedExamRegistrationId) {
       items.push({
         type: PAYMENT_TYPE_EXAM_FEE,
-        classId: form.classId,
+        classId: effectiveClassId,
         examRegistrationId: form.selectedExamRegistrationId,
         description: 'Lệ phí thi cấp'
       })
@@ -697,39 +720,64 @@ return
 
       items.push({
         type: normalizedFeeCode === 'CSVC' ? PAYMENT_TYPE_FACILITY_FEE : PAYMENT_TYPE_CODE_CHANGE_FEE,
-        classId: form.classId,
+        classId: effectiveClassId,
         amount: Number(item.amount || 0),
         description: item.feeName
       })
     }
 
     for (const row of productRows) {
-      const quantity = Math.max(1, Number(row.quantity || 1))
-      const product = products.find(item => item.id === row.productId)
-      const variant = getProductVariant(product, row.productVariantId)
+      if (row.type === 'product') {
+        const quantity = Math.max(1, Number(row.quantity || 1))
+        const product = products.find(item => item.id === row.productId)
+        const variant = getProductVariant(product, row.productVariantId)
 
-      if (!product) continue
-      if (product.hasVariants && !variant) continue
+        if (!product) continue
+        if (product.hasVariants && !variant) continue
 
-      const retailUnitPrice = getProductUnitPrice(product, variant?.id)
-      const effectiveUnitPrice = getProductRowUnitPrice(product, row)
-      const lineDiscountAmount = row.bundleName ? Math.max(0, Number(row.bundleDiscountAmount || 0)) : Math.max(0, retailUnitPrice - effectiveUnitPrice)
+        const retailUnitPrice = getProductUnitPrice(product, variant?.id)
+        const effectiveUnitPrice = getProductRowUnitPrice(product, row)
+        const lineDiscountAmount = Math.max(0, retailUnitPrice - effectiveUnitPrice)
 
-      const lineDiscountReason =
-        row.bundleName && lineDiscountAmount > 0 ? `Áp dụng giá combo: ${row.bundleName}` : undefined
+        for (let index = 0; index < quantity; index += 1) {
+          items.push({
+            type: PAYMENT_TYPE_BUY_PRODUCT,
+            classId: effectiveClassId,
+            productId: row.productId,
+            productVariantId: variant?.id,
+            description: getProductDisplayName(product, variant?.id),
+            discountAmount: lineDiscountAmount > 0 ? lineDiscountAmount : undefined
+          })
+        }
+      } else {
+        const bundle = bundles.find(b => b.id === row.bundleId)
+        if (!bundle) continue
 
-      for (let index = 0; index < quantity; index += 1) {
-        items.push({
-          type: PAYMENT_TYPE_BUY_PRODUCT,
-          classId: form.classId,
-          productId: row.productId,
-          productVariantId: variant?.id,
-          description: row.bundleName
-            ? `${getProductDisplayName(product, variant?.id)} - combo ${row.bundleName}`
-            : getProductDisplayName(product, variant?.id),
-          discountAmount: lineDiscountAmount > 0 ? lineDiscountAmount : undefined,
-          discountReason: lineDiscountReason
-        })
+        for (const item of row.items) {
+          const product = products.find(p => p.id === item.productId)
+          const variant = getProductVariant(product, item.productVariantId)
+
+          if (!product) continue
+          if (product.hasVariants && !variant) continue
+
+          const retailUnitPrice = getProductUnitPrice(product, variant?.id)
+          const effectiveUnitPrice = Math.max(0, retailUnitPrice - Number(item.bundleDiscountAmount || 0))
+          const lineDiscountAmount = Math.max(0, retailUnitPrice - effectiveUnitPrice)
+          const lineDiscountReason = lineDiscountAmount > 0 ? `Áp dụng giá combo: ${bundle.name}` : undefined
+
+          const quantity = Math.max(1, Number(item.quantity || 1))
+          for (let index = 0; index < quantity; index += 1) {
+            items.push({
+              type: PAYMENT_TYPE_BUY_PRODUCT,
+              classId: effectiveClassId,
+              productId: item.productId,
+              productVariantId: variant?.id,
+              description: `${getProductDisplayName(product, variant?.id)} - combo ${bundle.name}`,
+              discountAmount: lineDiscountAmount > 0 ? lineDiscountAmount : undefined,
+              discountReason: lineDiscountReason
+            })
+          }
+        }
       }
     }
 
@@ -738,7 +786,7 @@ return
 
       items.push({
         type: PAYMENT_TYPE_OTHER,
-        classId: form.classId,
+        classId: effectiveClassId,
         amount: Number(row.amount),
         description: row.description.trim()
       })
@@ -761,7 +809,7 @@ return
 
         if (!uploadResponse.success || !uploadResponse.data?.imageUrl) {
           showNotification(uploadResponse.message || 'Upload ảnh chuyển khoản thất bại.', 'error')
-          
+
 return
         }
 
@@ -772,7 +820,7 @@ return
         const single = items[0]
 
         const response = await paymentService.createPayment({
-          studentId: form.studentId,
+          studentId: form.studentId || null,
           classId: single.classId,
           type: single.type,
           amount: single.amount,
@@ -793,19 +841,19 @@ return
 
         if (!response.success || !response.data?.receiptNumber) {
           showNotification(response.message || 'Tạo phiếu thu thất bại.', 'error')
-          
+
 return
         }
 
         clearPaymentInvoiceDraft(draftKey)
         setPreviewReceiptNumber(response.data.receiptNumber)
         setReceiptPreviewOpen(true)
-        
+
 return
       }
 
       const bulkResponse = await paymentService.createBulkPayment({
-        studentId: form.studentId,
+        studentId: form.studentId || null,
         paymentDate: new Date().toISOString(),
         method: form.method,
         transferProofImageUrl,
@@ -819,7 +867,7 @@ return
 
       if (!bulkResponse.success || !receiptNumber) {
         showNotification(bulkResponse.message || 'Tạo phiếu thu thất bại.', 'error')
-        
+
 return
       }
 
@@ -837,20 +885,28 @@ return
 
     if (!effectiveCollectorId) {
       showNotification('Không xác định được người thu tiền.', 'error')
-      
-return
+
+      return
     }
 
-    if (!form.classId) {
-      showNotification('Vui lòng chọn lớp hiện tại.', 'error')
-      
-return
-    }
+    if (!isGuest) {
+      if (!form.classId) {
+        showNotification('Vui lòng chọn lớp hiện tại.', 'error')
 
-    if (!form.studentId) {
-      showNotification('Vui lòng chọn học viên.', 'error')
-      
-return
+        return
+      }
+
+      if (!form.studentId) {
+        showNotification('Vui lòng chọn học viên.', 'error')
+
+        return
+      }
+    } else {
+      if (productRows.length === 0 && otherFeeRows.length === 0) {
+        showNotification('Thanh toán khách lẻ cần có ít nhất một sản phẩm hoặc khoản thu khác.', 'error')
+
+        return
+      }
     }
 
     if (form.tuitionEnabled) {
@@ -889,69 +945,110 @@ return
 
     if (discountAmount > 0 && !form.tuitionEnabled) {
       showNotification('Giảm trừ chỉ áp dụng cho học phí.', 'error')
-      
-return
+
+      return
     }
 
     if (discountAmount > 0 && !form.discountReason.trim()) {
       showNotification('Vui lòng nhập lý do giảm trừ.', 'error')
-      
-return
+
+      return
     }
 
     if (form.examEnabled && !form.selectedExamRegistrationId) {
       showNotification('Vui lòng chọn đăng ký thi cấp.', 'error')
-      
-return
+
+      return
     }
+
+    const reservedStock: Record<string, number> = {}
 
     for (const row of productRows) {
-      if (!row.productId) {
-        showNotification('Vui lòng chọn sản phẩm.', 'error')
-        
-return
-      }
+      if (row.type === 'product') {
+        if (!row.productId) {
+          showNotification('Vui lòng chọn sản phẩm.', 'error')
 
-      const product = products.find(item => item.id === row.productId)
+          return
+        }
 
-      if (!product) {
-        showNotification('Sản phẩm không còn tồn tại trong hệ thống.', 'error')
-        
-return
-      }
+        const product = products.find(item => item.id === row.productId)
 
-      if (product.hasVariants && !row.productVariantId) {
-        showNotification('Vui lòng chọn biến thể sản phẩm.', 'error')
-        
-return
-      }
+        if (!product) {
+          showNotification('Sản phẩm không còn tồn tại trong hệ thống.', 'error')
 
-      const availableStock = getAvailableProductStock(product, row.productVariantId)
+          return
+        }
 
-      if (availableStock <= 0) {
-        showNotification('Sản phẩm đã hết hàng. Vui lòng thông báo tới admin.', 'error')
-        
-return
-      }
+        if (product.hasVariants && !row.productVariantId) {
+          showNotification('Vui lòng chọn biến thể sản phẩm.', 'error')
 
-      if (Number(row.quantity || 0) < 1) {
-        showNotification('Số lượng sản phẩm phải lớn hơn hoặc bằng 1.', 'error')
-        
-return
-      }
+          return
+        }
 
-      if (Number(row.quantity || 0) > availableStock) {
-        showNotification(`Số lượng vượt quá tồn kho hiện có (${availableStock}).`, 'error')
-        
-return
+        const key = `${row.productId}_${row.productVariantId || ''}`
+
+        reservedStock[key] = (reservedStock[key] || 0) + Number(row.quantity || 0)
+
+        if (Number(row.quantity || 0) < 1) {
+          showNotification('Số lượng sản phẩm phải lớn hơn hoặc bằng 1.', 'error')
+
+          return
+        }
+      } else {
+        if (!row.bundleId) {
+          showNotification('Vui lòng chọn combo.', 'error')
+
+          return
+        }
+
+        const bundle = bundles.find(b => b.id === row.bundleId)
+
+        if (!bundle) {
+          showNotification('Combo không tồn tại.', 'error')
+
+          return
+        }
+
+        for (const item of row.items) {
+          const product = products.find(p => p.id === item.productId)
+
+          if (!product) {
+            showNotification('Sản phẩm trong combo không còn tồn tại.', 'error')
+
+            return
+          }
+
+          if (product.hasVariants && !item.productVariantId) {
+            showNotification(`Vui lòng chọn biến thể cho sản phẩm "${product.name}" trong combo.`, 'error')
+
+            return
+          }
+
+          const key = `${item.productId}_${item.productVariantId || ''}`
+
+          reservedStock[key] = (reservedStock[key] || 0) + Number(item.quantity || 0)
+        }
       }
     }
 
-    for (const row of otherFeeRows) {
-      if ((row.description.trim() && Number(row.amount || 0) <= 0) || (!row.description.trim() && Number(row.amount || 0) > 0)) {
-        showNotification('Khoản phí khác cần đủ mô tả và số tiền hợp lệ.', 'error')
-        
-return
+    for (const [key, qty] of Object.entries(reservedStock)) {
+      const [productId, variantId] = key.split('_')
+      const product = products.find(p => p.id === productId)
+
+      if (!product) continue
+
+      const availableStock = getAvailableProductStock(product, variantId)
+
+      if (availableStock <= 0) {
+        showNotification(`Sản phẩm "${getProductDisplayName(product, variantId)}" đã hết hàng.`, 'error')
+
+        return
+      }
+
+      if (qty > availableStock) {
+        showNotification(`Tổng số lượng chọn của "${getProductDisplayName(product, variantId)}" (${qty}) vượt quá tồn kho hiện có (${availableStock}).`, 'error')
+
+        return
       }
     }
 
@@ -959,19 +1056,19 @@ return
 
     if (items.length === 0) {
       showNotification('Vui lòng chọn ít nhất một khoản thu.', 'error')
-      
+
 return
     }
 
     if (form.method === PAYMENT_METHOD_BANK_TRANSFER && !proofFile) {
       showNotification('Chuyển khoản bắt buộc có ảnh minh chứng.', 'error')
-      
+
 return
     }
 
     if (sendZaloOverride === undefined && shouldSendZaloConfirmation && !studentHasZalo) {
       setZaloPromptOpen(true)
-      
+
 return
     }
 
@@ -983,9 +1080,7 @@ return
       <Box className='flex items-center justify-between gap-3 flex-wrap'>
         <div>
           <Typography variant='h4'>Tạo phiếu thu</Typography>
-          <Typography variant='body2' color='text.secondary'>
-            Chọn học viên và các khoản cần thu trong cùng một biên lai.
-          </Typography>
+
         </div>
         <Button variant='outlined' onClick={() => router.push('/apps/payment/collect')} startIcon={<i className='ri-arrow-left-line' />}>
           Quay lại trang thu tiền
@@ -1004,12 +1099,41 @@ return
                 <CardHeader title='Thông tin chung' />
                 <CardContent>
                   <Grid container spacing={3}>
+                    <Grid size={{ xs: 12 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={isGuest}
+                            onChange={event => {
+                              const checked = event.target.checked
+                              setIsGuest(checked)
+                              if (checked) {
+                                setForm(prev => ({
+                                  ...prev,
+                                  classId: prev.classId || classes[0]?.id || '',
+                                  studentId: '',
+                                  tuitionEnabled: false,
+                                  examEnabled: false,
+                                  selectedExamRegistrationId: '',
+                                  discountAmount: '',
+                                  discountReason: ''
+                                }))
+                                setSelectedStudent(null)
+                                setSelectedOneTimeFees({})
+                              }
+                            }}
+                          />
+                        }
+                        label='Khách lẻ'
+                      />
+                    </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                       <FormControl fullWidth>
                         <InputLabel>Lớp hiện tại</InputLabel>
                         <Select
                           label='Lớp hiện tại'
                           value={form.classId}
+                          disabled={isGuest}
                           onChange={event =>
                             setForm(prev => ({
                               ...prev,
@@ -1021,10 +1145,10 @@ return
                           {classes.map(item => (
                             <MenuItem key={item.id} value={item.id}>
                               {item.code}
-                              {/*{item.code ? `${item.code} - ${item.name}` : item.name}*/}
                             </MenuItem>
                           ))}
                         </Select>
+
                       </FormControl>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
@@ -1033,15 +1157,31 @@ return
                         <Select
                           label='Học viên'
                           value={form.studentId}
-                          disabled={!form.classId}
+                          disabled={isGuest || !form.classId}
                           onChange={event => {
                             const studentId = String(event.target.value)
-                            const matched = students.find(item => item.id === studentId) || null
-
-                            setSelectedStudent(matched)
-                            setForm(prev => ({ ...prev, studentId }))
+                            if (studentId === '') {
+                              setSelectedStudent(null)
+                              setForm(prev => ({
+                                ...prev,
+                                studentId: '',
+                                tuitionEnabled: false,
+                                examEnabled: false,
+                                selectedExamRegistrationId: '',
+                                discountAmount: '',
+                                discountReason: ''
+                              }))
+                              setSelectedOneTimeFees({})
+                            } else {
+                              const matched = students.find(item => item.id === studentId) || null
+                              setSelectedStudent(matched)
+                              setForm(prev => ({ ...prev, studentId }))
+                            }
                           }}
                         >
+                          <MenuItem value=''>
+                            <em>Chọn học viên</em>
+                          </MenuItem>
                           {students.map(item => (
                             <MenuItem key={item.id} value={item.id}>
                               {item.fullName}
@@ -1101,8 +1241,9 @@ return
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader title='Học phí tháng' />
+              {form.studentId ? (
+                <Card>
+                  <CardHeader title='Học phí tháng' />
                 <CardContent>
                   <Stack spacing={3}>
                     <FormControlLabel
@@ -1221,9 +1362,11 @@ return
                   </Stack>
                 </CardContent>
               </Card>
+              ) : null}
 
-              <Card>
-                <CardHeader title='Lệ phí thi cấp' />
+              {form.studentId ? (
+                <Card>
+                  <CardHeader title='Lệ phí thi cấp' />
                 <CardContent>
                   <Stack spacing={3}>
                     <FormControlLabel
@@ -1266,9 +1409,11 @@ return
                   </Stack>
                 </CardContent>
               </Card>
+              ) : null}
 
-              <Card>
-                <CardHeader title='Các loại phí cần thu' />
+              {form.studentId ? (
+                <Card>
+                  <CardHeader title='Các loại phí cần thu' />
                 <CardContent>
                   {loadingOneTimeFees ? (
                     <Alert severity='info'>Đang tải danh sách phí 1 lần...</Alert>
@@ -1299,167 +1444,257 @@ return
                   )}
                 </CardContent>
               </Card>
+              ) : null}
 
               <Card>
                 <CardHeader
                   title='Mua sản phẩm'
                   action={
-                    <Button variant='outlined' size='small' onClick={addProductRow} startIcon={<i className='ri-add-line' />}>
-                      Thêm sản phẩm
-                    </Button>
+                    <Stack direction='row' spacing={2}>
+                      {bundles.length > 0 && (
+                        <Button variant='outlined' size='small' onClick={addComboRow} startIcon={<i className='ri-add-line' />}>
+                          Thêm combo
+                        </Button>
+                      )}
+                      <Button variant='outlined' size='small' onClick={addProductRow} startIcon={<i className='ri-add-line' />}>
+                        Thêm sản phẩm
+                      </Button>
+                    </Stack>
                   }
                 />
                 <CardContent>
-                  {bundles.length > 0 ? (
-                    <Stack spacing={2} sx={{ mb: 3 }}>
-                      <Typography variant='subtitle2' color='text.secondary'>
-                        Chọn combo để tự động thêm các dòng sản phẩm với giá combo đã phân bổ sẵn.
-                      </Typography>
-                      <Grid container spacing={3} alignItems='center'>
-                        <Grid size={{ xs: 12, md: 8 }}>
-                          <FormControl fullWidth>
-                            <InputLabel>Combo sản phẩm</InputLabel>
-                            <Select
-                              label='Combo sản phẩm'
-                              value={selectedBundleId}
-                              onChange={event => setSelectedBundleId(String(event.target.value))}
-                            >
-                              <MenuItem value=''>Chọn combo</MenuItem>
-                              {bundles.map(bundle => (
-                                <MenuItem key={bundle.id} value={bundle.id}>
-                                  {bundle.name} - giảm {formatCurrency(bundle.items.reduce((sum, item) => sum + Number(item.discountAmount || 0) * Number(item.quantity || 0), 0))}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                          <Button fullWidth variant='contained' color='secondary' onClick={addBundleRows}>
-                            Thêm combo
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    </Stack>
-                  ) : null}
                   {productRows.length === 0 ? (
                     <Alert severity='info'>Chưa có sản phẩm nào được chọn.</Alert>
                   ) : (
                     <Stack spacing={3}>
                       {productRows.map(row => {
-                        const product = products.find(item => item.id === row.productId)
-                        const variants = getActiveProductVariants(product)
-                        const selectedVariant = getProductVariant(product, row.productVariantId)
-                        const availableStock = getAvailableProductStock(product, row.productVariantId)
-                        const unitPrice = getProductRowUnitPrice(product, row)
-                        const rowTotal = unitPrice * Number(row.quantity || 0)
-                        const isOutOfStock = Boolean(product) && availableStock <= 0
+                        if (row.type === 'product') {
+                          const product = products.find(item => item.id === row.productId)
+                          const variants = getActiveProductVariants(product)
+                          const selectedVariant = getProductVariant(product, row.productVariantId)
+                          const availableStock = getAvailableProductStock(product, row.productVariantId)
+                          const unitPrice = getProductRowUnitPrice(product, row)
+                          const rowTotal = unitPrice * Number(row.quantity || 0)
+                          const isOutOfStock = Boolean(product) && availableStock <= 0
 
-                        const productHasAvailableStock = product?.hasVariants
-                          ? variants.some(variant => Number(variant.stockQuantity || 0) > 0)
-                          : Number(product?.totalStockQuantity || 0) > 0
+                          const productHasAvailableStock = product?.hasVariants
+                            ? variants.some(variant => Number(variant.stockQuantity || 0) > 0)
+                            : Number(product?.totalStockQuantity || 0) > 0
 
-                        const isBundleRow = Boolean(row.bundleId)
-
-                        return (
-                          <Stack spacing={2} key={row.id}>
-                            <Grid container spacing={3} alignItems='flex-start'>
-                              <Grid size={{ xs: 12, md: product?.hasVariants ? 4 : 6 }}>
-                                <FormControl fullWidth>
-                                  <InputLabel>Sản phẩm</InputLabel>
-                                  <Select
-                                    label='Sản phẩm'
-                                    value={row.productId}
-                                    onChange={event => handleProductChange(row.id, String(event.target.value))}
-                                    disabled={isBundleRow}
-                                  >
-                                    {products.map(item => {
-                                      const canSelect = item.hasVariants
-                                        ? getActiveProductVariants(item).some(variant => Number(variant.stockQuantity || 0) > 0)
-                                        : Number(item.totalStockQuantity || 0) > 0
-
-                                      return (
-                                        <MenuItem key={item.id} value={item.id} disabled={!canSelect}>
-                                          {item.name} - {formatCurrency(Number(item.unitPrice || 0))}
-                                          {item.hasVariants ? ` - ${getActiveProductVariants(item).length} biến thể` : ` - còn ${Number(item.totalStockQuantity || 0)}`}
-                                          {!canSelect ? ' - Hết hàng' : ''}
-                                        </MenuItem>
-                                      )
-                                    })}
-                                  </Select>
-                                </FormControl>
-                              </Grid>
-                              {product?.hasVariants ? (
-                                <Grid size={{ xs: 12, md: 4 }}>
+                          return (
+                            <Stack spacing={2} key={row.id}>
+                              <Grid container spacing={3} alignItems='flex-start'>
+                                <Grid size={{ xs: 12, md: product?.hasVariants ? 4 : 6 }}>
                                   <FormControl fullWidth>
-                                    <InputLabel>Biến thể</InputLabel>
+                                    <InputLabel>Sản phẩm</InputLabel>
                                     <Select
-                                      label='Biến thể'
-                                      value={row.productVariantId}
-                                      onChange={event => updateProductRow(row.id, { productVariantId: String(event.target.value), quantity: 1 })}
+                                      label='Sản phẩm'
+                                      value={row.productId}
+                                      onChange={event => handleProductChange(row.id, String(event.target.value))}
                                     >
-                                      {variants.length === 0 ? (
-                                        <MenuItem value=''>Chưa có biến thể</MenuItem>
-                                      ) : (
-                                        variants.map(variant => {
-                                          const canSelect = Number(variant.stockQuantity || 0) > 0
+                                      {products.map(item => {
+                                        const canSelect = item.hasVariants
+                                          ? getActiveProductVariants(item).some(variant => Number(variant.stockQuantity || 0) > 0)
+                                          : Number(item.totalStockQuantity || 0) > 0
 
-                                          return (
-                                            <MenuItem key={variant.id} value={variant.id} disabled={!canSelect}>
-                                              {variant.label} - {formatCurrency(Number(product.unitPrice || 0) + Number(variant.additionalPrice || 0))} - còn {Number(variant.stockQuantity || 0)}
-                                              {!canSelect ? ' - Hết hàng' : ''}
-                                            </MenuItem>
-                                          )
-                                        })
-                                      )}
+                                        return (
+                                          <MenuItem key={item.id} value={item.id} disabled={!canSelect}>
+                                            {item.name}
+
+                                            {!canSelect ? ' - Hết hàng' : ''}
+                                          </MenuItem>
+                                        )
+                                      })}
                                     </Select>
                                   </FormControl>
                                 </Grid>
+                                {product?.hasVariants ? (
+                                  <Grid size={{ xs: 12, md: 4 }}>
+                                    <FormControl fullWidth>
+                                      <InputLabel>Biến thể</InputLabel>
+                                      <Select
+                                        label='Biến thể'
+                                        value={row.productVariantId}
+                                        onChange={event => updateProductRow(row.id, { productVariantId: String(event.target.value), quantity: 1 })}
+                                      >
+                                        {variants.length === 0 ? (
+                                          <MenuItem value=''>Chưa có biến thể</MenuItem>
+                                        ) : (
+                                          variants.map(variant => {
+                                            const canSelect = Number(variant.stockQuantity || 0) > 0
+
+                                            return (
+                                              <MenuItem key={variant.id} value={variant.id} disabled={!canSelect}>
+                                                {variant.label} - còn {Number(variant.stockQuantity || 0)}
+                                                {!canSelect ? ' - Hết hàng' : ''}
+                                              </MenuItem>
+                                            )
+                                          })
+                                        )}
+                                      </Select>
+                                    </FormControl>
+                                  </Grid>
+                                ) : null}
+                                <Grid size={{ xs: 12, md: 2 }}>
+                                  <TextField
+                                    fullWidth
+                                    label='Số lượng'
+                                    type='number'
+                                    value={row.quantity}
+                                    onChange={event => updateProductRow(row.id, { quantity: Number(event.target.value) })}
+                                    inputProps={{ min: 1, max: availableStock > 0 ? availableStock : undefined }}
+                                    helperText={
+                                      row.productId
+                                        ? isOutOfStock
+                                          ? 'Vui lòng thông báo tới admin'
+                                          : `Tồn kho còn lại: ${availableStock}`
+                                        : 'Chọn sản phẩm để xem tồn kho'
+                                    }
+                                  />
+                                </Grid>
+                                <Grid size={{ xs: 10, md: product?.hasVariants ? 1 : 2 }}>
+                                  <Typography color='primary.main' fontWeight={600} sx={{ pt: { md: 2 } }}>
+                                    {formatCurrency(rowTotal)}
+                                  </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 2, md: 1 }}>
+                                  <IconButton color='error' onClick={() => removeProductRow(row.id)}>
+                                    <i className='ri-delete-bin-line' />
+                                  </IconButton>
+                                </Grid>
+                              </Grid>
+
+                              {row.productId && !productHasAvailableStock ? (
+                                <Alert severity='warning'>Sản phẩm đã hết hàng. Vui lòng thông báo tới admin.</Alert>
                               ) : null}
-                              <Grid size={{ xs: 12, md: 2 }}>
-                                <TextField
-                                  fullWidth
-                                  label='Số lượng'
-                                  type='number'
-                                  value={row.quantity}
-                                  onChange={event => updateProductRow(row.id, { quantity: Number(event.target.value) })}
-                                  disabled={isBundleRow}
-                                  inputProps={{ min: 1, max: availableStock > 0 ? availableStock : undefined }}
-                                  helperText={
-                                    row.productId
-                                      ? isOutOfStock
-                                        ? 'Vui lòng thông báo tới admin'
-                                        : `Tồn kho còn lại: ${availableStock}`
-                                      : 'Chọn sản phẩm để xem tồn kho'
-                                  }
-                                />
+                              {product?.hasVariants && row.productId && !row.productVariantId ? (
+                                <Alert severity='info'>Sản phẩm này có biến thể, vui lòng chọn đúng biến thể trước khi tạo biên lai.</Alert>
+                              ) : null}
+                            </Stack>
+                          )
+                        } else {
+                          const bundle = bundles.find(item => item.id === row.bundleId)
+                          const comboItemsTotal = row.items.reduce((sum, item) => {
+                            const product = products.find(p => p.id === item.productId)
+                            if (!product) return sum
+                            const price = Math.max(0, getProductUnitPrice(product, item.productVariantId) - item.bundleDiscountAmount)
+                            return sum + price * item.quantity
+                          }, 0)
+
+                          return (
+                            <Paper variant='outlined' className='p-4' sx={{ width: '100%', mb: 2 }} key={row.id}>
+                              <Grid container spacing={3} alignItems='center' sx={{ mb: 3 }}>
+                                <Grid size={{ xs: 12, md: 8 }}>
+                                  <FormControl fullWidth>
+                                    <InputLabel>Chọn Combo sản phẩm</InputLabel>
+                                    <Select
+                                      label='Chọn Combo sản phẩm'
+                                      value={row.bundleId}
+                                      onChange={event => handleComboChange(row.id, String(event.target.value))}
+                                    >
+                                      <MenuItem value=''>Chọn combo</MenuItem>
+                                      {bundles.map(bundleOption => (
+                                        <MenuItem key={bundleOption.id} value={bundleOption.id}>
+                                          {bundleOption.name} - giảm {formatCurrency(bundleOption.items.reduce((sum, item) => sum + Number(item.discountAmount || 0) * Number(item.quantity || 0), 0))}
+                                        </MenuItem>
+                                      ))}
+                                    </Select>
+                                  </FormControl>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 3 }} className='flex items-center'>
+                                  <Typography variant='subtitle1' color='primary.main' fontWeight={700}>
+                                    Tổng combo: {formatCurrency(comboItemsTotal)}
+                                  </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 1 }} className='flex justify-end'>
+                                  <IconButton color='error' onClick={() => removeProductRow(row.id)}>
+                                    <i className='ri-delete-bin-line' />
+                                  </IconButton>
+                                </Grid>
                               </Grid>
-                              <Grid size={{ xs: 10, md: product?.hasVariants ? 1 : 2 }}>
-                                <Typography color='primary.main' fontWeight={600} sx={{ pt: { md: 2 } }}>
-                                  {formatCurrency(rowTotal)}
-                                </Typography>
-                              </Grid>
-                              <Grid size={{ xs: 2, md: 1 }}>
-                                <IconButton color='error' onClick={() => removeProductRow(row.id)}>
-                                  <i className='ri-delete-bin-line' />
-                                </IconButton>
-                              </Grid>
-                            </Grid>
-                            {selectedVariant ? (
-                              <Typography variant='body2' color='text.secondary'>
-                                Biến thể đã chọn: {selectedVariant.label}
-                              </Typography>
-                            ) : null}
-                            {row.bundleName ? (
-                              <Alert severity='success'>Dòng này đến từ combo {row.bundleName}. Giá áp dụng: {formatCurrency(unitPrice)}.</Alert>
-                            ) : null}
-                            {row.productId && !productHasAvailableStock ? (
-                              <Alert severity='warning'>Sản phẩm đã hết hàng. Vui lòng thông báo tới admin.</Alert>
-                            ) : null}
-                            {product?.hasVariants && row.productId && !row.productVariantId ? (
-                              <Alert severity='info'>Sản phẩm này có biến thể, vui lòng chọn đúng biến thể trước khi tạo biên lai.</Alert>
-                            ) : null}
-                          </Stack>
-                        )
+
+                              {row.items.length > 0 && (
+                                <Stack spacing={2} sx={{ pl: { xs: 2, md: 4 }, borderLeft: '2px solid', borderColor: 'divider' }}>
+                                  <Typography variant='body2' fontWeight={600} color='text.secondary'>
+                                    Danh sách sản phẩm trong combo:
+                                  </Typography>
+                                  {row.items.map(item => {
+                                    const product = products.find(p => p.id === item.productId)
+                                    const variants = getActiveProductVariants(product)
+                                    const selectedVariant = getProductVariant(product, item.productVariantId)
+                                    const availableStock = getAvailableProductStock(product, item.productVariantId)
+                                    const unitPrice = Math.max(0, getProductUnitPrice(product, item.productVariantId) - item.bundleDiscountAmount)
+                                    const rowTotal = unitPrice * item.quantity
+                                    const isOutOfStock = Boolean(product) && availableStock <= 0
+
+                                    return (
+                                      <Grid container spacing={3} key={item.productId} alignItems='center'>
+                                        <Grid size={{ xs: 12, md: product?.hasVariants ? 4 : 6 }}>
+                                          <TextField
+                                            fullWidth
+                                            label='Sản phẩm'
+                                            value={product?.name || ''}
+                                            InputProps={{ readOnly: true }}
+                                          />
+                                        </Grid>
+                                        {product?.hasVariants ? (
+                                          <Grid size={{ xs: 12, md: 4 }}>
+                                            <FormControl fullWidth>
+                                              <InputLabel>Biến thể</InputLabel>
+                                              <Select
+                                                label='Biến thể'
+                                                value={item.productVariantId}
+                                                onChange={event => handleComboVariantChange(row.id, item.productId, String(event.target.value))}
+                                              >
+                                                {variants.length === 0 ? (
+                                                  <MenuItem value=''>Chưa có biến thể</MenuItem>
+                                                ) : (
+                                                  variants.map(variant => {
+                                                    const canSelect = Number(variant.stockQuantity || 0) > 0
+                                                    return (
+                                                      <MenuItem key={variant.id} value={variant.id} disabled={!canSelect}>
+                                                        {variant.label} - {formatCurrency(Number(product.unitPrice || 0) + Number(variant.additionalPrice || 0))} - còn {Number(variant.stockQuantity || 0)}
+                                                        {!canSelect ? ' - Hết hàng' : ''}
+                                                      </MenuItem>
+                                                    )
+                                                  })
+                                                )}
+                                              </Select>
+                                            </FormControl>
+                                          </Grid>
+                                        ) : null}
+                                        <Grid size={{ xs: 12, md: 2 }}>
+                                          <TextField
+                                            fullWidth
+                                            label='Số lượng'
+                                            type='number'
+                                            value={item.quantity}
+                                            InputProps={{ readOnly: true }}
+                                            helperText={
+                                              isOutOfStock
+                                                ? 'Hết hàng. Vui lòng báo tới admin'
+                                                : `Tồn kho: ${availableStock}`
+                                            }
+                                          />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, md: product?.hasVariants ? 2 : 2 }}>
+                                          <Stack spacing={0.5}>
+                                            <Typography variant='caption' color='text.secondary' sx={{ textDecoration: 'line-through' }}>
+                                              Gốc: {formatCurrency(getProductUnitPrice(product, item.productVariantId))}
+                                            </Typography>
+                                            <Typography color='primary.main' fontWeight={600}>
+                                              {formatCurrency(rowTotal)}
+                                            </Typography>
+                                          </Stack>
+                                        </Grid>
+                                      </Grid>
+                                    )
+                                  })}
+                                </Stack>
+                              )}
+                            </Paper>
+                          )
+                        }
                       })}
                     </Stack>
                   )}
@@ -1515,7 +1750,7 @@ return
                       <div className='flex items-center justify-between gap-3'>
                         <Typography color='text.secondary'>Họ tên</Typography>
                         <Typography fontWeight={600} className='text-right'>
-                          {selectedStudent?.fullName || '-'}
+                          {selectedStudent?.fullName || (isGuest ? 'Khách lẻ' : (form.classId && !form.studentId ? 'Khách lẻ' : '-'))}
                         </Typography>
                       </div>
                       <div className='flex items-center justify-between gap-3'>
