@@ -40,7 +40,10 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
         const response = await classService.getClasses({ isActive: true, pageSize: 1000 })
 
         if (response.success && response.data) {
-          setClasses(response.data)
+          setClasses([
+            { id: '00000000-0000-0000-0000-000000000000', name: 'Khách lẻ' },
+            ...response.data
+          ])
         }
       } catch (error) {
         console.error('Error loading classes:', error)

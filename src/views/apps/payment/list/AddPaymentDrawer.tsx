@@ -12,6 +12,7 @@ import Dialog from '@mui/material/Dialog'
 import Divider from '@mui/material/Divider'
 import FormControl from '@mui/material/FormControl'
 import Grid from '@mui/material/Grid2'
+import FormHelperText from '@mui/material/FormHelperText'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
 import InputLabel from '@mui/material/InputLabel'
@@ -460,9 +461,11 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     }
 
     if (!formData.studentId) {
-      showNotification('Vui lòng chọn học viên.', 'error')
+      if (formData.type !== PAYMENT_TYPE_PRODUCT) {
+        showNotification('Khách lẻ chỉ hỗ trợ thanh toán khi mua sản phẩm.', 'error')
 
-      return
+        return
+      }
     }
 
     if (formData.type === PAYMENT_TYPE_TUITION) {
@@ -623,7 +626,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
         }
 
         const bulkResponse = await paymentService.createBulkPayment({
-          studentId: formData.studentId,
+          studentId: formData.studentId || null,
           paymentDate: formData.paymentDate,
           method: formData.method,
           transferProofImageUrl,
@@ -650,7 +653,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
 
       const firstTuitionMonth = tuitionMonths[0]
       const response = await paymentService.createPayment({
-        studentId: formData.studentId,
+        studentId: formData.studentId || null,
         classId: formData.classId,
         type: formData.type,
         amount: originalAmount,
@@ -714,9 +717,9 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
             <Grid container spacing={4}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth>
-                  <InputLabel>Lớp hiện tại *</InputLabel>
+                  <InputLabel>Lớp *</InputLabel>
                   <Select
-                    label='Lớp hiện tại *'
+                    label='Lớp *'
                     value={formData.classId}
                     onChange={e => setFormData(prev => ({ ...prev, classId: String(e.target.value), studentId: '' }))}
                   >
@@ -726,6 +729,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
                       </MenuItem>
                     ))}
                   </Select>
+
                 </FormControl>
               </Grid>
 
@@ -789,8 +793,8 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
                   renderInput={params => (
                     <TextField
                       {...params}
-                      label='Học viên *'
-                      placeholder='Tìm theo tên học viên'
+                      label={formData.type === PAYMENT_TYPE_PRODUCT ? 'Học viên (Mặc định: Khách lẻ)' : 'Học viên *'}
+                      placeholder={formData.type === PAYMENT_TYPE_PRODUCT ? 'Tìm theo tên học viên (bỏ trống nếu là khách lẻ)' : 'Tìm theo tên học viên'}
                       helperText={!formData.classId ? 'Cần chọn lớp trước khi chọn học viên' : undefined}
                     />
                   )}

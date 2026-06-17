@@ -194,10 +194,10 @@ return Number(selectedProduct.unitPrice || 0) + Number(selectedVariant?.addition
     const quantity = Number(formData.quantity)
     const unitPrice = Number(formData.unitPrice)
 
-    if (!formData.productId || !formData.classId || quantity <= 0 || unitPrice <= 0) {
-      showNotification('Vui lòng nhập đủ sản phẩm, lớp, số lượng và đơn giá hợp lệ.', 'error')
+    if (!formData.productId || quantity <= 0 || unitPrice <= 0) {
+      showNotification('Vui lòng nhập đủ sản phẩm, số lượng và đơn giá hợp lệ.', 'error')
       
-return
+      return
     }
 
     if (selectedProduct?.hasVariants && !formData.productVariantId) {
@@ -343,21 +343,30 @@ return
             </FormControl>
           ) : null}
 
-          <FormControl fullWidth>
-            <InputLabel>Lớp *</InputLabel>
-            <Select
-              label='Lớp *'
-              value={formData.classId}
-              disabled={isEditMode}
-              onChange={event => setFormData(prev => ({ ...prev, classId: String(event.target.value) }))}
-            >
-              {classes.map(item => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {isEditMode && !formData.classId ? (
+            <TextField
+              fullWidth
+              label='Lớp'
+              value='Khách lẻ (Không thuộc lớp)'
+              disabled
+            />
+          ) : (
+            <FormControl fullWidth>
+              <InputLabel>Lớp *</InputLabel>
+              <Select
+                label='Lớp *'
+                value={formData.classId}
+                disabled={isEditMode}
+                onChange={event => setFormData(prev => ({ ...prev, classId: String(event.target.value) }))}
+              >
+                {classes.map(item => (
+                  <MenuItem key={item.id} value={item.id}>
+                    {item.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
           {isAdmin ? (
             <FormControl fullWidth>

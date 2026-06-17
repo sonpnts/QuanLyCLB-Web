@@ -51,7 +51,7 @@ export interface GetReceiptListParams {
 }
 
 export interface CreatePaymentRequest {
-  studentId: string
+  studentId: string | null
   classId?: string
   productId?: string
   productVariantId?: string
@@ -86,7 +86,7 @@ export interface BulkPaymentItemRequest {
 }
 
 export interface CreateBulkPaymentRequest {
-  studentId: string
+  studentId: string | null
   paymentDate: string
   method: number
   transactionRef?: string
@@ -169,7 +169,7 @@ const normalizeReceiptListItem = (payload: any): ReceiptListItemType | null => {
   if (!payload || typeof payload !== 'object') return null
 
   const receiptNumber = payload.receiptNumber ?? payload.ReceiptNumber
-  const studentId = payload.studentId ?? payload.StudentId
+  const studentId = payload.studentId ?? payload.StudentId ?? null
   const studentName = payload.studentName ?? payload.StudentName
   const paymentDate = payload.paymentDate ?? payload.PaymentDate
   const method = normalizeNumber(payload.method ?? payload.Method)
@@ -183,7 +183,7 @@ const normalizeReceiptListItem = (payload: any): ReceiptListItemType | null => {
 
   if (
     typeof receiptNumber !== 'string' ||
-    typeof studentId !== 'string' ||
+    (typeof studentId !== 'string' && studentId !== null) ||
     typeof studentName !== 'string' ||
     typeof paymentDate !== 'string' ||
     method === null ||

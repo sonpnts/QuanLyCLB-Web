@@ -1,4 +1,4 @@
-﻿// Type Imports
+// Type Imports
 import type { ThemeColor } from '@core/types'
 
 // Payment type: 0=Tuition, 1=ExamFee, 2=Registration, 3=Other, 4=FacilityFee, 5=CodeChangeFee
@@ -9,7 +9,7 @@ export type PaymentMethod = 0 | 1 | 2
 
 export type PaymentRecordType = {
   id: string
-  studentId: string
+  studentId: string | null
   studentName?: string
   classId?: string
   className?: string
@@ -66,7 +66,7 @@ export type DiscountedReceiptPagedResultType = {
 
 export type ReceiptListItemType = {
   receiptNumber: string
-  studentId: string
+  studentId: string | null
   studentName: string
   paymentDate: string
   method: PaymentMethod
