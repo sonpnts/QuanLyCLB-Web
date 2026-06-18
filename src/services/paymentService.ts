@@ -69,6 +69,8 @@ export interface CreatePaymentRequest {
   description?: string
   collectedByUserId?: string
   sendZaloConfirmation?: boolean
+  buyerName?: string
+  buyerPhone?: string
 }
 
 export interface BulkPaymentItemRequest {
@@ -93,6 +95,10 @@ export interface CreateBulkPaymentRequest {
   transferProofImageUrl?: string
   collectedByUserId?: string
   sendZaloConfirmation?: boolean
+  discountAmount?: number
+  discountReason?: string
+  buyerName?: string
+  buyerPhone?: string
   items: BulkPaymentItemRequest[]
 }
 

@@ -44,6 +44,11 @@ export type PaymentRecordType = {
   hasApprovedDiscount?: boolean
   hasComboDiscount?: boolean
   discountScope?: 'manual' | 'approved' | 'combo' | 'mixed' | 'all' | 'unknown' | string
+  invoiceTotalAmount?: number
+  invoiceDiscountAmount?: number
+  invoiceFinalAmount?: number
+  invoiceDiscountReason?: string
+  invoiceManualDiscountAmount?: number
 }
 
 export type ReceiptZnsStatusType = {

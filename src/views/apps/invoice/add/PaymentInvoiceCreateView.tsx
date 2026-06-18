@@ -188,11 +188,44 @@ const PaymentInvoiceCreateView = () => {
     discountAmount: '',
     discountReason: '',
     examEnabled: false,
-    selectedExamRegistrationId: ''
+    selectedExamRegistrationId: '',
+    buyerName: '',
+    buyerPhone: ''
   })
+
+  const resetForm = () => {
+    setForm({
+      classId: '',
+      studentId: '',
+      collectedByUserId: auth?.user?.id || '',
+      method: PAYMENT_METHOD_CASH,
+      note: '',
+      tuitionEnabled: false,
+      discountAmount: '',
+      discountReason: '',
+      examEnabled: false,
+      selectedExamRegistrationId: '',
+      buyerName: '',
+      buyerPhone: ''
+    })
+    setTuitionMonths([createTuitionMonthRow()])
+    setTuitionQuotes({})
+    setExamFeeOptions([])
+    setOneTimeFeeOptions([])
+    setSelectedOneTimeFees({})
+    setProductRows([])
+    setOtherFeeRows([])
+    setIsGuest(false)
+    if (proofPreview) {
+      URL.revokeObjectURL(proofPreview)
+    }
+    setProofFile(null)
+    setProofPreview(null)
+  }
 
   useEffect(() => {
     setDraftInfo(readPaymentInvoiceDraft(draftKey))
+    initializedDraftRef.current = false
   }, [draftKey])
 
   useEffect(() => {
@@ -512,18 +545,18 @@ return
   )
 
   const tuitionPayableAmount = tuitionMonthSummaries.reduce((sum, item) => sum + Number(item.quote?.finalAmount || 0), 0)
-  const discountAmount = Number(form.discountAmount || 0)
-  const tuitionNetAmount = Math.max(0, tuitionPayableAmount - discountAmount)
   const examFeeAmount = Number(selectedExamOption?.feeAmount || 0)
-  const studentHasZalo = Boolean(selectedStudent?.userIdZalo?.trim())
-  const shouldSendZaloConfirmation = form.tuitionEnabled && tuitionNetAmount > 0
-
-  const grandTotal =
-    (form.tuitionEnabled ? tuitionNetAmount : 0) +
+  const invoiceTotalGrossAmount =
+    (form.tuitionEnabled ? tuitionPayableAmount : 0) +
     (form.examEnabled ? examFeeAmount : 0) +
     oneTimeFeeTotal +
     productTotal +
     otherFeeTotal
+
+  const discountAmount = Number(form.discountAmount || 0)
+  const grandTotal = Math.max(0, invoiceTotalGrossAmount - discountAmount)
+  const studentHasZalo = Boolean(selectedStudent?.userIdZalo?.trim())
+  const shouldSendZaloConfirmation = form.tuitionEnabled && tuitionPayableAmount > 0
 
   const addTuitionMonth = () => {
     setTuitionMonths(prev => {
@@ -693,15 +726,13 @@ return
     const effectiveClassId = isGuest ? undefined : (form.classId || undefined)
 
     if (form.tuitionEnabled) {
-      tuitionMonths.forEach((row, index) => {
+      tuitionMonths.forEach((row) => {
         items.push({
           type: PAYMENT_TYPE_TUITION,
           classId: effectiveClassId,
           forMonth: row.month,
           forYear: row.year,
-          description: `Học phí tháng ${row.month}/${row.year}`,
-          discountAmount: discountAmount > 0 && index === 0 ? discountAmount : undefined,
-          discountReason: discountAmount > 0 && index === 0 ? form.discountReason.trim() : undefined
+          description: `Học phí tháng ${row.month}/${row.year}`
         })
       })
     }
@@ -816,6 +847,7 @@ return
         transferProofImageUrl = uploadResponse.data.imageUrl
       }
 
+      const discountAmountVal = Number(form.discountAmount || 0)
       if (items.length === 1) {
         const single = items[0]
 
@@ -830,8 +862,10 @@ return
           examRegistrationId: single.examRegistrationId,
           productId: single.productId,
           productVariantId: single.productVariantId,
-          discountAmount: single.discountAmount,
-          discountReason: single.discountReason,
+          discountAmount: discountAmountVal > 0 ? discountAmountVal : undefined,
+          discountReason: discountAmountVal > 0 ? form.discountReason.trim() : undefined,
+          buyerName: isGuest ? form.buyerName?.trim() || undefined : undefined,
+          buyerPhone: isGuest ? form.buyerPhone?.trim() || undefined : undefined,
           paymentDate: new Date().toISOString(),
           method: form.method,
           transferProofImageUrl,
@@ -859,6 +893,10 @@ return
         transferProofImageUrl,
         collectedByUserId: effectiveCollectorId,
         sendZaloConfirmation,
+        discountAmount: discountAmountVal > 0 ? discountAmountVal : undefined,
+        discountReason: discountAmountVal > 0 ? form.discountReason.trim() : undefined,
+        buyerName: isGuest ? form.buyerName?.trim() || undefined : undefined,
+        buyerPhone: isGuest ? form.buyerPhone?.trim() || undefined : undefined,
         items
       })
 
@@ -936,17 +974,6 @@ return
         }
       }
 
-      if (discountAmount > 0 && tuitionMonths.length > 1) {
-        showNotification('Giảm trừ thủ công chỉ áp dụng khi thu một tháng học phí trong một biên lai.', 'error')
-
-        return
-      }
-    }
-
-    if (discountAmount > 0 && !form.tuitionEnabled) {
-      showNotification('Giảm trừ chỉ áp dụng cho học phí.', 'error')
-
-      return
     }
 
     if (discountAmount > 0 && !form.discountReason.trim()) {
@@ -1082,7 +1109,7 @@ return
           <Typography variant='h4'>Tạo phiếu thu</Typography>
 
         </div>
-        <Button variant='outlined' onClick={() => router.push('/apps/payment/collect')} startIcon={<i className='ri-arrow-left-line' />}>
+        <Button variant='outlined' onClick={() => router.push('/apps/invoice/collect')} startIcon={<i className='ri-arrow-left-line' />}>
           Quay lại trang thu tiền
         </Button>
       </Box>
@@ -1116,7 +1143,9 @@ return
                                   examEnabled: false,
                                   selectedExamRegistrationId: '',
                                   discountAmount: '',
-                                  discountReason: ''
+                                  discountReason: '',
+                                  buyerName: '',
+                                  buyerPhone: ''
                                 }))
                                 setSelectedStudent(null)
                                 setSelectedOneTimeFees({})
@@ -1127,6 +1156,36 @@ return
                         label='Khách lẻ'
                       />
                     </Grid>
+                    {isGuest && (
+                      <>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <TextField
+                            fullWidth
+                            label='Họ tên người mua'
+                            value={form.buyerName}
+                            onChange={event =>
+                              setForm(prev => ({
+                                ...prev,
+                                buyerName: event.target.value
+                              }))
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <TextField
+                            fullWidth
+                            label='Số điện thoại'
+                            value={form.buyerPhone}
+                            onChange={event =>
+                              setForm(prev => ({
+                                ...prev,
+                                buyerPhone: event.target.value
+                              }))
+                            }
+                          />
+                        </Grid>
+                      </>
+                    )}
                     <Grid size={{ xs: 12, md: 6 }}>
                       <FormControl fullWidth>
                         <InputLabel>Lớp hiện tại</InputLabel>
@@ -1241,6 +1300,7 @@ return
                 </CardContent>
               </Card>
 
+
               {form.studentId ? (
                 <Card>
                   <CardHeader title='Học phí tháng' />
@@ -1336,26 +1396,6 @@ return
                               </Grid>
                             )
                           })}
-                          <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                              fullWidth
-                              label='Giảm trừ'
-                              type='number'
-                              value={form.discountAmount}
-                              onChange={event => setForm(prev => ({ ...prev, discountAmount: event.target.value }))}
-                              disabled={tuitionMonths.length > 1}
-                              helperText={tuitionMonths.length > 1 ? 'Giảm trừ thủ công chỉ áp dụng khi thu 1 tháng.' : undefined}
-                            />
-                          </Grid>
-                          <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                              fullWidth
-                              label='Lý do giảm trừ'
-                              value={form.discountReason}
-                              onChange={event => setForm(prev => ({ ...prev, discountReason: event.target.value }))}
-                              disabled={tuitionMonths.length > 1}
-                            />
-                          </Grid>
                         </Grid>
                       </Stack>
                     )}
@@ -1364,7 +1404,34 @@ return
               </Card>
               ) : null}
 
-              {form.studentId ? (
+              <Card>
+                <CardHeader title='Giảm trừ' />
+                <CardContent>
+                  <Grid container spacing={3}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <TextField
+                        fullWidth
+                        label='Số tiền giảm trừ'
+                        type='number'
+                        value={form.discountAmount}
+                        onChange={event => setForm(prev => ({ ...prev, discountAmount: event.target.value }))}
+                        placeholder='0'
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <TextField
+                        fullWidth
+                        label='Lý do giảm trừ'
+                        value={form.discountReason}
+                        onChange={event => setForm(prev => ({ ...prev, discountReason: event.target.value }))}
+                        placeholder='Nhập lý do giảm trừ'
+                      />
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+
+              {form.studentId && (loadingExamOptions || examFeeOptions.length > 0) ? (
                 <Card>
                   <CardHeader title='Lệ phí thi cấp' />
                 <CardContent>
@@ -1411,14 +1478,12 @@ return
               </Card>
               ) : null}
 
-              {form.studentId ? (
+              {form.studentId && (loadingOneTimeFees || oneTimeFeeOptions.length > 0) ? (
                 <Card>
                   <CardHeader title='Các loại phí cần thu' />
                 <CardContent>
                   {loadingOneTimeFees ? (
                     <Alert severity='info'>Đang tải danh sách phí 1 lần...</Alert>
-                  ) : oneTimeFeeOptions.length === 0 ? (
-                    <Alert severity='success'>Học viên hiện không còn phí 1 lần nào chưa đóng.</Alert>
                   ) : (
                     <Stack spacing={2}>
                       {form.examEnabled && oneTimeFeeOptions.some(option => option.isRequiredForExam) ? (
@@ -1765,7 +1830,7 @@ return
                   </Paper>
                   <div className='flex items-center justify-between'>
                     <Typography color='text.secondary'>Học phí</Typography>
-                    <Typography>{form.tuitionEnabled ? formatCurrency(tuitionNetAmount) : '-'}</Typography>
+                    <Typography>{form.tuitionEnabled ? formatCurrency(tuitionPayableAmount) : '-'}</Typography>
                   </div>
                   <div className='flex items-center justify-between'>
                     <Typography color='text.secondary'>Lệ phí thi cấp</Typography>
@@ -1785,7 +1850,18 @@ return
                   </div>
                   <Divider />
                   <div className='flex items-center justify-between'>
-                    <Typography variant='h6'>Tổng thu</Typography>
+                    <Typography color='text.secondary' fontWeight={500}>Tổng cộng</Typography>
+                    <Typography fontWeight={600}>{formatCurrency(invoiceTotalGrossAmount)}</Typography>
+                  </div>
+                  {discountAmount > 0 && (
+                    <div className='flex items-center justify-between'>
+                      <Typography color='warning.main'>Giảm trừ hóa đơn</Typography>
+                      <Typography color='warning.main'>-{formatCurrency(discountAmount)}</Typography>
+                    </div>
+                  )}
+                  <Divider />
+                  <div className='flex items-center justify-between'>
+                    <Typography variant='h6'>Tổng thanh toán</Typography>
                     <Typography variant='h5' color='primary.main'>
                       {formatCurrency(grandTotal)}
                     </Typography>
@@ -1831,6 +1907,8 @@ return
         onClose={() => {
           setReceiptPreviewOpen(false)
           setPreviewReceiptNumber(null)
+          resetForm()
+          router.replace('/apps/invoice/add')
         }}
       />
     </Stack>

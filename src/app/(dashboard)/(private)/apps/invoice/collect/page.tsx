@@ -1,4 +1,4 @@
-import PaymentCollectView from '@/views/apps/payment/collect'
+import PaymentCollectView from '@/views/apps/invoice/collect'
 
 const PaymentCollectPage = () => {
   return <PaymentCollectView />

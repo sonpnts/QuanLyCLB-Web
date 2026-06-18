@@ -15,6 +15,8 @@ import Typography from '@mui/material/Typography'
 import type { ReceiptZnsStatusType } from '@/types/apps/paymentTypes'
 import { formatDateTimeVN } from '@/utils/dateTime'
 
+import { useRouter } from 'next/navigation'
+
 type Props = {
   onPrint: () => void
   znsStatus: ReceiptZnsStatusType | null
@@ -23,7 +25,10 @@ type Props = {
   onRetryZns: () => void
 }
 
+
 const PreviewActions = ({ onPrint, znsStatus, znsLoading, znsRetrying, onRetryZns }: Props) => {
+  const router = useRouter()
+
   return (
     <Card>
       <CardContent className='flex flex-col gap-4'>
@@ -72,23 +77,17 @@ const PreviewActions = ({ onPrint, znsStatus, znsLoading, znsRetrying, onRetryZn
             </Button>
           )}
         </Box>
-        <Button
-          fullWidth
-          variant='contained'
-          startIcon={<i className='ri-printer-line' />}
-          onClick={onPrint}
-        >
+        <Button fullWidth variant='contained' startIcon={<i className='ri-printer-line' />} onClick={onPrint}>
           In biên lai
         </Button>
         <Button
           fullWidth
           color='secondary'
           variant='outlined'
-          component={Link}
-          href='/apps/payment/list'
           startIcon={<i className='ri-arrow-left-line' />}
+          onClick={() => router.back()}
         >
-          Quay lại danh sách
+          Quay lại
         </Button>
       </CardContent>
     </Card>
