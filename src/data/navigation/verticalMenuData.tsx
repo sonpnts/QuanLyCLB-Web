@@ -116,12 +116,12 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
       {
         label: 'Thu tiền lớp',
         icon: 'ri-money-cny-circle-line',
-        href: '/apps/payment/collect'
+        href: '/apps/invoice/collect'
       },
       {
         label: 'Thanh toán',
         icon: 'ri-wallet-line',
-        href: '/apps/payment/list'
+        href: '/apps/invoice/list'
       },
       {
         label: 'Sản phẩm',

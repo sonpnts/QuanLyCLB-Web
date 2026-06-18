@@ -1,6 +1,7 @@
 'use client'
 
-import PaymentInvoiceMerged from '@/views/apps/payment/list/PaymentInvoiceMerged'
+// Component Imports
+import PaymentInvoiceMerged from './PaymentInvoiceMerged'
 
 const InvoiceList = () => {
   return <PaymentInvoiceMerged />

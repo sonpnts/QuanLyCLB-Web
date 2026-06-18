@@ -23,7 +23,7 @@ import tableStyles from '@core/styles/table.module.css'
 import znsLogService from '@/services/znsLogService'
 import type { ZnsLogType } from '@/types/apps/znsLogTypes'
 import { formatDateTimeVN } from '@/utils/dateTime'
-import ReceiptModal from '@/views/apps/payment/list/ReceiptModal'
+import ReceiptModal from '@/views/apps/invoice/list/ReceiptModal'
 
 const ZnsLogListView = () => {
   const [rows, setRows] = useState<ZnsLogType[]>([])

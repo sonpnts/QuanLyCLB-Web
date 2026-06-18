@@ -81,7 +81,7 @@ const DiscountedReceiptsView = () => {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [classId, setClassId] = useState('')
-  const [discountScope, setDiscountScope] = useState<DiscountScope>('manual')
+  const [discountScope, setDiscountScope] = useState<DiscountScope>('all')
   const [keyword, setKeyword] = useState('')
   const [paymentDateFrom, setPaymentDateFrom] = useState('')
   const [paymentDateTo, setPaymentDateTo] = useState('')
@@ -156,13 +156,12 @@ const DiscountedReceiptsView = () => {
     <Card>
       <CardHeader
         title='Biên lai có giảm trừ'
-        subheader='Mặc định chỉ hiển thị giảm trừ thủ công. Bạn có thể đổi bộ lọc để xem giảm trừ đã duyệt, giá combo hoặc biên lai kết hợp.'
+        subheader='Mặc định hiển thị tất cả các loại giảm trừ. Bạn có thể đổi bộ lọc để xem giảm trừ thủ công, giảm trừ đã duyệt, giá combo hoặc biên lai kết hợp.'
       />
       <CardContent>
         <Stack spacing={3}>
           <Alert severity='info'>
-            Trang này ưu tiên cho việc rà soát các biên lai có giảm trừ thủ công khi tạo hóa đơn. Các biên lai miễn/giảm học
-            phí đã duyệt và áp dụng giá combo sẽ không hiện mặc định.
+            Mặc định hiển thị tất cả các loại giảm trừ. Bạn có thể lọc riêng theo loại giảm trừ thủ công, miễn/giảm học phí đã duyệt, hoặc giá combo ở bộ lọc phía dưới.
           </Alert>
 
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
@@ -253,7 +252,8 @@ const DiscountedReceiptsView = () => {
                     <TableCell>Lớp</TableCell>
                     <TableCell>Ngày thu</TableCell>
                     <TableCell>Học viên</TableCell>
-                    <TableCell align='right'>Số tiền giảm trừ</TableCell>
+                    <TableCell align='right'>Giảm thủ công</TableCell>
+                    <TableCell align='right'>Tổng giảm</TableCell>
                     <TableCell>Lý do giảm trừ</TableCell>
                     <TableCell align='right'>Preview</TableCell>
                   </TableRow>
@@ -261,7 +261,7 @@ const DiscountedReceiptsView = () => {
                 <TableBody>
                   {loadingTable ? (
                     <TableRow>
-                      <TableCell colSpan={9} align='center'>
+                      <TableCell colSpan={10} align='center'>
                         <Box className='flex justify-center py-6'>
                           <CircularProgress size={24} />
                         </Box>
@@ -269,7 +269,7 @@ const DiscountedReceiptsView = () => {
                     </TableRow>
                   ) : records.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} align='center'>
+                      <TableCell colSpan={10} align='center'>
                         Không có biên lai giảm trừ phù hợp.
                       </TableCell>
                     </TableRow>
@@ -299,7 +299,12 @@ const DiscountedReceiptsView = () => {
                         </TableCell>
                         <TableCell align='right'>
                           <Typography variant='body2' color='warning.main' sx={{ fontWeight: 700 }}>
-                            {formatCurrency(row.discountAmount)}
+                            {formatCurrency(row.invoiceManualDiscountAmount)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align='right'>
+                          <Typography variant='body2' color='error.main' sx={{ fontWeight: 700 }}>
+                            {formatCurrency(row.invoiceDiscountAmount)}
                           </Typography>
                         </TableCell>
                         <TableCell sx={{ maxWidth: 360 }}>

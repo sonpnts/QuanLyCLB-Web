@@ -1,8 +1,8 @@
-﻿import { redirect } from 'next/navigation'
+import InvoiceList from '@/views/apps/invoice/list'
 
-const InvoiceApp = () => {
-  redirect('/apps/payment/list')
+const InvoiceListApp = async () => {
+  return <InvoiceList />
 }
 
-export default InvoiceApp
+export default InvoiceListApp
 

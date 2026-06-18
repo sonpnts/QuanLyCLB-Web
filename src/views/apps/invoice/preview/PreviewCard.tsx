@@ -87,9 +87,15 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
   }
 
   const firstItem = items[0]
-  const totalAmount = items.reduce((sum, item) => sum + item.amount, 0)
-  const totalDiscount = items.reduce((sum, item) => sum + (item.discountAmount ?? 0), 0)
-  const originalTotal = items.reduce((sum, item) => sum + (item.originalAmount ?? item.amount), 0)
+  const totalAmount = firstItem?.invoiceFinalAmount !== undefined && firstItem?.invoiceFinalAmount !== null
+    ? firstItem.invoiceFinalAmount
+    : items.reduce((sum, item) => sum + item.amount, 0)
+  const totalDiscount = firstItem?.invoiceDiscountAmount !== undefined && firstItem?.invoiceDiscountAmount !== null
+    ? firstItem.invoiceDiscountAmount
+    : items.reduce((sum, item) => sum + (item.discountAmount ?? 0), 0)
+  const originalTotal = firstItem?.invoiceTotalAmount !== undefined && firstItem?.invoiceTotalAmount !== null
+    ? firstItem.invoiceTotalAmount
+    : items.reduce((sum, item) => sum + (item.originalAmount ?? item.amount), 0)
 
   return (
     <Box ref={wrapperRef} sx={{ width: '100%', overflow: 'hidden' }}>
