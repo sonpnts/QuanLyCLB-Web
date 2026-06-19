@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
@@ -61,17 +61,23 @@ const DebouncedInput = ({
   debounce?: number
 } & Omit<TextFieldProps, 'onChange'>) => {
   const [value, setValue] = useState(initialValue)
+  const onChangeRef = useRef(onChange)
+
+  onChangeRef.current = onChange
 
   useEffect(() => {
     setValue(initialValue)
   }, [initialValue])
 
   useEffect(() => {
-    const timeout = setTimeout(() => onChange(value), debounce)
+    if (value === initialValue) return
 
-    
-return () => clearTimeout(timeout)
-  }, [value, debounce, onChange])
+    const timeout = setTimeout(() => {
+      onChangeRef.current(value)
+    }, debounce)
+
+    return () => clearTimeout(timeout)
+  }, [value, debounce, initialValue])
 
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
 }
