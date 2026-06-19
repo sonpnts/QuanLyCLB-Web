@@ -177,8 +177,6 @@ const PaymentInvoiceCreateView = () => {
   const initializedDraftRef = useRef(false)
   const tuitionTouchedRef = useRef(false)
   const examTouchedRef = useRef(false)
-  const skipTuitionResetRef = useRef(false)
-  const skipExamResetRef = useRef(false)
 
   const [form, setForm] = useState({
     classId: '',
@@ -258,8 +256,6 @@ const PaymentInvoiceCreateView = () => {
     if (!draftInfo || initializedDraftRef.current || loadingInit) return
 
     initializedDraftRef.current = true
-    skipTuitionResetRef.current = true
-    skipExamResetRef.current = true
     setForm(prev => ({
       ...prev,
       classId: draftInfo.classId || prev.classId,
@@ -287,7 +283,7 @@ const PaymentInvoiceCreateView = () => {
         setStudents([])
         setSelectedStudent(null)
 
-return
+        return
       }
 
       const response = await studentService.getStudents({ classId: form.classId, pageSize: 1000 })
@@ -306,48 +302,17 @@ return
   }, [form.classId, form.studentId])
 
   useEffect(() => {
-    if (skipTuitionResetRef.current) {
-      skipTuitionResetRef.current = false
+    let isMounted = true
 
-      return
-    }
-
-    tuitionTouchedRef.current = false
-    setTuitionQuotes({})
-    setTuitionMonths([createTuitionMonthRow()])
-    setForm(prev => ({
-      ...prev,
-      tuitionEnabled: false,
-      discountAmount: '',
-      discountReason: ''
-    }))
-  }, [form.classId, form.studentId])
-
-  useEffect(() => {
-    if (skipExamResetRef.current) {
-      skipExamResetRef.current = false
-
-      return
-    }
-
-    examTouchedRef.current = false
-    setForm(prev => ({
-      ...prev,
-      examEnabled: false,
-      selectedExamRegistrationId: ''
-    }))
-  }, [form.classId, form.studentId])
-
-  useEffect(() => {
     const loadTuitionQuote = async () => {
       if (!form.classId || !form.studentId) {
-        setTuitionQuotes({})
+        if (isMounted) setTuitionQuotes({})
 
-return
+        return
       }
 
       try {
-        setLoadingQuote(true)
+        if (isMounted) setLoadingQuote(true)
         const quoteEntries = await Promise.all(
           tuitionMonths.map(async item => {
             const response = await paymentService.getTuitionQuote(form.classId, form.studentId, item.month, item.year, undefined)
@@ -355,6 +320,8 @@ return
             return [item.id, response.success ? response.data || null : null] as const
           })
         )
+
+        if (!isMounted) return
 
         const nextQuotes: Record<string, TuitionQuoteType | null> = {}
 
@@ -370,36 +337,47 @@ return
           setForm(prev => ({ ...prev, tuitionEnabled: hasPayableMonth }))
         }
       } catch {
+        if (!isMounted) return
         setTuitionQuotes({})
 
         if (!tuitionTouchedRef.current) {
           setForm(prev => ({ ...prev, tuitionEnabled: false }))
         }
       } finally {
-        setLoadingQuote(false)
+        if (isMounted) setLoadingQuote(false)
       }
     }
 
     loadTuitionQuote()
+
+    return () => {
+      isMounted = false
+    }
   }, [form.classId, form.studentId, tuitionMonths])
 
   useEffect(() => {
+    let isMounted = true
+
     const loadExamOptions = async () => {
       if (!form.classId || !form.studentId) {
-        setExamFeeOptions([])
-        setForm(prev => ({
-          ...prev,
-          examEnabled: false,
-          selectedExamRegistrationId: ''
-        }))
+        if (isMounted) {
+          setExamFeeOptions([])
+          setForm(prev => ({
+            ...prev,
+            examEnabled: false,
+            selectedExamRegistrationId: ''
+          }))
+        }
 
-return
+        return
       }
 
       try {
-        setLoadingExamOptions(true)
+        if (isMounted) setLoadingExamOptions(true)
         const response = await paymentService.getExamFeeOptions(form.classId, form.studentId)
         const options = response.data || []
+
+        if (!isMounted) return
 
         setExamFeeOptions(options)
 
@@ -416,26 +394,36 @@ return
           }
         })
       } finally {
-        setLoadingExamOptions(false)
+        if (isMounted) setLoadingExamOptions(false)
       }
     }
 
     loadExamOptions()
+
+    return () => {
+      isMounted = false
+    }
   }, [form.classId, form.studentId, form.selectedExamRegistrationId])
 
   useEffect(() => {
+    let isMounted = true
+
     const loadOneTimeFees = async () => {
       if (!form.classId || !form.studentId) {
-        setOneTimeFeeOptions([])
-        setSelectedOneTimeFees({})
+        if (isMounted) {
+          setOneTimeFeeOptions([])
+          setSelectedOneTimeFees({})
+        }
 
-return
+        return
       }
 
       try {
-        setLoadingOneTimeFees(true)
+        if (isMounted) setLoadingOneTimeFees(true)
         const response = await oneTimeFeeService.getOptions(form.studentId, form.classId)
         const options = (response.data || []).filter(item => SUPPORTED_ONE_TIME_FEE_CODES.has(String(item.feeCode || '').toUpperCase()))
+
+        if (!isMounted) return
 
         setOneTimeFeeOptions(options)
         setSelectedOneTimeFees(prev => {
@@ -448,11 +436,15 @@ return
           return next
         })
       } finally {
-        setLoadingOneTimeFees(false)
+        if (isMounted) setLoadingOneTimeFees(false)
       }
     }
 
     loadOneTimeFees()
+
+    return () => {
+      isMounted = false
+    }
   }, [form.classId, form.studentId, draftInfo?.initialMode])
 
   useEffect(() => {
@@ -1151,6 +1143,10 @@ return
                               const checked = event.target.checked
                               setIsGuest(checked)
                               if (checked) {
+                                tuitionTouchedRef.current = false
+                                setTuitionQuotes({})
+                                setTuitionMonths([createTuitionMonthRow()])
+                                examTouchedRef.current = false
                                 setForm(prev => ({
                                   ...prev,
                                   classId: prev.classId || classes[0]?.id || '',
@@ -1209,13 +1205,24 @@ return
                           label='Lớp hiện tại'
                           value={form.classId}
                           disabled={isGuest}
-                          onChange={event =>
+                          onChange={event => {
+                            const classId = String(event.target.value)
+                            tuitionTouchedRef.current = false
+                            setTuitionQuotes({})
+                            setTuitionMonths([createTuitionMonthRow()])
+                            examTouchedRef.current = false
                             setForm(prev => ({
                               ...prev,
-                              classId: String(event.target.value),
-                              studentId: ''
+                              classId,
+                              studentId: '',
+                              tuitionEnabled: false,
+                              discountAmount: '',
+                              discountReason: '',
+                              examEnabled: false,
+                              selectedExamRegistrationId: ''
                             }))
-                          }
+                            setSelectedOneTimeFees({})
+                          }}
                         >
                           {classes.map(item => (
                             <MenuItem key={item.id} value={item.id}>
@@ -1237,6 +1244,10 @@ return
                             const studentId = String(event.target.value)
                             if (studentId === '') {
                               setSelectedStudent(null)
+                              tuitionTouchedRef.current = false
+                              setTuitionQuotes({})
+                              setTuitionMonths([createTuitionMonthRow()])
+                              examTouchedRef.current = false
                               setForm(prev => ({
                                 ...prev,
                                 studentId: '',
@@ -1250,7 +1261,20 @@ return
                             } else {
                               const matched = students.find(item => item.id === studentId) || null
                               setSelectedStudent(matched)
-                              setForm(prev => ({ ...prev, studentId }))
+                              tuitionTouchedRef.current = false
+                              setTuitionQuotes({})
+                              setTuitionMonths([createTuitionMonthRow()])
+                              examTouchedRef.current = false
+                              setForm(prev => ({
+                                ...prev,
+                                studentId,
+                                tuitionEnabled: false,
+                                discountAmount: '',
+                                discountReason: '',
+                                examEnabled: false,
+                                selectedExamRegistrationId: ''
+                              }))
+                              setSelectedOneTimeFees({})
                             }
                           }}
                         >
