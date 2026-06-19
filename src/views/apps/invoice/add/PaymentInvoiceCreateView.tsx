@@ -177,6 +177,8 @@ const PaymentInvoiceCreateView = () => {
   const initializedDraftRef = useRef(false)
   const tuitionTouchedRef = useRef(false)
   const examTouchedRef = useRef(false)
+  const skipTuitionResetRef = useRef(false)
+  const skipExamResetRef = useRef(false)
 
   const [form, setForm] = useState({
     classId: '',
@@ -256,6 +258,8 @@ const PaymentInvoiceCreateView = () => {
     if (!draftInfo || initializedDraftRef.current || loadingInit) return
 
     initializedDraftRef.current = true
+    skipTuitionResetRef.current = true
+    skipExamResetRef.current = true
     setForm(prev => ({
       ...prev,
       classId: draftInfo.classId || prev.classId,
@@ -302,6 +306,12 @@ return
   }, [form.classId, form.studentId])
 
   useEffect(() => {
+    if (skipTuitionResetRef.current) {
+      skipTuitionResetRef.current = false
+
+      return
+    }
+
     tuitionTouchedRef.current = false
     setTuitionQuotes({})
     setTuitionMonths([createTuitionMonthRow()])
@@ -314,6 +324,12 @@ return
   }, [form.classId, form.studentId])
 
   useEffect(() => {
+    if (skipExamResetRef.current) {
+      skipExamResetRef.current = false
+
+      return
+    }
+
     examTouchedRef.current = false
     setForm(prev => ({
       ...prev,
