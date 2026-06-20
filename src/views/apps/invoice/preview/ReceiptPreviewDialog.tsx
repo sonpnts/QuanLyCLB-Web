@@ -36,12 +36,19 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
   const [znsLoading, setZnsLoading] = useState(false)
   const [znsRetrying, setZnsRetrying] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
+  
+  const currentReceiptNumberRef = useRef<string | null>(null)
+  currentReceiptNumberRef.current = receiptNumber
 
   const fetchReceipt = async (currentReceiptNumber: string) => {
+    if (currentReceiptNumber !== currentReceiptNumberRef.current) return
+
     setLoading(true)
 
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.payments.byReceipt(currentReceiptNumber))
+
+      if (currentReceiptNumber !== currentReceiptNumberRef.current) return
 
       if (response.data?.isSuccess) {
         setItems(Array.isArray(response.data.data) ? response.data.data : [])
@@ -50,14 +57,19 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
         toast.error(response.data?.message || 'Không thể tải biên lai.')
       }
     } catch {
+      if (currentReceiptNumber !== currentReceiptNumberRef.current) return
       setItems([])
       toast.error('Lỗi khi tải biên lai.')
     } finally {
-      setLoading(false)
+      if (currentReceiptNumber === currentReceiptNumberRef.current) {
+        setLoading(false)
+      }
     }
   }
 
   const fetchReceiptZnsStatus = async (currentReceiptNumber: string, retryIfMissing = false) => {
+    if (currentReceiptNumber !== currentReceiptNumberRef.current) return
+
     setZnsLoading(true)
 
     try {
@@ -65,7 +77,11 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
       const totalAttempts = retryIfMissing ? 5 : 1
 
       for (let attempt = 0; attempt < totalAttempts; attempt++) {
+        if (currentReceiptNumber !== currentReceiptNumberRef.current) return
+
         const response = await apiClient.get<any>(API_ENDPOINTS.payments.receiptZnsStatus(currentReceiptNumber))
+
+        if (currentReceiptNumber !== currentReceiptNumberRef.current) return
 
         if (response.data?.isSuccess) {
           latestStatus = response.data.data as ReceiptZnsStatusType
@@ -84,13 +100,17 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
         }
       }
 
+      if (currentReceiptNumber !== currentReceiptNumberRef.current) return
       if (!latestStatus) {
         setZnsStatus(null)
       }
     } catch {
+      if (currentReceiptNumber !== currentReceiptNumberRef.current) return
       setZnsStatus(null)
     } finally {
-      setZnsLoading(false)
+      if (currentReceiptNumber === currentReceiptNumberRef.current) {
+        setZnsLoading(false)
+      }
     }
   }
 
