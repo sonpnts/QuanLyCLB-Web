@@ -373,35 +373,33 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
                 <div className='flex flex-col gap-2'>
                   {collections.map(item => (
                     <Box key={item.classId} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
-                      <Box display='flex' justifyContent='space-between' alignItems='flex-start'>
-                        <Box>
-                          <Typography className='font-medium'>{item.className}</Typography>
+                      <div className='flex items-start justify-between gap-2 flex-wrap'>
+                        <div className='min-w-0 flex-1'>
+                          <Typography className='font-medium' noWrap>{item.className}</Typography>
                           <Typography variant='caption' color='text.secondary'>
                             {item.invoiceCount} biên lai
                           </Typography>
-                        </Box>
-                        <Box textAlign='right'>
+                          <Box display='flex' gap={0.5} mt={0.5} flexWrap='wrap'>
+                            {item.totalDiscountAmount > 0 && (
+                              <Chip label={`Giảm: ${formatCurrency(item.totalDiscountAmount)}`} size='small' color='warning' variant='outlined' />
+                            )}
+                            {item.totalManualDiscountAmount > 0 && (
+                              <Chip label={`HLV: ${formatCurrency(item.totalManualDiscountAmount)}`} size='small' color='warning' variant='outlined' />
+                            )}
+                          </Box>
+                        </div>
+                        <div className='flex flex-col items-end gap-1 shrink-0'>
                           <Typography variant='body2' className='font-semibold' color='success.main'>
                             {formatCurrency(item.availableToHandover)}
                           </Typography>
                           <Typography variant='caption' color='text.secondary'>
                             TM {formatCurrency(item.cashAvailableToHandover)} | CK {formatCurrency(item.bankTransferAvailableToHandover)}
                           </Typography>
-                        </Box>
-                      </Box>
-                      <Box display='flex' justifyContent='space-between' mt={1}>
-                        <Box display='flex' gap={1}>
-                          {item.totalDiscountAmount > 0 && (
-                            <Chip label={`Giảm: ${formatCurrency(item.totalDiscountAmount)}`} size='small' color='warning' variant='outlined' />
-                          )}
-                          {item.totalManualDiscountAmount > 0 && (
-                            <Chip label={`HLV: ${formatCurrency(item.totalManualDiscountAmount)}`} size='small' color='warning' variant='outlined' />
-                          )}
-                        </Box>
-                        <Button size='small' variant='outlined' onClick={() => handleViewInvoices(item.classId, item.className || '')}>
-                          Xem biên lai
-                        </Button>
-                      </Box>
+                          <Button size='small' variant='outlined' fullWidth onClick={() => handleViewInvoices(item.classId, item.className || '')}>
+                            Xem biên lai
+                          </Button>
+                        </div>
+                      </div>
                     </Box>
                   ))}
                 </div>
@@ -478,60 +476,62 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
       </Drawer>
 
       {/* Invoice list dialog */}
-      <Dialog open={invoiceListOpen} onClose={() => setInvoiceListOpen(false)} maxWidth='md' fullWidth>
+      <Dialog open={invoiceListOpen} onClose={() => setInvoiceListOpen(false)} maxWidth='md' fullWidth fullScreen={false}>
         <DialogTitle>
           <Box display='flex' justifyContent='space-between' alignItems='center'>
-            <Typography variant='h6'>Biên lai - {selectedClassName}</Typography>
+            <Typography variant='h6' noWrap>Biên lai - {selectedClassName}</Typography>
             <IconButton size='small' onClick={() => setInvoiceListOpen(false)}>
               <i className='ri-close-line' />
             </IconButton>
           </Box>
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ p: 0 }}>
           {loadingInvoices ? (
             <LinearProgress />
           ) : classInvoices.length === 0 ? (
             <Typography color='text.secondary' textAlign='center' py={4}>Không có biên lai nào.</Typography>
           ) : (
-            <Table size='small'>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Số biên lai</TableCell>
-                  <TableCell>Học viên</TableCell>
-                  <TableCell>Ngày thu</TableCell>
-                  <TableCell align='right'>Tổng gốc</TableCell>
-                  <TableCell align='right'>Giảm trừ</TableCell>
-                  <TableCell align='right'>Thực thu</TableCell>
-                  <TableCell>Phương thức</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {classInvoices.map(inv => (
-                  <TableRow key={inv.receiptNumber} hover sx={{ cursor: 'pointer' }} onClick={() => {
-                    setPreviewReceiptNumber(inv.receiptNumber)
-                    setPreviewOpen(true)
-                  }}>
-                    <TableCell>
-                      <Typography color='primary' fontWeight={500} variant='body2'>{inv.receiptNumber}</Typography>
-                    </TableCell>
-                    <TableCell>{inv.studentName}</TableCell>
-                    <TableCell>{new Date(inv.paymentDate).toLocaleDateString('vi-VN')}</TableCell>
-                    <TableCell align='right'>{formatCurrency(inv.totalAmount)}</TableCell>
-                    <TableCell align='right'>
-                      {inv.discountAmount > 0 ? (
-                        <Typography color='warning.main'>-{formatCurrency(inv.discountAmount)}</Typography>
-                      ) : '—'}
-                    </TableCell>
-                    <TableCell align='right'>
-                      <Typography fontWeight={600}>{formatCurrency(inv.finalAmount)}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={paymentMethodLabels[inv.method] || '-'} size='small' variant='tonal' />
-                    </TableCell>
+            <Box sx={{ overflowX: 'auto' }}>
+              <Table size='small' sx={{ minWidth: 600 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Số biên lai</TableCell>
+                    <TableCell>Học viên</TableCell>
+                    <TableCell>Ngày thu</TableCell>
+                    <TableCell align='right'>Tổng gốc</TableCell>
+                    <TableCell align='right'>Giảm trừ</TableCell>
+                    <TableCell align='right'>Thực thu</TableCell>
+                    <TableCell>Phương thức</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {classInvoices.map(inv => (
+                    <TableRow key={inv.receiptNumber} hover sx={{ cursor: 'pointer' }} onClick={() => {
+                      setPreviewReceiptNumber(inv.receiptNumber)
+                      setPreviewOpen(true)
+                    }}>
+                      <TableCell>
+                        <Typography color='primary' fontWeight={500} variant='body2' noWrap>{inv.receiptNumber}</Typography>
+                      </TableCell>
+                      <TableCell><Typography noWrap>{inv.studentName}</Typography></TableCell>
+                      <TableCell><Typography noWrap>{new Date(inv.paymentDate).toLocaleDateString('vi-VN')}</Typography></TableCell>
+                      <TableCell align='right'>{formatCurrency(inv.totalAmount)}</TableCell>
+                      <TableCell align='right'>
+                        {inv.discountAmount > 0 ? (
+                          <Typography color='warning.main'>-{formatCurrency(inv.discountAmount)}</Typography>
+                        ) : '—'}
+                      </TableCell>
+                      <TableCell align='right'>
+                        <Typography fontWeight={600}>{formatCurrency(inv.finalAmount)}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={paymentMethodLabels[inv.method] || '-'} size='small' variant='tonal' />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Box>
           )}
         </DialogContent>
       </Dialog>
