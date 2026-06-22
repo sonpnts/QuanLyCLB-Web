@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -419,13 +419,12 @@ return
         columns: [
           { header: 'HLV', accessor: row => row.instructorName || row.instructorId },
           { header: 'Lớp', accessor: row => row.className || row.classId },
-          { header: 'Học phí thu', accessor: 'tuitionCollectedToDate', formatter: formatVnCurrency },
-          { header: 'Lệ phí thi', accessor: 'examFeeCollectedToDate', formatter: formatVnCurrency },
-          { header: 'Khoản thu khác', accessor: 'otherPaymentsCollectedToDate', formatter: formatVnCurrency },
-          { header: 'Bán sản phẩm', accessor: 'productSalesCollectedToDate', formatter: formatVnCurrency },
-          { header: 'Tổng thu', accessor: 'totalCollectedToDate', formatter: formatVnCurrency },
+          { header: 'Tổng thu (final)', accessor: 'totalCollectedToDate', formatter: formatVnCurrency },
+          { header: 'Giảm trừ', accessor: 'totalDiscountAmount', formatter: formatVnCurrency },
+          { header: 'Giảm trừ HLV', accessor: 'totalManualDiscountAmount', formatter: formatVnCurrency },
           { header: 'Đã bàn giao', accessor: 'totalHandedOver', formatter: formatVnCurrency },
           { header: 'Còn lại', accessor: 'availableToHandover', formatter: formatVnCurrency },
+          { header: 'Số biên lai', accessor: 'invoiceCount' },
           { header: 'Tính đến ngày', accessor: 'asOf', formatter: formatVnDate }
         ]
       })
@@ -670,15 +669,13 @@ return
                               {item.className || item.classId}
                             </Typography>
                           </td>
-                          <td>{formatCurrency(item.tuitionCollectedToDate)}</td>
-                          <td>{formatCurrency(item.examFeeCollectedToDate)}</td>
-                          <td>{formatCurrency(item.otherPaymentsCollectedToDate)}</td>
-                          <td>{formatCurrency(item.productSalesCollectedToDate)}</td>
                           <td>
                             <Typography variant='body2' color='success.main' className='font-medium'>
                               {formatCurrency(item.totalCollectedToDate)}
                             </Typography>
                           </td>
+                          <td>{formatCurrency(item.totalDiscountAmount)}</td>
+                          <td>{formatCurrency(item.totalManualDiscountAmount)}</td>
                           <td>{formatCurrency(item.totalHandedOver)}</td>
                           <td>
                             <Typography

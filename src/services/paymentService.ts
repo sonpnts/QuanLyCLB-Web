@@ -70,7 +70,6 @@ export interface CreatePaymentRequest {
   collectedByUserId?: string
   sendZaloConfirmation?: boolean
   buyerName?: string
-  buyerPhone?: string
 }
 
 export interface BulkPaymentItemRequest {
@@ -98,7 +97,6 @@ export interface CreateBulkPaymentRequest {
   discountAmount?: number
   discountReason?: string
   buyerName?: string
-  buyerPhone?: string
   items: BulkPaymentItemRequest[]
 }
 

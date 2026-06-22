@@ -41,7 +41,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
 
         if (response.success && response.data) {
           setClasses([
-            { id: '00000000-0000-0000-0000-000000000000', name: 'Khách lẻ' },
+            { id: '00000000-0000-0000-0000-000000000000', name: 'Khách lẻ / Học viên khác' },
             ...response.data
           ])
         }

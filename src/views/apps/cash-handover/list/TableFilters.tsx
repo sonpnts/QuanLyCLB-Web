@@ -50,6 +50,7 @@ const TableFilters = memo(
                 <InputLabel>Lớp</InputLabel>
                 <Select label='Lớp' value={classId} onChange={(event: SelectChangeEvent) => setClassId(event.target.value)}>
                   <MenuItem value=''>Tất cả</MenuItem>
+                  <MenuItem value='00000000-0000-0000-0000-000000000000'>Khách lẻ / Học viên khác</MenuItem>
                   {classes.map(item => (
                     <MenuItem key={item.id} value={item.id}>
                       {item.name}

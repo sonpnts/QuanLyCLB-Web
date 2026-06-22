@@ -96,7 +96,9 @@ export const API_ENDPOINTS = {
       `/finance/summary/class/${classId}/instructor/${instructorId}`,
     branchSummary: (branchId: string) => `/finance/summary/branch/${branchId}`,
     instructorClassCollections: (instructorId: string) => `/finance/instructors/${instructorId}/class-collections`,
-    myClassCollections: '/finance/me/class-collections'
+    classInvoices: (instructorId: string, classId: string) => `/finance/instructors/${instructorId}/class-collections/${classId}/invoices`,
+    myClassCollections: '/finance/me/class-collections',
+    myClassInvoices: (classId: string) => `/finance/me/class-collections/${classId}/invoices`
   },
   instructors: {
     root: '/Instructors',

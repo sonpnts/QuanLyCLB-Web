@@ -19,6 +19,7 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import TextField from '@mui/material/TextField'
+import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 
 import { toast } from 'react-toastify'
@@ -135,7 +136,9 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
   if (!open) return null
 
   const firstItem = items.length > 0 ? items[0] : null
-  const totalAmount = items.reduce((sum, current) => sum + current.amount, 0)
+  const totalAmount = firstItem?.invoiceFinalAmount !== undefined && firstItem?.invoiceFinalAmount !== null
+    ? firstItem.invoiceFinalAmount
+    : items.reduce((sum, current) => sum + current.amount, 0)
   const isReceiptInactive = items.length > 0 && items.every(item => item.isActive === false)
 
   const beginEdit = () => {
@@ -409,6 +412,7 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
                       <TableCell>Mô tả</TableCell>
                       <TableCell>Loại</TableCell>
                       <TableCell align='right'>Tiền gốc</TableCell>
+                      <TableCell align='right'>Giảm trừ</TableCell>
                       <TableCell align='right'>Thực thu</TableCell>
                     </TableRow>
                   </TableHead>
@@ -447,6 +451,17 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
                           )}
                         </TableCell>
                         <TableCell align='right'>
+                          {item.discountAmount && item.discountAmount > 0 ? (
+                            <Tooltip title={item.discountReason || ''} arrow placement='top'>
+                              <Typography variant='body2' color='warning.main' sx={{ cursor: item.discountReason ? 'help' : 'default' }}>
+                                -{formatCurrency(item.discountAmount)}
+                              </Typography>
+                            </Tooltip>
+                          ) : (
+                            <Typography variant='body2' color='text.disabled'>—</Typography>
+                          )}
+                        </TableCell>
+                        <TableCell align='right'>
                           {editing ? (
                             <TextField
                               size='small'
@@ -471,7 +486,7 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
                       </TableRow>
                     ))}
                     <TableRow>
-                      <TableCell colSpan={3} align='right'>
+                      <TableCell colSpan={4} align='right'>
                         <Typography fontWeight='bold'>Tổng cộng:</Typography>
                       </TableCell>
                       <TableCell align='right'>
@@ -483,6 +498,44 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
                   </TableBody>
                 </Table>
               </TableContainer>
+
+              {(firstItem?.invoiceDiscountAmount && firstItem.invoiceDiscountAmount > 0) ||
+               (firstItem?.invoiceManualDiscountAmount && firstItem.invoiceManualDiscountAmount > 0) ? (
+                <Box mt={3} p={2} sx={{ bgcolor: 'action.hover', borderRadius: 1 }}>
+                  <Typography variant='subtitle2' gutterBottom>
+                    Thông tin giảm trừ
+                  </Typography>
+                  <Divider sx={{ mb: 1.5 }} />
+                  <Box display='flex' flexDirection='column' gap={1}>
+                    {firstItem?.invoiceTotalAmount != null && (
+                      <Box display='flex' justifyContent='space-between'>
+                        <Typography variant='body2' color='text.secondary'>Tổng gốc:</Typography>
+                        <Typography variant='body2'>{formatCurrency(firstItem.invoiceTotalAmount)}</Typography>
+                      </Box>
+                    )}
+                    {firstItem?.invoiceDiscountAmount != null && firstItem.invoiceDiscountAmount > 0 && (
+                      <Box display='flex' justifyContent='space-between'>
+                        <Typography variant='body2' color='text.secondary'>Giảm trừ:</Typography>
+                        <Typography variant='body2' color='warning.main'>-{formatCurrency(firstItem.invoiceDiscountAmount)}</Typography>
+                      </Box>
+                    )}
+                    {firstItem?.invoiceDiscountReason && (
+                      <Box display='flex' justifyContent='space-between' alignItems='flex-start'>
+                        <Typography variant='body2' color='text.secondary'>Lý do:</Typography>
+                        <Typography variant='body2' color='text.primary' sx={{ textAlign: 'right', maxWidth: '70%' }}>
+                          {firstItem.invoiceDiscountReason}
+                        </Typography>
+                      </Box>
+                    )}
+                    {firstItem?.invoiceManualDiscountAmount != null && firstItem.invoiceManualDiscountAmount > 0 && (
+                      <Box display='flex' justifyContent='space-between'>
+                        <Typography variant='body2' color='text.secondary'>Giảm trừ thủ công:</Typography>
+                        <Typography variant='body2' color='warning.main'>-{formatCurrency(firstItem.invoiceManualDiscountAmount)}</Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              ) : null}
             </Grid>
 
             {firstItem?.transferProofImageUrl && (

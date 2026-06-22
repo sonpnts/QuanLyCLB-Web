@@ -4,7 +4,8 @@ import type {
   ClassInstructorSummaryType,
   FinanceAmountSummaryType,
   FinanceTransactionSummaryType,
-  InstructorClassCollectionType
+  InstructorClassCollectionType,
+  InvoiceSummaryType
 } from '@/types/apps/financeTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
@@ -222,27 +223,17 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
             instructorName: item.instructorName,
             classId: item.classId,
             className: item.className,
-            tuitionCollectedToDate: Number(item.tuitionCollectedToDate || 0),
-            examFeeCollectedToDate: Number(item.examFeeCollectedToDate || 0),
-            otherPaymentsCollectedToDate: Number(item.otherPaymentsCollectedToDate || 0),
-            productSalesCollectedToDate: Number(item.productSalesCollectedToDate || 0),
-            cashCollectedToDate: Number(item.cashCollectedToDate || 0),
-            bankTransferCollectedToDate: Number(item.bankTransferCollectedToDate || 0),
             totalCollectedToDate: Number(item.totalCollectedToDate || 0),
+            totalDiscountAmount: Number(item.totalDiscountAmount || 0),
+            totalManualDiscountAmount: Number(item.totalManualDiscountAmount || 0),
             totalHandedOver: Number(item.totalHandedOver || 0),
             cashAvailableToHandover: Number(item.cashAvailableToHandover || 0),
             bankTransferAvailableToHandover: Number(item.bankTransferAvailableToHandover || 0),
             availableToHandover: Number(item.availableToHandover || 0),
-            asOf: item.asOf,
-            breakdown: Array.isArray(item.breakdown)
-              ? item.breakdown.map((detail: any) => ({
-                  key: String(detail.key || ''),
-                  label: String(detail.label || ''),
-                  amount: Number(detail.amount || 0)
-                }))
-              : []
-        }))
-      }
+            invoiceCount: Number(item.invoiceCount || 0),
+            asOf: item.asOf
+          }))
+        }
     } catch (error) {
       logger.error('FinanceService', 'getClassCollectionsByInstructor', error)
       
@@ -269,29 +260,83 @@ return { success: true, data: [] }
             instructorName: item.instructorName,
             classId: item.classId,
             className: item.className,
-            tuitionCollectedToDate: Number(item.tuitionCollectedToDate || 0),
-            examFeeCollectedToDate: Number(item.examFeeCollectedToDate || 0),
-            otherPaymentsCollectedToDate: Number(item.otherPaymentsCollectedToDate || 0),
-            productSalesCollectedToDate: Number(item.productSalesCollectedToDate || 0),
-            cashCollectedToDate: Number(item.cashCollectedToDate || 0),
-            bankTransferCollectedToDate: Number(item.bankTransferCollectedToDate || 0),
             totalCollectedToDate: Number(item.totalCollectedToDate || 0),
+            totalDiscountAmount: Number(item.totalDiscountAmount || 0),
+            totalManualDiscountAmount: Number(item.totalManualDiscountAmount || 0),
             totalHandedOver: Number(item.totalHandedOver || 0),
             cashAvailableToHandover: Number(item.cashAvailableToHandover || 0),
             bankTransferAvailableToHandover: Number(item.bankTransferAvailableToHandover || 0),
             availableToHandover: Number(item.availableToHandover || 0),
-            asOf: item.asOf,
-            breakdown: Array.isArray(item.breakdown)
-              ? item.breakdown.map((detail: any) => ({
-                  key: String(detail.key || ''),
-                  label: String(detail.label || ''),
-                  amount: Number(detail.amount || 0)
-                }))
-              : []
+            invoiceCount: Number(item.invoiceCount || 0),
+            asOf: item.asOf
           }))
         }
     } catch (error) {
       logger.error('FinanceService', 'getMyClassCollections', error)
+      
+return { success: true, data: [] }
+    }
+  }
+
+  async getClassInvoices(instructorId: string, classId: string, asOfDate?: string): Promise<ResponseResult<InvoiceSummaryType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.finance.classInvoices(instructorId, classId), {
+        params: { asOfDate }
+      })
+
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
+
+      const rows: any[] = Array.isArray(apiResponse.data) ? apiResponse.data : []
+
+        return {
+          success: true,
+          data: rows.map(item => ({
+            receiptNumber: String(item.receiptNumber || ''),
+            studentName: String(item.studentName || ''),
+            paymentDate: String(item.paymentDate || ''),
+            totalAmount: Number(item.totalAmount || 0),
+            discountAmount: Number(item.discountAmount || 0),
+            manualDiscountAmount: Number(item.manualDiscountAmount || 0),
+            finalAmount: Number(item.finalAmount || 0),
+            method: Number(item.method || 0)
+          }))
+        }
+    } catch (error) {
+      logger.error('FinanceService', 'getClassInvoices', error)
+      
+return { success: true, data: [] }
+    }
+  }
+
+  async getMyClassInvoices(classId: string, asOfDate?: string): Promise<ResponseResult<InvoiceSummaryType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.finance.myClassInvoices(classId), {
+        params: { asOfDate }
+      })
+
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
+
+      const rows: any[] = Array.isArray(apiResponse.data) ? apiResponse.data : []
+
+        return {
+          success: true,
+          data: rows.map(item => ({
+            receiptNumber: String(item.receiptNumber || ''),
+            studentName: String(item.studentName || ''),
+            paymentDate: String(item.paymentDate || ''),
+            totalAmount: Number(item.totalAmount || 0),
+            discountAmount: Number(item.discountAmount || 0),
+            manualDiscountAmount: Number(item.manualDiscountAmount || 0),
+            finalAmount: Number(item.finalAmount || 0),
+            method: Number(item.method || 0)
+          }))
+        }
+    } catch (error) {
+      logger.error('FinanceService', 'getMyClassInvoices', error)
       
 return { success: true, data: [] }
     }

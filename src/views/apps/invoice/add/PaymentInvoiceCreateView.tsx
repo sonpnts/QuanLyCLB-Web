@@ -189,8 +189,7 @@ const PaymentInvoiceCreateView = () => {
     discountReason: '',
     examEnabled: false,
     selectedExamRegistrationId: '',
-    buyerName: '',
-    buyerPhone: ''
+    buyerName: ''
   })
 
   const resetForm = () => {
@@ -205,8 +204,7 @@ const PaymentInvoiceCreateView = () => {
       discountReason: '',
       examEnabled: false,
       selectedExamRegistrationId: '',
-      buyerName: '',
-      buyerPhone: ''
+      buyerName: ''
     })
     setTuitionMonths([createTuitionMonthRow()])
     setTuitionQuotes({})
@@ -873,7 +871,6 @@ return
           discountAmount: discountAmountVal > 0 ? discountAmountVal : undefined,
           discountReason: discountAmountVal > 0 ? form.discountReason.trim() : undefined,
           buyerName: isGuest ? form.buyerName?.trim() || undefined : undefined,
-          buyerPhone: isGuest ? form.buyerPhone?.trim() || undefined : undefined,
           paymentDate: new Date().toISOString(),
           method: form.method,
           transferProofImageUrl,
@@ -904,7 +901,6 @@ return
         discountAmount: discountAmountVal > 0 ? discountAmountVal : undefined,
         discountReason: discountAmountVal > 0 ? form.discountReason.trim() : undefined,
         buyerName: isGuest ? form.buyerName?.trim() || undefined : undefined,
-        buyerPhone: isGuest ? form.buyerPhone?.trim() || undefined : undefined,
         items
       })
 
@@ -1156,8 +1152,7 @@ return
                                   selectedExamRegistrationId: '',
                                   discountAmount: '',
                                   discountReason: '',
-                                  buyerName: '',
-                                  buyerPhone: ''
+                                  buyerName: ''
                                 }))
                                 setSelectedStudent(null)
                                 setSelectedOneTimeFees({})
@@ -1170,7 +1165,8 @@ return
                     </Grid>
                     {isGuest && (
                       <>
-                        <Grid size={{ xs: 12, md: 6 }}>
+
+                        <Grid size={{ xs: 12 }}>
                           <TextField
                             fullWidth
                             label='Họ tên người mua'
@@ -1179,19 +1175,6 @@ return
                               setForm(prev => ({
                                 ...prev,
                                 buyerName: event.target.value
-                              }))
-                            }
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <TextField
-                            fullWidth
-                            label='Số điện thoại'
-                            value={form.buyerPhone}
-                            onChange={event =>
-                              setForm(prev => ({
-                                ...prev,
-                                buyerPhone: event.target.value
                               }))
                             }
                           />

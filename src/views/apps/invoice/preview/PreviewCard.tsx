@@ -262,6 +262,16 @@ const PreviewCard = ({ items, receiptNumber, loading }: Props) => {
                             - {formatCurrency(totalDiscount)}
                           </Typography>
                         </Box>
+                        {firstItem.invoiceDiscountReason && (
+                          <Box display='flex' alignItems='flex-start' justifyContent='space-between' gap={4}>
+                            <Typography color='text.secondary' noWrap>
+                              Lý do giảm:
+                            </Typography>
+                            <Typography color='text.primary' sx={{ textAlign: 'right', maxWidth: '70%' }}>
+                              {firstItem.invoiceDiscountReason}
+                            </Typography>
+                          </Box>
+                        )}
                         <Divider sx={{ my: 1 }} />
                       </>
                     )}
