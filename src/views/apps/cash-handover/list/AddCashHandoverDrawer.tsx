@@ -284,7 +284,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
         variant='temporary'
         onClose={resetAndClose}
         ModalProps={{ keepMounted: true }}
-        sx={{ '& .MuiDrawer-paper': { width: { xs: 360, sm: 560 } } }}
+        sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', sm: 560 } } }}
       >
         <div className='flex items-center justify-between pli-5 plb-4'>
           <Typography variant='h5'>Tạo phiếu bàn giao tiền</Typography>
@@ -294,7 +294,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
         </div>
         <Divider />
 
-        <div className='p-5 overflow-y-auto'>
+        <div className='p-4 sm:p-5 overflow-y-auto'>
           {loading && <LinearProgress sx={{ mb: 2 }} />}
 
           <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
@@ -318,7 +318,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
               <Typography variant='subtitle2' className='mb-2 font-semibold'>Tổng quan</Typography>
 
               <Box display='flex' justifyContent='space-between' mb={1}>
-                <Typography variant='body2' color='text.secondary'>Tổng tiền đã thu (final):</Typography>
+                <Typography variant='body2' color='text.secondary'>Tổng tiền đã thu:</Typography>
                 <Typography variant='body2' className='font-medium'>
                   {formatCurrency(collections.reduce((s, c) => s + Number(c.totalCollectedToDate || 0), 0))}
                 </Typography>
@@ -343,16 +343,22 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
                 </Typography>
               </Box>
               <Box display='flex' justifyContent='space-between'>
-                <Typography variant='body2' color='text.secondary'>CK:</Typography>
+                <Typography variant='body2' color='text.secondary'>CK cần bàn giao:</Typography>
                 <Typography variant='body2'>{formatCurrency(totalBankTransferAvailableToHandover)}</Typography>
+              </Box>
+              <Box display='flex' justifyContent='space-between' mt={0.5}>
+                <Typography variant='body2' className='font-semibold'>Tổng cần bàn giao:</Typography>
+                <Typography variant='body2' className='font-semibold' color='success.main'>
+                  {formatCurrency(totalAvailableToHandover)}
+                </Typography>
               </Box>
 
               {totalDeductionAmount > 0 && (
                 <>
                   <Divider sx={{ my: 1 }} />
                   <Box display='flex' justifyContent='space-between'>
-                    <Typography variant='body2' className='font-medium'>Tổng cần bàn giao:</Typography>
-                    <Typography variant='body2' className='font-semibold' color='warning.main'>
+                    <Typography variant='body2' color='error.main'>Sau khi giảm trừ HLV:</Typography>
+                    <Typography variant='body2' className='font-semibold' color='error.main'>
                       {formatCurrency(totalAfterDeduction)}
                     </Typography>
                   </Box>
@@ -419,26 +425,28 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
                   </Button>
                 </div>
                 {showLateStudents && (
-                  <Table size='small' sx={{ mt: 1 }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Học viên</TableCell>
-                        <TableCell>Lớp</TableCell>
-                        <TableCell align='right'>Số ngày</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {lateStudents.map(item => (
-                        <TableRow key={`${item.studentId}-${item.classId}`}>
-                          <TableCell>{item.studentName}</TableCell>
-                          <TableCell>{item.className}</TableCell>
-                          <TableCell align='right'>
-                            <Chip label={`${item.daysSinceLastPayment} ngày`} size='small' color={item.daysSinceLastPayment > 60 ? 'error' : 'warning'} />
-                          </TableCell>
+                  <div className='overflow-x-auto mt-1'>
+                    <Table size='small' sx={{ minWidth: 300 }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Học viên</TableCell>
+                          <TableCell>Lớp</TableCell>
+                          <TableCell align='right'>Số ngày</TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHead>
+                      <TableBody>
+                        {lateStudents.map(item => (
+                          <TableRow key={`${item.studentId}-${item.classId}`}>
+                            <TableCell>{item.studentName}</TableCell>
+                            <TableCell>{item.className}</TableCell>
+                            <TableCell align='right'>
+                              <Chip label={`${item.daysSinceLastPayment} ngày`} size='small' color={item.daysSinceLastPayment > 60 ? 'error' : 'warning'} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </Box>
             )}
@@ -446,16 +454,16 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
             {/* Deductions */}
             <Box>
               <div className='flex items-center justify-between mb-2'>
-                <Typography variant='subtitle2' className='font-semibold'>Khoản trừ</Typography>
+                <Typography variant='subtitle2' className='font-semibold'>Khoản trừ HLV</Typography>
                 <Button type='button' size='small' startIcon={<i className='ri-add-line' />} onClick={addDeductionRow}>Thêm</Button>
               </div>
               {deductions.length === 0 && (
-                <Typography variant='body2' color='text.secondary'>Chưa có khoản trừ.</Typography>
+                <Typography variant='body2' color='text.secondary'>Chưa có khoản trừ. Nhấn Thêm để nhập khoản giảm trừ HLV.</Typography>
               )}
               {deductions.map(item => (
                 <div key={item.tempId} className='flex gap-2 mb-2 items-center'>
-                  <TextField size='small' label='Mô tả' value={item.description} onChange={event => updateDeductionRow(item.tempId, 'description', event.target.value)} sx={{ flex: 2 }} />
-                  <TextField size='small' label='Số tiền' type='number' value={item.amount} onChange={event => updateDeductionRow(item.tempId, 'amount', event.target.value)} sx={{ flex: 1 }} />
+                  <TextField size='small' label='Mô tả' value={item.description} onChange={event => updateDeductionRow(item.tempId, 'description', event.target.value)} sx={{ flex: 2, minWidth: 120 }} />
+                  <TextField size='small' label='Số tiền' type='number' value={item.amount} onChange={event => updateDeductionRow(item.tempId, 'amount', event.target.value)} sx={{ flex: 1, minWidth: 80 }} />
                   <IconButton size='small' color='error' onClick={() => removeDeductionRow(item.tempId)}>
                     <i className='ri-delete-bin-line' />
                   </IconButton>
@@ -465,11 +473,11 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
 
             <TextField label='Ghi chú' multiline rows={2} value={formData.notes} onChange={event => setFormData(prev => ({ ...prev, notes: event.target.value }))} />
 
-            <div className='flex items-center gap-3 flex-wrap'>
-              <Button type='submit' variant='contained' disabled={loading || saving || totalAvailableToHandover <= 0}>
+            <div className='flex items-center gap-3 flex-col sm:flex-row'>
+              <Button type='submit' variant='contained' disabled={loading || saving || totalAvailableToHandover <= 0} fullWidth className='sm:w-auto'>
                 {saving ? 'Đang xử lý...' : `Tạo phiếu bàn giao ${formatCurrency(totalAfterDeduction > 0 ? totalAfterDeduction : totalAvailableToHandover)}`}
               </Button>
-              <Button type='button' variant='outlined' color='error' onClick={resetAndClose}>Hủy</Button>
+              <Button type='button' variant='outlined' color='error' onClick={resetAndClose} fullWidth className='sm:w-auto'>Hủy</Button>
             </div>
           </form>
         </div>
@@ -492,7 +500,7 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
             <Typography color='text.secondary' textAlign='center' py={4}>Không có biên lai nào.</Typography>
           ) : (
             <Box sx={{ overflowX: 'auto' }}>
-              <Table size='small' sx={{ minWidth: 600 }}>
+              <Table size='small' sx={{ minWidth: 500 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Số biên lai</TableCell>

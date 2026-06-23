@@ -43,9 +43,9 @@ const TableFilters = memo(
 
     return (
       <CardContent>
-        <Grid container spacing={4}>
+        <Grid container spacing={3}>
           {showClassFilter && (
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth>
                 <InputLabel>Lớp</InputLabel>
                 <Select label='Lớp' value={classId} onChange={(event: SelectChangeEvent) => setClassId(event.target.value)}>
@@ -62,7 +62,7 @@ const TableFilters = memo(
           )}
 
           {showInstructorFilter && (
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth>
                 <InputLabel>Người bàn giao</InputLabel>
                 <Select
@@ -81,7 +81,7 @@ const TableFilters = memo(
             </Grid>
           )}
 
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <TextField
               fullWidth
               type='date'
@@ -91,7 +91,7 @@ const TableFilters = memo(
               onChange={event => setHandoverFrom(event.target.value)}
             />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <TextField
               fullWidth
               type='date'

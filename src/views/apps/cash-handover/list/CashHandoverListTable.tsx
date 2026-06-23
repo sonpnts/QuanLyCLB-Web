@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -62,15 +62,6 @@ type OutstandingInstructorSummary = {
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
-
-const getOtherFeeAmount = (row: CashHandoverType) =>
-  Math.max(
-    0,
-    Number(row.snapshotTotalAmount || 0) -
-      Number(row.snapshotTuitionAmount || 0) -
-      Number(row.snapshotExamFeeAmount || 0) -
-      Number(row.snapshotProductSalesAmount || 0)
-  )
 
 const DebouncedInput = ({
   value: initialValue,
@@ -321,55 +312,16 @@ return
         header: 'Người bàn giao',
         cell: ({ row }) => <Typography className='font-medium'>{row.original.instructorName || row.original.instructorId}</Typography>
       }),
-      {
-        id: 'classSummary',
-        header: 'Chi tiết lớp',
-        cell: ({ row }) => (
-          <div className='flex flex-col'>
-            <Typography>{row.original.classCount > 1 ? `${row.original.classCount} lớp` : row.original.className || '-'}</Typography>
-            {/*{row.original.details.length > 0 && (*/}
-            {/*  <Typography variant='caption' color='text.secondary'>*/}
-            {/*    {row.original.details.map(detail => detail.className).join(', ')}*/}
-            {/*  </Typography>*/}
-            {/*)}*/}
-          </div>
-        )
-      },
       columnHelper.accessor('handoverAt', {
         header: 'Ngày bàn giao',
         cell: ({ row }) => (
-          <Typography>
+          <Typography variant='body2'>
             {formatDateTimeVN(row.original.handoverAt)}
           </Typography>
         )
       }),
-      columnHelper.accessor('snapshotTuitionAmount', {
-        header: 'Học phí',
-        cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotTuitionAmount)}</Typography>
-      }),
-      columnHelper.accessor('snapshotExamFeeAmount', {
-        header: 'Lệ phí thi',
-        cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotExamFeeAmount)}</Typography>
-      }),
-      columnHelper.accessor('snapshotProductSalesAmount', {
-        header: 'Sản phẩm',
-        cell: ({ row }) => <Typography>{formatCurrency(row.original.snapshotProductSalesAmount)}</Typography>
-      }),
-      {
-        id: 'otherFeesAmount',
-        header: 'Các khoản phí khác',
-        cell: ({ row }) => <Typography>{formatCurrency(getOtherFeeAmount(row.original))}</Typography>
-      },
-      columnHelper.accessor('totalDeductionAmount', {
-        header: 'Khoản trừ',
-        cell: ({ row }) => (
-          <Typography color={row.original.totalDeductionAmount > 0 ? 'error.main' : 'text.secondary'}>
-            {row.original.totalDeductionAmount > 0 ? `-${formatCurrency(row.original.totalDeductionAmount)}` : formatCurrency(0)}
-          </Typography>
-        )
-      }),
       columnHelper.accessor('amountHandedOver', {
-        header: 'Số tiền đã nộp',
+        header: 'Số tiền bàn giao',
         cell: ({ row }) => (
           <div className='flex flex-col'>
             <Typography className='font-medium' color='success.main'>
@@ -380,6 +332,26 @@ return
             </Typography>
           </div>
         )
+      }),
+      columnHelper.accessor('totalDeductionAmount', {
+        header: 'Giảm trừ HLV',
+        cell: ({ row }) => {
+          const deductionCount = row.original.deductions?.length || 0
+          const amount = row.original.totalDeductionAmount || 0
+
+          return (
+            <div className='flex flex-col'>
+              <Typography color={amount > 0 ? 'error.main' : 'text.secondary'}>
+                {amount > 0 ? `-${formatCurrency(amount)}` : '—'}
+              </Typography>
+              {deductionCount > 0 && (
+                <Typography variant='caption' color='text.secondary'>
+                  {deductionCount} khoản
+                </Typography>
+              )}
+            </div>
+          )
+        }
       }),
       columnHelper.accessor('status', {
         header: 'Trạng thái',
@@ -399,8 +371,24 @@ return
         )
       }),
       {
+        id: 'confirmedBy',
+        header: 'Xác nhận',
+        cell: ({ row }) => (
+          <div className='flex flex-col'>
+            <Typography variant='body2'>
+              {row.original.confirmedByUserName || row.original.createdByUserName || '—'}
+            </Typography>
+            {row.original.confirmedAt && (
+              <Typography variant='caption' color='text.secondary'>
+                {formatDateTimeVN(row.original.confirmedAt)}
+              </Typography>
+            )}
+          </div>
+        )
+      },
+      {
         id: 'actions',
-        header: 'Thao tác',
+        header: '',
         cell: ({ row }) => (
           <div className='flex items-center gap-1' onClick={event => event.stopPropagation()}>
             {isAdmin && row.original.status === 'Pending' && (
@@ -472,33 +460,33 @@ return
             placeholder='Tìm kiếm bàn giao...'
             className='max-sm:is-full'
           />
-          <Button variant='contained' onClick={() => openCreateDrawer()}>
+          <Button variant='contained' onClick={() => openCreateDrawer()} className='max-sm:is-full'>
             Tạo phiếu bàn giao
           </Button>
         </div>
         <div className='px-5 pb-4'>
-          <div className='grid grid-cols-1 gap-3 md:grid-cols-3'>
-            <div className='rounded border p-3'>
+          <div className='grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3'>
+            <div className='rounded border p-2 sm:p-3'>
               <Typography variant='caption' color='text.secondary'>
                 Tổng đã bàn giao
               </Typography>
-              <Typography className='font-semibold' color='success.main'>
+              <Typography className='font-semibold text-sm sm:text-base' color='success.main'>
                 {formatCurrency(handoverSummary.totalAmount)}
               </Typography>
             </div>
-            <div className='rounded border p-3'>
+            <div className='rounded border p-2 sm:p-3'>
               <Typography variant='caption' color='text.secondary'>
                 Tiền mặt
               </Typography>
-              <Typography className='font-semibold'>
+              <Typography className='font-semibold text-sm sm:text-base'>
                 {formatCurrency(handoverSummary.cashAmount)}
               </Typography>
             </div>
-            <div className='rounded border p-3'>
+            <div className='rounded border p-2 sm:p-3 col-span-2 sm:col-span-1'>
               <Typography variant='caption' color='text.secondary'>
                 Chuyển khoản
               </Typography>
-              <Typography className='font-semibold'>
+              <Typography className='font-semibold text-sm sm:text-base'>
                 {formatCurrency(handoverSummary.bankTransferAmount)}
               </Typography>
             </div>
@@ -511,18 +499,18 @@ return
             </Typography>
             <div className='flex flex-col gap-2'>
               {outstandingByInstructor.map(item => (
-                <div key={item.instructorId} className='flex items-center justify-between border rounded p-2 gap-3'>
-                  <div>
-                    <Typography variant='body2'>{item.instructorName}</Typography>
+                <div key={item.instructorId} className='flex items-center justify-between border rounded p-2 gap-2 sm:gap-3'>
+                  <div className='min-w-0 flex-1'>
+                    <Typography variant='body2' noWrap>{item.instructorName}</Typography>
                     <Typography variant='caption' color='text.secondary'>
                       {item.classCount} lớp còn tiền
                     </Typography>
                   </div>
-                  <div className='flex items-center gap-3'>
-                    <Typography variant='body2' color='warning.main'>
+                  <div className='flex items-center gap-2 sm:gap-3 shrink-0'>
+                    <Typography variant='body2' color='warning.main' className='whitespace-nowrap'>
                       {formatCurrency(item.totalAvailableToHandover)}
                     </Typography>
-                    <Button size='small' variant='outlined' onClick={() => openCreateDrawer(item.instructorId)}>
+                    <Button size='small' variant='outlined' onClick={() => openCreateDrawer(item.instructorId)} className='whitespace-nowrap'>
                       Tạo bàn giao
                     </Button>
                   </div>
@@ -531,7 +519,72 @@ return
             </div>
           </div>
         )}
-        <div className='overflow-x-auto'>
+
+        {/* Mobile card view */}
+        <div className='sm:hidden px-5 pb-4'>
+          {table.getFilteredRowModel().rows.length === 0 ? (
+            <Typography className='text-center py-4' color='text.secondary'>
+              {loading ? 'Đang tải...' : 'Không có dữ liệu'}
+            </Typography>
+          ) : (
+            <div className='flex flex-col gap-3'>
+              {table.getRowModel().rows.map(row => {
+                const item: CashHandoverType = row.original
+
+                return (
+                  <div
+                    key={row.id}
+                    className='border rounded-lg p-3 cursor-pointer active:bg-action-hover'
+                    onClick={() => handleOpenDetail(item)}
+                  >
+                    <div className='flex items-start justify-between gap-2 mb-2'>
+                      <div className='min-w-0 flex-1'>
+                        <Typography className='font-medium' noWrap>{item.instructorName || item.instructorId}</Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          {formatDateTimeVN(item.handoverAt)}
+                        </Typography>
+                      </div>
+                      <Chip
+                        label={HandoverStatusLabel[item.status] ?? item.status}
+                        size='small'
+                        color={item.status === 'Confirmed' ? 'success' : item.status === 'Rejected' ? 'error' : 'warning'}
+                        variant='tonal'
+                      />
+                    </div>
+                    <div className='flex items-center justify-between'>
+                      <Typography className='font-semibold' color='success.main'>
+                        {formatCurrency(item.amountHandedOver)}
+                      </Typography>
+                      {item.totalDeductionAmount > 0 && (
+                        <Typography variant='caption' color='error.main'>
+                          -{formatCurrency(item.totalDeductionAmount)} ({item.deductions?.length || 0} khoản)
+                        </Typography>
+                      )}
+                    </div>
+                    <div className='flex items-center justify-between mt-1'>
+                      <Typography variant='caption' color='text.secondary'>
+                        TM {formatCurrency(item.amountHandedOverCashAmount)} | CK {formatCurrency(item.amountHandedOverBankTransferAmount)}
+                      </Typography>
+                      {isAdmin && item.status === 'Pending' && (
+                        <div className='flex items-center gap-1' onClick={e => e.stopPropagation()}>
+                          <IconButton size='small' color='success' disabled={confirmingId === item.id} onClick={() => handleConfirm(item.id)}>
+                            <i className='ri-check-double-line' />
+                          </IconButton>
+                          <IconButton size='small' color='error' disabled={rejectingId === item.id} onClick={() => openRejectDialog(item)}>
+                            <i className='ri-close-circle-line' />
+                          </IconButton>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop table view */}
+        <div className='hidden sm:block overflow-x-auto'>
           <table className={tableStyles.table}>
             <thead>
               {table.getHeaderGroups().map(headerGroup => (
@@ -573,6 +626,7 @@ return
             </tbody>
           </table>
         </div>
+
         <TablePagination
           rowsPerPageOptions={[10, 25, 50]}
           component='div'

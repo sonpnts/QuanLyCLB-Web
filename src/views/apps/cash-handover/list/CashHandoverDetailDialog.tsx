@@ -1,7 +1,5 @@
 'use client'
 
-import type { ReactNode } from 'react'
-
 import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
 import Dialog from '@mui/material/Dialog'
@@ -30,155 +28,156 @@ type Props = {
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 
-const getOtherFeeAmount = (total: number, tuition: number, exam: number, products: number) =>
-  Math.max(0, Number(total || 0) - Number(tuition || 0) - Number(exam || 0) - Number(products || 0))
-
-const DetailRow = ({ label, value }: { label: string; value: string | ReactNode }) => (
-  <Grid item xs={12} md={6}>
-    <Typography variant='body2' color='text.secondary'>
-      {label}
-    </Typography>
-    <Typography className='mt-1'>{value}</Typography>
-  </Grid>
-)
-
 const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth='lg'>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth='md' fullScreen={false}>
       <DialogTitle>Chi tiết phiếu bàn giao tiền</DialogTitle>
       <DialogContent>
         {!data ? (
           <Typography>Không có dữ liệu.</Typography>
         ) : (
           <div className='flex flex-col gap-4'>
-            <Grid container spacing={3}>
-              <DetailRow label='Người bàn giao' value={data.instructorName || data.instructorId} />
-              <DetailRow label='Số lớp trong phiếu' value={String(data.classCount || data.details.length || 0)} />
-              <DetailRow
-                label='Thời gian bàn giao'
-                value={formatDateTimeVN(data.handoverAt)}
-              />
-              <DetailRow label='Người tạo phiếu' value={data.createdByUserName || data.createdByUserId || '-'} />
-              <DetailRow label='Học phí đã ghi nhận' value={formatCurrency(data.snapshotTuitionAmount)} />
-              <DetailRow label='Lệ phí thi đã ghi nhận' value={formatCurrency(data.snapshotExamFeeAmount)} />
-              <DetailRow label='Bán sản phẩm' value={formatCurrency(data.snapshotProductSalesAmount)} />
-              <DetailRow
-                label='Các khoản phí khác'
-                value={formatCurrency(
-                  getOtherFeeAmount(
-                    data.snapshotTotalAmount,
-                    data.snapshotTuitionAmount,
-                    data.snapshotExamFeeAmount,
-                    data.snapshotProductSalesAmount
-                  )
-                )}
-              />
-              <DetailRow label='Tổng ghi nhận' value={formatCurrency(data.snapshotTotalAmount)} />
-              <DetailRow label='Số tiền đã nộp trước đó' value={formatCurrency(data.previousHandedOverAmount)} />
-              <DetailRow label='Tổng khoản trừ' value={formatCurrency(data.totalDeductionAmount)} />
-              <DetailRow label='Số tiền bàn giao' value={formatCurrency(data.amountHandedOver)} />
-              <DetailRow label='Bàn giao tiền mặt' value={formatCurrency(data.amountHandedOverCashAmount)} />
-              <DetailRow label='Bàn giao chuyển khoản' value={formatCurrency(data.amountHandedOverBankTransferAmount)} />
-              <DetailRow label='Còn lại sau bàn giao' value={formatCurrency(data.remainingAmountAfterHandover)} />
-              <DetailRow
-                label='Trạng thái'
-                value={
+            <Grid container spacing={2} sx={{ mt: 0 }}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant='body2' color='text.secondary'>Người bàn giao</Typography>
+                <Typography className='mt-1'>{data.instructorName || data.instructorId}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant='body2' color='text.secondary'>Thời gian bàn giao</Typography>
+                <Typography className='mt-1'>{formatDateTimeVN(data.handoverAt)}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant='body2' color='text.secondary'>Người tạo phiếu</Typography>
+                <Typography className='mt-1'>{data.createdByUserName || data.createdByUserId || '-'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant='body2' color='text.secondary'>Số lớp trong phiếu</Typography>
+                <Typography className='mt-1'>{String(data.classCount || data.details.length || 0)}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant='body2' color='text.secondary'>Số tiền bàn giao</Typography>
+                <Typography className='mt-1 font-semibold' color='success.main'>{formatCurrency(data.amountHandedOver)}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant='body2' color='text.secondary'>Bàn giao tiền mặt / Chuyển khoản</Typography>
+                <Typography className='mt-1'>
+                  {formatCurrency(data.amountHandedOverCashAmount)} / {formatCurrency(data.amountHandedOverBankTransferAmount)}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant='body2' color='text.secondary'>Tổng khoản trừ HLV</Typography>
+                <Typography className='mt-1' color={data.totalDeductionAmount > 0 ? 'error.main' : 'text.secondary'}>
+                  {data.totalDeductionAmount > 0 ? `-${formatCurrency(data.totalDeductionAmount)}` : 'Không có'}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant='body2' color='text.secondary'>Còn lại sau bàn giao</Typography>
+                <Typography className='mt-1'>{formatCurrency(data.remainingAmountAfterHandover)}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant='body2' color='text.secondary'>Trạng thái</Typography>
+                <div className='mt-1'>
                   <Chip
                     label={HandoverStatusLabel[data.status] ?? data.status}
                     size='small'
-                    color={
-                      data.status === 'Confirmed' ? 'success' : data.status === 'Rejected' ? 'error' : 'warning'
-                    }
+                    color={data.status === 'Confirmed' ? 'success' : data.status === 'Rejected' ? 'error' : 'warning'}
                     variant='tonal'
                   />
-                }
-              />
-              {data.status !== 'Pending' && (
-                <>
-                  <DetailRow label='Xác nhận bởi' value={data.confirmedByUserName || data.confirmedByUserId || '-'} />
-                  <DetailRow
-                    label='Thời gian xác nhận'
-                    value={formatDateTimeVN(data.confirmedAt)}
-                  />
-                </>
+                </div>
+              </Grid>
+              {data.status !== 'Pending' && data.confirmedByUserName && (
+                <Grid item xs={12} sm={6}>
+                  <Typography variant='body2' color='text.secondary'>Xác nhận bởi</Typography>
+                  <Typography className='mt-1'>
+                    {data.confirmedByUserName}
+                    {data.confirmedAt && (
+                      <Typography variant='caption' component='span' color='text.secondary' sx={{ ml: 1 }}>
+                        ({formatDateTimeVN(data.confirmedAt)})
+                      </Typography>
+                    )}
+                  </Typography>
+                </Grid>
               )}
-              <DetailRow label='Ghi chú' value={data.notes || '-'} />
+              {data.notes && (
+                <Grid item xs={12}>
+                  <Typography variant='body2' color='text.secondary'>Ghi chú</Typography>
+                  <Typography className='mt-1'>{data.notes}</Typography>
+                </Grid>
+              )}
             </Grid>
 
-            <Divider />
-
-            <div>
-              <Typography variant='subtitle2' className='font-semibold mb-2'>
-                Chi tiết theo lớp
-              </Typography>
-              <Table size='small'>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Lớp</TableCell>
-                    <TableCell align='right'>Học phí</TableCell>
-                    <TableCell align='right'>Lệ phí thi</TableCell>
-                    <TableCell align='right'>Sản phẩm</TableCell>
-                    <TableCell align='right'>Phí khác</TableCell>
-                    <TableCell align='right'>Đã nộp trước đó</TableCell>
-                    <TableCell align='right'>Khoản trừ</TableCell>
-                    <TableCell align='right'>Bàn giao kỳ này</TableCell>
-                    <TableCell align='right'>TM</TableCell>
-                    <TableCell align='right'>CK</TableCell>
-                    <TableCell align='right'>Còn lại</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {data.details.map(detail => (
-                    <TableRow key={detail.classId}>
-                      <TableCell>{detail.className}</TableCell>
-                      <TableCell align='right'>{formatCurrency(detail.snapshotTuitionAmount)}</TableCell>
-                      <TableCell align='right'>{formatCurrency(detail.snapshotExamFeeAmount)}</TableCell>
-                      <TableCell align='right'>{formatCurrency(detail.snapshotProductSalesAmount)}</TableCell>
-                      <TableCell align='right'>
-                        {formatCurrency(
-                          getOtherFeeAmount(
-                            detail.snapshotTotalAmount,
-                            detail.snapshotTuitionAmount,
-                            detail.snapshotExamFeeAmount,
-                            detail.snapshotProductSalesAmount
-                          )
-                        )}
-                      </TableCell>
-                      <TableCell align='right'>{formatCurrency(detail.previousHandedOverAmount)}</TableCell>
-                      <TableCell align='right'>{formatCurrency(detail.totalDeductionAmount)}</TableCell>
-                      <TableCell align='right'>{formatCurrency(detail.amountHandedOver)}</TableCell>
-                      <TableCell align='right'>{formatCurrency(detail.amountHandedOverCashAmount)}</TableCell>
-                      <TableCell align='right'>{formatCurrency(detail.amountHandedOverBankTransferAmount)}</TableCell>
-                      <TableCell align='right'>{formatCurrency(detail.remainingAmountAfterHandover)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-
+            {/* Khoản trừ HLV */}
             {data.deductions.length > 0 && (
               <>
                 <Divider />
                 <div>
                   <Typography variant='subtitle2' className='font-semibold mb-2'>
-                    Các khoản trừ
+                    Khoản giảm trừ HLV ({data.deductions.length} khoản — {formatCurrency(data.totalDeductionAmount)})
                   </Typography>
-                  <Table size='small'>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Mô tả</TableCell>
-                        <TableCell align='right'>Số tiền</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {data.deductions.map(deduction => (
-                        <TableRow key={deduction.id}>
-                          <TableCell>{deduction.description}</TableCell>
-                          <TableCell align='right'>{formatCurrency(deduction.amount)}</TableCell>
+                  <div className='overflow-x-auto'>
+                    <Table size='small' sx={{ minWidth: 300 }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>STT</TableCell>
+                          <TableCell>Mô tả</TableCell>
+                          <TableCell align='right'>Số tiền</TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHead>
+                      <TableBody>
+                        {data.deductions.map((deduction, idx) => (
+                          <TableRow key={deduction.id}>
+                            <TableCell>{idx + 1}</TableCell>
+                            <TableCell>{deduction.description}</TableCell>
+                            <TableCell align='right'>
+                              <Typography color='error.main'>-{formatCurrency(deduction.amount)}</Typography>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Chi tiết theo lớp */}
+            {data.details.length > 0 && (
+              <>
+                <Divider />
+                <div>
+                  <Typography variant='subtitle2' className='font-semibold mb-2'>
+                    Chi tiết theo lớp
+                  </Typography>
+                  <div className='overflow-x-auto'>
+                    <Table size='small' sx={{ minWidth: 500 }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Lớp</TableCell>
+                          <TableCell align='right'>Tổng ghi nhận</TableCell>
+                          <TableCell align='right'>Đã nộp trước</TableCell>
+                          <TableCell align='right'>Khoản trừ</TableCell>
+                          <TableCell align='right'>Bàn giao kỳ này</TableCell>
+                          <TableCell align='right'>Còn lại</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {data.details.map(detail => (
+                          <TableRow key={detail.classId}>
+                            <TableCell>{detail.className}</TableCell>
+                            <TableCell align='right'>{formatCurrency(detail.snapshotTotalAmount)}</TableCell>
+                            <TableCell align='right'>{formatCurrency(detail.previousHandedOverAmount)}</TableCell>
+                            <TableCell align='right'>
+                              {detail.totalDeductionAmount > 0 ? (
+                                <Typography color='error.main'>-{formatCurrency(detail.totalDeductionAmount)}</Typography>
+                              ) : '—'}
+                            </TableCell>
+                            <TableCell align='right'>{formatCurrency(detail.amountHandedOver)}</TableCell>
+                            <TableCell align='right'>{formatCurrency(detail.remainingAmountAfterHandover)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               </>
             )}
