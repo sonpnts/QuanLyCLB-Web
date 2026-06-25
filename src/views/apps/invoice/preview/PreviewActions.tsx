@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // Next Imports
 import Link from 'next/link'
@@ -51,17 +51,29 @@ const PreviewActions = ({ onPrint, znsStatus, znsLoading, znsRetrying, onRetryZn
                   color={znsStatus.isSent ? 'success' : 'error'}
                   label={znsStatus.isSent ? 'Đã gửi' : 'Gửi thất bại'}
                 />
-                {znsStatus.sentAtUtc && (
-                  <Typography variant='body2'>{formatDateTimeVN(znsStatus.sentAtUtc)}</Typography>
-                )}
-                {/*<Typography variant='body2'>Status: {znsStatus.status}</Typography>*/}
               </Box>
-
-              {/*{znsStatus.errorMessage && (*/}
-              {/*  <Typography variant='body2' color={znsStatus.isSent ? 'text.secondary' : 'error'}>*/}
-              {/*    {znsStatus.errorMessage}*/}
-              {/*  </Typography>*/}
-              {/*)}*/}
+              {znsStatus.monthlyStatuses && znsStatus.monthlyStatuses.length > 0 && (
+                <Box className='flex flex-col gap-1'>
+                  {znsStatus.monthlyStatuses.map((ms) => (
+                    <Box key={`${ms.forMonth}-${ms.forYear}`} className='flex items-center gap-2 flex-wrap'>
+                      <Chip
+                        size='small'
+                        variant='outlined'
+                        color={ms.isSent ? 'success' : ms.hasLog ? 'error' : 'default'}
+                        label={ms.monthLabel}
+                      />
+                      <Typography variant='caption' color={ms.isSent ? 'success.main' : ms.hasLog ? 'error.main' : 'text.secondary'}>
+                        {ms.isSent ? 'Đã gửi' : ms.hasLog ? 'Gửi thất bại' : 'Chưa gửi'}
+                      </Typography>
+                      {ms.sentAtUtc && (
+                        <Typography variant='caption' color='text.secondary'>
+                          {formatDateTimeVN(ms.sentAtUtc)}
+                        </Typography>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+              )}
             </Box>
           )}
           {znsStatus?.canRetry && (

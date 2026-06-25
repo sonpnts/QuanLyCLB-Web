@@ -51,17 +51,29 @@ export type PaymentRecordType = {
   invoiceManualDiscountAmount?: number
 }
 
-export type ReceiptZnsStatusType = {
-  logId?: string | null
-  receiptNumber: string
-  notificationType: string
+export type MonthlyReceiptZnsStatus = {
+  forMonth: number
+  forYear: number
+  monthLabel: string
   hasLog: boolean
   isSent: boolean
   status: number
   errorMessage?: string | null
   messageId?: string | null
   sentAtUtc?: string | null
+  logId?: string | null
   canRetry: boolean
+}
+
+export type ReceiptZnsStatusType = {
+  receiptNumber: string
+  notificationType: string
+  hasLog: boolean
+  isSent: boolean
+  status: number
+  errorMessage?: string | null
+  canRetry: boolean
+  monthlyStatuses: MonthlyReceiptZnsStatus[]
 }
 
 export type DiscountedReceiptPagedResultType = {

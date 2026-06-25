@@ -74,7 +74,7 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
 
     try {
       let latestStatus: ReceiptZnsStatusType | null = null
-      const totalAttempts = retryIfMissing ? 5 : 1
+      const totalAttempts = retryIfMissing ? 10 : 1
 
       for (let attempt = 0; attempt < totalAttempts; attempt++) {
         if (currentReceiptNumber !== currentReceiptNumberRef.current) return
@@ -87,7 +87,7 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
           latestStatus = response.data.data as ReceiptZnsStatusType
           setZnsStatus(latestStatus)
 
-          if (latestStatus.hasLog || !retryIfMissing) {
+          if (latestStatus.isSent || !retryIfMissing) {
             return
           }
         } else {
@@ -96,7 +96,7 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
         }
 
         if (retryIfMissing && attempt < totalAttempts - 1) {
-          await new Promise(resolve => window.setTimeout(resolve, 900))
+          await new Promise(resolve => window.setTimeout(resolve, 1500))
         }
       }
 
@@ -189,16 +189,35 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
             ) : !znsStatus?.hasLog ? (
               <Typography variant='body2'>Chưa có lịch sử gửi Zalo.</Typography>
             ) : (
-              <>
+              <Box display='flex' flexDirection='column' gap={1}>
                 <Chip
                   size='small'
                   color={znsStatus.isSent ? 'success' : 'error'}
                   label={znsStatus.isSent ? 'Đã gửi' : 'Gửi thất bại'}
                 />
-                {znsStatus.sentAtUtc ? (
-                  <Typography variant='body2'>{formatDateTimeVN(znsStatus.sentAtUtc)}</Typography>
-                ) : null}
-              </>
+                {znsStatus.monthlyStatuses && znsStatus.monthlyStatuses.length > 0 && (
+                  <Box display='flex' flexDirection='column' gap={0.5}>
+                    {znsStatus.monthlyStatuses.map((ms) => (
+                      <Box key={`${ms.forMonth}-${ms.forYear}`} display='flex' alignItems='center' gap={1} flexWrap='wrap'>
+                        <Chip
+                          size='small'
+                          variant='outlined'
+                          color={ms.isSent ? 'success' : ms.hasLog ? 'error' : 'default'}
+                          label={ms.monthLabel}
+                        />
+                        <Typography variant='caption' color={ms.isSent ? 'success.main' : ms.hasLog ? 'error.main' : 'text.secondary'}>
+                          {ms.isSent ? 'Đã gửi' : ms.hasLog ? 'Gửi thất bại' : 'Chưa gửi'}
+                        </Typography>
+                        {ms.sentAtUtc && (
+                          <Typography variant='caption' color='text.secondary'>
+                            {formatDateTimeVN(ms.sentAtUtc)}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Box>
             )}
           </Box>
 

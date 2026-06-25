@@ -37,7 +37,7 @@ const Preview = ({ id }: Props) => {
 
     try {
       let latestStatus: ReceiptZnsStatusType | null = null
-      const totalAttempts = retryIfMissing ? 5 : 1
+      const totalAttempts = retryIfMissing ? 10 : 1
 
       for (let attempt = 0; attempt < totalAttempts; attempt++) {
         const response = await apiClient.get<any>(API_ENDPOINTS.payments.receiptZnsStatus(currentReceiptNumber))
@@ -46,7 +46,7 @@ const Preview = ({ id }: Props) => {
           latestStatus = response.data.data as ReceiptZnsStatusType
           setZnsStatus(latestStatus)
 
-          if (latestStatus.hasLog || !retryIfMissing) {
+          if (latestStatus.isSent || !retryIfMissing) {
             return
           }
         } else {
@@ -55,7 +55,7 @@ const Preview = ({ id }: Props) => {
         }
 
         if (retryIfMissing && attempt < totalAttempts - 1) {
-          await new Promise(resolve => window.setTimeout(resolve, 900))
+          await new Promise(resolve => window.setTimeout(resolve, 1500))
         }
       }
 
