@@ -55,7 +55,7 @@ const fetchNewTokens = async () => {
   authStorage.updateTokens({
     accessToken: payload.accessToken,
     refreshToken: payload.refreshToken,
-    expiresAtUtc: payload.expiresAtUtc
+    expiresAt: payload.expiresAt
   })
 }
 

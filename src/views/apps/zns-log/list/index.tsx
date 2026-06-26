@@ -256,7 +256,7 @@ const ZnsLogListView = () => {
                           {row.errorCode === 0 ? row.errorMessage || '-' : row.responseJson || row.errorMessage || '-'}
                         </Typography>
                       </td>
-                      <td>{formatDateTimeVN(row.sentAtUtc)}</td>
+                      <td>{formatDateTimeVN(row.sentAt)}</td>
                       <td onClick={event => event.stopPropagation()}>
                         <Button
                           size='small'

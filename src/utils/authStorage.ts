@@ -12,13 +12,13 @@ export type AuthUser = {
 export type AuthSnapshot = {
   accessToken: string
   refreshToken: string
-  expiresAtUtc?: string | null
+  expiresAt?: string | null
   user: AuthUser
   roles: string[]
   permissions: string[]
 }
 
-type AuthTokens = Partial<Pick<AuthSnapshot, 'accessToken' | 'refreshToken' | 'expiresAtUtc'>>
+type AuthTokens = Partial<Pick<AuthSnapshot, 'accessToken' | 'refreshToken' | 'expiresAt'>>
 
 type Listener = (value: AuthSnapshot | null) => void
 
@@ -49,7 +49,7 @@ export const authStorage = {
 return {
         accessToken: parsed.accessToken || '',
         refreshToken: parsed.refreshToken || '',
-        expiresAtUtc: parsed.expiresAtUtc,
+        expiresAt: parsed.expiresAt,
         user: parsed.user as AuthUser,
         roles: Array.isArray(parsed.roles) ? parsed.roles : [],
         permissions: Array.isArray(parsed.permissions) ? parsed.permissions : []

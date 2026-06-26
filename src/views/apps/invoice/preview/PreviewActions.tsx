@@ -65,9 +65,9 @@ const PreviewActions = ({ onPrint, znsStatus, znsLoading, znsRetrying, onRetryZn
                       <Typography variant='caption' color={ms.isSent ? 'success.main' : ms.hasLog ? 'error.main' : 'text.secondary'}>
                         {ms.isSent ? 'Đã gửi' : ms.hasLog ? 'Gửi thất bại' : 'Chưa gửi'}
                       </Typography>
-                      {ms.sentAtUtc && (
+                      {ms.sentAt && (
                         <Typography variant='caption' color='text.secondary'>
-                          {formatDateTimeVN(ms.sentAtUtc)}
+                          {formatDateTimeVN(ms.sentAt)}
                         </Typography>
                       )}
                     </Box>

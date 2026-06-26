@@ -311,9 +311,9 @@ export default function CronJobLogListView() {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant='body2'>Bắt đầu: {formatDateTime(row.startedAtUtc)}</Typography>
+                        <Typography variant='body2'>Bắt đầu: {formatDateTime(row.startedAt)}</Typography>
                         <Typography variant='caption' color='text.secondary'>
-                          Xong: {formatDateTime(row.finishedAtUtc)}
+                          Xong: {formatDateTime(row.finishedAt)}
                         </Typography>
                       </TableCell>
                       <TableCell align='right'>
@@ -359,10 +359,10 @@ export default function CronJobLogListView() {
               <b>Trạng thái:</b> {selectedRow?.status}
             </Typography>
             <Typography>
-              <b>StartedAtUtc:</b> {formatDateTime(selectedRow?.startedAtUtc)}
+              <b>StartedAt:</b> {formatDateTime(selectedRow?.startedAt)}
             </Typography>
             <Typography>
-              <b>FinishedAtUtc:</b> {formatDateTime(selectedRow?.finishedAtUtc)}
+              <b>FinishedAt:</b> {formatDateTime(selectedRow?.finishedAt)}
             </Typography>
             <Typography>
               <b>Attempt:</b> {selectedRow?.attemptCount}

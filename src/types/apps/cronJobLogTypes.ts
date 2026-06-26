@@ -4,8 +4,8 @@ export type CronJobLogType = {
   scheduledAtLocal: string
   forMonth?: number | null
   forYear?: number | null
-  startedAtUtc: string
-  finishedAtUtc?: string | null
+  startedAt: string
+  finishedAt?: string | null
   status: string
   attemptCount: number
   totalCandidates: number

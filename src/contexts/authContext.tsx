@@ -18,7 +18,7 @@ import type { AuthSnapshot, AuthUser } from '@/utils/authStorage'
 type ApiAuthResponse = {
   accessToken?: string
   refreshToken?: string
-  expiresAtUtc?: string | null
+  expiresAt?: string | null
   roles?: string[]
   permissions?: string[]
   instructor?: AuthUser
@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }: ChildrenType) => {
       const authSnapshot: AuthSnapshot = {
         accessToken: payload.accessToken,
         refreshToken: payload.refreshToken,
-        expiresAtUtc: payload.expiresAtUtc,
+        expiresAt: payload.expiresAt,
         user,
         roles: Array.isArray(payload.roles) ? payload.roles : [],
         permissions: Array.isArray(payload.permissions) ? payload.permissions : []

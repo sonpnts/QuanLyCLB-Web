@@ -60,7 +60,7 @@ export type MonthlyReceiptZnsStatus = {
   status: number
   errorMessage?: string | null
   messageId?: string | null
-  sentAtUtc?: string | null
+  sentAt?: string | null
   logId?: string | null
   canRetry: boolean
 }

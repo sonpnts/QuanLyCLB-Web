@@ -13,7 +13,7 @@ export type ZnsLogType = {
   errorMessage?: string | null
   isSuccess: boolean
   messageId?: string | null
-  sentAtUtc: string
+  sentAt: string
   responseJson?: string | null
   templateDataJson: string
   createdAt: string

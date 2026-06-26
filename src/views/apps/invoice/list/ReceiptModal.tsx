@@ -356,9 +356,9 @@ const ReceiptModal = ({ open, receiptNumber, onClose }: ReceiptModalProps) => {
                             <Typography variant='caption' color={ms.isSent ? 'success.main' : ms.hasLog ? 'error.main' : 'text.secondary'}>
                               {ms.isSent ? 'Đã gửi' : ms.hasLog ? 'Gửi thất bại' : 'Chưa gửi'}
                             </Typography>
-                            {ms.sentAtUtc && (
+                            {ms.sentAt && (
                               <Typography variant='caption' color='text.secondary'>
-                                {formatDateTimeVN(ms.sentAtUtc)}
+                                {formatDateTimeVN(ms.sentAt)}
                               </Typography>
                             )}
                             {ms.errorMessage && (
