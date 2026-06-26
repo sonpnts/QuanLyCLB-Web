@@ -31,8 +31,7 @@ import type { BranchType } from '@/types/apps/branchTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { InstructorClassCollectionType } from '@/types/apps/financeTypes'
 import type { UsersType } from '@/types/apps/userTypes'
-import { formatDateVN } from '@/utils/dateTime'
-import { exportToExcel, formatVnCurrency, formatVnDate } from '@/utils/exportToExcel'
+import { exportToExcel, formatVnCurrency } from '@/utils/exportToExcel'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
 
@@ -53,7 +52,6 @@ type SummaryTotals = {
   examFeeTotal: number
   productSalesTotal: number
   coachCollectedTotal: number
-  handedOverTotal: number
 }
 
 const pad2 = (value: number) => String(value).padStart(2, '0')
@@ -70,8 +68,7 @@ const getPresetRange = (preset: TimePreset) => {
 
     return {
       fromDate: toDateInputValue(firstDayLastMonth),
-      toDate: toDateInputValue(lastDayLastMonth),
-      asOfDate: toDateInputValue(lastDayLastMonth)
+      toDate: toDateInputValue(lastDayLastMonth)
     }
   }
 
@@ -79,8 +76,7 @@ const getPresetRange = (preset: TimePreset) => {
 
   return {
     fromDate: toDateInputValue(firstDayThisMonth),
-    toDate: toDateInputValue(now),
-    asOfDate: toDateInputValue(now)
+    toDate: toDateInputValue(now)
   }
 }
 
@@ -109,8 +105,7 @@ const emptyTotals = (): SummaryTotals => ({
   tuitionTotal: 0,
   examFeeTotal: 0,
   productSalesTotal: 0,
-  coachCollectedTotal: 0,
-  handedOverTotal: 0
+  coachCollectedTotal: 0
 })
 
 const FinanceSummaryView = () => {
@@ -255,7 +250,11 @@ return true
   const loadCollectionsForMode = useCallback(async (): Promise<InstructorClassCollectionType[]> => {
     if (filters.statisticsMode === 'instructor') {
       if (!filters.instructorId) return []
-      const response = await financeService.getClassCollectionsByInstructor(filters.instructorId, filters.asOfDate || undefined)
+      const response = await financeService.getClassCollectionsByInstructor(
+        filters.instructorId,
+        filters.fromDate || undefined,
+        filters.toDate || undefined
+      )
 
       
 return response.success && response.data ? response.data : []
@@ -266,7 +265,13 @@ return response.success && response.data ? response.data : []
     if (instructorIds.length === 0) return []
 
     const responses = await Promise.all(
-      instructorIds.map(instructorId => financeService.getClassCollectionsByInstructor(instructorId, filters.asOfDate || undefined))
+      instructorIds.map(instructorId =>
+        financeService.getClassCollectionsByInstructor(
+          instructorId,
+          filters.fromDate || undefined,
+          filters.toDate || undefined
+        )
+      )
     )
 
     let rows = responses.flatMap(response => (response.success && response.data ? response.data : []))
@@ -282,7 +287,7 @@ return response.success && response.data ? response.data : []
     }
 
     return rows
-  }, [filters.asOfDate, filters.branchId, filters.classId, filters.instructorId, filters.statisticsMode, instructors, selectedBranchClassIds])
+  }, [filters.branchId, filters.classId, filters.fromDate, filters.instructorId, filters.statisticsMode, filters.toDate, instructors, selectedBranchClassIds])
 
   const loadSummary = useCallback(async () => {
     if (!modeRequiresSelection) {
@@ -314,8 +319,7 @@ return
         tuitionTotal: summary?.tuitionTotal || 0,
         examFeeTotal: summary?.examFeeTotal || 0,
         productSalesTotal: summary?.productSalesTotal || 0,
-        coachCollectedTotal: summary?.receiptTotal || 0,
-        handedOverTotal: summary?.handedOverTotal || 0
+        coachCollectedTotal: summary?.receiptTotal || 0
       })
 
       setCollections(collectionRows)
@@ -399,8 +403,7 @@ return
       { ten: 'Tổng học phí đã thu', soTien: totals.tuitionTotal },
       { ten: 'Tổng lệ phí thi cấp đã thu', soTien: totals.examFeeTotal },
       { ten: 'Tổng doanh thu bán sản phẩm', soTien: totals.productSalesTotal },
-      { ten: 'Tổng tiền theo biên lai', soTien: totals.coachCollectedTotal },
-      { ten: 'Tổng tiền đã bàn giao', soTien: totals.handedOverTotal }
+      { ten: 'Tổng tiền theo biên lai', soTien: totals.coachCollectedTotal }
     ]
 
     exportToExcel({
@@ -419,13 +422,14 @@ return
         columns: [
           { header: 'HLV', accessor: row => row.instructorName || row.instructorId },
           { header: 'Lớp', accessor: row => row.className || row.classId },
-          { header: 'Tổng thu (final)', accessor: 'totalCollectedToDate', formatter: formatVnCurrency },
+          { header: 'Học phí', accessor: 'tuitionCollected', formatter: formatVnCurrency },
+          { header: 'Lệ phí thi', accessor: 'examFeeCollected', formatter: formatVnCurrency },
+          { header: 'Phí khác', accessor: 'otherFeesCollected', formatter: formatVnCurrency },
+          { header: 'Bán sản phẩm', accessor: 'productSalesCollected', formatter: formatVnCurrency },
+          { header: 'Tổng thu', accessor: 'totalCollectedToDate', formatter: formatVnCurrency },
           { header: 'Giảm trừ', accessor: 'totalDiscountAmount', formatter: formatVnCurrency },
           { header: 'Giảm trừ HLV', accessor: 'totalManualDiscountAmount', formatter: formatVnCurrency },
-          { header: 'Đã bàn giao', accessor: 'totalHandedOver', formatter: formatVnCurrency },
-          { header: 'Còn lại', accessor: 'availableToHandover', formatter: formatVnCurrency },
-          { header: 'Số biên lai', accessor: 'invoiceCount' },
-          { header: 'Tính đến ngày', accessor: 'asOf', formatter: formatVnDate }
+          { header: 'Số biên lai', accessor: 'invoiceCount' }
         ]
       })
     }
@@ -555,8 +559,7 @@ return
                     onChange={event =>
                       setFilters(prev => ({
                         ...prev,
-                        toDate: event.target.value,
-                        asOfDate: event.target.value || prev.asOfDate
+                        toDate: event.target.value
                       }))
                     }
                   />
@@ -616,20 +619,17 @@ return
       ) : (
         <>
           <Grid container spacing={4}>
-            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 3 }}>
               <SummaryCard title='Tổng học phí đã thu' amount={totals.tuitionTotal} />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 3 }}>
               <SummaryCard title='Tổng lệ phí thi cấp đã thu' amount={totals.examFeeTotal} color='primary.main' />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 3 }}>
               <SummaryCard title='Tổng doanh thu bán sản phẩm' amount={totals.productSalesTotal} color='info.main' />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 6, xl: 2.4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 6, xl: 3 }}>
               <SummaryCard title='Tổng tiền theo biên lai' amount={totals.coachCollectedTotal} color='warning.main' />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 6, xl: 2.4 }}>
-              <SummaryCard title='Tổng tiền đã bàn giao' amount={totals.handedOverTotal} color='secondary.main' />
             </Grid>
           </Grid>
 
@@ -643,14 +643,14 @@ return
                     <tr>
                       <th>HLV</th>
                       <th>Lớp</th>
-                      <th>Học phí thu được</th>
+                      <th>Học phí</th>
                       <th>Lệ phí thi</th>
-                      <th>Các khoản thu khác</th>
+                      <th>Phí khác</th>
                       <th>Bán sản phẩm</th>
                       <th>Tổng thu</th>
-                      <th>Đã bàn giao</th>
-                      <th>Còn lại</th>
-                      <th>Tính đến</th>
+                      <th>Giảm trừ</th>
+                      <th>Giảm trừ HLV</th>
+                      <th>Số biên lai</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -671,25 +671,20 @@ return
                           </td>
                           <td>
                             <Typography variant='body2' color='success.main' className='font-medium'>
+                              {formatCurrency(item.tuitionCollected)}
+                            </Typography>
+                          </td>
+                          <td>{formatCurrency(item.examFeeCollected)}</td>
+                          <td>{formatCurrency(item.otherFeesCollected)}</td>
+                          <td>{formatCurrency(item.productSalesCollected)}</td>
+                          <td>
+                            <Typography variant='body2' color='success.main' className='font-medium'>
                               {formatCurrency(item.totalCollectedToDate)}
                             </Typography>
                           </td>
                           <td>{formatCurrency(item.totalDiscountAmount)}</td>
                           <td>{formatCurrency(item.totalManualDiscountAmount)}</td>
-                          <td>{formatCurrency(item.totalHandedOver)}</td>
-                          <td>
-                            <Typography
-                              variant='body2'
-                              color={item.availableToHandover > 0 ? 'warning.main' : 'text.secondary'}
-                            >
-                              {formatCurrency(item.availableToHandover)}
-                            </Typography>
-                          </td>
-                          <td>
-                            <Typography variant='body2' color='text.secondary'>
-                              {formatDateVN(item.asOf)}
-                            </Typography>
-                          </td>
+                          <td>{item.invoiceCount}</td>
                         </tr>
                       ))
                     )}

@@ -65,7 +65,6 @@ class FinanceService {
           examFeeTotal: Number(payload.examFeeTotal || 0),
           productSalesTotal: Number(payload.productSalesTotal || 0),
           receiptTotal: Number(payload.receiptTotal || 0),
-          handedOverTotal: Number(payload.handedOverTotal || 0),
           fromDate: payload.fromDate,
           toDate: payload.toDate,
           classId: payload.classId,
@@ -203,11 +202,12 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
 
   async getClassCollectionsByInstructor(
     instructorId: string,
-    asOfDate?: string
+    fromDate?: string,
+    toDate?: string
   ): Promise<ResponseResult<InstructorClassCollectionType[]>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.finance.instructorClassCollections(instructorId), {
-        params: { asOfDate }
+        params: { fromDate, toDate }
       })
 
       const apiResponse = response.data
@@ -223,6 +223,10 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
             instructorName: item.instructorName,
             classId: item.classId,
             className: item.className,
+            tuitionCollected: Number(item.tuitionCollected || 0),
+            examFeeCollected: Number(item.examFeeCollected || 0),
+            otherFeesCollected: Number(item.otherFeesCollected || 0),
+            productSalesCollected: Number(item.productSalesCollected || 0),
             totalCollectedToDate: Number(item.totalCollectedToDate || 0),
             totalDiscountAmount: Number(item.totalDiscountAmount || 0),
             totalManualDiscountAmount: Number(item.totalManualDiscountAmount || 0),
@@ -230,8 +234,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
             cashAvailableToHandover: Number(item.cashAvailableToHandover || 0),
             bankTransferAvailableToHandover: Number(item.bankTransferAvailableToHandover || 0),
             availableToHandover: Number(item.availableToHandover || 0),
-            invoiceCount: Number(item.invoiceCount || 0),
-            asOf: item.asOf
+            invoiceCount: Number(item.invoiceCount || 0)
           }))
         }
     } catch (error) {
@@ -241,10 +244,10 @@ return { success: true, data: [] }
     }
   }
 
-  async getMyClassCollections(asOfDate?: string): Promise<ResponseResult<InstructorClassCollectionType[]>> {
+  async getMyClassCollections(fromDate?: string, toDate?: string): Promise<ResponseResult<InstructorClassCollectionType[]>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.finance.myClassCollections, {
-        params: { asOfDate }
+        params: { fromDate, toDate }
       })
 
       const apiResponse = response.data
@@ -260,6 +263,10 @@ return { success: true, data: [] }
             instructorName: item.instructorName,
             classId: item.classId,
             className: item.className,
+            tuitionCollected: Number(item.tuitionCollected || 0),
+            examFeeCollected: Number(item.examFeeCollected || 0),
+            otherFeesCollected: Number(item.otherFeesCollected || 0),
+            productSalesCollected: Number(item.productSalesCollected || 0),
             totalCollectedToDate: Number(item.totalCollectedToDate || 0),
             totalDiscountAmount: Number(item.totalDiscountAmount || 0),
             totalManualDiscountAmount: Number(item.totalManualDiscountAmount || 0),
@@ -267,8 +274,7 @@ return { success: true, data: [] }
             cashAvailableToHandover: Number(item.cashAvailableToHandover || 0),
             bankTransferAvailableToHandover: Number(item.bankTransferAvailableToHandover || 0),
             availableToHandover: Number(item.availableToHandover || 0),
-            invoiceCount: Number(item.invoiceCount || 0),
-            asOf: item.asOf
+            invoiceCount: Number(item.invoiceCount || 0)
           }))
         }
     } catch (error) {

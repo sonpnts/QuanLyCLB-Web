@@ -14,6 +14,10 @@ export type InstructorClassCollectionType = {
   instructorName?: string
   classId: string
   className?: string
+  tuitionCollected: number
+  examFeeCollected: number
+  otherFeesCollected: number
+  productSalesCollected: number
   totalCollectedToDate: number
   totalDiscountAmount: number
   totalManualDiscountAmount: number
@@ -22,7 +26,6 @@ export type InstructorClassCollectionType = {
   bankTransferAvailableToHandover: number
   availableToHandover: number
   invoiceCount: number
-  asOf?: string
 }
 
 export type InvoiceSummaryType = {
@@ -46,7 +49,6 @@ export type FinanceTransactionSummaryType = {
   examFeeTotal: number
   productSalesTotal: number
   receiptTotal: number
-  handedOverTotal: number
   fromDate?: string
   toDate?: string
   classId?: string
