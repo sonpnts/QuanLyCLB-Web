@@ -34,10 +34,10 @@ const PAYMENT_TYPE_MAP: Record<string, number> = {
   Tuition: 0,
   ExamFee: 1,
   Registration: 2,
-  Other: 3,
+  ProductPurchase: 3,
   FacilityFee: 4,
   CodeChangeFee: 5,
-  ProductPurchase: 6
+  Other: 6
 }
 
 const PAYMENT_METHOD_MAP: Record<string, number> = {

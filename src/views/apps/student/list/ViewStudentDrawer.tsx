@@ -73,10 +73,10 @@ const paymentTypeLabels: Record<number, string> = {
   0: 'Học phí',
   1: 'Lệ phí thi',
   2: 'Phí đăng ký',
-  3: 'Khác',
+  3: 'Sản phẩm',
   4: 'Phí CSVC',
   5: 'Phí chuyển mã / import',
-  6: 'Sản phẩm'
+  6: 'Khác'
 }
 
 const paymentMethodLabels: Record<number, string> = {
