@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useRef, useState } from 'react'
 
@@ -36,7 +36,8 @@ const PAYMENT_TYPE_MAP: Record<string, number> = {
   Registration: 2,
   Other: 3,
   FacilityFee: 4,
-  CodeChangeFee: 5
+  CodeChangeFee: 5,
+  ProductPurchase: 6
 }
 
 const PAYMENT_METHOD_MAP: Record<string, number> = {

@@ -45,7 +45,7 @@ import { hasAdminRole } from '@/utils/roleUtils'
 
 const PAYMENT_TYPE_TUITION = 0
 const PAYMENT_TYPE_EXAM_FEE = 1
-const PAYMENT_TYPE_BUY_PRODUCT = 3
+const PAYMENT_TYPE_BUY_PRODUCT = 6
 const PAYMENT_TYPE_FACILITY_FEE = 4
 const PAYMENT_TYPE_CODE_CHANGE_FEE = 5
 const PAYMENT_TYPE_OTHER = 3

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -75,7 +75,8 @@ const paymentTypeLabels: Record<number, string> = {
   2: 'Phí đăng ký',
   3: 'Khác',
   4: 'Phí CSVC',
-  5: 'Phí chuyển mã / import'
+  5: 'Phí chuyển mã / import',
+  6: 'Sản phẩm'
 }
 
 const paymentMethodLabels: Record<number, string> = {

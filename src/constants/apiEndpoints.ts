@@ -291,6 +291,9 @@ export const API_ENDPOINTS = {
     root: '/mini-app-links',
     byId: (id: string) => `/mini-app-links/${id}`
   },
+  print: {
+    receipt: (receiptNumber: string) => `/print/receipt/${receiptNumber}`
+  },
   oneTimeFees: {
     options: '/one-time-fees/options',
     studentStatuses: (studentId: string) => `/one-time-fees/students/${studentId}`,

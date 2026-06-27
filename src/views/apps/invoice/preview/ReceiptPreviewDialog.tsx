@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-import { useReactToPrint } from 'react-to-print'
 import { toast } from 'react-toastify'
 
 import Box from '@mui/material/Box'
@@ -32,11 +31,11 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
   const previewMaxWidth = 1000
   const [items, setItems] = useState<PaymentRecordType[]>([])
   const [loading, setLoading] = useState(false)
+  const [printing, setPrinting] = useState(false)
   const [znsStatus, setZnsStatus] = useState<ReceiptZnsStatusType | null>(null)
   const [znsLoading, setZnsLoading] = useState(false)
   const [znsRetrying, setZnsRetrying] = useState(false)
-  const contentRef = useRef<HTMLDivElement>(null)
-  
+
   const currentReceiptNumberRef = useRef<string | null>(null)
   currentReceiptNumberRef.current = receiptNumber
 
@@ -147,10 +146,44 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
     }
   }
 
-  const handlePrint = useReactToPrint({
-    contentRef,
-    documentTitle: receiptNumber ? `Bien-lai-${receiptNumber}` : 'Bien-lai'
-  })
+  const handlePrint = async () => {
+    if (!receiptNumber) return
+
+    try {
+      setPrinting(true)
+      const response = await apiClient.get(API_ENDPOINTS.print.receipt(receiptNumber), {
+        responseType: 'blob'
+      })
+
+      if (response.status >= 400 || response.data?.isSuccess === false) {
+        const msg = response.data?.message || 'Không thể tải biên lai để in.'
+        toast.error(msg)
+        return
+      }
+
+      const contentType = response.headers?.['content-type'] || ''
+      if (!contentType.includes('application/pdf')) {
+        const text = typeof response.data === 'string' ? response.data : await (response.data as Blob).text()
+        try {
+          const parsed = JSON.parse(text)
+          toast.error(parsed?.message || 'Lỗi server khi tạo PDF.')
+        } catch {
+          toast.error('Phản hồi không hợp lệ từ server.')
+        }
+        return
+      }
+
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+
+      setTimeout(() => URL.revokeObjectURL(url), 30000)
+    } catch {
+      toast.error('Không thể tải biên lai để in.')
+    } finally {
+      setPrinting(false)
+    }
+  }
 
   return (
     <Dialog
@@ -222,20 +255,23 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
           </Box>
 
           <Box sx={{ width: '100%', maxWidth: `${previewMaxWidth}px`, mx: 'auto' }}>
-            <div ref={contentRef}>
-              <PreviewCard items={items} receiptNumber={receiptNumber || ''} loading={loading} />
-            </div>
+            <PreviewCard items={items} receiptNumber={receiptNumber || ''} loading={loading} />
           </Box>
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 }, justifyContent: 'center' }}>
+      <DialogActions
+        sx={{
+          px: { xs: 2, sm: 3 },
+          pb: { xs: 2, sm: 3 },
+          pt: 1
+        }}
+      >
         <Box
           sx={{
             width: '100%',
-            maxWidth: `${previewMaxWidth}px`,
-            mx: 'auto',
             display: 'flex',
-            justifyContent: 'center',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
             gap: 1.5,
             flexWrap: 'wrap'
           }}
@@ -244,22 +280,29 @@ const ReceiptPreviewDialog = ({ open, receiptNumber, onClose }: ReceiptPreviewDi
             <Button
               variant='contained'
               color='info'
+              startIcon={znsRetrying ? <CircularProgress size={16} color='inherit' /> : <i className='ri-whatsapp-line' />}
               onClick={handleRetryZns}
               disabled={znsRetrying || znsLoading || loading}
-              sx={{ minWidth: { xs: '100%', sm: 160 } }}
+              sx={{ minHeight: 40 }}
             >
               Gửi lại Zalo
             </Button>
           ) : null}
           <Button
             variant='contained'
+            startIcon={printing ? <CircularProgress size={16} color='inherit' /> : <i className='ri-printer-line' />}
             onClick={handlePrint}
-            disabled={loading || items.length === 0}
-            sx={{ minWidth: { xs: '100%', sm: 160 } }}
+            disabled={printing || loading || items.length === 0}
+            sx={{ minHeight: 40 }}
           >
-            In biên lai
+            {printing ? 'Đang tải...' : 'In biên lai'}
           </Button>
-          <Button variant='outlined' onClick={onClose} sx={{ minWidth: { xs: '100%', sm: 120 } }}>
+          <Button
+            variant='outlined'
+            startIcon={<i className='ri-close-line' />}
+            onClick={onClose}
+            sx={{ minHeight: 40 }}
+          >
             Đóng
           </Button>
         </Box>
