@@ -1,6 +1,6 @@
 import { apiClient } from '@/utils/apiClient'
 import { logger } from '@/utils/logger'
-import type { StudentType, EnrollmentType, TuitionStatusType, ExamHistoryType } from '@/types/apps/studentTypes'
+import type { StudentType, EnrollmentType, TuitionStatusType, ExamHistoryType, StudentLeaveRecordType } from '@/types/apps/studentTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 
@@ -462,6 +462,21 @@ return response.data as ZaloVerifyResult
       logger.error('StudentService', 'verifyZaloPhone', error)
       
 return { success: false, isFollower: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getLeaveRecords(studentId: string): Promise<ResponseResult<StudentLeaveRecordType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.students.leaveRecords(studentId))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
+
+      return { success: true, data: unwrapList(apiResponse.data) as StudentLeaveRecordType[] }
+    } catch (error) {
+      logger.error('StudentService', 'getLeaveRecords', error)
+
+      return { success: true, data: [] }
     }
   }
 

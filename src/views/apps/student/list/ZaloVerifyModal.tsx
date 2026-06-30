@@ -120,7 +120,9 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
       PaperProps={{
         sx: {
           borderRadius: fullScreen ? 0 : 3,
-          minHeight: { xs: '100dvh', sm: 'auto' }
+          minHeight: { xs: '100dvh', sm: 'auto' },
+          display: 'flex',
+          flexDirection: 'column'
         }
       }}
     >
@@ -143,7 +145,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
 
       <Divider />
 
-      <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 2.5 } }}>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 2.5 }, flex: '1 1 0', overflow: 'auto' }}>
         <Stack spacing={2.5}>
           <Alert severity='info' sx={{ alignItems: 'flex-start' }}>
             Nhập số điện thoại học viên để kiểm tra tài khoản đó đã theo dõi Zalo OA của CLB hay chưa.
@@ -316,17 +318,34 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
         sx={{
           px: { xs: 2, sm: 3 },
           pb: { xs: 2.5, sm: 2 },
-          pt: 0,
+          pt: { xs: 2, sm: 0 },
           gap: 1,
           flexDirection: { xs: 'column-reverse', sm: 'row' },
-          alignItems: 'stretch'
+          alignItems: 'stretch',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          position: { xs: 'sticky', sm: 'static' },
+          bottom: 0,
+          bgcolor: 'background.paper',
+          zIndex: 1
         }}
       >
-        <Button variant='outlined' onClick={handleClose} fullWidth={fullScreen}>
+        <Button
+          variant='outlined'
+          onClick={handleClose}
+          fullWidth={fullScreen}
+          sx={{ minHeight: { xs: 48, sm: 40 } }}
+        >
           Đóng
         </Button>
         {state === 'not_follower' && (
-          <Button variant='contained' color='warning' onClick={() => setState('idle')} fullWidth={fullScreen}>
+          <Button
+            variant='contained'
+            color='warning'
+            onClick={() => setState('idle')}
+            fullWidth={fullScreen}
+            sx={{ minHeight: { xs: 48, sm: 40 } }}
+          >
             Thử lại
           </Button>
         )}
@@ -337,6 +356,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
             onClick={handleConfirm}
             startIcon={<i className='ri-save-line' />}
             fullWidth={fullScreen}
+            sx={{ minHeight: { xs: 48, sm: 40 } }}
           >
             Xác nhận liên kết
           </Button>

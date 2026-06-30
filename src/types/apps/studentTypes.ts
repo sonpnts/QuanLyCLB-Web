@@ -95,6 +95,18 @@ export type ExamHistoryType = {
   notes?: string
 }
 
+export type StudentLeaveRecordType = {
+  id: string
+  studentId: string
+  studentName: string
+  startDate: string
+  endDate?: string | null
+  reason?: string | null
+  createdByUserId?: string | null
+  createdByUserName?: string | null
+  createdAt: string
+}
+
 export type StudentStatusType = {
   [key: string]: ThemeColor
 }

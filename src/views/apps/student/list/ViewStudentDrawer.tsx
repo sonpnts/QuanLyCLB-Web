@@ -31,7 +31,7 @@ import TablePagination from '@mui/material/TablePagination'
 import TableRow from '@mui/material/TableRow'
 import Button from '@mui/material/Button'
 
-import type { StudentType, EnrollmentType, ExamHistoryType } from '@/types/apps/studentTypes'
+import type { StudentType, EnrollmentType, ExamHistoryType, StudentLeaveRecordType } from '@/types/apps/studentTypes'
 import type { OneTimeFeeOptionType, StudentOneTimeFeeStatusType } from '@/types/apps/oneTimeFeeTypes'
 
 import studentService from '@/services/studentService'
@@ -117,6 +117,8 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
   const [loadingPayments, setLoadingPayments] = useState(false)
   const [loadingAttendance, setLoadingAttendance] = useState(false)
   const [loadingExamHistory, setLoadingExamHistory] = useState(false)
+  const [leaveRecords, setLeaveRecords] = useState<StudentLeaveRecordType[]>([])
+  const [loadingLeaveRecords, setLoadingLeaveRecords] = useState(false)
   const [loadingOneTimeFees, setLoadingOneTimeFees] = useState(false)
   const [loadingPendingOneTimeFees, setLoadingPendingOneTimeFees] = useState(false)
   const [zaloModalOpen, setZaloModalOpen] = useState(false)
@@ -130,6 +132,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     payments: false,
     attendance: false,
     examHistory: false,
+    leaveRecords: false,
     oneTimeFees: false
   })
 
@@ -148,6 +151,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
         payments: false,
         attendance: false,
         examHistory: false,
+        leaveRecords: false,
         oneTimeFees: false
       }
 
@@ -158,6 +162,7 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
       setAttendanceRowsPerPage(10)
       setAttendanceTotalRecords(0)
       setExamHistory([])
+      setLeaveRecords([])
       setOneTimeFeeStatuses([])
       setPendingOneTimeFees([])
     }
@@ -264,6 +269,23 @@ const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume
     }
   }, [activeStudent?.id])
 
+  const loadLeaveRecords = useCallback(async () => {
+    if (!activeStudent?.id || loadedDataRef.current.leaveRecords) return
+
+    try {
+      setLoadingLeaveRecords(true)
+      const response = await studentService.getLeaveRecords(activeStudent.id)
+
+      setLeaveRecords(response.success && Array.isArray(response.data) ? response.data : [])
+      loadedDataRef.current.leaveRecords = true
+    } catch (error) {
+      logger.error('ViewStudentDrawer', 'Error loading leave records', error)
+      setLeaveRecords([])
+    } finally {
+      setLoadingLeaveRecords(false)
+    }
+  }, [activeStudent?.id])
+
   useEffect(() => {
     const loadOneTimeFees = async () => {
       if (!activeStudent?.id || !open || loadedDataRef.current.oneTimeFees) return
@@ -341,6 +363,7 @@ return
 
     if (newValue === '2') loadPayments()
     if (newValue === '4') loadExamHistory()
+    if (newValue === '5') loadLeaveRecords()
   }
 
   const handleAttendancePageChange = (_event: unknown, newPage: number) => {
@@ -522,6 +545,7 @@ return
             <Tab label='Thanh toán' value='2' />
             <Tab label='Điểm danh' value='3' />
             <Tab label='Lịch sử thi' value='4' />
+            <Tab label='Lịch sử tạm nghỉ' value='5' />
           </TabList>
 
           <TabPanel value='1' className='px-0'>
@@ -964,6 +988,58 @@ return
                             <TableCell>{formatDate(exam.examDate)}</TableCell>
                             <TableCell>{exam.examName}</TableCell>
                             <TableCell>{exam.beltLevelName}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </CardContent>
+            </Card>
+          </TabPanel>
+
+          <TabPanel value='5' className='px-0'>
+            <Card variant='outlined'>
+              <CardContent>
+                <Typography variant='subtitle1' className='font-medium mb-3'>
+                  Lịch sử tạm nghỉ
+                </Typography>
+
+                {loadingLeaveRecords ? (
+                  <Box className='flex justify-center py-4'>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : leaveRecords.length === 0 ? (
+                  <Typography variant='body2' color='text.secondary'>
+                    Chưa có lịch sử tạm nghỉ.
+                  </Typography>
+                ) : (
+                  <TableContainer>
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Ngày bắt đầu</TableCell>
+                          <TableCell>Ngày kết thúc</TableCell>
+                          <TableCell>Trạng thái</TableCell>
+                          <TableCell>Lý do</TableCell>
+                          <TableCell>Người ghi nhận</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {leaveRecords.map(record => (
+                          <TableRow key={record.id}>
+                            <TableCell>{formatDateTime(record.startDate)}</TableCell>
+                            <TableCell>{record.endDate ? formatDateTime(record.endDate) : '-'}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={record.endDate ? 'Đã kết thúc' : 'Đang tạm nghỉ'}
+                                size='small'
+                                color={record.endDate ? 'success' : 'warning'}
+                                variant='tonal'
+                              />
+                            </TableCell>
+                            <TableCell>{record.reason || '-'}</TableCell>
+                            <TableCell>{record.createdByUserName || '-'}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
