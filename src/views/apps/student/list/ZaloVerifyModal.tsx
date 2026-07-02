@@ -292,7 +292,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
                 >
                   {(zaloUser.display_name || '?').charAt(0)}
                 </Avatar>
-                <Box sx={{ minWidth: 0 }}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Typography variant='subtitle1' fontWeight={700}>
                     {zaloUser.display_name || '—'}
                   </Typography>
@@ -304,11 +304,19 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
                       icon={<i className='ri-check-double-line text-xs' />}
                     />
                   </Box>
-                  <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
-                    Nhấn <strong>Xác nhận liên kết</strong> để lưu thông tin Zalo cho học viên.
-                  </Typography>
                 </Box>
               </Paper>
+
+              <Button
+                variant='contained'
+                color='success'
+                onClick={handleConfirm}
+                startIcon={<i className='ri-save-line' />}
+                fullWidth
+                sx={{ minHeight: 48 }}
+              >
+                Xác nhận liên kết
+              </Button>
             </Stack>
           )}
         </Stack>
@@ -318,16 +326,10 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
         sx={{
           px: { xs: 2, sm: 3 },
           pb: { xs: 2.5, sm: 2 },
-          pt: { xs: 2, sm: 0 },
+          pt: 0,
           gap: 1,
           flexDirection: { xs: 'column-reverse', sm: 'row' },
-          alignItems: 'stretch',
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          position: { xs: 'sticky', sm: 'static' },
-          bottom: 0,
-          bgcolor: 'background.paper',
-          zIndex: 1
+          alignItems: 'stretch'
         }}
       >
         <Button
@@ -347,18 +349,6 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
             sx={{ minHeight: { xs: 48, sm: 40 } }}
           >
             Thử lại
-          </Button>
-        )}
-        {state === 'confirmed' && zaloUser?.user_id && (
-          <Button
-            variant='contained'
-            color='success'
-            onClick={handleConfirm}
-            startIcon={<i className='ri-save-line' />}
-            fullWidth={fullScreen}
-            sx={{ minHeight: { xs: 48, sm: 40 } }}
-          >
-            Xác nhận liên kết
           </Button>
         )}
       </DialogActions>
