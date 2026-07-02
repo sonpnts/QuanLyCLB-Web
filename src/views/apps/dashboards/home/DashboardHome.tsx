@@ -1,8 +1,9 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
@@ -17,6 +18,18 @@ import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import TableSortLabel from '@mui/material/TableSortLabel'
+import Paper from '@mui/material/Paper'
 
 import dashboardService from '@/services/dashboardService'
 import type {
@@ -24,7 +37,9 @@ import type {
   DashboardSystemNotificationsDto,
   RevenueStatisticsDto,
   StudentStatisticsDto,
-  AttendanceStatisticsDto
+  AttendanceStatisticsDto,
+  StudentMonthStatisticsDto,
+  StudentMonthListItemDto
 } from '@/services/dashboardService'
 
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -119,12 +134,23 @@ const StatusSection = ({
 )
 
 const DashboardHome = () => {
+  const router = useRouter()
   const [stats, setStats] = useState<DashboardStatisticsDto | null>(null)
   const [revenue, setRevenue] = useState<RevenueStatisticsDto[]>([])
   const [studentStats, setStudentStats] = useState<StudentStatisticsDto | null>(null)
   const [attendanceStats, setAttendanceStats] = useState<AttendanceStatisticsDto | null>(null)
   const [systemNotifications, setSystemNotifications] = useState<DashboardSystemNotificationsDto | null>(null)
+  const [studentMonthStats, setStudentMonthStats] = useState<StudentMonthStatisticsDto | null>(null)
   const [loading, setLoading] = useState(true)
+  const [studentListDialog, setStudentListDialog] = useState<{
+    open: boolean
+    title: string
+    list: StudentMonthListItemDto[]
+  }>({ open: false, title: '', list: [] })
+  const [sortConfig, setSortConfig] = useState<{ key: 'code' | 'fullName' | 'className'; direction: 'asc' | 'desc' }>({
+    key: 'fullName',
+    direction: 'asc'
+  })
 
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const d = new Date()
@@ -161,6 +187,28 @@ const DashboardHome = () => {
     []
   )
 
+  const sortedStudentList = useMemo(() => {
+    const list = [...studentListDialog.list]
+    const { key, direction } = sortConfig
+    const multiplier = direction === 'asc' ? 1 : -1
+
+    list.sort((a, b) => {
+      const aVal = (a[key] ?? '').toString()
+      const bVal = (b[key] ?? '').toString()
+
+      return aVal.localeCompare(bVal, 'vi') * multiplier
+    })
+
+    return list
+  }, [studentListDialog.list, sortConfig])
+
+  const handleSort = (key: 'code' | 'fullName' | 'className') => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }))
+  }
+
   useEffect(() => {
     const load = async () => {
       const [yearStr, monthStr] = selectedMonth.split('-')
@@ -171,14 +219,15 @@ const DashboardHome = () => {
 
       try {
         if (canViewAdminDashboard) {
-          const [statsRes, revenueRes, studentRes, attendanceRes, notificationRes] = await Promise.all([
+          const [statsRes, revenueRes, studentRes, attendanceRes, notificationRes, studentMonthRes] = await Promise.all([
             dashboardService.getStatistics({ year, month }),
             dashboardService.getRevenue({ months: 6 }),
             dashboardService.getStudentStats(),
             dashboardService.getAttendanceStats(),
             canViewNotifications
               ? dashboardService.getSystemNotifications({ year, month, maxItemsPerStatus: 10 })
-              : Promise.resolve({ success: true, data: null } as any)
+              : Promise.resolve({ success: true, data: null } as any),
+            dashboardService.getStudentMonthStats({ year, month })
           ])
 
           if (statsRes.success && statsRes.data) setStats(statsRes.data)
@@ -186,6 +235,7 @@ const DashboardHome = () => {
           if (studentRes.success && studentRes.data) setStudentStats(studentRes.data)
           if (attendanceRes.success && attendanceRes.data) setAttendanceStats(attendanceRes.data)
           if (notificationRes.success && notificationRes.data) setSystemNotifications(notificationRes.data)
+          if (studentMonthRes.success && studentMonthRes.data) setStudentMonthStats(studentMonthRes.data)
           if (!canViewNotifications) setSystemNotifications(null)
         } else {
           setStats(null)
@@ -200,6 +250,10 @@ const DashboardHome = () => {
           } else {
             setSystemNotifications(null)
           }
+
+          const studentMonthRes = await dashboardService.getStudentMonthStats({ year, month })
+
+          if (studentMonthRes.success && studentMonthRes.data) setStudentMonthStats(studentMonthRes.data)
         }
       } finally {
         setLoading(false)
@@ -304,9 +358,45 @@ const DashboardHome = () => {
             <Card sx={{ height: '100%' }}>
               <CardHeader title='Tổng hợp nhanh' />
               <CardContent className='flex flex-col gap-2'>
-                <Typography>
-                  Học viên mới tháng này: <strong>{studentStats?.newStudentsThisMonth ?? 0}</strong>
-                </Typography>
+                <Box className='flex items-center justify-between'>
+                  <Typography>
+                    Học viên mới tháng {monthText}/{yearText}: <strong>{studentMonthStats?.newStudentsCount ?? 0}</strong>
+                  </Typography>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    disabled={!studentMonthStats?.newStudentsCount}
+                    onClick={() =>
+                      setStudentListDialog({
+                        open: true,
+                        title: `Học viên mới tháng ${monthText}/${yearText}`,
+                        list: studentMonthStats?.newStudentsList ?? []
+                      })
+                    }
+                  >
+                    Xem danh sách
+                  </Button>
+                </Box>
+                <Box className='flex items-center justify-between'>
+                  <Typography>
+                    Học viên tạm nghỉ tháng {monthText}/{yearText}: <strong>{studentMonthStats?.suspendedStudentsCount ?? 0}</strong>
+                  </Typography>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    color='warning'
+                    disabled={!studentMonthStats?.suspendedStudentsCount}
+                    onClick={() =>
+                      setStudentListDialog({
+                        open: true,
+                        title: `Học viên tạm nghỉ tháng ${monthText}/${yearText}`,
+                        list: studentMonthStats?.suspendedStudentsList ?? []
+                      })
+                    }
+                  >
+                    Xem danh sách
+                  </Button>
+                </Box>
                 <Typography>
                   Tỷ lệ điểm danh: <strong>{((attendanceStats?.attendanceRate ?? 0) * 100).toFixed(1)}%</strong>
                 </Typography>
@@ -322,6 +412,73 @@ const DashboardHome = () => {
           </Grid>
         </>
       )}
+
+      {!canViewAdminDashboard && (
+        <Grid size={{ xs: 12 }}>
+          <Card>
+            <CardContent className='flex items-center justify-between flex-wrap gap-3'>
+              <Typography variant='h6'>Dashboard</Typography>
+              <FormControl size='small' sx={{ minWidth: 230 }}>
+                <InputLabel>Chọn tháng</InputLabel>
+                <Select label='Chọn tháng' value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}>
+                  {monthOptions.map(option => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </CardContent>
+          </Card>
+        </Grid>
+      )}
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardHeader title='Thống kê học viên theo tháng' />
+          <CardContent className='flex flex-col gap-3'>
+            <Box className='flex items-center justify-between'>
+              <Typography>
+                Học viên mới tháng {monthText}/{yearText}: <strong>{studentMonthStats?.newStudentsCount ?? 0}</strong>
+              </Typography>
+              <Button
+                size='small'
+                variant='outlined'
+                disabled={!studentMonthStats?.newStudentsCount}
+                onClick={() =>
+                  setStudentListDialog({
+                    open: true,
+                    title: `Học viên mới tháng ${monthText}/${yearText}`,
+                    list: studentMonthStats?.newStudentsList ?? []
+                  })
+                }
+              >
+                Xem danh sách
+              </Button>
+            </Box>
+            <Box className='flex items-center justify-between'>
+              <Typography>
+                Học viên tạm nghỉ tháng {monthText}/{yearText}: <strong>{studentMonthStats?.suspendedStudentsCount ?? 0}</strong>
+              </Typography>
+              <Button
+                size='small'
+                variant='outlined'
+                color='warning'
+                disabled={!studentMonthStats?.suspendedStudentsCount}
+                onClick={() =>
+                  setStudentListDialog({
+                    open: true,
+                    title: `Học viên tạm nghỉ tháng ${monthText}/${yearText}`,
+                    list: studentMonthStats?.suspendedStudentsList ?? []
+                  })
+                }
+              >
+                Xem danh sách
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ height: '100%' }}>
@@ -383,6 +540,76 @@ const DashboardHome = () => {
           </CardContent>
         </Card>
       </Grid>
+
+      <Dialog
+        open={studentListDialog.open}
+        onClose={() => setStudentListDialog(prev => ({ ...prev, open: false }))}
+        maxWidth='md'
+        fullWidth
+      >
+        <DialogTitle>{studentListDialog.title}</DialogTitle>
+        <DialogContent dividers>
+          {studentListDialog.list.length === 0 ? (
+            <Typography color='text.secondary'>Không có học viên.</Typography>
+          ) : (
+            <TableContainer component={Paper} variant='outlined'>
+              <Table size='small'>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>
+                      <TableSortLabel
+                        active={sortConfig.key === 'code'}
+                        direction={sortConfig.key === 'code' ? sortConfig.direction : 'asc'}
+                        onClick={() => handleSort('code')}
+                      >
+                        Mã HV
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell>
+                      <TableSortLabel
+                        active={sortConfig.key === 'fullName'}
+                        direction={sortConfig.key === 'fullName' ? sortConfig.direction : 'asc'}
+                        onClick={() => handleSort('fullName')}
+                      >
+                        Họ tên
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell>
+                      <TableSortLabel
+                        active={sortConfig.key === 'className'}
+                        direction={sortConfig.key === 'className' ? sortConfig.direction : 'asc'}
+                        onClick={() => handleSort('className')}
+                      >
+                        Lớp
+                      </TableSortLabel>
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {sortedStudentList.map(student => (
+                    <TableRow
+                      key={student.studentId}
+                      hover
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setStudentListDialog(prev => ({ ...prev, open: false }))
+                        router.push(`/apps/students/${student.studentId}`)
+                      }}
+                    >
+                      <TableCell>{student.code || '-'}</TableCell>
+                      <TableCell>{student.fullName}</TableCell>
+                      <TableCell>{student.className}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setStudentListDialog(prev => ({ ...prev, open: false }))}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   )
 }

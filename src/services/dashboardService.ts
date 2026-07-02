@@ -81,6 +81,20 @@ export interface AttendanceStatisticsDto {
   todayStats?: DailyAttendanceStat
 }
 
+export interface StudentMonthListItemDto {
+  studentId: string
+  fullName: string
+  code: string | null
+  className: string
+}
+
+export interface StudentMonthStatisticsDto {
+  newStudentsCount: number
+  newStudentsList: StudentMonthListItemDto[]
+  suspendedStudentsCount: number
+  suspendedStudentsList: StudentMonthListItemDto[]
+}
+
 class DashboardService {
   async getStatistics(params?: { year?: number; month?: number }): Promise<ResponseResult<DashboardStatisticsDto>> {
     try {
@@ -171,6 +185,21 @@ class DashboardService {
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('DashboardService', 'getSystemNotifications', error)
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getStudentMonthStats(params?: { year?: number; month?: number }): Promise<ResponseResult<StudentMonthStatisticsDto>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.dashboard.studentMonthStats, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('DashboardService', 'getStudentMonthStats', error)
 
       return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }

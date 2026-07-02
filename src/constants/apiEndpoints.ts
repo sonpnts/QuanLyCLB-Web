@@ -263,7 +263,8 @@ export const API_ENDPOINTS = {
     students: '/dashboard/students',
     classes: '/dashboard/classes',
     attendance: '/dashboard/attendance',
-    systemNotifications: '/dashboard/system-notifications'
+    systemNotifications: '/dashboard/system-notifications',
+    studentMonthStats: '/dashboard/student-month-stats'
   },
   userDocuments: {
     // User-facing
