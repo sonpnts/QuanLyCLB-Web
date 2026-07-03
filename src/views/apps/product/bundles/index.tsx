@@ -82,7 +82,7 @@ const ProductBundleView = () => {
       setProducts(productRes.success && productRes.data ? productRes.data : [])
       setBundles(bundleRes.success && bundleRes.data ? bundleRes.data : [])
     } catch {
-      showNotification('Khong the tai du lieu combo san pham.', 'error')
+      showNotification('Không thể tải dữ liệu combo sản phẩm.', 'error')
     } finally {
       setLoading(false)
     }
@@ -168,13 +168,13 @@ return
     }
 
     if (!form.name.trim() || items.length === 0) {
-      showNotification('Vui long nhap ten combo va it nhat mot dong san pham.', 'error')
+      showNotification('Vui lòng nhập tên combo và ít nhất một dòng sản phẩm.', 'error')
       
 return
     }
 
     if (!editingBundle && !form.code.trim()) {
-      showNotification('Vui long nhap ma combo.', 'error')
+      showNotification('Vui lòng nhập mã combo.', 'error')
       
 return
     }
@@ -189,7 +189,7 @@ return
     }))
 
     if (normalizedItems.some(item => !item.productId || item.quantity <= 0 || item.discountAmount <= 0)) {
-      showNotification('Cac dong combo phai chon san pham, so luong va muc giam hop le.', 'error')
+      showNotification('Các dòng combo phải chọn sản phẩm, số lượng và mức giảm hợp lệ.', 'error')
       
 return
     }
@@ -212,7 +212,7 @@ return
           })
 
       if (!response.success || !response.data) {
-        showNotification(response.message || 'Khong the luu combo.', 'error')
+        showNotification(response.message || 'Không thể lưu combo.', 'error')
         
 return
       }
@@ -223,10 +223,10 @@ return
         setBundles(prev => [response.data!, ...prev])
       }
 
-      showNotification(editingBundle ? 'Cap nhat combo thanh cong.' : 'Tao combo thanh cong.', 'success')
+      showNotification(editingBundle ? 'Cập nhật combo thành công.' : 'Tạo combo thành công.', 'success')
       setDialogOpen(false)
     } catch {
-      showNotification('Da co loi khi luu combo.', 'error')
+      showNotification('Đã có lỗi khi lưu combo.', 'error')
     } finally {
       setSaving(false)
     }
@@ -236,11 +236,11 @@ return
     <>
       <Card>
         <CardHeader
-          title='Combo san pham'
-          subheader='Combo chi cau hinh san pham va muc giam tren tung mon. Luc ban, he thong van bung thanh cac dong le de chon bien the va tru kho binh thuong.'
+          title='Combo sản phẩm'
+          subheader='Combo chỉ cấu hình sản phẩm và mức giảm trên từng món. Lúc bán, hệ thống vẫn bung thành các dòng lẻ để chọn biến thể và trừ kho bình thường.'
           action={
             <Button variant='contained' onClick={openCreateDialog} disabled={!bundlePermissions.canCreate}>
-              Them combo
+              Thêm combo
             </Button>
           }
         />
@@ -249,26 +249,26 @@ return
           {!bundlePermissions.canView ? (
             <Alert severity='warning'>Bạn không có quyền quản lý combo sản phẩm.</Alert>
           ) : loading ? (
-            <Alert severity='info'>Dang tai du lieu combo...</Alert>
+            <Alert severity='info'>Đang tải dữ liệu combo...</Alert>
           ) : (
             <div className='overflow-x-auto'>
               <table className={tableStyles.table}>
                 <thead>
                   <tr>
-                    <th>Ma combo</th>
-                    <th>Ten combo</th>
-                    <th>Tong giam</th>
-                    <th>So dong</th>
-                    <th>Trang thai</th>
-                    <th>Chi tiet</th>
-                    <th>Thao tac</th>
+                    <th>Mã combo</th>
+                    <th>Tên combo</th>
+                    <th>Tổng giảm</th>
+                    <th>Số dòng</th>
+                    <th>Trạng thái</th>
+                    <th>Chi tiết</th>
+                    <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pagedBundles.length === 0 ? (
                     <tr>
                       <td colSpan={7} className='text-center'>
-                        Khong co combo nao.
+                        Không có combo nào.
                       </td>
                     </tr>
                   ) : (
@@ -296,14 +296,14 @@ return
                             size='small'
                             color={bundle.isActive ? 'success' : 'secondary'}
                             variant='tonal'
-                            label={bundle.isActive ? 'Dang dung' : 'Ngung dung'}
+                            label={bundle.isActive ? 'Đang dùng' : 'Ngừng dùng'}
                           />
                         </td>
                         <td>
                           <Stack spacing={0.5}>
                             {bundle.items.map(item => (
                               <Typography key={item.id} variant='body2'>
-                                {item.productName} x{item.quantity} (giam {formatCurrency(item.discountAmount)})
+                                {item.productName} x{item.quantity} (giảm {formatCurrency(item.discountAmount)})
                               </Typography>
                             ))}
                           </Stack>
@@ -315,7 +315,7 @@ return
                             onClick={() => openEditDialog(bundle)}
                             disabled={!bundlePermissions.canUpdate}
                           >
-                            Chinh sua
+                            Chỉnh sửa
                           </Button>
                         </td>
                       </tr>
@@ -341,14 +341,14 @@ return
       </Card>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth='lg' fullWidth>
-        <DialogTitle>{editingBundle ? 'Chinh sua combo' : 'Tao combo moi'}</DialogTitle>
+        <DialogTitle>{editingBundle ? 'Chỉnh sửa combo' : 'Tạo combo mới'}</DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ pt: 1 }}>
             <Grid container spacing={3}>
               <Grid size={{ xs: 12, md: 3 }}>
                 <TextField
                   fullWidth
-                  label='Ma combo'
+                  label='Mã combo'
                   value={form.code}
                   onChange={event => setForm(prev => ({ ...prev, code: event.target.value }))}
                   disabled={Boolean(editingBundle) || !bundlePermissions.canCreate}
@@ -357,20 +357,20 @@ return
               <Grid size={{ xs: 12, md: 5 }}>
                 <TextField
                   fullWidth
-                  label='Ten combo'
+                  label='Tên combo'
                   value={form.name}
                   onChange={event => setForm(prev => ({ ...prev, name: event.target.value }))}
                   disabled={editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
-                <Alert severity='info'>Khong nhap gia combo. Chi can cau hinh muc giam tren tung mon.</Alert>
+                <Alert severity='info'>Không nhập giá combo. Chỉ cần cấu hình mức giảm trên từng món.</Alert>
               </Grid>
             </Grid>
 
             <TextField
               fullWidth
-              label='Mo ta'
+              label='Mô tả'
               value={form.description}
               onChange={event => setForm(prev => ({ ...prev, description: event.target.value }))}
               disabled={editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate}
@@ -379,21 +379,21 @@ return
             {editingBundle ? (
               <FormControlLabel
                 control={<Switch checked={form.isActive} onChange={event => setForm(prev => ({ ...prev, isActive: event.target.checked }))} />}
-                label={form.isActive ? 'Dang hoat dong' : 'Ngung hoat dong'}
+                label={form.isActive ? 'Đang hoạt động' : 'Ngừng hoạt động'}
                 disabled={!bundlePermissions.canUpdate}
               />
             ) : null}
 
             <Stack direction='row' justifyContent='space-between' alignItems='center'>
               <Typography variant='subtitle1' fontWeight={700}>
-                Dong san pham trong combo
+                Dòng sản phẩm trong combo
               </Typography>
               <Button
                 variant='outlined'
                 onClick={() => setItems(prev => [...prev, createBundleItemRow()])}
                 disabled={editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate}
               >
-                Them dong
+                Thêm dòng
               </Button>
             </Stack>
 
@@ -408,7 +408,7 @@ return
                         <TextField
                           select
                           fullWidth
-                          label='San pham'
+                          label='Sản phẩm'
                           value={item.productId}
                           onChange={event => updateItem(item.clientId, { productId: String(event.target.value) })}
                           disabled={editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate}
@@ -423,7 +423,7 @@ return
                       <Grid size={{ xs: 12, md: 2 }}>
                         <TextField
                           fullWidth
-                          label='So luong'
+                          label='Số lượng'
                           type='number'
                           value={item.quantity}
                           onChange={event => updateItem(item.clientId, { quantity: Number(event.target.value) || 0 })}
@@ -433,7 +433,7 @@ return
                       <Grid size={{ xs: 12, md: 3 }}>
                         <TextField
                           fullWidth
-                          label='Giam tren moi mon'
+                          label='Giảm trên mỗi món'
                           type='number'
                           value={item.discountAmount}
                           onChange={event => updateItem(item.clientId, { discountAmount: event.target.value })}
@@ -451,8 +451,8 @@ return
                       </Grid>
                     </Grid>
                     <Typography variant='caption' color='text.secondary'>
-                      Dong {index + 1}
-                      {product?.hasVariants ? ' - bien the se duoc chon khi ban' : ''}
+                      Dòng {index + 1}
+                      {product?.hasVariants ? ' - biến thể sẽ được chọn khi bán' : ''}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -460,20 +460,20 @@ return
             })}
 
             <Alert severity='info'>
-              Tong giam hien tai: {formatCurrency(totalDiscount)}. Khi dua vao phieu thu, moi mon se bung thanh dong le de chon bien the va tru kho binh thuong.
+              Tổng giảm hiện tại: {formatCurrency(totalDiscount)}. Khi đưa vào phiếu thu, mỗi món sẽ bung thành dòng lẻ để chọn biến thể và trừ kho bình thường.
             </Alert>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)} disabled={saving}>
-            Huy
+            Hủy
           </Button>
           <Button
             onClick={handleSave}
             variant='contained'
             disabled={saving || (editingBundle ? !bundlePermissions.canUpdate : !bundlePermissions.canCreate)}
           >
-            {saving ? 'Dang luu...' : editingBundle ? 'Luu thay doi' : 'Tao combo'}
+            {saving ? 'Đang lưu...' : editingBundle ? 'Lưu thay đổi' : 'Tạo combo'}
           </Button>
         </DialogActions>
       </Dialog>

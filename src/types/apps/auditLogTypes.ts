@@ -13,9 +13,15 @@ export type AuditAction =
   | 'StudentEnroll'
   | 'StudentTransfer'
   | 'StudentGraduate'
+  | 'StudentSuspend'
+  | 'StudentDrop'
+  | 'StudentComplete'
+  | 'StudentResume'
+  | 'StudentZaloUpdate'
   | 'CheckIn'
   | 'CheckOut'
   | 'AttendanceManual'
+  | 'AttendanceApprove'
   | 'ExamRegister'
   | 'ExamApprove'
   | 'ExamReject'
@@ -30,6 +36,7 @@ export type AuditAction =
   | 'ConfigUpdate'
   | 'DataExport'
   | 'DataImport'
+  | 'Other'
 
 export type AuditLogType = {
   id: string
@@ -60,9 +67,15 @@ export const AuditActionColors: { [key: string]: ThemeColor } = {
   StudentEnroll: 'primary',
   StudentTransfer: 'info',
   StudentGraduate: 'success',
+  StudentSuspend: 'warning',
+  StudentDrop: 'error',
+  StudentComplete: 'success',
+  StudentResume: 'info',
+  StudentZaloUpdate: 'secondary',
   CheckIn: 'success',
   CheckOut: 'secondary',
   AttendanceManual: 'warning',
+  AttendanceApprove: 'info',
   ExamRegister: 'primary',
   ExamApprove: 'success',
   ExamReject: 'error',
@@ -76,7 +89,8 @@ export const AuditActionColors: { [key: string]: ThemeColor } = {
   TransferCancel: 'secondary',
   ConfigUpdate: 'warning',
   DataExport: 'info',
-  DataImport: 'info'
+  DataImport: 'info',
+  Other: 'secondary'
 }
 
 export const auditActionLabels: { [key: string]: string } = {
@@ -91,9 +105,15 @@ export const auditActionLabels: { [key: string]: string } = {
   StudentEnroll: 'Đăng ký học viên',
   StudentTransfer: 'Chuyển lớp',
   StudentGraduate: 'Tốt nghiệp',
+  StudentSuspend: 'Tạm nghỉ',
+  StudentDrop: 'Nghỉ học',
+  StudentComplete: 'Hoàn thành khóa',
+  StudentResume: 'Khôi phục học viên',
+  StudentZaloUpdate: 'Cập nhật Zalo',
   CheckIn: 'Check-in',
   CheckOut: 'Check-out',
   AttendanceManual: 'Chấm công thủ công',
+  AttendanceApprove: 'Duyệt chấm công',
   ExamRegister: 'Đăng ký thi',
   ExamApprove: 'Duyệt thi',
   ExamReject: 'Từ chối thi',
@@ -107,5 +127,27 @@ export const auditActionLabels: { [key: string]: string } = {
   TransferCancel: 'Hủy chuyển lớp',
   ConfigUpdate: 'Cập nhật cấu hình',
   DataExport: 'Xuất dữ liệu',
-  DataImport: 'Nhập dữ liệu'
+  DataImport: 'Nhập dữ liệu',
+  Other: 'Khác'
+}
+
+export const entityTypeLabels: { [key: string]: string } = {
+  Student: 'Học viên',
+  Class: 'Lớp học',
+  ClassTransferRequest: 'Yêu cầu chuyển lớp',
+  Payment: 'Thanh toán',
+  BeltExam: 'Thi đai',
+  Attendance: 'Chấm công',
+  Branch: 'Chi nhánh',
+  Instructor: 'Giáo viên',
+  User: 'Người dùng',
+  StudentLeaveRecord: 'Phiếu tạm nghỉ',
+  StudentEnrollment: 'Đăng ký học viên',
+  Invoice: 'Hóa đơn',
+  InvoiceDetail: 'Chi tiết hóa đơn',
+  BeltExamRegistration: 'Đăng ký thi đai',
+  AttendanceAdjustment: 'Điều chỉnh chấm công',
+  UserAccount: 'Tài khoản',
+  UserRole: 'Vai trò',
+  Config: 'Cấu hình'
 }

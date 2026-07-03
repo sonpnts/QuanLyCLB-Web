@@ -131,7 +131,7 @@ const EditStudentDrawer = (props: Props) => {
 
       // if (info.address) setValue('address', info.address)
       showNotification('Đã áp dụng CCCD từ liên đoàn cho học viên đã có mã HV.', 'info')
-      
+
 return
     }
 
@@ -216,7 +216,8 @@ return
         {isLocked && (
           <Alert severity='info' icon={<i className='ri-lock-line' />}>
             Học viên đã có mã HV nên thông tin định danh (tên, giới tính, ngày sinh, ...) bị khóa. Vẫn có thể chỉnh sửa{' '}
-            <strong>CCCD</strong>, <strong>địa chỉ</strong> và <strong>ghi chú</strong>. Để mở khóa toàn bộ, xóa mã HV trước rồi lưu lại.
+            <strong>CCCD</strong>, <strong>địa chỉ</strong> và <strong>ghi chú</strong>. Để mở khóa toàn bộ, xóa mã HV
+            trước rồi lưu lại.
           </Alert>
         )}
 
@@ -231,7 +232,9 @@ return
           locked={false} // mã HV luôn có thể cập nhật (chỉ khóa các trường còn lại)
           active={open}
           helperText={
-            isLocked ? 'Xóa mã và lưu để mở khóa toàn bộ thông tin' : 'Chọn từ bảng tra cứu để xem và áp dụng thông tin từ liên đoàn'
+            isLocked
+              ? 'Xóa mã và lưu để mở khóa toàn bộ thông tin'
+              : 'Chọn từ bảng tra cứu để xem và áp dụng thông tin từ liên đoàn'
           }
         />
 
@@ -245,8 +248,8 @@ return
                 validate: value => {
                   if (isLocked) return true
                   if (!value?.trim()) return 'Họ tên là bắt buộc'
-                  
-return true
+
+                  return true
                 }
               }}
               render={({ field }) => (
@@ -350,12 +353,7 @@ return true
               name='personalIdNumber'
               control={control}
               render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label='CCCD / Số định danh cá nhân'
-                  placeholder='Ví dụ: 012345678901'
-                />
+                <TextField disabled={isLocked} {...field} fullWidth label='CCCD / Số định danh cá nhân' placeholder='Ví dụ: 012345678901' />
               )}
             />
           </Grid>
@@ -411,9 +409,9 @@ return true
                 size='small'
                 sx={{
                   alignSelf: 'flex-start',
-                  bgcolor: student?.beltLevelName ? 'primary.light' : 'action.hover',
-                  fontWeight: student?.beltLevelName ? 600 : 400,
-                  color: student?.beltLevelName ? 'primary.main' : 'text.secondary'
+                  bgcolor: 'primary.light',
+                  color: 'white',
+                  fontWeight: 600
                 }}
               />
               <Typography variant='caption' color='text.disabled'>

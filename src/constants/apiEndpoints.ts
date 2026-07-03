@@ -266,6 +266,17 @@ export const API_ENDPOINTS = {
     systemNotifications: '/dashboard/system-notifications',
     studentMonthStats: '/dashboard/student-month-stats'
   },
+  attendanceAdjustments: {
+    root: '/attendance-adjustments',
+    my: '/attendance-adjustments/my',
+    byId: (id: string) => `/attendance-adjustments/${id}`,
+    cancel: (id: string) => `/attendance-adjustments/${id}/cancel`,
+    approve: (id: string) => `/attendance-adjustments/${id}/approve`,
+    reject: (id: string) => `/attendance-adjustments/${id}/reject`,
+    pendingCount: '/attendance-adjustments/pending-count',
+    myPendingCount: '/attendance-adjustments/my-pending-count',
+    canCreate: '/attendance-adjustments/can-create'
+  },
   userDocuments: {
     // User-facing
     my: '/user-documents/my',

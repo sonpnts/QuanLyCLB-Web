@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 /**
  * MemberCodeField – trường "Mã HV" với:
@@ -185,29 +185,27 @@ const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = fals
         fullWidth
         label='Mã HV (hội viên liên đoàn)'
         value={value}
-        onChange={e => {
-          onChange(e.target.value)
-
-
-          // Chỉ giữ preview khi vừa chọn từ modal, còn gõ tay thì ẩn preview
-          if (e.target.value.trim() !== lastLookedUpCode) {
-            setLookupResult(null)
-          }
+        onClick={() => {
+          if (!locked) setSearchOpen(true)
         }}
         disabled={locked}
-        placeholder={locked ? 'Đã khoá' : 'Dùng kính lúp để tra cứu theo tên hoặc nhập mã thủ công...'}
+        placeholder={locked ? 'Đã khoá' : 'Nhấn để tra cứu mã HV...'}
         helperText={
           locked
             ? 'Đã có mã HV – thông tin được khoá'
-            : (helperText ?? 'Chỉ khi chọn từ bảng tra cứu mới hiện thông tin dự kiến từ liên đoàn')
+            : (helperText ?? 'Nhấn vào ô hoặc kính lúp để tra cứu từ liên đoàn')
         }
         inputRef={inputRef}
+        inputProps={{ readOnly: true, style: { cursor: locked ? 'default' : 'pointer' } }}
         InputProps={{
           endAdornment: (
             <InputAdornment position='end'>
               <IconButton
                 size='small'
-                onClick={() => setSearchOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (!locked) setSearchOpen(true)
+                }}
                 disabled={locked}
                 title='Tìm kiếm theo tên'
               >

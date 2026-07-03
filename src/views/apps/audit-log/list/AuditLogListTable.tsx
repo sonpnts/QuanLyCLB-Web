@@ -33,7 +33,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 
 // Type Imports
 import type { AuditLogType } from '@/types/apps/auditLogTypes'
-import { AuditActionColors, auditActionLabels } from '@/types/apps/auditLogTypes'
+import { AuditActionColors, auditActionLabels, entityTypeLabels } from '@/types/apps/auditLogTypes'
 import { formatDateTimeVN } from '@/utils/dateTime'
 import { fuzzyFilter } from '@/utils/tableHelpers'
 
@@ -187,7 +187,7 @@ const AuditLogListTable = () => {
       columnHelper.accessor('entityType', {
         header: 'Đối tượng',
         cell: ({ row }) => (
-          <Typography variant='body2'>{row.original.entityType}</Typography>
+          <Typography variant='body2'>{entityTypeLabels[row.original.entityType] || row.original.entityType}</Typography>
         )
       }),
       columnHelper.accessor('description', {
@@ -342,7 +342,7 @@ const AuditLogListTable = () => {
                 </Box>
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>Đối tượng</Typography>
-                  <Typography>{selectedLog.entityType}</Typography>
+                  <Typography>{entityTypeLabels[selectedLog.entityType] || selectedLog.entityType}</Typography>
                 </Box>
                 <Box>
                   <Typography variant='subtitle2' color='text.secondary'>ID đối tượng</Typography>

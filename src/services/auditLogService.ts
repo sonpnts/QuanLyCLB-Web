@@ -10,6 +10,7 @@ export interface GetAuditLogsParams {
   pageSize?: number
   keyword?: string
   userId?: string
+  userName?: string
   userRole?: string
   action?: string
   entityType?: string

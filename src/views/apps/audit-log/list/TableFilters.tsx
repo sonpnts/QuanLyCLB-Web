@@ -41,6 +41,7 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
   const [action, setAction] = useState<string>('')
   const [entityType, setEntityType] = useState<string>('')
   const [userRole, setUserRole] = useState<string>('')
+  const [userName, setUserName] = useState<string>('')
   const [isSuccess, setIsSuccess] = useState<string>('')
   const [timestampFrom, setTimestampFrom] = useState<string>('')
   const [timestampTo, setTimestampTo] = useState<string>('')
@@ -50,8 +51,8 @@ const TableFilters = memo(({ onFilterChange }: TableFiltersProps) => {
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
-      
-return
+
+      return
     }
 
     const params: GetAuditLogsParams = {}
@@ -59,11 +60,12 @@ return
     if (action) params.action = action
     if (entityType) params.entityType = entityType
     if (userRole) params.userRole = userRole
+    if (userName.trim()) params.userName = userName.trim()
     if (isSuccess !== '') params.isSuccess = isSuccess === 'true'
     if (timestampFrom) params.timestampFrom = timestampFrom
     if (timestampTo) params.timestampTo = timestampTo
     onFilterChange(params)
-  }, [action, entityType, userRole, isSuccess, timestampFrom, timestampTo, onFilterChange])
+  }, [action, entityType, userRole, userName, isSuccess, timestampFrom, timestampTo, onFilterChange])
 
   return (
     <CardContent>
@@ -97,6 +99,16 @@ return
               ))}
             </Select>
           </FormControl>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+          <TextField
+            fullWidth
+            size='small'
+            label='Người dùng'
+            value={userName}
+            onChange={e => setUserName(e.target.value)}
+            placeholder='Tìm theo tên...'
+          />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 2 }}>
           <FormControl fullWidth size='small'>

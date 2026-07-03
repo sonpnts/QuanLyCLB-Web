@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
@@ -32,6 +31,7 @@ import TableSortLabel from '@mui/material/TableSortLabel'
 import Paper from '@mui/material/Paper'
 
 import dashboardService from '@/services/dashboardService'
+import studentService from '@/services/studentService'
 import type {
   DashboardStatisticsDto,
   DashboardSystemNotificationsDto,
@@ -41,6 +41,9 @@ import type {
   StudentMonthStatisticsDto,
   StudentMonthListItemDto
 } from '@/services/dashboardService'
+import type { StudentType } from '@/types/apps/studentTypes'
+
+import ViewStudentDrawer from '@/views/apps/student/list/ViewStudentDrawer'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 import { useAuth } from '@/contexts/authContext'
@@ -134,7 +137,6 @@ const StatusSection = ({
 )
 
 const DashboardHome = () => {
-  const router = useRouter()
   const [stats, setStats] = useState<DashboardStatisticsDto | null>(null)
   const [revenue, setRevenue] = useState<RevenueStatisticsDto[]>([])
   const [studentStats, setStudentStats] = useState<StudentStatisticsDto | null>(null)
@@ -151,6 +153,8 @@ const DashboardHome = () => {
     key: 'fullName',
     direction: 'asc'
   })
+  const [viewStudentOpen, setViewStudentOpen] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
 
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const d = new Date()
@@ -207,6 +211,16 @@ const DashboardHome = () => {
       key,
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
     }))
+  }
+
+  const handleViewStudent = async (studentId: string) => {
+    setStudentListDialog(prev => ({ ...prev, open: false }))
+    const res = await studentService.getStudentById(studentId)
+
+    if (res.success && res.data) {
+      setSelectedStudent(res.data)
+      setViewStudentOpen(true)
+    }
   }
 
   useEffect(() => {
@@ -352,63 +366,6 @@ const DashboardHome = () => {
               icon='ri-calendar-check-line'
               color='error'
             />
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card sx={{ height: '100%' }}>
-              <CardHeader title='Tổng hợp nhanh' />
-              <CardContent className='flex flex-col gap-2'>
-                <Box className='flex items-center justify-between'>
-                  <Typography>
-                    Học viên mới tháng {monthText}/{yearText}: <strong>{studentMonthStats?.newStudentsCount ?? 0}</strong>
-                  </Typography>
-                  <Button
-                    size='small'
-                    variant='outlined'
-                    disabled={!studentMonthStats?.newStudentsCount}
-                    onClick={() =>
-                      setStudentListDialog({
-                        open: true,
-                        title: `Học viên mới tháng ${monthText}/${yearText}`,
-                        list: studentMonthStats?.newStudentsList ?? []
-                      })
-                    }
-                  >
-                    Xem danh sách
-                  </Button>
-                </Box>
-                <Box className='flex items-center justify-between'>
-                  <Typography>
-                    Học viên tạm nghỉ tháng {monthText}/{yearText}: <strong>{studentMonthStats?.suspendedStudentsCount ?? 0}</strong>
-                  </Typography>
-                  <Button
-                    size='small'
-                    variant='outlined'
-                    color='warning'
-                    disabled={!studentMonthStats?.suspendedStudentsCount}
-                    onClick={() =>
-                      setStudentListDialog({
-                        open: true,
-                        title: `Học viên tạm nghỉ tháng ${monthText}/${yearText}`,
-                        list: studentMonthStats?.suspendedStudentsList ?? []
-                      })
-                    }
-                  >
-                    Xem danh sách
-                  </Button>
-                </Box>
-                <Typography>
-                  Tỷ lệ điểm danh: <strong>{((attendanceStats?.attendanceRate ?? 0) * 100).toFixed(1)}%</strong>
-                </Typography>
-                <Typography>
-                  Số phiên điểm danh: <strong>{attendanceStats?.totalSessions ?? 0}</strong>
-                </Typography>
-                <Typography>
-                  Doanh thu 6 tháng gần nhất:{' '}
-                  <strong>{formatMoney(revenue.reduce((sum, x) => sum + (x.totalRevenue || 0), 0))} ₫</strong>
-                </Typography>
-              </CardContent>
-            </Card>
           </Grid>
         </>
       )}
@@ -591,10 +548,7 @@ const DashboardHome = () => {
                       key={student.studentId}
                       hover
                       sx={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        setStudentListDialog(prev => ({ ...prev, open: false }))
-                        router.push(`/apps/students/${student.studentId}`)
-                      }}
+                      onClick={() => handleViewStudent(student.studentId)}
                     >
                       <TableCell>{student.code || '-'}</TableCell>
                       <TableCell>{student.fullName}</TableCell>
@@ -610,6 +564,15 @@ const DashboardHome = () => {
           <Button onClick={() => setStudentListDialog(prev => ({ ...prev, open: false }))}>Đóng</Button>
         </DialogActions>
       </Dialog>
+
+      <ViewStudentDrawer
+        open={viewStudentOpen}
+        onClose={() => {
+          setViewStudentOpen(false)
+          setSelectedStudent(null)
+        }}
+        student={selectedStudent}
+      />
     </Grid>
   )
 }
