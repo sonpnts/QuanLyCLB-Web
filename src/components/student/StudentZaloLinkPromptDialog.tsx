@@ -89,7 +89,7 @@ const StudentZaloLinkPromptDialog = ({
       <Dialog
         open={open}
         onClose={saving ? undefined : onClose}
-        maxWidth='xs'
+        maxWidth='sm'
         fullWidth
         fullScreen={fullScreen}
         PaperProps={{
@@ -123,18 +123,17 @@ const StudentZaloLinkPromptDialog = ({
             px: { xs: 2, sm: 3 },
             pb: { xs: 2.5, sm: 3 },
             pt: 0,
-            flexDirection: { xs: 'column-reverse', sm: 'row' },
-            alignItems: 'stretch'
+            gap: 1
           }}
         >
-          <Button variant='outlined' color='inherit' onClick={handleSkip} disabled={saving} fullWidth={fullScreen}>
+          <Button variant='outlined' color='inherit' onClick={handleSkip} disabled={saving} sx={{ flex: 1 }}>
             {skipLabel}
           </Button>
           <Button
             variant='contained'
             onClick={() => setVerifyOpen(true)}
             disabled={saving || hasLinkedZalo || !student}
-            fullWidth={fullScreen}
+            sx={{ flex: 1 }}
           >
             {saving ? <CircularProgress size={18} color='inherit' /> : linkLabel}
           </Button>

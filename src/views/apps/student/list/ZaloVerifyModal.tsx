@@ -327,16 +327,13 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
           px: { xs: 2, sm: 3 },
           pb: { xs: 2.5, sm: 2 },
           pt: 0,
-          gap: 1,
-          flexDirection: { xs: 'column-reverse', sm: 'row' },
-          alignItems: 'stretch'
+          gap: 1
         }}
       >
         <Button
           variant='outlined'
           onClick={handleClose}
-          fullWidth={fullScreen}
-          sx={{ minHeight: { xs: 48, sm: 40 } }}
+          sx={{ flex: 1, minHeight: { xs: 48, sm: 40 } }}
         >
           Đóng
         </Button>
@@ -345,8 +342,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
             variant='contained'
             color='warning'
             onClick={() => setState('idle')}
-            fullWidth={fullScreen}
-            sx={{ minHeight: { xs: 48, sm: 40 } }}
+            sx={{ flex: 1, minHeight: { xs: 48, sm: 40 } }}
           >
             Thử lại
           </Button>
