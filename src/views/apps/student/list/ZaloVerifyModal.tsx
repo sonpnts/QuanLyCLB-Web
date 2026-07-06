@@ -110,9 +110,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
       maxWidth='md'
       fullWidth
       scroll='paper'
-      PaperProps={{
-        sx: { borderRadius: fullScreen ? 0 : 3 }
-      }}
+      sx={{ '& .MuiDialog-paper': { borderRadius: fullScreen ? 0 : 3, maxHeight: fullScreen ? '100dvh' : '90dvh' } }}
     >
       {/* Header */}
       <DialogTitle

@@ -91,7 +91,8 @@ const StudentZaloLinkPromptDialog = ({
         maxWidth='sm'
         fullWidth
         fullScreen={fullScreen}
-        PaperProps={{ sx: { borderRadius: fullScreen ? 0 : 3 } }}
+        scroll='paper'
+        sx={{ '& .MuiDialog-paper': { borderRadius: fullScreen ? 0 : 3, maxHeight: fullScreen ? '100dvh' : '90dvh' } }}
       >
         <DialogTitle
           sx={{
