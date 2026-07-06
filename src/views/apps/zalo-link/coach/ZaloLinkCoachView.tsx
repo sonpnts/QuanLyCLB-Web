@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -199,8 +199,8 @@ return
       <Card>
         <CardHeader title='Bộ lọc' />
         <CardContent>
-          <Box className='flex flex-wrap gap-4 items-center'>
-            <FormControl size='small' sx={{ minWidth: 280 }}>
+          <Box className='flex flex-wrap gap-3 items-center'>
+            <FormControl size='small' sx={{ minWidth: { xs: '100%', sm: 280 }, flex: { xs: '1 1 100%', sm: '0 0 auto' } }}>
               <InputLabel id='zalo-coach-class'>Lọc theo lớp</InputLabel>
               <Select
                 labelId='zalo-coach-class'
@@ -220,7 +220,8 @@ return
 
             <FormControlLabel
               control={<Switch checked={onlyUnlinked} onChange={e => setOnlyUnlinked(e.target.checked)} />}
-              label='Chỉ xem chưa liên kết'
+              label='Chưa LK'
+              sx={{ mx: 0 }}
             />
 
             <TextField
@@ -229,10 +230,10 @@ return
               placeholder='Tên / mã HV / SĐT...'
               value={keyword}
               onChange={e => setKeyword(e.target.value)}
-              sx={{ minWidth: 260 }}
+              sx={{ flex: '1 1 200px', minWidth: { xs: '100%', sm: 200 } }}
             />
 
-            <Button variant='outlined' onClick={loadRows} disabled={loading}>
+            <Button variant='outlined' onClick={loadRows} disabled={loading} sx={{ flexShrink: 0 }}>
               Lọc
             </Button>
           </Box>
@@ -251,14 +252,14 @@ return
               Không có dữ liệu.
             </Typography>
           ) : (
-            <TableContainer>
-              <Table size='small'>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size='small' sx={{ minWidth: 600 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Mã HV</TableCell>
                     <TableCell>Họ tên</TableCell>
                     <TableCell>SĐT</TableCell>
-                    <TableCell>Lớp</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Lớp</TableCell>
                     <TableCell align='center'>Zalo</TableCell>
                     <TableCell align='right'>Thao tác</TableCell>
                   </TableRow>
@@ -273,7 +274,7 @@ return (
                         <TableCell>{r.studentCode}</TableCell>
                         <TableCell>{r.studentName}</TableCell>
                         <TableCell>{r.phoneNumber || '-'}</TableCell>
-                        <TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                           {r.classCode}
                         </TableCell>
                         <TableCell align='center'>
@@ -288,11 +289,6 @@ return (
                             <IconButton size='small' title='Liên kết/cập nhật' onClick={() => openVerify(r)} disabled={saving}>
                               <i className='ri-chat-check-line' />
                             </IconButton>
-                            {/*{linked && (*/}
-                            {/*  <IconButton size='small' title='Hủy liên kết' onClick={() => unlink(r)} disabled={saving}>*/}
-                            {/*    <i className='ri-link-unlink' />*/}
-                            {/*  </IconButton>*/}
-                            {/*)}*/}
                           </Box>
                         </TableCell>
                       </TableRow>

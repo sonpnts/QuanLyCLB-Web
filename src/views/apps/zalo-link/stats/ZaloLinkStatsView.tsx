@@ -178,7 +178,7 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
       <Card>
         <CardHeader title='Tra cứu học viên' subheader='Nhập SĐT hoặc UserIdZalo để ra thông tin học viên' />
         <CardContent>
-          <Grid container spacing={4}>
+          <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 5 }}>
               <TextField
                 fullWidth
@@ -259,12 +259,12 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
               Không có dữ liệu lớp.
             </Typography>
           ) : (
-            <TableContainer>
-              <Table size='small'>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size='small' sx={{ minWidth: 600 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Lớp</TableCell>
-                    <TableCell>Chi nhánh</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Chi nhánh</TableCell>
                     <TableCell align='center'>Tổng</TableCell>
                     <TableCell align='center'>Đã LK</TableCell>
                     <TableCell align='center'>Chưa LK</TableCell>
@@ -278,12 +278,13 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                       hover
                       selected={selectedClassId === c.classId}
                       onClick={() => setSelectedClassId(c.classId)}
-                      style={{ cursor: 'pointer' }}
+                      sx={{ cursor: 'pointer' }}
                     >
                       <TableCell>
-                        {c.className} <span className='text-textSecondary'>({c.classCode})</span>
+                        <Typography variant='body2' noWrap>{c.className} ({c.classCode})</Typography>
+                        <Typography variant='caption' color='text.secondary' sx={{ display: { md: 'none' } }}>{c.branchName}</Typography>
                       </TableCell>
-                      <TableCell>{c.branchName}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{c.branchName}</TableCell>
                       <TableCell align='center'>{c.totalStudents}</TableCell>
                       <TableCell align='center'>{c.linkedStudents}</TableCell>
                       <TableCell align='center'>{c.unlinkedStudents}</TableCell>
@@ -303,8 +304,8 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
           subheader='Dựa trên Student.UserIdZalo rỗng/null (đang học)'
         />
         <CardContent>
-          <Box className='flex flex-wrap items-center gap-4 mb-4'>
-            <FormControl size='small' sx={{ minWidth: 260 }}>
+          <Box className='flex flex-wrap items-center gap-3 mb-4'>
+            <FormControl size='small' sx={{ minWidth: { xs: '100%', sm: 260 }, flex: { xs: '1 1 100%', sm: '0 0 auto' } }}>
               <InputLabel id='zalo-link-class-filter'>Lọc theo lớp</InputLabel>
               <Select
                 labelId='zalo-link-class-filter'
@@ -334,14 +335,14 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
               Không có học viên chưa liên kết.
             </Typography>
           ) : (
-            <TableContainer>
-              <Table size='small'>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size='small' sx={{ minWidth: 500 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Mã HV</TableCell>
                     <TableCell>Họ tên</TableCell>
                     <TableCell>SĐT</TableCell>
-                    <TableCell>Lớp</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Lớp</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -350,7 +351,7 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                       <TableCell>{r.studentCode}</TableCell>
                       <TableCell>{r.studentName}</TableCell>
                       <TableCell>{r.phoneNumber}</TableCell>
-                      <TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                         {r.className} <span className='text-textSecondary'>({r.classCode})</span>
                       </TableCell>
                     </TableRow>
