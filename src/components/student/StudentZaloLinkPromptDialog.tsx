@@ -7,9 +7,9 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Dialog from '@mui/material/Dialog'
-import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
+import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { useTheme } from '@mui/material/styles'
@@ -68,7 +68,6 @@ const StudentZaloLinkPromptDialog = ({
 
       if (!response.success || !response.data) {
         showNotification(response.message || 'Không thể lưu liên kết Zalo.', 'error')
-
         return
       }
 
@@ -89,55 +88,70 @@ const StudentZaloLinkPromptDialog = ({
       <Dialog
         open={open}
         onClose={saving ? undefined : onClose}
-        maxWidth='md'
+        maxWidth='sm'
         fullWidth
         fullScreen={fullScreen}
-        PaperProps={{
-          sx: {
-            borderRadius: fullScreen ? 0 : 3
-          }
-        }}
+        PaperProps={{ sx: { borderRadius: fullScreen ? 0 : 3 } }}
       >
-        <DialogTitle sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>{title}</DialogTitle>
-        <DialogContent sx={{ px: { xs: 2, sm: 4 }, pb: { xs: 2, sm: 3 }, pt: { xs: 1, sm: 2 } }}>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            pb: 1.5,
+            pt: { xs: 2, sm: 2.5 },
+            px: { xs: 2.5, sm: 3.5 }
+          }}
+        >
+          <Box component='span' sx={{ fontWeight: 600 }}>{title}</Box>
+        </DialogTitle>
+
+        <DialogContent sx={{ px: { xs: 2.5, sm: 3.5 }, py: { xs: 2, sm: 3 } }}>
           {hasLinkedZalo ? (
-            <Alert severity='success' sx={{ py: 1 }}>Học viên này đã có liên kết Zalo.</Alert>
+            <Alert severity='success' variant='outlined' sx={{ py: 1 }}>
+              Học viên này đã có liên kết Zalo.
+            </Alert>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, py: { xs: 0, sm: 1 } }}>
-              <Alert severity='warning' sx={{ py: 1 }}>
+            <Stack spacing={2}>
+              <Alert severity='warning' variant='filled' sx={{ py: 1 }}>
                 {student?.fullName ? `Học viên ${student.fullName} chưa có UserIdZalo.` : 'Học viên này chưa có UserIdZalo.'}
               </Alert>
               <Typography variant='body1' color='text.secondary' sx={{ lineHeight: 1.6 }}>
                 {message}
               </Typography>
               {student?.phoneNumber ? (
-                <Typography variant='body1' color='text.secondary'>
+                <Typography variant='body2' color='text.secondary'>
                   Số điện thoại hiện tại: <strong>{student.phoneNumber}</strong>
                 </Typography>
               ) : null}
-            </Box>
+            </Stack>
           )}
         </DialogContent>
-        <DialogActions
+
+        <Box
           sx={{
-            px: { xs: 2, sm: 4 },
+            px: { xs: 2.5, sm: 3.5 },
             pb: { xs: 2.5, sm: 3 },
-            pt: { xs: 1, sm: 2 },
-            gap: 1.5
+            pt: 1.5,
+            display: 'flex',
+            gap: 1.5,
+            justifyContent: 'flex-end',
+            borderTop: '1px solid',
+            borderColor: 'divider'
           }}
         >
-          <Button variant='outlined' color='inherit' onClick={handleSkip} disabled={saving} sx={{ flex: 1, minHeight: 44 }}>
+          <Button variant='outlined' onClick={handleSkip} disabled={saving} sx={{ textTransform: 'none', px: 4 }}>
             {skipLabel}
           </Button>
           <Button
             variant='contained'
             onClick={() => setVerifyOpen(true)}
             disabled={saving || hasLinkedZalo || !student}
-            sx={{ flex: 1, minHeight: 44 }}
+            sx={{ textTransform: 'none', px: 4 }}
           >
-            {saving ? <CircularProgress size={18} color='inherit' /> : linkLabel}
+            {saving ? <CircularProgress size={18} color='inherit' sx={{ mr: 1 }} /> : linkLabel}
           </Button>
-        </DialogActions>
+        </Box>
       </Dialog>
 
       <ZaloVerifyModal
