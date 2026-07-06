@@ -69,8 +69,10 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
     setState('loading')
     setZaloUser(null)
     setErrMsg('')
+
     try {
       const result = await studentService.verifyZaloPhone(phone.trim())
+
       if (result.isFollower && result.data) {
         setZaloUser(result.data)
         setState('confirmed')
@@ -107,7 +109,12 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
       <DialogTitle>
         <Stack direction='row' spacing={1} alignItems='center' justifyContent='space-between'>
           <Stack direction='row' spacing={1} alignItems='center'>
-            <Box component='img' src='https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg' alt='Zalo' sx={{ width: 24, height: 24 }} />
+            <Box
+              component='img'
+              src='https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg'
+              alt='Zalo'
+              sx={{ width: 24, height: 24 }}
+            />
             <Typography variant='h6'>Xác thực Zalo</Typography>
           </Stack>
           <IconButton onClick={handleClose} size='small'>
@@ -121,25 +128,38 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
           <Alert severity='info'>Nhập SĐT học viên để kiểm tra đã theo dõi Zalo OA chưa.</Alert>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-            <TextField
-              fullWidth
-              label='Số điện thoại'
-              size='small'
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleVerify()}
-              placeholder='Nhập SĐT Zalo...'
-              disabled={state === 'loading'}
-              InputProps={{
-                startAdornment: <InputAdornment position='start'><i className='ri-phone-line' /></InputAdornment>
-              }}
-            />
+            <Box sx={{ flex: 1 }}>
+              <TextField
+                fullWidth
+                label='Số điện thoại'
+                size='small'
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleVerify()}
+                placeholder='Nhập SĐT Zalo...'
+                disabled={state === 'loading'}
+
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <i className='ri-phone-line' />
+                    </InputAdornment>
+                  )
+                }}
+              />
+            </Box>
+
             <Button
               variant='contained'
-              size='small'
               onClick={handleVerify}
               disabled={!phone.trim() || state === 'loading'}
-              startIcon={state === 'loading' ? <CircularProgress size={16} color='inherit' /> : <i className='ri-search-2-line' />}
+              startIcon={
+                state === 'loading' ? (
+                  <CircularProgress size={30} color='inherit' />
+                ) : (
+                  <i className='ri-search-2-line' />
+                )
+              }
             >
               {state === 'loading' ? 'Đang...' : 'Kiểm tra'}
             </Button>
@@ -148,8 +168,12 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
           {state === 'not_follower' && (
             <Stack spacing={2}>
               <Alert severity='warning'>
-                <Typography variant='body2' fontWeight={600}>Số điện thoại chưa theo dõi Zalo OA</Typography>
-                <Typography variant='body2' color='text.secondary'>Học viên cần theo dõi trang Zalo OA của CLB để nhận thông báo.</Typography>
+                <Typography variant='body2' fontWeight={600}>
+                  Số điện thoại chưa theo dõi Zalo OA
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Học viên cần theo dõi trang Zalo OA của CLB để nhận thông báo.
+                </Typography>
               </Alert>
 
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
@@ -157,13 +181,26 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
                   <Typography variant='subtitle2'>Link theo dõi OA</Typography>
                   <Paper variant='outlined' sx={{ p: 1.5 }}>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                      <Link underline='hover' variant='body2' sx={{ wordBreak: 'break-all', flex: 1 }} href={ZALO_OA_LINK || '#'} target='_blank' rel='noopener noreferrer'>
+                      <Link
+                        underline='hover'
+                        variant='body2'
+                        sx={{ wordBreak: 'break-all', flex: 1 }}
+                        href={ZALO_OA_LINK || '#'}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      >
                         {ZALO_OA_LINK || 'Chưa cấu hình link'}
                       </Link>
                       <Tooltip title={copied ? 'Đã sao chép' : 'Sao chép'} arrow>
                         <span>
-                          <Button size='small' variant={copied ? 'contained' : 'outlined'} color={copied ? 'success' : 'primary'} onClick={handleCopyLink} disabled={!ZALO_OA_LINK}
-                            startIcon={<i className={copied ? 'ri-check-line' : 'ri-file-copy-line'} />}>
+                          <Button
+                            size='small'
+                            variant={copied ? 'contained' : 'outlined'}
+                            color={copied ? 'success' : 'primary'}
+                            onClick={handleCopyLink}
+                            disabled={!ZALO_OA_LINK}
+                            startIcon={<i className={copied ? 'ri-check-line' : 'ri-file-copy-line'} />}
+                          >
                             {copied ? 'Đã copy' : 'Copy'}
                           </Button>
                         </span>
@@ -175,11 +212,20 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
                 <Paper variant='outlined' sx={{ p: 2, textAlign: 'center', flexShrink: 0 }}>
                   {ZALO_QR_IMG ? (
                     <>
-                      <Box component='img' src={ZALO_QR_IMG} alt='QR Code Zalo OA' sx={{ width: 160, height: 160, borderRadius: 1, border: '1px solid', borderColor: 'divider' }} />
-                      <Typography variant='caption' color='text.secondary' display='block' mt={1}>Quét mã QR theo dõi OA</Typography>
+                      <Box
+                        component='img'
+                        src={ZALO_QR_IMG}
+                        alt='QR Code Zalo OA'
+                        sx={{ width: 160, height: 160, borderRadius: 1, border: '1px solid', borderColor: 'divider' }}
+                      />
+                      <Typography variant='caption' color='text.secondary' display='block' mt={1}>
+                        Quét mã QR theo dõi OA
+                      </Typography>
                     </>
                   ) : (
-                    <Typography variant='caption' color='text.secondary'>Chưa cấu hình QR</Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      Chưa cấu hình QR
+                    </Typography>
                   )}
                 </Paper>
               </Stack>
@@ -197,12 +243,26 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
                   {(zaloUser.display_name || '?').charAt(0)}
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant='subtitle1' fontWeight={600}>{zaloUser.display_name || '—'}</Typography>
-                  <Chip label='Đã theo dõi OA' size='small' color='success' icon={<i className='ri-check-double-line text-xs' />} sx={{ mt: 0.5 }} />
+                  <Typography variant='subtitle1' fontWeight={600}>
+                    {zaloUser.display_name || '—'}
+                  </Typography>
+                  <Chip
+                    label='Đã theo dõi OA'
+                    size='small'
+                    color='success'
+                    icon={<i className='ri-check-double-line text-xs' />}
+                    sx={{ mt: 0.5 }}
+                  />
                 </Box>
               </Paper>
 
-              <Button variant='contained' color='success' fullWidth onClick={handleConfirm} startIcon={<i className='ri-save-line' />}>
+              <Button
+                variant='contained'
+                color='success'
+                fullWidth
+                onClick={handleConfirm}
+                startIcon={<i className='ri-save-line' />}
+              >
                 Xác nhận liên kết
               </Button>
             </Stack>
