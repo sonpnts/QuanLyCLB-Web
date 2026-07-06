@@ -1,0 +1,122 @@
+==06/07/2026 10:40:01==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:5039:34
+==END==
+
+==06/07/2026 10:40:04==
+- Level: ERROR
+- ClassName: CashHandoverService
+- Method: getCashHandovers
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async CashHandoverService.getCashHandovers (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:134:30)
+    at async CashHandoverListTable.useCallback[loadHandovers] (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:6150:34)
+==END==
+
+==06/07/2026 10:40:04==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:426:30)
+    at async Promise.all (index 0)
+    at async CashHandoverListTable.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:6100:63)
+==END==
+
+==06/07/2026 10:40:04==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:1045:30)
+    at async Promise.all (index 1)
+    at async CashHandoverListTable.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:6100:63)
+==END==
+
+==06/07/2026 10:40:04==
+- Level: ERROR
+- ClassName: CashHandoverService
+- Method: getCashHandovers
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async CashHandoverService.getCashHandovers (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:134:30)
+    at async CashHandoverListTable.useCallback[loadHandovers] (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:6150:34)
+==END==
+
+==06/07/2026 10:45:26==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:5039:34
+==END==
+
+==06/07/2026 10:45:27==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:426:30)
+    at async Promise.all (index 0)
+    at async CashHandoverListTable.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:6100:63)
+==END==
+
+==06/07/2026 10:45:29==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:1045:30)
+    at async Promise.all (index 1)
+    at async CashHandoverListTable.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:6100:63)
+==END==
+
+==06/07/2026 10:45:29==
+- Level: ERROR
+- ClassName: CashHandoverService
+- Method: getCashHandovers
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async CashHandoverService.getCashHandovers (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:134:30)
+    at async CashHandoverListTable.useCallback[loadHandovers] (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:6150:34)
+==END==
+
+==06/07/2026 10:45:29==
+- Level: ERROR
+- ClassName: CashHandoverService
+- Method: getCashHandovers
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async CashHandoverService.getCashHandovers (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:134:30)
+    at async CashHandoverListTable.useCallback[loadHandovers] (http://localhost:3000/_next/static/chunks/src_f3cec6._.js:6150:34)
+==END==
+

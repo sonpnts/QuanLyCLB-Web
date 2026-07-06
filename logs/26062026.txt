@@ -1,0 +1,1325 @@
+==26/06/2026 11:16:33==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getRevenue
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getRevenue (http://localhost:3000/_next/static/chunks/src_6c3e67._.js:42:30)
+    at async Promise.all (index 1)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_6c3e67._.js:603:104)
+==END==
+
+==26/06/2026 11:16:33==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getAttendanceStats
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getAttendanceStats (http://localhost:3000/_next/static/chunks/src_6c3e67._.js:104:30)
+    at async Promise.all (index 3)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_6c3e67._.js:603:104)
+==END==
+
+==26/06/2026 11:16:33==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:5023:34
+    at async VerticalMenu.useEffect.fetchMenu (http://localhost:3000/_next/static/chunks/src_components_0deea8._.js:642:42)
+==END==
+
+==26/06/2026 11:16:33==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getStudentStats
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getStudentStats (http://localhost:3000/_next/static/chunks/src_6c3e67._.js:64:30)
+    at async Promise.all (index 2)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_6c3e67._.js:603:104)
+==END==
+
+==26/06/2026 11:16:33==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getStatistics
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getStatistics (http://localhost:3000/_next/static/chunks/src_6c3e67._.js:20:30)
+    at async Promise.all (index 0)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_6c3e67._.js:603:104)
+==END==
+
+==26/06/2026 11:16:33==
+- Level: ERROR
+- ClassName: DashboardService
+- Method: getSystemNotifications
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async DashboardService.getSystemNotifications (http://localhost:3000/_next/static/chunks/src_6c3e67._.js:124:30)
+    at async Promise.all (index 4)
+    at async DashboardHome.useEffect.load (http://localhost:3000/_next/static/chunks/src_6c3e67._.js:603:104)
+==END==
+
+==26/06/2026 11:22:33==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:33==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:34==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:34==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:34==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:35==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:36==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:36==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 3)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:36==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 5)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:36==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 7)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:36==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 4)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:36==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 6)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:37==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 8)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:38==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 9)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:38==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 10)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:38==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 13)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:38==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 11)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:38==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getClassCollectionsByInstructor
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getClassCollectionsByInstructor (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:184:30)
+    at async Promise.all (index 12)
+    at async FinanceSummaryView.useCallback[loadCollectionsForMode] (http://localhost:3000/_next/static/chunks/src_900682._.js:1941:31)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:40==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:40==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:40==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:40==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:40==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:42==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:43==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:45==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:45==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:45==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:47==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:53==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:53==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:53==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js:1820:70)
+==END==
+
+==26/06/2026 11:22:53==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:56==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js:1985:54)
+==END==
+
+==26/06/2026 11:22:59==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:22:59==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:22:59==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:22:59==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:369:54)
+==END==
+
+==26/06/2026 11:23:02==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:369:54)
+==END==
+
+==26/06/2026 11:23:06==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:23:06==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:23:06==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:23:06==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:370:54)
+==END==
+
+==26/06/2026 11:23:08==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:370:54)
+==END==
+
+==26/06/2026 11:23:09==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:23:11==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:23:11==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:23:11==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:370:54)
+==END==
+
+==26/06/2026 11:23:13==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:370:54)
+==END==
+
+==26/06/2026 11:23:13==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:23:15==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:23:15==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:204:70)
+==END==
+
+==26/06/2026 11:23:15==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:370:54)
+==END==
+
+==26/06/2026 11:23:17==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:370:54)
+==END==
+
+==26/06/2026 11:23:23==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:23:23==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:23:23==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:23:23==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:368:54)
+==END==
+
+==26/06/2026 11:23:26==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:368:54)
+==END==
+
+==26/06/2026 11:23:31==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:23:31==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:23:31==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:23:31==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:368:54)
+==END==
+
+==26/06/2026 11:23:34==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_900682._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:368:54)
+==END==
+
+==26/06/2026 11:24:32==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:24:32==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:24:32==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:24:32==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:368:54)
+==END==
+
+==26/06/2026 11:24:36==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:368:54)
+==END==
+
+==26/06/2026 11:24:39==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:24:39==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:24:40==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:24:40==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:368:54)
+==END==
+
+==26/06/2026 11:24:42==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:368:54)
+==END==
+
+==26/06/2026 11:25:17==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:25:18==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:25:18==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:202:70)
+==END==
+
+==26/06/2026 11:25:18==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:368:54)
+==END==
+
+==26/06/2026 11:25:20==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:368:54)
+==END==
+
+==26/06/2026 11:26:01==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:200:70)
+==END==
+
+==26/06/2026 11:26:01==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:200:70)
+==END==
+
+==26/06/2026 11:26:01==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:200:70)
+==END==
+
+==26/06/2026 11:26:01==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:366:54)
+==END==
+
+==26/06/2026 11:26:04==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:366:54)
+==END==
+
+==26/06/2026 11:26:12==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_900682._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:200:70)
+==END==
+
+==26/06/2026 11:26:12==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_900682._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:200:70)
+==END==
+
+==26/06/2026 11:26:12==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_900682._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:200:70)
+==END==
+
+==26/06/2026 11:26:12==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:366:54)
+==END==
+
+==26/06/2026 11:26:15==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fservices%252FfinanceService.ts+%255Bapp-client%255D+%2528ecmascript%2529:31:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js?id=%255Bproject%255D%252Fsrc%252Fviews%252Fapps%252Ffinance%252Fsummary%252Findex.tsx+%255Bapp-client%255D+%2528ecmascript%2529:366:54)
+==END==
+
+==26/06/2026 11:31:37==
+- Level: ERROR
+- ClassName: MenuService
+- Method: getMenuByRole
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async http://localhost:3000/_next/static/chunks/src_8da787._.js:5023:34
+==END==
+
+==26/06/2026 11:31:37==
+- Level: ERROR
+- ClassName: ClassService
+- Method: getClasses
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async ClassService.getClasses (http://localhost:3000/_next/static/chunks/src_8f58a2._.js:198:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js:1738:70)
+==END==
+
+==26/06/2026 11:31:39==
+- Level: ERROR
+- ClassName: serviceHelper
+- Method: apiList
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async apiList (http://localhost:3000/_next/static/chunks/src_8f58a2._.js:18:26)
+    at async Promise.all (index 1)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js:1738:70)
+==END==
+
+==26/06/2026 11:31:39==
+- Level: ERROR
+- ClassName: UserService
+- Method: getCoaches
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async UserService.getCoaches (http://localhost:3000/_next/static/chunks/src_8f58a2._.js:1158:30)
+    at async Promise.all (index 2)
+    at async FinanceSummaryView.useEffect.loadReferences (http://localhost:3000/_next/static/chunks/src_8f58a2._.js:1738:70)
+==END==
+
+==26/06/2026 11:31:40==
+- Level: ERROR
+- ClassName: FinanceService
+- Method: getTransactionSummary
+- Message: Network Error
+- StackTrace: AxiosError: Network Error
+    at XMLHttpRequest.handleError (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:2570:20)
+    at Axios.request (http://localhost:3000/_next/static/chunks/node_modules_axios_lib_c4c49c._.js:3159:49)
+    at async FinanceService.getTransactionSummary (http://localhost:3000/_next/static/chunks/src_8f58a2._.js:717:30)
+    at async Promise.all (index 0)
+    at async FinanceSummaryView.useCallback[loadSummary] (http://localhost:3000/_next/static/chunks/src_8f58a2._.js:1904:54)
+==END==
+
