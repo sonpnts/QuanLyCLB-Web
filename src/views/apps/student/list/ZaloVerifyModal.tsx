@@ -119,10 +119,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
       scroll='paper'
       PaperProps={{
         sx: {
-          borderRadius: fullScreen ? 0 : 3,
-          minHeight: { xs: '100dvh', sm: 420 },
-          display: 'flex',
-          flexDirection: 'column'
+          borderRadius: fullScreen ? 0 : 3
         }
       }}
     >

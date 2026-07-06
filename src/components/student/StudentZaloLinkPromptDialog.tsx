@@ -94,8 +94,7 @@ const StudentZaloLinkPromptDialog = ({
         fullScreen={fullScreen}
         PaperProps={{
           sx: {
-            borderRadius: fullScreen ? 0 : 3,
-            minHeight: { sm: 280 }
+            borderRadius: fullScreen ? 0 : 3
           }
         }}
       >
