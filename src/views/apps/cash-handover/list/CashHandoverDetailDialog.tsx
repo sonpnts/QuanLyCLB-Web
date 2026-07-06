@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
+import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
 import Dialog from '@mui/material/Dialog'
@@ -8,6 +11,7 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import Divider from '@mui/material/Divider'
 import Grid from '@mui/material/Grid'
+import LinearProgress from '@mui/material/LinearProgress'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -15,9 +19,10 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
 
-import type { CashHandoverType } from '@/types/apps/cashHandoverTypes'
+import type { CashHandoverType, CashHandoverInvoiceType } from '@/types/apps/cashHandoverTypes'
 import { HandoverStatusLabel } from '@/types/apps/cashHandoverTypes'
 import { formatDateTimeVN } from '@/utils/dateTime'
+import cashHandoverService from '@/services/cashHandoverService'
 
 type Props = {
   open: boolean
@@ -28,9 +33,48 @@ type Props = {
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 
+const paymentMethodLabels: Record<number, string> = { 0: 'Tiền mặt', 1: 'Chuyển khoản', 2: 'Khác' }
+
 const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
+  const [invoices, setInvoices] = useState<CashHandoverInvoiceType[]>([])
+  const [loadingInvoices, setLoadingInvoices] = useState(false)
+  const [showInvoices, setShowInvoices] = useState(false)
+
+  useEffect(() => {
+    if (!open) {
+      setInvoices([])
+      setShowInvoices(false)
+    }
+  }, [open])
+
+  const loadInvoices = async () => {
+    if (!data) return
+
+    setLoadingInvoices(true)
+    try {
+      const response = await cashHandoverService.getInvoicesByHandover(data.id)
+      if (response.success && response.data) {
+        setInvoices(response.data)
+      }
+    } finally {
+      setLoadingInvoices(false)
+    }
+  }
+
+  const handleToggleInvoices = async () => {
+    if (showInvoices) {
+      setShowInvoices(false)
+      return
+    }
+
+    if (invoices.length === 0) {
+      await loadInvoices()
+    }
+    setShowInvoices(true)
+  }
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth='md' fullScreen={false}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth='lg' fullScreen={false}>
       <DialogTitle>Chi tiết phiếu bàn giao tiền</DialogTitle>
       <DialogContent>
         {!data ? (
@@ -181,6 +225,84 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
                 </div>
               </>
             )}
+
+            {/* Danh sách biên lai */}
+            <>
+              <Divider />
+              <div>
+                <div className='flex items-center justify-between mb-2'>
+                  <Typography variant='subtitle2' className='font-semibold'>
+                    Biên lai trong kỳ ({showInvoices ? invoices.length : '...'})
+                  </Typography>
+                  <Button size='small' variant='outlined' onClick={handleToggleInvoices}>
+                    {showInvoices ? 'Ẩn' : 'Xem biên lai'}
+                  </Button>
+                </div>
+
+                {showInvoices && (
+                  <>
+                    {loadingInvoices ? (
+                      <LinearProgress sx={{ mb: 1 }} />
+                    ) : invoices.length === 0 ? (
+                      <Typography variant='body2' color='text.secondary'>
+                        Không có biên lai nào trong kỳ này.
+                      </Typography>
+                    ) : (
+                      <Box sx={{ overflowX: 'auto' }}>
+                        <Table size='small' sx={{ minWidth: 700 }}>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Số biên lai</TableCell>
+                              <TableCell>Học viên</TableCell>
+                              <TableCell>Lớp</TableCell>
+                              <TableCell>Ngày thu</TableCell>
+                              <TableCell align='right'>Tổng gốc</TableCell>
+                              <TableCell align='right'>Giảm trừ</TableCell>
+                              <TableCell align='right'>Thực thu</TableCell>
+                              <TableCell>Phương thức</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {invoices.map(inv => (
+                              <TableRow key={inv.id} hover>
+                                <TableCell>
+                                  <Typography color='primary' fontWeight={500} variant='body2' noWrap>
+                                    {inv.receiptNumber}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography noWrap>{inv.studentName || 'Khách lẻ'}</Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography noWrap>{inv.className || '-'}</Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography noWrap>
+                                    {new Date(inv.paymentDate).toLocaleDateString('vi-VN')}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell align='right'>{formatCurrency(inv.totalAmount)}</TableCell>
+                                <TableCell align='right'>
+                                  {inv.discountAmount > 0 ? (
+                                    <Typography color='warning.main'>-{formatCurrency(inv.discountAmount)}</Typography>
+                                  ) : '—'}
+                                </TableCell>
+                                <TableCell align='right'>
+                                  <Typography fontWeight={600}>{formatCurrency(inv.finalAmount)}</Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Chip label={paymentMethodLabels[inv.method] || '-'} size='small' variant='tonal' />
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </Box>
+                    )}
+                  </>
+                )}
+              </div>
+            </>
           </div>
         )}
       </DialogContent>

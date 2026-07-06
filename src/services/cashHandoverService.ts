@@ -4,6 +4,7 @@ import type {
   CashHandoverClassDetailType,
   CashHandoverDeductionType,
   CashHandoverType,
+  CashHandoverInvoiceType,
   LateTuitionStudentType,
   OutstandingInstructorType
 } from '@/types/apps/cashHandoverTypes'
@@ -108,6 +109,19 @@ const toLateTuitionStudent = (value: any): LateTuitionStudentType => ({
   className: value.className,
   lastPaymentDate: value.lastPaymentDate,
   daysSinceLastPayment: Number(value.daysSinceLastPayment || 0)
+})
+
+const toCashHandoverInvoice = (value: any): CashHandoverInvoiceType => ({
+  id: value.id,
+  receiptNumber: value.receiptNumber || '',
+  studentName: value.studentName,
+  paymentDate: value.paymentDate,
+  totalAmount: Number(value.totalAmount || 0),
+  discountAmount: Number(value.discountAmount || 0),
+  finalAmount: Number(value.finalAmount || 0),
+  method: Number(value.method || 0),
+  classId: value.classId,
+  className: value.className
 })
 
 const unwrapList = (value: any): any[] => {
@@ -226,6 +240,21 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: unwrapList(apiResponse.data).map(toLateTuitionStudent) }
     } catch (error) {
       logger.error('CashHandoverService', 'getLateTuitionStudents', error)
+      
+return { success: true, data: [] }
+    }
+  }
+
+  async getInvoicesByHandover(handoverId: string): Promise<ResponseResult<CashHandoverInvoiceType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.cashHandovers.invoices(handoverId))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: true, data: [] }
+
+      return { success: true, data: unwrapList(apiResponse.data).map(toCashHandoverInvoice) }
+    } catch (error) {
+      logger.error('CashHandoverService', 'getInvoicesByHandover', error)
       
 return { success: true, data: [] }
     }

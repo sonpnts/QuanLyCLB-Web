@@ -62,6 +62,7 @@ export const API_ENDPOINTS = {
     byId: (id: string) => `/cash-handovers/${id}`,
     confirm: (id: string) => `/cash-handovers/${id}/confirm`,
     reject: (id: string) => `/cash-handovers/${id}/reject`,
+    invoices: (id: string) => `/cash-handovers/${id}/invoices`,
     lateTuitionStudents: '/cash-handovers/late-tuition-students'
   },
   classes: {

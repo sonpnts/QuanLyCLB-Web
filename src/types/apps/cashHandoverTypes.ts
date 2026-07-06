@@ -86,3 +86,16 @@ export type OutstandingInstructorType = {
   classCount: number
   totalAvailableToHandover: number
 }
+
+export type CashHandoverInvoiceType = {
+  id: string
+  receiptNumber: string
+  studentName?: string
+  paymentDate: string
+  totalAmount: number
+  discountAmount: number
+  finalAmount: number
+  method: number
+  classId?: string
+  className?: string
+}
