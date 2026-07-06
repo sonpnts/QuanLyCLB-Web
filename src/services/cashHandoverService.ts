@@ -4,7 +4,8 @@ import type {
   CashHandoverClassDetailType,
   CashHandoverDeductionType,
   CashHandoverType,
-  LateTuitionStudentType
+  LateTuitionStudentType,
+  OutstandingInstructorType
 } from '@/types/apps/cashHandoverTypes'
 import type { ResponseResult } from '@/types/common'
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
@@ -28,6 +29,11 @@ export interface CreateCashHandoverRequest {
   amountHandedOver?: number
   notes?: string
   deductions?: CreateDeductionRequest[]
+}
+
+export interface CashHandoverListResult {
+  handovers: CashHandoverType[]
+  outstandingInstructors: OutstandingInstructorType[]
 }
 
 const toDeduction = (value: any): CashHandoverDeductionType => ({
@@ -113,18 +119,29 @@ const unwrapList = (value: any): any[] => {
 }
 
 class CashHandoverService {
-  async getCashHandovers(params?: GetCashHandoversParams): Promise<ResponseResult<CashHandoverType[]>> {
+  async getCashHandovers(params?: GetCashHandoversParams): Promise<ResponseResult<CashHandoverListResult>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.cashHandovers.root, { params })
       const apiResponse = response.data
 
-      if (!apiResponse.isSuccess) return { success: true, data: [] }
+      if (!apiResponse.isSuccess) return { success: true, data: { handovers: [], outstandingInstructors: [] } }
 
-      return { success: true, data: unwrapList(apiResponse.data).map(toCashHandover) }
+      const payload = apiResponse.data
+      const handovers = unwrapList(payload?.handovers ?? payload).map(toCashHandover)
+      const outstandingInstructors: OutstandingInstructorType[] = Array.isArray(payload?.outstandingInstructors)
+        ? payload.outstandingInstructors.map((item: any) => ({
+            instructorId: String(item.instructorId || ''),
+            instructorName: String(item.instructorName || ''),
+            classCount: Number(item.classCount || 0),
+            totalAvailableToHandover: Number(item.totalAvailableToHandover || 0)
+          }))
+        : []
+
+      return { success: true, data: { handovers, outstandingInstructors } }
     } catch (error) {
       logger.error('CashHandoverService', 'getCashHandovers', error)
       
-return { success: true, data: [] }
+return { success: true, data: { handovers: [], outstandingInstructors: [] } }
     }
   }
 

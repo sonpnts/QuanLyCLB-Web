@@ -31,17 +31,15 @@ import {
 import type { ColumnDef } from '@tanstack/react-table'
 
 import { fuzzyFilter } from '@/utils/tableHelpers'
-import type { CashHandoverType } from '@/types/apps/cashHandoverTypes'
+import type { CashHandoverType, OutstandingInstructorType } from '@/types/apps/cashHandoverTypes'
 import { HandoverStatusLabel } from '@/types/apps/cashHandoverTypes'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { UsersType } from '@/types/apps/userTypes'
-import type { InstructorClassCollectionType } from '@/types/apps/financeTypes'
 import cashHandoverService from '@/services/cashHandoverService'
 import type { GetCashHandoversParams } from '@/services/cashHandoverService'
 import { formatDateTimeVN } from '@/utils/dateTime'
 import classService from '@/services/classService'
 import userService from '@/services/userService'
-import financeService from '@/services/financeService'
 import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
@@ -53,12 +51,7 @@ import TableFilters from './TableFilters'
 
 import tableStyles from '@core/styles/table.module.css'
 
-type OutstandingInstructorSummary = {
-  instructorId: string
-  instructorName: string
-  classCount: number
-  totalAvailableToHandover: number
-}
+type OutstandingInstructorSummary = OutstandingInstructorType
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
@@ -115,7 +108,7 @@ const CashHandoverListTable = () => {
 
   const [addDrawerOpen, setAddDrawerOpen] = useState(false)
   const [presetInstructorId, setPresetInstructorId] = useState<string | undefined>(undefined)
-  const [outstandingCollections, setOutstandingCollections] = useState<InstructorClassCollectionType[]>([])
+  const [outstandingInstructors, setOutstandingInstructors] = useState<OutstandingInstructorSummary[]>([])
   const [detailOpen, setDetailOpen] = useState(false)
   const [selectedHandover, setSelectedHandover] = useState<CashHandoverType | null>(null)
 
@@ -148,51 +141,6 @@ const CashHandoverListTable = () => {
     loadReferences()
   }, [isAdmin, userId])
 
-  useEffect(() => {
-    const loadOutstandingCollections = async () => {
-      if (!isAdmin || instructors.length === 0) {
-        setOutstandingCollections([])
-        
-return
-      }
-
-      const rows = await Promise.all(
-        instructors.map(async instructor => {
-          const response = await financeService.getClassCollectionsByInstructor(instructor.id)
-
-          
-return (response.data || []).filter(item => item.availableToHandover > 0)
-        })
-      )
-
-      setOutstandingCollections(rows.flat())
-    }
-
-    loadOutstandingCollections()
-  }, [isAdmin, instructors])
-
-  const outstandingByInstructor = useMemo<OutstandingInstructorSummary[]>(() => {
-    const map = new Map<string, OutstandingInstructorSummary>()
-
-    outstandingCollections.forEach(item => {
-      const current = map.get(item.instructorId)
-
-      if (current) {
-        current.classCount += 1
-        current.totalAvailableToHandover += Number(item.availableToHandover || 0)
-      } else {
-        map.set(item.instructorId, {
-          instructorId: item.instructorId,
-          instructorName: item.instructorName || item.instructorId,
-          classCount: 1,
-          totalAvailableToHandover: Number(item.availableToHandover || 0)
-        })
-      }
-    })
-
-    return Array.from(map.values()).sort((a, b) => b.totalAvailableToHandover - a.totalAvailableToHandover)
-  }, [outstandingCollections])
-
   const handoverSummary = useMemo(
     () =>
       data.reduce(
@@ -216,9 +164,11 @@ return (response.data || []).filter(item => item.availableToHandover > 0)
 
       const response = await cashHandoverService.getCashHandovers(effectiveParams)
 
-      setData(response.data || [])
+      setData(response.data?.handovers || [])
+      setOutstandingInstructors(response.data?.outstandingInstructors || [])
     } catch {
       setData([])
+      setOutstandingInstructors([])
     } finally {
       setLoading(false)
     }
@@ -492,13 +442,13 @@ return
             </div>
           </div>
         </div>
-        {isAdmin && outstandingByInstructor.length > 0 && (
+        {isAdmin && outstandingInstructors.length > 0 && (
           <div className='px-5 pb-4'>
             <Typography variant='subtitle2' className='mb-2'>
               Huấn luyện viên còn tiền cần bàn giao
             </Typography>
             <div className='flex flex-col gap-2'>
-              {outstandingByInstructor.map(item => (
+              {outstandingInstructors.map(item => (
                 <div key={item.instructorId} className='flex items-center justify-between border rounded p-2 gap-2 sm:gap-3'>
                   <div className='min-w-0 flex-1'>
                     <Typography variant='body2' noWrap>{item.instructorName}</Typography>

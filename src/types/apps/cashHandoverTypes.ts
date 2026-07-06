@@ -79,3 +79,10 @@ export type LateTuitionStudentType = {
   lastPaymentDate?: string
   daysSinceLastPayment: number
 }
+
+export type OutstandingInstructorType = {
+  instructorId: string
+  instructorName: string
+  classCount: number
+  totalAvailableToHandover: number
+}
