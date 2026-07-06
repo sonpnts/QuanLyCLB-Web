@@ -89,29 +89,30 @@ const StudentZaloLinkPromptDialog = ({
       <Dialog
         open={open}
         onClose={saving ? undefined : onClose}
-        maxWidth='sm'
+        maxWidth='md'
         fullWidth
         fullScreen={fullScreen}
         PaperProps={{
           sx: {
-            borderRadius: fullScreen ? 0 : 3
+            borderRadius: fullScreen ? 0 : 3,
+            minHeight: { sm: 280 }
           }
         }}
       >
-        <DialogTitle>{title}</DialogTitle>
-        <DialogContent sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 3 } }}>
+        <DialogTitle sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>{title}</DialogTitle>
+        <DialogContent sx={{ px: { xs: 2, sm: 4 }, pb: { xs: 2, sm: 3 }, pt: { xs: 1, sm: 2 } }}>
           {hasLinkedZalo ? (
-            <Alert severity='success'>Học viên này đã có liên kết Zalo.</Alert>
+            <Alert severity='success' sx={{ py: 1 }}>Học viên này đã có liên kết Zalo.</Alert>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Alert severity='warning'>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, py: { xs: 0, sm: 1 } }}>
+              <Alert severity='warning' sx={{ py: 1 }}>
                 {student?.fullName ? `Học viên ${student.fullName} chưa có UserIdZalo.` : 'Học viên này chưa có UserIdZalo.'}
               </Alert>
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body1' color='text.secondary' sx={{ lineHeight: 1.6 }}>
                 {message}
               </Typography>
               {student?.phoneNumber ? (
-                <Typography variant='body2' color='text.secondary'>
+                <Typography variant='body1' color='text.secondary'>
                   Số điện thoại hiện tại: <strong>{student.phoneNumber}</strong>
                 </Typography>
               ) : null}
@@ -120,20 +121,20 @@ const StudentZaloLinkPromptDialog = ({
         </DialogContent>
         <DialogActions
           sx={{
-            px: { xs: 2, sm: 3 },
+            px: { xs: 2, sm: 4 },
             pb: { xs: 2.5, sm: 3 },
-            pt: 0,
-            gap: 1
+            pt: { xs: 1, sm: 2 },
+            gap: 1.5
           }}
         >
-          <Button variant='outlined' color='inherit' onClick={handleSkip} disabled={saving} sx={{ flex: 1 }}>
+          <Button variant='outlined' color='inherit' onClick={handleSkip} disabled={saving} sx={{ flex: 1, minHeight: 44 }}>
             {skipLabel}
           </Button>
           <Button
             variant='contained'
             onClick={() => setVerifyOpen(true)}
             disabled={saving || hasLinkedZalo || !student}
-            sx={{ flex: 1 }}
+            sx={{ flex: 1, minHeight: 44 }}
           >
             {saving ? <CircularProgress size={18} color='inherit' /> : linkLabel}
           </Button>

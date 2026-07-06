@@ -114,19 +114,19 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
       open={open}
       onClose={handleClose}
       fullScreen={fullScreen}
-      maxWidth='sm'
+      maxWidth='md'
       fullWidth
       scroll='paper'
       PaperProps={{
         sx: {
           borderRadius: fullScreen ? 0 : 3,
-          minHeight: { xs: '100dvh', sm: 'auto' },
+          minHeight: { xs: '100dvh', sm: 420 },
           display: 'flex',
           flexDirection: 'column'
         }
       }}
     >
-      <DialogTitle sx={{ pb: 1.5, pr: 6 }}>
+      <DialogTitle sx={{ pb: 1.5, pr: 6, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
         <Stack direction='row' spacing={1.25} alignItems='center'>
           <Box
             component='img'
@@ -134,7 +134,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
             alt='Zalo'
             sx={{ width: { xs: 24, sm: 28 }, height: { xs: 24, sm: 28 } }}
           />
-          <Typography variant='h6' sx={{ fontWeight: 600 }}>
+          <Typography variant='h6' sx={{ fontWeight: 600, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
             Xác thực Zalo
           </Typography>
         </Stack>
@@ -145,7 +145,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
 
       <Divider />
 
-      <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 2.5 }, flex: '1 1 0', overflow: 'auto' }}>
+      <DialogContent sx={{ px: { xs: 2, sm: 4 }, py: { xs: 2, sm: 3 }, flex: '1 1 0', overflow: 'auto' }}>
         <Stack spacing={2.5}>
           <Alert severity='info' sx={{ alignItems: 'flex-start' }}>
             Nhập số điện thoại học viên để kiểm tra tài khoản đó đã theo dõi Zalo OA của CLB hay chưa.
@@ -324,16 +324,16 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
 
       <DialogActions
         sx={{
-          px: { xs: 2, sm: 3 },
-          pb: { xs: 2.5, sm: 2 },
-          pt: 0,
-          gap: 1
+          px: { xs: 2, sm: 4 },
+          pb: { xs: 2.5, sm: 3 },
+          pt: { xs: 1, sm: 2 },
+          gap: 1.5
         }}
       >
         <Button
           variant='outlined'
           onClick={handleClose}
-          sx={{ flex: 1, minHeight: { xs: 48, sm: 40 } }}
+          sx={{ flex: 1, minHeight: 44 }}
         >
           Đóng
         </Button>
@@ -342,7 +342,7 @@ const ZaloVerifyModal = ({ open, onClose, defaultPhone = '', onConfirm }: Props)
             variant='contained'
             color='warning'
             onClick={() => setState('idle')}
-            sx={{ flex: 1, minHeight: { xs: 48, sm: 40 } }}
+            sx={{ flex: 1, minHeight: 44 }}
           >
             Thử lại
           </Button>
