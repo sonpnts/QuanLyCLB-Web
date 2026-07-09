@@ -84,6 +84,8 @@ const AttendanceTicketsTable = () => {
   const [validSessions, setValidSessions] = useState<any[]>([])
   const [missedSessions, setMissedSessions] = useState<any[]>([])
   const [loadingOptions, setLoadingOptions] = useState(false)
+  const [createMonth, setCreateMonth] = useState<number>(new Date().getMonth() + 1)
+  const [createYear, setCreateYear] = useState<number>(new Date().getFullYear())
 
   const loadAdjustments = useCallback(async () => {
     try {
@@ -148,11 +150,10 @@ const AttendanceTicketsTable = () => {
   const loadMissedSessions = useCallback(async () => {
     try {
       setLoadingOptions(true)
-      const now = new Date()
 
       const response = await attendanceService.getMissedSessions({
-        month: now.getMonth() + 1,
-        year: now.getFullYear()
+        month: createMonth,
+        year: createYear
       })
       if (response.success && response.data) {
         setMissedSessions(response.data)
@@ -165,7 +166,7 @@ const AttendanceTicketsTable = () => {
     } finally {
       setLoadingOptions(false)
     }
-  }, [])
+  }, [createMonth, createYear])
 
   useEffect(() => {
     if (createDialogOpen) {
@@ -176,6 +177,12 @@ const AttendanceTicketsTable = () => {
       }
     }
   }, [createDialogOpen, adjustmentType, loadValidSessions, loadMissedSessions])
+
+  useEffect(() => {
+    if (createDialogOpen && adjustmentType === 'CheckIn') {
+      loadMissedSessions()
+    }
+  }, [createMonth, createYear, createDialogOpen, adjustmentType, loadMissedSessions])
 
   const handleCreateAdjustment = async () => {
     if (!selectedSessionId) {
@@ -301,6 +308,8 @@ const AttendanceTicketsTable = () => {
     setSelectedSessionId('')
     setReason('')
     setNotes('')
+    setCreateMonth(new Date().getMonth() + 1)
+    setCreateYear(new Date().getFullYear())
   }
 
   const getStatusLabel = (status: AdjustmentStatus) => {
@@ -513,6 +522,45 @@ const AttendanceTicketsTable = () => {
                 ))}
               </Select>
             </FormControl>
+
+            {adjustmentType === 'CheckIn' && (
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}>
+                  <FormControl fullWidth size='small'>
+                    <InputLabel>Tháng</InputLabel>
+                    <Select
+                      label='Tháng'
+                      value={createMonth}
+                      onChange={e => {
+                        setCreateMonth(Number(e.target.value))
+                        setSelectedSessionId('')
+                      }}
+                    >
+                      {MONTHS.map(m => (
+                        <MenuItem key={m} value={m}>Tháng {m}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <FormControl fullWidth size='small'>
+                    <InputLabel>Năm</InputLabel>
+                    <Select
+                      label='Năm'
+                      value={createYear}
+                      onChange={e => {
+                        setCreateYear(Number(e.target.value))
+                        setSelectedSessionId('')
+                      }}
+                    >
+                      {YEARS.map(y => (
+                        <MenuItem key={y} value={y}>{y}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            )}
 
             <Divider />
 

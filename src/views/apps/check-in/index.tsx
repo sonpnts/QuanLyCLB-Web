@@ -42,7 +42,7 @@ interface RecentAttendance {
   checkedInAt: string
   latitude: number
   longitude: number
-  attendanceType: number
+  attendanceType: string
   branchId: string | null
   branchName: string | null
   address: string | null
@@ -66,8 +66,8 @@ const mapAttendanceError = (code?: number, fallback?: string, type: 'checkin' | 
 }
 
 const AttendanceType = {
-  CheckIn: 0,
-  CheckOut: 1
+  CheckIn: 'CheckIn',
+  CheckOut: 'CheckOut'
 }
 
 const CheckInView = () => {

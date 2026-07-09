@@ -68,16 +68,16 @@ interface UserDetail {
     checkedInAt: string
     latitude: number
     longitude: number
-    attendanceType: number
-    branchId: string | null
-    branchName: string | null
-    deviceInfo: string | null
+    attendanceType: string
+    branchName?: string
   }>
 }
 
 const AttendanceType = {
-  CheckIn: 0,
-  CheckOut: 1
+  CheckIn: 'CheckIn',
+  CheckOut: 'CheckOut',
+  MakeupCheckIn: 'MakeupCheckIn',
+  MakeupCheckOut: 'MakeupCheckOut'
 }
 
 const InstructorHistoryView = () => {
@@ -299,6 +299,7 @@ const InstructorHistoryView = () => {
                         <TableCell>Loại</TableCell>
                         <TableCell>Ngày</TableCell>
                         <TableCell>Thời gian</TableCell>
+                        <TableCell>Chi nhánh</TableCell>
                         <TableCell>Vĩ độ</TableCell>
                         <TableCell>Kinh độ</TableCell>
                       </TableRow>
@@ -320,6 +321,9 @@ const InstructorHistoryView = () => {
                           </TableCell>
                           <TableCell>
                             {new Date(record.checkedInAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant='body2'>{(record as any).branchName || '-'}</Typography>
                           </TableCell>
                           <TableCell>
                             <Tooltip title={record.latitude.toFixed(6)}>
