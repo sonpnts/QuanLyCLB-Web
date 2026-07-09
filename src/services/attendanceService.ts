@@ -6,7 +6,12 @@ import { logger } from '@/utils/logger'
 import type {
   AttendanceAdminOverviewType,
   InstructorMonthlyStatsType,
-  ClassAttendanceSummaryType
+  ClassAttendanceSummaryType,
+  MakeupTicket,
+  MakeupTicketListResponse,
+  CreateMakeupTicketRequest,
+  TicketApprovalRequest as MakeupTicketApprovalRequest,
+  TicketType
 } from '@/types/apps/attendanceTypes'
 
 export interface CheckInRequest {
@@ -185,6 +190,44 @@ return { success: true, data: [] }
     }
   }
 
+  async getMyRecentAttendance(count: number = 5): Promise<ResponseResult<any[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.myRecent(count))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: [], message: apiResponse.message }
+      }
+
+      return {
+        success: true,
+        data: apiResponse.data || []
+      }
+    } catch (error) {
+      logger.error('AttendanceService', 'getMyRecentAttendance', error)
+      return { success: false, data: [], message: 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getUserAttendanceDetail(userId: string, month: number, year: number): Promise<ResponseResult<any>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.userDetail(userId, month, year))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: null, message: apiResponse.message }
+      }
+
+      return {
+        success: true,
+        data: apiResponse.data
+      }
+    } catch (error) {
+      logger.error('AttendanceService', 'getUserAttendanceDetail', error)
+      return { success: false, data: null, message: 'Lỗi kết nối máy chủ' }
+    }
+  }
+
   async createTicket(data: CreateTicketRequest): Promise<ResponseResult<any>> {
     try {
       const response = await apiClient.post<any>(API_ENDPOINTS.attendance.tickets, data)
@@ -265,6 +308,261 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       () => apiClient.get<any>(API_ENDPOINTS.attendance.adminClassSummary, { params }),
       data => (Array.isArray(data) ? data : [])
     )
+  }
+
+  async generateAttendanceReport(data: {
+    userIds?: string[]
+    month: number
+    year: number
+    sendEmail: boolean
+  }): Promise<ResponseResult<any>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.attendance.adminGenerateReport, data)
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'generateAttendanceReport', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getAttendanceHistoryList(month: number, year: number): Promise<ResponseResult<any[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.adminHistoryList, {
+        params: { month, year }
+      })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: [], message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data || [], message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getAttendanceHistoryList', error)
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getReportHistory(month?: number, year?: number): Promise<ResponseResult<any[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.reportHistory(month, year))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: [], message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data || [], message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getReportHistory', error)
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async downloadReport(reportId: string): Promise<Blob | null> {
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.attendance.reportDownload(reportId), {
+        responseType: 'blob'
+      })
+      return response.data
+    } catch (error) {
+      logger.error('AttendanceService', 'downloadReport', error)
+      return null
+    }
+  }
+
+  async getMakeupTickets(params?: {
+    page?: number
+    pageSize?: number
+    status?: string
+    ticketType?: TicketType
+    fromDate?: string
+    toDate?: string
+    userId?: string
+  }): Promise<ResponseResult<MakeupTicketListResponse>> {
+    try {
+      const queryParams: any = {}
+      if (params?.page) queryParams.page = params.page
+      if (params?.pageSize) queryParams.pageSize = params.pageSize
+      if (params?.status) queryParams.status = params.status
+      if (params?.ticketType) queryParams.ticketType = params.ticketType
+      if (params?.fromDate) queryParams.fromDate = params.fromDate
+      if (params?.toDate) queryParams.toDate = params.toDate
+      if (params?.userId) queryParams.userId = params.userId
+
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.tickets, { params: queryParams })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return {
+        success: true,
+        data: apiResponse.data
+      }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getMakeupTickets', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getMyMakeupTickets(params?: {
+    page?: number
+    pageSize?: number
+    status?: string
+    ticketType?: TicketType
+    fromDate?: string
+    toDate?: string
+  }): Promise<ResponseResult<MakeupTicketListResponse>> {
+    try {
+      const queryParams: any = {}
+      if (params?.page) queryParams.page = params.page
+      if (params?.pageSize) queryParams.pageSize = params.pageSize
+      if (params?.status) queryParams.status = params.status
+      if (params?.ticketType) queryParams.ticketType = params.ticketType
+      if (params?.fromDate) queryParams.fromDate = params.fromDate
+      if (params?.toDate) queryParams.toDate = params.toDate
+
+      const response = await apiClient.get<any>(`${API_ENDPOINTS.attendance.tickets}/my`, { params: queryParams })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return {
+        success: true,
+        data: apiResponse.data
+      }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getMyMakeupTickets', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getAvailableSchedulesForMakeup(params: {
+    month: number
+    year: number
+    ticketType: TicketType
+  }): Promise<ResponseResult<any[]>> {
+    try {
+      const response = await apiClient.get<any>(`${API_ENDPOINTS.attendance.tickets}/available-schedules`, {
+        params: { month: params.month, year: params.year, ticketType: params.ticketType }
+      })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: [], message: apiResponse.message }
+      }
+
+      return {
+        success: true,
+        data: apiResponse.data || []
+      }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getAvailableSchedulesForMakeup', error)
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async createMakeupTicket(data: CreateMakeupTicketRequest): Promise<ResponseResult<MakeupTicket>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.attendance.tickets, data)
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return {
+        success: true,
+        data: apiResponse.data,
+        message: apiResponse.message
+      }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'createMakeupTicket', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async approveMakeupTicket(ticketId: string, data: MakeupTicketApprovalRequest): Promise<ResponseResult<MakeupTicket>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.attendance.ticketApproval(ticketId), data)
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      return {
+        success: true,
+        data: apiResponse.data,
+        message: apiResponse.message
+      }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'approveMakeupTicket', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getUnassignedAttendances(params?: {
+    fromDate?: string
+    toDate?: string
+  }): Promise<ResponseResult<any[]>> {
+    try {
+      const queryParams: any = {}
+      if (params?.fromDate) queryParams.fromDate = params.fromDate
+      if (params?.toDate) queryParams.toDate = params.toDate
+
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.unassigned, { params: queryParams })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: [], message: apiResponse.message }
+      }
+
+      const data = apiResponse.data
+      return {
+        success: true,
+        data: data?.records || data || []
+      }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getUnassignedAttendances', error)
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getMissedSessions(params?: {
+    month?: number
+    year?: number
+  }): Promise<ResponseResult<any[]>> {
+    try {
+      const queryParams: any = {}
+      if (params?.month) queryParams.month = params.month
+      if (params?.year) queryParams.year = params.year
+
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.missedSessions, { params: queryParams })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: [], message: apiResponse.message }
+      }
+
+      return {
+        success: true,
+        data: apiResponse.data || []
+      }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getMissedSessions', error)
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
   }
 }
 

@@ -314,6 +314,18 @@ const AttendanceHistoryView = () => {
     setDetailLoading(false)
   }
 
+  const handleExportExcel = async () => {
+    try {
+      await studentAttendanceService.exportSessionLogs({
+        classId: selectedClassId || undefined,
+        fromDate: fromDate || undefined,
+        toDate: toDate || undefined
+      })
+    } catch (error) {
+      console.error('Export error:', error)
+    }
+  }
+
   return (
     <>
       <Box className='flex flex-col gap-6'>
@@ -357,6 +369,17 @@ const AttendanceHistoryView = () => {
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
+              <Grid size={{ xs: 12, md: 4 }} className='flex items-end'>
+                <Button
+                  variant='outlined'
+                  color='primary'
+                  fullWidth
+                  onClick={handleExportExcel}
+                  startIcon={<i className='ri-download-line' />}
+                >
+                  Xuất Excel
+                </Button>
+              </Grid>
             </Grid>
           </CardContent>
         </Card>
@@ -390,7 +413,7 @@ const AttendanceHistoryView = () => {
                       }}
                     >
                       <Typography variant='subtitle2' sx={{ mb: 1 }}>
-                        {`${group.classCode} - ${group.className} (${group.sessions.length} buổi thiếu)`}
+                        {`${group.classCode} (${group.sessions.length} buổi thiếu)`}
                       </Typography>
                       <Box className='flex flex-wrap gap-2'>
                         {group.sessions.map(session => (

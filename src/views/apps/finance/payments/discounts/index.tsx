@@ -196,7 +196,7 @@ const DiscountedReceiptsView = () => {
               <MenuItem value=''>Tất cả lớp</MenuItem>
               {sortedClasses.map(item => (
                 <MenuItem key={item.id} value={item.id}>
-                  {item.code ? `${item.code} - ${item.name}` : item.name}
+                  {item.code }
                 </MenuItem>
               ))}
             </TextField>

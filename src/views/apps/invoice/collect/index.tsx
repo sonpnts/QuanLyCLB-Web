@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -36,6 +36,7 @@ import type { AdminPaymentSummaryType, ClassPaymentSummary, CoachPaymentSummaryT
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { savePaymentInvoiceDraft } from '@/utils/paymentDraft'
+import { exportToExcel, formatVnCurrency } from '@/utils/exportToExcel'
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 const YEARS = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() - i)
@@ -209,6 +210,91 @@ const PaymentCollectView = () => {
     router.push(`/apps/invoice/add?draft=${encodeURIComponent(draftKey)}`)
   }
 
+  const handleExportUnpaidStudents = () => {
+    if (!summary) return
+
+    const exportRows: {
+      className: string
+      branchName: string
+      studentName: string
+      tuitionAmount: number
+      examFeeAmount: number
+      totalUnpaid: number
+    }[] = []
+
+    for (const cls of filteredClasses) {
+      const tuitionAmountByStudentId = new Map(
+        (cls.tuition?.unpaidStudents ?? []).map(student => [student.studentId, Number(student.amount || 0)])
+      )
+
+      const examFeeSummaryByStudentId = (cls.examFees ?? [])
+        .filter(ef => Boolean(ef.isCollectable))
+        .flatMap(ef => ef.unpaidStudents ?? [])
+        .reduce(
+          (acc, student) => {
+            const current = acc.get(student.studentId) ?? {
+              studentId: student.studentId,
+              studentName: student.studentName,
+              examFeeAmount: 0
+            }
+
+            current.examFeeAmount += Number(student.amount || 0)
+            acc.set(student.studentId, current)
+
+            return acc
+          },
+          new Map<string, { studentId: string; studentName: string; examFeeAmount: number }>()
+        )
+
+      const mergedStudents = Array.from(
+        new Set([...tuitionAmountByStudentId.keys(), ...examFeeSummaryByStudentId.keys()])
+      )
+        .map(studentId => {
+          const tuitionAmount = tuitionAmountByStudentId.get(studentId) ?? 0
+          const examFeeSummary = examFeeSummaryByStudentId.get(studentId)
+
+          return {
+            className: cls.className || '',
+            branchName: cls.branchName || '',
+            studentName:
+              cls.tuition?.unpaidStudents?.find(student => student.studentId === studentId)?.studentName ||
+              examFeeSummary?.studentName ||
+              'Học viên',
+            tuitionAmount,
+            examFeeAmount: examFeeSummary?.examFeeAmount ?? 0,
+            totalUnpaid: tuitionAmount + (examFeeSummary?.examFeeAmount ?? 0)
+          }
+        })
+        .filter(student => student.tuitionAmount > 0 || student.examFeeAmount > 0)
+
+      exportRows.push(...mergedStudents)
+    }
+
+    if (exportRows.length === 0) {
+      showNotification('Không có dữ liệu để xuất', 'info')
+
+      return
+    }
+
+    exportRows.sort((a, b) => a.className.localeCompare(b.className, 'vi') || a.studentName.localeCompare(b.studentName, 'vi'))
+
+    exportToExcel({
+      filename: `CongNo_HocPhi_${month}_${year}`,
+      sheetName: 'Công nợ học phí',
+      columns: [
+        { header: 'Lớp', accessor: 'className', width: 25 },
+        { header: 'Chi nhánh', accessor: 'branchName', width: 20 },
+        { header: 'Học viên', accessor: 'studentName', width: 25 },
+        { header: 'Học phí nợ', accessor: 'tuitionAmount', formatter: v => formatVnCurrency(Number(v || 0)), width: 18 },
+        { header: 'Lệ phí nợ', accessor: 'examFeeAmount', formatter: v => formatVnCurrency(Number(v || 0)), width: 18 },
+        { header: 'Tổng nợ', accessor: 'totalUnpaid', formatter: v => formatVnCurrency(Number(v || 0)), width: 18 }
+      ],
+      rows: exportRows
+    })
+
+    showNotification(`Đã xuất ${exportRows.length} học viên nợ học phí`, 'success')
+  }
+
   return (
     <Box>
       <Typography variant='h5' className='mb-4'>
@@ -353,6 +439,15 @@ const PaymentCollectView = () => {
                     startIcon={<i className='ri-money-dollar-circle-line' />}
                   >
                     {unpaidOnlyFilter ? 'Chỉ lớp còn nợ' : 'Hiện tất cả'}
+                  </Button>
+                  <Button
+                    variant='outlined'
+                    color='info'
+                    size='small'
+                    onClick={handleExportUnpaidStudents}
+                    startIcon={<i className='ri-download-line' />}
+                  >
+                    Xuất Excel
                   </Button>
                   <Box className='flex items-center gap-2 ml-auto'>
                     <Typography variant='body2' color='text.secondary'>

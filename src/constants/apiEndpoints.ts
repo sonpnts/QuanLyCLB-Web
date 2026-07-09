@@ -8,12 +8,20 @@ export const API_ENDPOINTS = {
     checkOut: '/Attendance/check-out',
     manual: '/Attendance/manual',
     my: '/Attendance/my',
+    myRecent: (count: number = 5) => `/Attendance/my/recent?count=${count}`,
     byUser: (userId: string) => `/Attendance/${userId}`,
+    userDetail: (userId: string, month: number, year: number) => `/Attendance/admin/user-detail?userId=${userId}&month=${month}&year=${year}`,
+    reportHistory: (month?: number, year?: number) => `/Attendance/admin/report-history${month ? `?month=${month}` : ''}${year ? `${month ? '&' : '?'}year=${year}` : ''}`,
+    reportDownload: (reportId: string) => `/Attendance/admin/report-download/${reportId}`,
     tickets: '/Attendance/tickets',
     ticketApproval: (ticketId: string) => `/Attendance/tickets/${ticketId}/approval`,
     adminOverview: '/attendance/admin/overview',
     adminInstructorStats: '/attendance/admin/instructor-stats',
-    adminClassSummary: '/attendance/admin/class-summary'
+    adminClassSummary: '/attendance/admin/class-summary',
+    adminGenerateReport: '/attendance/admin/generate-report',
+    adminHistoryList: '/attendance/admin/history-list',
+    unassigned: '/Attendance/unassigned',
+    missedSessions: '/Attendance/missed-sessions'
   },
   auditLogs: {
     root: '/audit-logs',
@@ -63,7 +71,9 @@ export const API_ENDPOINTS = {
     confirm: (id: string) => `/cash-handovers/${id}/confirm`,
     reject: (id: string) => `/cash-handovers/${id}/reject`,
     invoices: (id: string) => `/cash-handovers/${id}/invoices`,
-    lateTuitionStudents: '/cash-handovers/late-tuition-students'
+    lateTuitionStudents: '/cash-handovers/late-tuition-students',
+    tuitionDebtReport: '/cash-handovers/tuition-debt-report',
+    tuitionDebtReportExport: '/cash-handovers/tuition-debt-report/export'
   },
   classes: {
     root: '/Classes',
@@ -232,7 +242,8 @@ export const API_ENDPOINTS = {
     coachClasses: '/student-attendance/coach/classes',
     coachSuggestedDate: (classId: string) => `/student-attendance/coach/class/${classId}/suggested-date`,
     coachSheet: (classId: string, date: string) => `/student-attendance/coach/class/${classId}/sheet/${date}`,
-    coachSaveSheet: '/student-attendance/coach/sheet'
+    coachSaveSheet: '/student-attendance/coach/sheet',
+    exportSessionLogs: '/student-attendance/export-session-logs'
   },
   users: {
     root: '/Users',

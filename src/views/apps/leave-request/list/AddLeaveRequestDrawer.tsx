@@ -147,7 +147,7 @@ const AddLeaveRequestDrawer = ({ open, handleClose, setData }: Props) => {
         setStudents([])
         setAvailableDates([])
         setDateInput('')
-        
+
 return
       }
 
@@ -214,7 +214,7 @@ return
 
     if (!classId || !student?.id || selectedDates.length === 0 || !reason.trim()) {
       showNotification('Vui lòng chọn lớp, học viên, buổi nghỉ và nhập lý do.', 'error')
-      
+
 return
     }
 
@@ -230,7 +230,7 @@ return
 
       if (!response.success) {
         showNotification(response.message || 'Không thể tạo xin nghỉ phép cho học viên.', 'error')
-        
+
 return
       }
 
@@ -239,7 +239,7 @@ return
           const existing = new Map(prev.map(item => [item.id, item]))
 
           response.data!.forEach(item => existing.set(item.id, item))
-          
+
 return Array.from(existing.values()).sort((a, b) => b.attendanceDate.localeCompare(a.attendanceDate))
         })
       }
@@ -276,7 +276,7 @@ return Array.from(existing.values()).sort((a, b) => b.attendanceDate.localeCompa
             <Select label='Lớp *' value={classId} onChange={event => setClassId(String(event.target.value))}>
               {classes.map(item => (
                 <MenuItem key={item.id} value={item.id}>
-                  {item.code ? `${item.code} - ${item.name}` : item.name}
+                  {item.code}
                 </MenuItem>
               ))}
             </Select>

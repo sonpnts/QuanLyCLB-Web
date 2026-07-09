@@ -6,7 +6,8 @@ import type {
   CreateRegistrationListRequest,
   EligibleStudentForExamType,
   ExamRegistrationType,
-  ExamSessionType
+  ExamSessionType,
+  ExamType
 } from '@/types/apps/beltExamTypes'
 import type { ResponseResult } from '@/types/common'
 import { apiClient } from '@/utils/apiClient'
@@ -27,6 +28,7 @@ export interface CreateExamSessionRequest {
   location?: string
   registrationDeadline?: string
   examFee?: number
+  examType: ExamType
 }
 
 export interface UpdateExamSessionRequest {
@@ -37,6 +39,7 @@ export interface UpdateExamSessionRequest {
   isActive: boolean
   registrationDeadline?: string
   examFee?: number
+  examType: ExamType
 }
 
 export interface CreateExamRegistrationRequest {

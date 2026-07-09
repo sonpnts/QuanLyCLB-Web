@@ -77,7 +77,7 @@ const BeltExamRegisterView = () => {
   return (
     <Box>
       <Typography variant='h5' className='mb-4'>
-        Đăng ký thi cấp
+        Kỳ thi
       </Typography>
 
       {sessions.length === 0 ? (

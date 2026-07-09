@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useState } from 'react'
 
@@ -35,7 +35,8 @@ import type {
   BeltExamRegistrationListType,
   CreateRegistrationListItemRequest,
   EligibleStudentForExamType,
-  ExamSessionType
+  ExamSessionType,
+  ExamType
 } from '@/types/apps/beltExamTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { hasPermission } from '@/utils/permissionUtils'
@@ -232,8 +233,11 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 
   const isStudentInCurrentList = (student: StudentRow) => currentRegistrationsByStudentId.has(student.studentId)
 
-  const isStudentPaidInCurrentList = (student: StudentRow) =>
-    Boolean(currentRegistrationsByStudentId.get(student.studentId)?.isFeePaid)
+  const isStudentPaidInCurrentList = (student: StudentRow) => {
+    // Nếu lệ phí thi = 0 thì coi như đã đóng
+    if (session.examFee != null && session.examFee <= 0) return true
+    return Boolean(currentRegistrationsByStudentId.get(student.studentId)?.isFeePaid)
+  }
 
   const isStudentLockedByAnotherList = (student: StudentRow) =>
     student.alreadyRegistered && student.existingRegistrationListId !== myList?.id
@@ -375,8 +379,8 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={registration.isFeePaid ? 'Đã đóng' : 'Chưa đóng'}
-                          color={registration.isFeePaid ? 'success' : 'warning'}
+                          label={(session.examFee != null && session.examFee <= 0) || registration.isFeePaid ? 'Đã đóng' : 'Chưa đóng'}
+                          color={(session.examFee != null && session.examFee <= 0) || registration.isFeePaid ? 'success' : 'warning'}
                           size='small'
                           variant='tonal'
                         />
@@ -393,7 +397,11 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
       <Card>
         <CardHeader
           title='Chọn học viên đăng ký thi'
-          subheader={readOnly ? 'Danh sách chỉ còn để xem. Không thể chỉnh sửa hoặc thu thêm lệ phí thi.' : 'Chỉ hiển thị học viên đang active, cấp 10 đến cấp 2 (không bao gồm đẳng).'}
+          subheader={readOnly
+            ? 'Danh sách chỉ còn để xem. Không thể chỉnh sửa hoặc thu thêm lệ phí thi.'
+            : session.examType === 'ThangDang'
+              ? 'Chỉ hiển thị học viên đang active, cấp 1 hoặc cấp 11 trở lên (thi thăng đẳng).'
+              : 'Chỉ hiển thị học viên đang active, cấp 10 đến cấp 2 (không bao gồm đẳng).'}
           action={
             <Box className='flex gap-2'>
               <Button

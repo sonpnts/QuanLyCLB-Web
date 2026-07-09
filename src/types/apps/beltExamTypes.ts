@@ -3,6 +3,7 @@ import type { ThemeColor } from '@core/types'
 export type ExamSessionStatus = 'Draft' | 'Open' | 'Locked'
 export type EffectiveExamSessionStatus = ExamSessionStatus | 'Expired'
 export type ExamResult = 'Passed' | 'Failed' | null
+export type ExamType = 'Regular' | 'ThangDang'
 
 export type ExamSessionType = {
   id: string
@@ -11,6 +12,7 @@ export type ExamSessionType = {
   examDate: string
   location?: string
   status: ExamSessionStatus
+  examType: ExamType
   totalRegistrations: number
   paidRegistrations: number
   unpaidRegistrations: number
@@ -178,6 +180,16 @@ export const examSessionStatusLabels: Record<ExamSessionStatus, string> = {
 }
 
 export const examSessionStatusObj = examSessionStatusColors
+
+export const examTypeColors: Record<ExamType, ThemeColor> = {
+  Regular: 'primary',
+  ThangDang: 'warning'
+}
+
+export const examTypeLabels: Record<ExamType, string> = {
+  Regular: 'Thi cấp đai',
+  ThangDang: 'Thi thăng đẳng'
+}
 
 export const effectiveExamSessionStatusColors: Record<EffectiveExamSessionStatus, ThemeColor> = {
   ...examSessionStatusColors,

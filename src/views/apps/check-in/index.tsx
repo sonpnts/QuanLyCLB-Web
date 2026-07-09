@@ -1,9 +1,9 @@
 'use client'
 
-// React Imports
 import { useState, useEffect, useCallback, useRef } from 'react'
 
-// MUI Imports
+import Link from 'next/link'
+
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
@@ -13,18 +13,49 @@ import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid2'
 import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import Chip from '@mui/material/Chip'
+import Divider from '@mui/material/Divider'
+import Stack from '@mui/material/Stack'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import Tooltip from '@mui/material/Tooltip'
 
-// Component Imports
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 
-// Service Imports
 import attendanceService, { type CheckInRequest, type CheckOutRequest } from '@/services/attendanceService'
-import { getVietnamNow, toVietnamISOString } from '@/utils/dateTime'
+import { getVietnamNow, toVietnamISOString, formatDateTimeVN } from '@/utils/dateTime'
 
 const MAX_ACCEPTABLE_ACCURACY = 50
 
 type LocationPermissionState = 'unknown' | 'prompt' | 'granted' | 'denied' | 'unsupported'
+
+interface RecentAttendance {
+  id: string
+  checkedInAt: string
+  latitude: number
+  longitude: number
+  attendanceType: number
+  branchId: string | null
+  branchName: string | null
+  address: string | null
+}
+
+interface SuccessPopupData {
+  open: boolean
+  type: 'checkin' | 'checkout'
+  time: string
+  branchName: string | null
+  latitude: number
+  longitude: number
+}
 
 const mapAttendanceError = (code?: number, fallback?: string, type: 'checkin' | 'checkout' = 'checkin') => {
   if (code === 4100) return 'Bạn đang cách xa câu lạc bộ, vui lòng di chuyển lại gần và thử lại.'
@@ -32,6 +63,11 @@ const mapAttendanceError = (code?: number, fallback?: string, type: 'checkin' | 
   if (code === 4102) return 'Không tìm thấy lượt chấm công vào để chấm công ra. Vui lòng chấm công vào trước.'
 
   return fallback || (type === 'checkin' ? 'Chấm công vào thất bại.' : 'Chấm công ra thất bại.')
+}
+
+const AttendanceType = {
+  CheckIn: 0,
+  CheckOut: 1
 }
 
 const CheckInView = () => {
@@ -51,10 +87,39 @@ const CheckInView = () => {
   const [isSecureContextReady, setIsSecureContextReady] = useState(true)
   const locationErrorRef = useRef<string | null>(null)
 
+  const [recentAttendances, setRecentAttendances] = useState<RecentAttendance[]>([])
+  const [loadingRecent, setLoadingRecent] = useState(false)
+
+  const [successPopup, setSuccessPopup] = useState<SuccessPopupData>({
+    open: false,
+    type: 'checkin',
+    time: '',
+    branchName: null,
+    latitude: 0,
+    longitude: 0
+  })
+
   const updateLocationError = useCallback((message: string | null) => {
     locationErrorRef.current = message
     setLocationError(message)
   }, [])
+
+  const loadRecentAttendances = useCallback(async () => {
+    setLoadingRecent(true)
+    try {
+      const response = await attendanceService.getMyRecentAttendance(5)
+      if (response.success && response.data) {
+        setRecentAttendances(response.data)
+      }
+    } catch {
+    } finally {
+      setLoadingRecent(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadRecentAttendances()
+  }, [loadRecentAttendances])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -162,8 +227,6 @@ const CheckInView = () => {
           return null
         }
       } catch {
-        // navigator.permissions.query không hỗ trợ trên một số mobile browser
-        // Tiếp tục gọi getCurrentPosition để trigger prompt
       }
     }
 
@@ -261,8 +324,16 @@ const CheckInView = () => {
       const response = await attendanceService.checkIn(checkInData)
 
       if (response?.success) {
-        showNotification('Chấm công vào thành công!', 'success')
+        setSuccessPopup({
+          open: true,
+          type: 'checkin',
+          time: formatDateTimeVN(response.data?.checkedInAt || timestamp),
+          branchName: response.data?.branchName || null,
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude
+        })
         setLocation(null)
+        loadRecentAttendances()
       } else {
         showNotification(mapAttendanceError(response?.code, response?.message, 'checkin'), 'error')
       }
@@ -272,7 +343,7 @@ const CheckInView = () => {
       setIsCheckingIn(false)
       setPendingAction(null)
     }
-  }, [currentTime, requestLocation, showNotification, updateLocationError, userId])
+  }, [currentTime, requestLocation, showNotification, updateLocationError, userId, loadRecentAttendances])
 
   const handleCheckOut = useCallback(async () => {
     if (!userId) {
@@ -308,8 +379,16 @@ const CheckInView = () => {
       const response = await attendanceService.checkOut(checkOutData)
 
       if (response?.success) {
-        showNotification('Chấm công ra thành công!', 'success')
+        setSuccessPopup({
+          open: true,
+          type: 'checkout',
+          time: formatDateTimeVN(response.data?.checkedOutAt || timestamp),
+          branchName: response.data?.branchName || null,
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude
+        })
         setLocation(null)
+        loadRecentAttendances()
       } else {
         showNotification(mapAttendanceError(response?.code, response?.message, 'checkout'), 'error')
       }
@@ -319,7 +398,7 @@ const CheckInView = () => {
       setIsCheckingOut(false)
       setPendingAction(null)
     }
-  }, [currentTime, requestLocation, showNotification, updateLocationError, userId])
+  }, [currentTime, requestLocation, showNotification, updateLocationError, userId, loadRecentAttendances])
 
   const formatTime = (date: Date) =>
     date.toLocaleTimeString('vi-VN', {
@@ -336,125 +415,263 @@ const CheckInView = () => {
       day: 'numeric'
     })
 
+  const formatRecordTime = (value: string) => formatDateTimeVN(value)
+
+  const isLatestIncompleteCheckIn = useCallback(() => {
+    if (recentAttendances.length === 0) return false
+    const latest = recentAttendances[0]
+    return latest.attendanceType === AttendanceType.CheckIn
+  }, [recentAttendances])
+
   return (
-    <Grid container spacing={{ xs: 4, sm: 6 }}>
-      <Grid size={{ xs: 12 }}>
-        <Card sx={{ position: 'relative' }}>
-          {isRequestingLocation && (
-            <Box
-              sx={{
-                position: 'absolute',
-                inset: 0,
-                bgcolor: 'rgba(255,255,255,0.7)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 2,
-                zIndex: 10,
-                borderRadius: 1
-              }}
-            >
-              <CircularProgress size={48} />
-              <Typography variant='body2' color='text.secondary'>
-                Đang lấy vị trí GPS...
-              </Typography>
-            </Box>
-          )}
-          <CardHeader title='Chấm công' className='p-4 sm:p-6' />
-          <CardContent className='p-4 sm:p-6'>
-            <Box className='flex flex-col items-center gap-4 sm:gap-6 py-4 sm:py-6'>
-              <Box className='text-center w-full'>
-                <Typography
-                  variant='h4'
-                  className='mb-2 font-bold text-3xl sm:text-4xl'
-                  sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }}
-                >
-                  {formatTime(currentTime)}
-                </Typography>
-                <Typography variant='body1' color='text.secondary' className='capitalize text-sm sm:text-base'>
-                  {formatDate(currentTime)}
+    <>
+      <Grid container spacing={{ xs: 4, sm: 6 }}>
+        <Grid size={{ xs: 12 }}>
+          <Card sx={{ position: 'relative' }}>
+            {isRequestingLocation && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  bgcolor: 'rgba(255,255,255,0.7)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 2,
+                  zIndex: 10,
+                  borderRadius: 1
+                }}
+              >
+                <CircularProgress size={48} />
+                <Typography variant='body2' color='text.secondary'>
+                  Đang lấy vị trí GPS...
                 </Typography>
               </Box>
-
-              <Box className='w-full max-w-md'>
-                {!isSecureContextReady && (
-                  <Alert severity='error' className='mb-4 text-xs sm:text-sm'>
-                    Trang chưa chạy HTTPS. Vui lòng truy cập lại qua HTTPS để chấm công.
-                  </Alert>
-                )}
-
-                {locationError && (
-                  <Alert severity={permissionDenied ? 'error' : 'warning'} className='mb-4 text-xs sm:text-sm'>
-                    {locationError}
-                  </Alert>
-                )}
-
-                {locationPermissionState === 'denied' && !locationError && (
-                  <Alert severity='error' className='mb-4 text-xs sm:text-sm'>
-                    Quyền vị trí bị chặn. Vui lòng vào cài đặt trình duyệt → Vị trí → Cho phép, rồi tải lại trang.
-                  </Alert>
-                )}
-
-                <Box className='flex flex-col gap-3 sm:gap-4'>
-                  <Button
-                    variant='contained'
-                    color='primary'
-                    size='large'
-                    onClick={handleCheckIn}
-                    disabled={isCheckingIn || isCheckingOut || isRequestingLocation}
-                    startIcon={
-                      isCheckingIn || (isRequestingLocation && pendingAction === 'checkin') ? (
-                        <CircularProgress size={20} color='inherit' />
-                      ) : (
-                        <i className='ri-login-circle-line' />
-                      )
-                    }
-                    fullWidth
-                    sx={{
-                      minHeight: { xs: '56px', sm: '64px' },
-                      fontSize: { xs: '1rem', sm: '1.125rem' }
-                    }}
+            )}
+            <CardHeader title='Chấm công' className='p-4 sm:p-6' />
+            <CardContent className='p-4 sm:p-6'>
+              <Box className='flex flex-col items-center gap-4 sm:gap-6 py-4 sm:py-6'>
+                <Box className='text-center w-full'>
+                  <Typography
+                    variant='h4'
+                    className='mb-2 font-bold text-3xl sm:text-4xl'
+                    sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }}
                   >
-                    {isRequestingLocation && pendingAction === 'checkin'
-                      ? 'Đang lấy vị trí...'
-                      : isCheckingIn
-                        ? 'Đang chấm công vào...'
-                        : 'Chấm công vào'}
-                  </Button>
+                    {formatTime(currentTime)}
+                  </Typography>
+                  <Typography variant='body1' color='text.secondary' className='capitalize text-sm sm:text-base'>
+                    {formatDate(currentTime)}
+                  </Typography>
+                </Box>
 
-                  <Button
-                    variant='contained'
-                    color='secondary'
-                    size='large'
-                    onClick={handleCheckOut}
-                    disabled={isCheckingIn || isCheckingOut || isRequestingLocation}
-                    startIcon={
-                      isCheckingOut || (isRequestingLocation && pendingAction === 'checkout') ? (
-                        <CircularProgress size={20} color='inherit' />
-                      ) : (
-                        <i className='ri-logout-circle-line' />
-                      )
-                    }
-                    fullWidth
-                    sx={{
-                      minHeight: { xs: '56px', sm: '64px' },
-                      fontSize: { xs: '1rem', sm: '1.125rem' }
-                    }}
-                  >
-                    {isRequestingLocation && pendingAction === 'checkout'
-                      ? 'Đang lấy vị trí...'
-                      : isCheckingOut
-                        ? 'Đang chấm công ra...'
-                        : 'Chấm công ra'}
-                  </Button>
+                <Box className='w-full max-w-md'>
+                  {!isSecureContextReady && (
+                    <Alert severity='error' className='mb-4 text-xs sm:text-sm'>
+                      Trang chưa chạy HTTPS. Vui lòng truy cập lại qua HTTPS để chấm công.
+                    </Alert>
+                  )}
+
+                  {locationError && (
+                    <Alert severity={permissionDenied ? 'error' : 'warning'} className='mb-4 text-xs sm:text-sm'>
+                      {locationError}
+                    </Alert>
+                  )}
+
+                  {locationPermissionState === 'denied' && !locationError && (
+                    <Alert severity='error' className='mb-4 text-xs sm:text-sm'>
+                      Quyền vị trí bị chặn. Vui lòng vào cài đặt trình duyệt → Vị trí → Cho phép, rồi tải lại trang.
+                    </Alert>
+                  )}
+
+                  {isLatestIncompleteCheckIn() && (
+                    <Alert severity='info' className='mb-4 text-xs sm:text-sm'>
+                      Bạn đang có lượt chấm công vào chưa hoàn thành. Vui lòng chấm công ra trước khi chấm công vào mới.
+                    </Alert>
+                  )}
+
+                  <Box className='flex flex-col gap-3 sm:gap-4'>
+                    <Button
+                      variant='contained'
+                      color='primary'
+                      size='large'
+                      onClick={handleCheckIn}
+                      disabled={isCheckingIn || isCheckingOut || isRequestingLocation || isLatestIncompleteCheckIn()}
+                      startIcon={
+                        isCheckingIn || (isRequestingLocation && pendingAction === 'checkin') ? (
+                          <CircularProgress size={20} color='inherit' />
+                        ) : (
+                          <i className='ri-login-circle-line' />
+                        )
+                      }
+                      fullWidth
+                      sx={{
+                        minHeight: { xs: '56px', sm: '64px' },
+                        fontSize: { xs: '1rem', sm: '1.125rem' }
+                      }}
+                    >
+                      {isRequestingLocation && pendingAction === 'checkin'
+                        ? 'Đang lấy vị trí...'
+                        : isCheckingIn
+                          ? 'Đang chấm công vào...'
+                          : 'Chấm công vào'}
+                    </Button>
+
+                    <Button
+                      variant='contained'
+                      color='secondary'
+                      size='large'
+                      onClick={handleCheckOut}
+                      disabled={isCheckingIn || isCheckingOut || isRequestingLocation || !isLatestIncompleteCheckIn()}
+                      startIcon={
+                        isCheckingOut || (isRequestingLocation && pendingAction === 'checkout') ? (
+                          <CircularProgress size={20} color='inherit' />
+                        ) : (
+                          <i className='ri-logout-circle-line' />
+                        )
+                      }
+                      fullWidth
+                      sx={{
+                        minHeight: { xs: '56px', sm: '64px' },
+                        fontSize: { xs: '1rem', sm: '1.125rem' }
+                      }}
+                    >
+                      {isRequestingLocation && pendingAction === 'checkout'
+                        ? 'Đang lấy vị trí...'
+                        : isCheckingOut
+                          ? 'Đang chấm công ra...'
+                          : 'Chấm công ra'}
+                    </Button>
+
+                    <Button
+                      component={Link}
+                      href='/apps/attendance/instructor-history'
+                      variant='outlined'
+                      size='large'
+                      fullWidth
+                      startIcon={<i className='ri-history-line' />}
+                      sx={{
+                        minHeight: { xs: '48px', sm: '56px' },
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                      }}
+                    >
+                      Xem lịch sử chấm công
+                    </Button>
+                  </Box>
                 </Box>
               </Box>
-            </Box>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Card>
+            <CardHeader title='5 lượt chấm công gần nhất' className='p-4 sm:p-6' />
+            <CardContent className='p-4 sm:p-6'>
+              {loadingRecent ? (
+                <Box className='flex items-center justify-center py-6'>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : recentAttendances.length === 0 ? (
+                <Typography color='text.secondary' textAlign='center' py={2}>
+                  Chưa có lượt chấm công nào.
+                </Typography>
+              ) : (
+                <div className='overflow-x-auto'>
+                  <Table size='small'>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>STT</TableCell>
+                        <TableCell>Loại</TableCell>
+                        <TableCell>Thời gian</TableCell>
+                        <TableCell>Địa điểm</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {recentAttendances.map((record, index) => (
+                        <TableRow key={record.id}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={record.attendanceType === AttendanceType.CheckIn ? 'Vào' : 'Ra'}
+                              color={record.attendanceType === AttendanceType.CheckIn ? 'primary' : 'secondary'}
+                              size='small'
+                              variant='tonal'
+                            />
+                          </TableCell>
+                          <TableCell>{formatRecordTime(record.checkedInAt)}</TableCell>
+                          <TableCell>
+                            <Tooltip title={record.branchName || 'Không xác định'}>
+                              <Typography variant='body2' noWrap sx={{ maxWidth: 200 }}>
+                                {record.branchName || 'Không xác định'}
+                              </Typography>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
-    </Grid>
+
+      <Dialog open={successPopup.open} onClose={() => setSuccessPopup(prev => ({ ...prev, open: false }))} maxWidth='sm' fullWidth>
+        <DialogTitle>
+          <Stack direction='row' alignItems='center' spacing={1}>
+            <i
+              className='ri-check-line'
+              style={{ fontSize: 24, color: successPopup.type === 'checkin' ? '#4caf50' : '#2196f3' }}
+            />
+            <Typography variant='h6'>
+              {successPopup.type === 'checkin' ? 'Chấm công vào thành công!' : 'Chấm công ra thành công!'}
+            </Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <Divider sx={{ mb: 3 }} />
+          <Stack spacing={2}>
+            <Box>
+              <Typography variant='body2' color='text.secondary' gutterBottom>
+                Thời gian
+              </Typography>
+              <Typography variant='body1' fontWeight={600}>
+                {successPopup.time}
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant='body2' color='text.secondary' gutterBottom>
+                Cơ sở
+              </Typography>
+              <Typography variant='body1' fontWeight={600}>
+                {successPopup.branchName || 'Không xác định'}
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant='body2' color='text.secondary' gutterBottom>
+                Vị trí
+              </Typography>
+              <Typography variant='body2'>
+                Vĩ độ: {successPopup.latitude.toFixed(6)}, Kinh độ: {successPopup.longitude.toFixed(6)}
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setSuccessPopup(prev => ({ ...prev, open: false }))}
+            variant='contained'
+            autoFocus
+          >
+            Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }
 

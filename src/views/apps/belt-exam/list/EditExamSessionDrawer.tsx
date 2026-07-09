@@ -5,17 +5,22 @@ import { useEffect, useState } from 'react'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
+import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Grid from '@mui/material/Grid2'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
+import Select from '@mui/material/Select'
 import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
 import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
-import type { ExamSessionType } from '@/types/apps/beltExamTypes'
+import type { ExamSessionType, ExamType } from '@/types/apps/beltExamTypes'
+import { examTypeLabels } from '@/types/apps/beltExamTypes'
 
 type Props = {
   open: boolean
@@ -53,7 +58,8 @@ const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
     location: '',
     registrationDeadline: '',
     examFee: '',
-    isActive: true
+    isActive: true,
+    examType: 'Regular' as ExamType
   })
 
   useEffect(() => {
@@ -66,7 +72,8 @@ const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
       location: session.location || '',
       registrationDeadline: toDateTimeLocalInput(session.registrationDeadline),
       examFee: session.examFee != null ? String(session.examFee) : '',
-      isActive: Boolean(session.isActive)
+      isActive: Boolean(session.isActive),
+      examType: session.examType || 'Regular'
     })
   }, [open, session])
 
@@ -91,7 +98,8 @@ const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
         location: formData.location.trim() || undefined,
         isActive: formData.isActive,
         registrationDeadline: formData.registrationDeadline || undefined,
-        examFee: formData.examFee ? Number(formData.examFee) : undefined
+        examFee: formData.examFee ? Number(formData.examFee) : undefined,
+        examType: formData.examType
       })
 
       if (!response.success || !response.data) {
@@ -133,6 +141,18 @@ const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
             value={formData.name}
             onChange={event => setFormData(prev => ({ ...prev, name: event.target.value }))}
           />
+
+          <FormControl fullWidth>
+            <InputLabel>Loại kỳ thi *</InputLabel>
+            <Select
+              label='Loại kỳ thi *'
+              value={formData.examType}
+              onChange={event => setFormData(prev => ({ ...prev, examType: event.target.value as ExamType }))}
+            >
+              <MenuItem value='Regular'>{examTypeLabels.Regular}</MenuItem>
+              <MenuItem value='ThangDang'>{examTypeLabels.ThangDang}</MenuItem>
+            </Select>
+          </FormControl>
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>

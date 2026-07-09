@@ -289,6 +289,33 @@ class StudentAttendanceService {
       return { success: true, data: [] }
     }
   }
+
+  async exportSessionLogs(params?: GetAttendanceSessionLogsParams): Promise<boolean> {
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.studentAttendance.exportSessionLogs, {
+        params,
+        responseType: 'blob'
+      })
+
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `LichSuDiemDanh_${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      return true
+    } catch (error) {
+      logger.error('StudentAttendanceService', 'exportSessionLogs', error)
+      return false
+    }
+  }
 }
 
 const studentAttendanceService = new StudentAttendanceService()

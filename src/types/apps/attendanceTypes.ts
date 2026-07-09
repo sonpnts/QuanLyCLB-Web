@@ -12,6 +12,52 @@ export const TICKET_REASONS = [
 
 export type TicketReason = (typeof TICKET_REASONS)[number]
 
+export const TICKET_TYPES = [
+  { value: 'makeup', label: 'Dạy thay / Dạy bù' },
+  { value: 'missing', label: 'Thiếu chấm công' }
+] as const
+
+export type TicketType = (typeof TICKET_TYPES)[number]['value']
+
+export type MakeupTicket = {
+  id: string
+  classScheduleId: string
+  classScheduleName?: string
+  className?: string
+  userId: string
+  userName?: string
+  ticketType: TicketType
+  reason?: string
+  status: 'pending' | 'approved' | 'rejected'
+  notes?: string
+  createdAt: string
+  updatedAt?: string
+  createdByUserId?: string
+  approverId?: string
+  approvedAt?: string
+}
+
+export type CreateMakeupTicketRequest = {
+  classScheduleId: string
+  userId: string
+  ticketType: TicketType
+  reason?: string
+  notes?: string
+}
+
+export type TicketApprovalRequest = {
+  approve: boolean
+  notes?: string
+}
+
+export type MakeupTicketListResponse = {
+  records: MakeupTicket[]
+  totalCount: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
 export type InstructorMonthlyStatsType = {
   instructorId: string
   instructorName: string

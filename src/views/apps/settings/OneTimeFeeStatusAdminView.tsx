@@ -46,7 +46,7 @@ const translatePaidSource = (value?: string | null) => {
     case 'Payment':
       return 'Qua thanh toán'
     case 'Manual':
-      return 'Đánh dấu tay'
+      return 'Thủ công'
     case 'LegacyPayment':
       return 'Dữ liệu cũ'
     case 'Waived':
@@ -115,7 +115,7 @@ const OneTimeFeeStatusAdminView = () => {
         setRecords([])
         setTotalRecords(0)
         showNotification(response.message || 'Không thể tải tổng hợp phí 1 lần.', 'error')
-        
+
 return
       }
 
@@ -164,7 +164,7 @@ return
 
       if (!response.success) {
         showNotification(response.message || 'Không thể cập nhật trạng thái đã đóng.', 'error')
-        
+
 return
       }
 
@@ -205,7 +205,7 @@ return
               <MenuItem value=''>Tất cả lớp</MenuItem>
               {classes.map(item => (
                 <MenuItem key={item.id} value={item.id}>
-                  {item.code ? `${item.code} - ${item.name}` : item.name}
+                  {item.code }
                 </MenuItem>
               ))}
             </TextField>
@@ -306,7 +306,7 @@ return
                         </TableCell>
                         <TableCell>
                           <Stack spacing={0.5}>
-                            <Typography variant='body2'>{row.className}</Typography>
+                            {/*<Typography variant='body2'>{row.className}</Typography>*/}
                             <Typography variant='caption' color='text.secondary'>
                               {row.classCode || '-'}
                             </Typography>

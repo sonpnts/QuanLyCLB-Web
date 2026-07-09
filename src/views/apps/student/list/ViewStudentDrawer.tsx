@@ -45,6 +45,7 @@ import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
 import CustomAvatar from '@core/components/mui/Avatar'
 import TransferStudentDialog from './TransferStudentDialog'
 import ZaloVerifyModal from './ZaloVerifyModal'
+import { maskPersonalId } from '@/utils/string'
 
 type Props = {
   open: boolean
@@ -462,28 +463,39 @@ return
           <Box className='flex-1'>
             <Box className='flex items-center gap-2 flex-wrap'>
               <Typography variant='h6'>{activeStudent.fullName}</Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {activeStudent.phoneNumber || 'Chưa có số điện thoại'}
+              </Typography>
               {activeStudent.isSuspended && <Chip label='Tạm nghỉ' size='small' color='warning' variant='tonal' />}
-              {activeStudent.code && (
-                <Chip label={`Mã HV: ${activeStudent.code}`} size='small' color='secondary' variant='tonal' />
-              )}
+              {/*{activeStudent.code && (*/}
+              {/*  <Chip label={`Mã HV: ${activeStudent.code}`} size='small' color='secondary' variant='tonal' />*/}
+              {/*)}*/}
             </Box>
-
-            <Typography variant='body2' color='text.secondary'>
-              {activeStudent.phoneNumber || 'Chưa có số điện thoại'}
-            </Typography>
 
             <Box className='flex gap-2 mt-1 flex-wrap items-center'>
               {activeStudent.beltLevelName && (
                 <Chip label={activeStudent.beltLevelName} size='small' color='warning' variant='tonal' />
               )}
-              {activeStudent.userIdZalo ? (
-                <Chip label='Đã liên kết Zalo' size='small' color='success' variant='tonal' />
-              ) : (
-                <Chip label='Chưa liên kết Zalo' size='small' color='default' variant='tonal' />
-              )}
+              {/*{activeStudent.userIdZalo ? (*/}
+              {/*  <Chip label='Đã liên kết Zalo' size='small' color='success' variant='tonal' />*/}
+              {/*) : (*/}
+              {/*  <Chip label='Chưa liên kết Zalo' size='small' color='default' variant='tonal' />*/}
+              {/*)}*/}
             </Box>
 
             <Box className='flex gap-2 mt-2 flex-wrap'>
+              <Box className='mt-3'>
+                <Button
+                  variant='outlined'
+                  color='warning'
+                  startIcon={<i className='ri-arrow-left-right-line' />}
+                  onClick={handleOpenTransferDialog}
+                  fullWidth
+                >
+                  Chuyển lớp
+                </Button>
+              </Box>
+
               {onEdit && (
                 <Button
                   size='small'
@@ -533,7 +545,8 @@ return
             </Typography>
             {activeStudent.tuitionDiscounts.map(discount => (
               <Typography key={discount.id} variant='caption' color='text.secondary' display='block'>
-                -{Number(discount.discountAmount || 0).toLocaleString('vi-VN')}đ | {discount.periodLabel} | {discount.reason}
+                -{Number(discount.discountAmount || 0).toLocaleString('vi-VN')}đ | {discount.periodLabel} |{' '}
+                {discount.reason}
               </Typography>
             ))}
           </Alert>
@@ -565,7 +578,7 @@ return
                     <Typography variant='body2' color='text.secondary'>
                       CCCD / Số định danh
                     </Typography>
-                    <Typography variant='body1'>{activeStudent.personalIdNumber || '-'}</Typography>
+                    <Typography variant='body1'> {maskPersonalId(activeStudent.personalIdNumber)}</Typography>
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
@@ -581,12 +594,12 @@ return
                     </Typography>
                     <Typography variant='body1'>{formatDate(activeStudent.dateOfBirth)}</Typography>
                   </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      Số điện thoại
-                    </Typography>
-                    <Typography variant='body1'>{activeStudent.phoneNumber || '-'}</Typography>
-                  </Grid>
+                  {/*<Grid size={{ xs: 6 }}>*/}
+                  {/*  <Typography variant='body2' color='text.secondary'>*/}
+                  {/*    Số điện thoại*/}
+                  {/*  </Typography>*/}
+                  {/*  <Typography variant='body1'>{activeStudent.phoneNumber || '-'}</Typography>*/}
+                  {/*</Grid>*/}
                   <Grid size={{ xs: 6 }}>
                     <Typography variant='body2' color='text.secondary'>
                       Cấp đai liên đoàn
@@ -633,24 +646,24 @@ return
                           primary={item.className || 'Lớp không xác định'}
                           secondary={
                             <Box className='flex items-center gap-2 mt-1 flex-wrap'>
-                              <Chip
-                                label={
-                                  item.status === 'Active' || item.status === 0
-                                    ? 'Đang học'
-                                    : item.status === 'Inactive' || item.status === 1
-                                      ? 'Tạm nghỉ'
-                                      : 'Hoàn thành'
-                                }
-                                size='small'
-                                color={
-                                  item.status === 'Active' || item.status === 0
-                                    ? 'success'
-                                    : item.status === 'Inactive' || item.status === 1
-                                      ? 'warning'
-                                      : 'info'
-                                }
-                                variant='tonal'
-                              />
+                              {/*<Chip*/}
+                              {/*  label={*/}
+                              {/*    item.status === 'Active' || item.status === 0*/}
+                              {/*      ? 'Đang học'*/}
+                              {/*      : item.status === 'Inactive' || item.status === 1*/}
+                              {/*        ? 'Tạm nghỉ'*/}
+                              {/*        : 'Hoàn thành'*/}
+                              {/*  }*/}
+                              {/*  size='small'*/}
+                              {/*  color={*/}
+                              {/*    item.status === 'Active' || item.status === 0*/}
+                              {/*      ? 'success'*/}
+                              {/*      : item.status === 'Inactive' || item.status === 1*/}
+                              {/*        ? 'warning'*/}
+                              {/*        : 'info'*/}
+                              {/*  }*/}
+                              {/*  variant='tonal'*/}
+                              {/*/>*/}
                               <Typography variant='caption' color='text.secondary'>
                                 Từ {formatDate(item.enrollmentDate)}
                               </Typography>
@@ -681,28 +694,33 @@ return
                 </Box>
 
                 <Grid container spacing={2}>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      SĐT liên kết
-                    </Typography>
-                    <Typography variant='body1'>{activeStudent.phoneNumber || '-'}</Typography>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Typography variant='body2' color='text.secondary'>
-                      Trạng thái
-                    </Typography>
-                    <Typography variant='body1'>
-                      {activeStudent.userIdZalo ? 'Đã liên kết' : 'Chưa liên kết'}
-                    </Typography>
-                  </Grid>
-                  {activeStudent.userIdZalo && (
-                    <Grid size={{ xs: 12 }}>
-                      <Typography variant='body2' color='text.secondary'>
-                        Zalo User ID
-                      </Typography>
-                      <Typography variant='body1'>{activeStudent.userIdZalo}</Typography>
-                    </Grid>
+                  {activeStudent.userIdZalo ? (
+                    <Chip label='Đã liên kết Zalo' size='small' color='success' variant='tonal' />
+                  ) : (
+                    <Chip label='Chưa liên kết Zalo' size='small' color='default' variant='tonal' />
                   )}
+                  {/*<Grid size={{ xs: 6 }}>*/}
+                  {/*  <Typography variant='body2' color='text.secondary'>*/}
+                  {/*    SĐT liên kết*/}
+                  {/*  </Typography>*/}
+                  {/*  <Typography variant='body1'>{activeStudent.phoneNumber || '-'}</Typography>*/}
+                  {/*</Grid>*/}
+                  {/*<Grid size={{ xs: 6 }}>*/}
+                  {/*  <Typography variant='body2' color='text.secondary'>*/}
+                  {/*    Trạng thái*/}
+                  {/*  </Typography>*/}
+                  {/*  <Typography variant='body1'>*/}
+                  {/*    {activeStudent.userIdZalo ? 'Đã liên kết' : 'Chưa liên kết'}*/}
+                  {/*  </Typography>*/}
+                  {/*</Grid>*/}
+                  {/*{activeStudent.userIdZalo && (*/}
+                  {/*  <Grid size={{ xs: 12 }}>*/}
+                  {/*    <Typography variant='body2' color='text.secondary'>*/}
+                  {/*      Zalo User ID*/}
+                  {/*    </Typography>*/}
+                  {/*    <Typography variant='body1'>{activeStudent.userIdZalo}</Typography>*/}
+                  {/*  </Grid>*/}
+                  {/*)}*/}
                 </Grid>
               </CardContent>
             </Card>
@@ -746,14 +764,14 @@ return
                               <Typography variant='caption' color='text.secondary'>
                                 Đã thu: {formatDateTime(item.paidAt)}
                               </Typography>
-                              <Typography variant='caption' color='text.secondary'>
-                                Người thu: {item.recordedByUserName || '-'}
-                              </Typography>
-                              {item.note && (
-                                <Typography variant='caption' color='text.secondary'>
-                                  Ghi chú: {item.note}
-                                </Typography>
-                              )}
+                              {/*<Typography variant='caption' color='text.secondary'>*/}
+                              {/*  Người thu: {item.recordedByUserName || '-'}*/}
+                              {/*</Typography>*/}
+                              {/*{item.note && (*/}
+                              {/*  <Typography variant='caption' color='text.secondary'>*/}
+                              {/*    Ghi chú: {item.note}*/}
+                              {/*  </Typography>*/}
+                              {/*)}*/}
                             </Box>
                           }
                         />
@@ -763,18 +781,6 @@ return
                 )}
               </CardContent>
             </Card>
-
-            <Box className='mt-3'>
-              <Button
-                variant='outlined'
-                color='warning'
-                startIcon={<i className='ri-arrow-left-right-line' />}
-                onClick={handleOpenTransferDialog}
-                fullWidth
-              >
-                Chuyển lớp
-              </Button>
-            </Box>
           </TabPanel>
 
           <TabPanel value='2' className='px-0'>

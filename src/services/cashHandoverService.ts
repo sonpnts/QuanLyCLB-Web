@@ -108,7 +108,9 @@ const toLateTuitionStudent = (value: any): LateTuitionStudentType => ({
   classId: value.classId,
   className: value.className,
   lastPaymentDate: value.lastPaymentDate,
-  daysSinceLastPayment: Number(value.daysSinceLastPayment || 0)
+  daysSinceLastPayment: Number(value.daysSinceLastPayment || 0),
+  monthsOwed: Number(value.monthsOwed || 1),
+  monthsOwedDetails: Array.isArray(value.monthsOwedDetails) ? value.monthsOwedDetails : []
 })
 
 const toCashHandoverInvoice = (value: any): CashHandoverInvoiceType => ({
@@ -257,6 +259,59 @@ return { success: true, data: [] }
       logger.error('CashHandoverService', 'getInvoicesByHandover', error)
       
 return { success: true, data: [] }
+    }
+  }
+
+  async getTuitionDebtReport(params?: {
+    classId?: string
+    instructorId?: string
+    branchId?: string
+    sortBy?: string
+    sortDescending?: boolean
+  }): Promise<ResponseResult<any>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.cashHandovers.tuitionDebtReport, { params })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('CashHandoverService', 'getTuitionDebtReport', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async exportTuitionDebtReport(params?: {
+    classId?: string
+    instructorId?: string
+    branchId?: string
+    sortBy?: string
+    sortDescending?: boolean
+  }): Promise<boolean> {
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.cashHandovers.tuitionDebtReportExport, {
+        params,
+        responseType: 'blob'
+      })
+
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `NoHocPhi_${new Date().toISOString().slice(0, 10)}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      return true
+    } catch (error) {
+      logger.error('CashHandoverService', 'exportTuitionDebtReport', error)
+      return false
     }
   }
 }

@@ -426,12 +426,12 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
                 </div>
                 {showLateStudents && (
                   <div className='overflow-x-auto mt-1'>
-                    <Table size='small' sx={{ minWidth: 300 }}>
+                    <Table size='small' sx={{ minWidth: 400 }}>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Học viên</TableCell>
+                          <TableCell>Họ và tên</TableCell>
                           <TableCell>Lớp</TableCell>
-                          <TableCell align='right'>Số ngày</TableCell>
+                          <TableCell align='left'>Tháng nợ</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -439,8 +439,20 @@ const AddCashHandoverDrawer = ({ open, handleClose, setData, presetInstructorId 
                           <TableRow key={`${item.studentId}-${item.classId}`}>
                             <TableCell>{item.studentName}</TableCell>
                             <TableCell>{item.className}</TableCell>
-                            <TableCell align='right'>
-                              <Chip label={`${item.daysSinceLastPayment} ngày`} size='small' color={item.daysSinceLastPayment > 60 ? 'error' : 'warning'} />
+                            <TableCell align='left'>
+                              <div className='flex flex-wrap gap-1'>
+                                {item.monthsOwedDetails.length > 0
+                                  ? item.monthsOwedDetails.map((month, idx) => (
+                                      <Chip
+                                        key={idx}
+                                        label={month}
+                                        size='small'
+                                        color={item.monthsOwed >= 3 ? 'error' : 'warning'}
+                                      />
+                                    ))
+                                  : <Chip label={`${item.monthsOwed} tháng`} size='small' color='warning' />
+                                }
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}

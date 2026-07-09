@@ -34,7 +34,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import type { ExamSessionType } from '@/types/apps/beltExamTypes'
-import { getEffectiveExamSessionStatusDisplay } from '@/types/apps/beltExamTypes'
+import { getEffectiveExamSessionStatusDisplay, examTypeLabels } from '@/types/apps/beltExamTypes'
 import { fuzzyFilter } from '@/utils/tableHelpers'
 import tableStyles from '@core/styles/table.module.css'
 
@@ -149,6 +149,12 @@ const BeltExamListTable = () => {
       columnHelper.accessor('examDate', {
         header: 'Ngày thi',
         cell: ({ row }) => <Typography>{formatDateVN(row.original.examDate)}</Typography>
+      }),
+      columnHelper.accessor('examType', {
+        header: 'Loại kỳ thi',
+        cell: ({ row }) => (
+          <Typography>{examTypeLabels[row.original.examType] || row.original.examType}</Typography>
+        )
       }),
       columnHelper.accessor('registrationDeadline', {
         header: 'Hạn đăng ký',

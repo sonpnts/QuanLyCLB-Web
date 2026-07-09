@@ -66,7 +66,7 @@ const genderToBool = (g?: string | null): boolean | undefined => {
 
   if (n === 'nam' || n === 'true' || n === '1' || n === 'male') return true
   if (n === 'nữ' || n === 'nu' || n === 'false' || n === '0' || n === 'female') return false
-  
+
 return undefined
 }
 
@@ -183,7 +183,7 @@ const MemberCodeField = ({ value, onChange, onMemberInfoConfirmed, locked = fals
     <Box>
       <TextField
         fullWidth
-        label='Mã HV (hội viên liên đoàn)'
+        label='Mã HV'
         value={value}
         onClick={() => {
           if (!locked) setSearchOpen(true)

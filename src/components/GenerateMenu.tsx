@@ -45,7 +45,7 @@ export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataT
       // Check if the current item is a sub menu
       if (subMenuItem.children) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { children, icon, prefix, suffix, ...rest } = subMenuItem as any
+        const { children, icon, prefix, suffix, isSection, ...rest } = subMenuItem as any
         const Icon = icon ? <i className={icon} /> : null
 
         const subMenuPrefix: ReactNode =
@@ -77,7 +77,7 @@ export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataT
 
       // Default: render as MenuItem
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { label, icon, prefix, suffix, ...rest } = menuItem as any
+      const { label, icon, prefix, suffix, isSection, ...rest } = menuItem as any
       const href = rest.href
       const Icon = icon ? <i className={icon} /> : null
 

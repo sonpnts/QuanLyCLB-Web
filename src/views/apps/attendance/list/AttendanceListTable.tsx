@@ -177,7 +177,7 @@ const AttendanceListTable = () => {
 
         if (scheduleDays.length === 0) {
           showNotification('Lớp này chưa có lịch học để chọn ngày điểm danh', 'warning')
-          
+
 return
         }
 
@@ -193,7 +193,7 @@ return
 
         if (!preferredDate) {
           showNotification('Không tìm thấy buổi học phù hợp để điểm danh', 'warning')
-          
+
 return
         }
 
@@ -382,7 +382,7 @@ return
 
     if (invalidExcused) {
       showNotification('Nghỉ có phép bắt buộc nhập lý do', 'warning')
-      
+
 return
     }
 
@@ -445,7 +445,7 @@ return
                     }}
                   >
                     <Typography variant='subtitle2' sx={{ mb: 1 }}>
-                      {`${group.classCode} - ${group.className} (${group.sessions.length} buổi thiếu)`}
+                      {`${group.classCode} (${group.sessions.length} buổi thiếu)`}
                     </Typography>
                     <Box className='flex flex-wrap gap-2'>
                       {group.sessions.map(session => (
@@ -490,7 +490,7 @@ return
               >
                 {coachClasses.map(cls => (
                   <MenuItem key={cls.classId} value={cls.classId}>
-                    {`${cls.classCode} - ${cls.className}`}
+                    {`${cls.classCode}`}
                   </MenuItem>
                 ))}
               </Select>

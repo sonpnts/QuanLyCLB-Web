@@ -87,26 +87,15 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         href: '/apps/attendance/list'
       },
       {
-        label: 'Quản lý điểm danh',
+        label: 'Lịch sử điểm danh',
         icon: 'ri-task-line',
         href: '/apps/attendance/history'
       },
       {
-        label: 'Phiếu điểm danh',
-        icon: 'ri-file-list-3-line',
-        href: '/apps/attendance/tickets'
-      },
-      {
-        label: 'Thống kê chấm công',
-        icon: 'ri-bar-chart-box-line',
-        href: '/apps/attendance/admin-stats'
-      },
-
-      // {
-      //   label: 'Xin nghỉ phép',
-      //   icon: 'ri-calendar-close-line',
-      //   href: '/apps/leave-request/list'
-      // }
+        label: 'Quản lý nghỉ phép',
+        icon: 'ri-calendar-close-line',
+        href: '/apps/leave-request/list'
+      }
     ]
   },
   {
@@ -170,7 +159,7 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         href: '/apps/belt-exam/list'
       },
       {
-        label: 'Đăng ký thi cấp',
+        label: 'Kỳ thi',
         icon: 'ri-trophy-line',
         href: '/apps/belt-exam/register'
       },
@@ -178,6 +167,37 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         label: 'DS đăng ký thi',
         icon: 'ri-list-check-3',
         href: '/apps/belt-exam/registrations'
+      }
+    ]
+  },
+  {
+    label: 'Cá nhân',
+    isSection: true,
+    children: [
+      {
+        label: 'Chấm công',
+        icon: 'ri-map-pin-line',
+        href: '/apps/check-in'
+      },
+      {
+        label: 'Phiếu chấm công bù',
+        icon: 'ri-file-list-3-line',
+        href: '/apps/attendance/tickets'
+      },
+      {
+        label: 'Lịch sử chấm công',
+        icon: 'ri-history-line',
+        href: '/apps/attendance/instructor-history'
+      },
+      {
+        label: 'Phiếu của tôi',
+        icon: 'ri-file-list-line',
+        href: '/apps/my-tickets'
+      },
+      {
+        label: 'Tài liệu của tôi',
+        icon: 'ri-folder-user-line',
+        href: '/apps/my-documents'
       }
     ]
   },
