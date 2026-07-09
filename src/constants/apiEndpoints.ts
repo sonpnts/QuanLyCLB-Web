@@ -20,6 +20,7 @@ export const API_ENDPOINTS = {
     adminClassSummary: '/attendance/admin/class-summary',
     adminGenerateReport: '/attendance/admin/generate-report',
     adminHistoryList: '/attendance/admin/history-list',
+    myHistory: '/attendance/my-history',
     unassigned: '/Attendance/unassigned',
     missedSessions: '/Attendance/missed-sessions'
   },

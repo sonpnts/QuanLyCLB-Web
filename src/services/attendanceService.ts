@@ -349,6 +349,24 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
     }
   }
 
+  async getMyAttendanceHistory(month: number, year: number): Promise<ResponseResult<any[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.myHistory, {
+        params: { month, year }
+      })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: [], message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data || [], message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getMyAttendanceHistory', error)
+      return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
   async getReportHistory(month?: number, year?: number): Promise<ResponseResult<any[]>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.attendance.reportHistory(month, year))

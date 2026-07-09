@@ -98,7 +98,7 @@ const InstructorHistoryView = () => {
 
     setLoading(true)
     try {
-      const response = await attendanceService.getAttendanceHistoryList(selectedMonth, selectedYear)
+      const response = await attendanceService.getMyAttendanceHistory(selectedMonth, selectedYear)
       if (response.success && response.data) {
         const items = response.data as HistoryItem[]
         const myItem = items.find(i => i.userId === currentUserId) || null
