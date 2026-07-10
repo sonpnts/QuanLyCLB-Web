@@ -53,6 +53,7 @@ interface SuccessPopupData {
   type: 'checkin' | 'checkout'
   time: string
   branchName: string | null
+  className: string | null
   latitude: number
   longitude: number
 }
@@ -95,6 +96,7 @@ const CheckInView = () => {
     type: 'checkin',
     time: '',
     branchName: null,
+    className: null,
     latitude: 0,
     longitude: 0
   })
@@ -329,6 +331,7 @@ const CheckInView = () => {
           type: 'checkin',
           time: formatDateTimeVN(response.data?.checkedInAt || timestamp),
           branchName: response.data?.branchName || null,
+          className: response.data?.className || null,
           latitude: currentLocation.latitude,
           longitude: currentLocation.longitude
         })
@@ -384,6 +387,7 @@ const CheckInView = () => {
           type: 'checkout',
           time: formatDateTimeVN(response.data?.checkedOutAt || timestamp),
           branchName: response.data?.branchName || null,
+          className: response.data?.className || null,
           latitude: currentLocation.latitude,
           longitude: currentLocation.longitude
         })
@@ -650,6 +654,17 @@ const CheckInView = () => {
                 {successPopup.branchName || 'Không xác định'}
               </Typography>
             </Box>
+
+            {successPopup.className && (
+              <Box>
+                <Typography variant='body2' color='text.secondary' gutterBottom>
+                  Lớp học
+                </Typography>
+                <Typography variant='body1' fontWeight={600}>
+                  {successPopup.className}
+                </Typography>
+              </Box>
+            )}
 
             <Box>
               <Typography variant='body2' color='text.secondary' gutterBottom>
