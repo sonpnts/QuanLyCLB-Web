@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { toLocalDateString } from '@/utils/dateTime'
+
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Checkbox from '@mui/material/Checkbox'
@@ -192,7 +194,7 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
 
     try {
       setSubmitting(true)
-      const today = new Date().toISOString().split('T')[0]
+      const today = toLocalDateString()
 
       const results = await Promise.all(
         selectedStudents.map(student =>

@@ -1,6 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+
+import { toLocalISOString } from '@/utils/dateTime'
 
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -314,7 +316,7 @@ return p
               ? {
                   ...s,
                   isSuspended: true,
-                  suspendedAt: new Date().toISOString(),
+                  suspendedAt: toLocalISOString(),
                   suspendReason: suspendReason.trim() || undefined
                 }
               : s

@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useRouter, useSearchParams } from 'next/navigation'
 
+import { toLocalISOString } from '@/utils/dateTime'
+
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -871,7 +873,7 @@ return
           discountAmount: discountAmountVal > 0 ? discountAmountVal : undefined,
           discountReason: discountAmountVal > 0 ? form.discountReason.trim() : undefined,
           buyerName: isGuest ? form.buyerName?.trim() || undefined : undefined,
-          paymentDate: new Date().toISOString(),
+          paymentDate: toLocalISOString(),
           method: form.method,
           transferProofImageUrl,
           collectedByUserId: effectiveCollectorId,

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
+import { toLocalDateString } from '@/utils/dateTime'
+
 import Alert from '@mui/material/Alert'
 import AppBar from '@mui/material/AppBar'
 import Autocomplete from '@mui/material/Autocomplete'
@@ -111,7 +113,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
     collectedByUserId: '',
     studentId: '',
     type: PAYMENT_TYPE_TUITION,
-    paymentDate: new Date().toISOString().split('T')[0],
+    paymentDate: toLocalDateString(),
     method: PAYMENT_METHOD_CASH,
     productId: '',
     examRegistrationId: '',
@@ -186,7 +188,7 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
       collectedByUserId: '',
       studentId: '',
       type: PAYMENT_TYPE_TUITION,
-      paymentDate: new Date().toISOString().split('T')[0],
+      paymentDate: toLocalDateString(),
       method: PAYMENT_METHOD_CASH,
       productId: '',
       examRegistrationId: '',

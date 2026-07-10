@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
+import { toLocalISOString } from '@/utils/dateTime'
+
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -276,7 +278,7 @@ return
 
       const payload = {
         studentId: selectedStudent.id,
-        paymentDate: new Date().toISOString(),
+        paymentDate: toLocalISOString(),
         method: paymentMethod,
         transferProofImageUrl: imageUrl,
         items: payloadItems

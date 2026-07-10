@@ -81,3 +81,22 @@ export const toVietnamISOString = (date: Date): string => {
 
   return `${year}-${pad2(month)}-${pad2(day)}T${pad2(hour)}:${pad2(minute)}:${pad2(second)}+07:00`
 }
+
+export const toLocalDateString = (date?: Date): string => {
+  const d = date || new Date()
+  const y = d.getFullYear()
+  const m = pad2(d.getMonth() + 1)
+  const day = pad2(d.getDate())
+  return `${y}-${m}-${day}`
+}
+
+export const toLocalISOString = (date?: Date): string => {
+  const d = date || new Date()
+  const y = d.getFullYear()
+  const m = pad2(d.getMonth() + 1)
+  const day = pad2(d.getDate())
+  const hh = pad2(d.getHours())
+  const mm = pad2(d.getMinutes())
+  const ss = pad2(d.getSeconds())
+  return `${y}-${m}-${day}T${hh}:${mm}:${ss}`
+}

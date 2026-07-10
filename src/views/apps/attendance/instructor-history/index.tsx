@@ -28,9 +28,12 @@ import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 
+import { useRouter } from 'next/navigation'
+
 import attendanceService from '@/services/attendanceService'
 import { useAuth } from '@/contexts/authContext'
 import { formatDateTimeVN } from '@/utils/dateTime'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 const currentYear = new Date().getFullYear()
 const currentMonth = new Date().getMonth() + 1
@@ -82,7 +85,15 @@ const AttendanceType = {
 
 const InstructorHistoryView = () => {
   const { auth } = useAuth()
+  const router = useRouter()
   const currentUserId = auth?.user?.id
+  const isAdmin = hasAdminRole(auth?.roles)
+
+  useEffect(() => {
+    if (isAdmin) {
+      router.replace('/apps/attendance/admin-history')
+    }
+  }, [isAdmin, router])
 
   const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth)
   const [selectedYear, setSelectedYear] = useState<number>(currentYear)

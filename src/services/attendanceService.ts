@@ -582,6 +582,96 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: false, data: [], message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
+
+  async getAdminAllRecords(params?: {
+    month?: number
+    year?: number
+    userId?: string
+    pageNumber?: number
+    pageSize?: number
+  }): Promise<ResponseResult<any>> {
+    try {
+      const queryParams: any = {}
+      if (params?.month) queryParams.month = params.month
+      if (params?.year) queryParams.year = params.year
+      if (params?.userId) queryParams.userId = params.userId
+      if (params?.pageNumber) queryParams.pageNumber = params.pageNumber
+      if (params?.pageSize) queryParams.pageSize = params.pageSize
+
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.adminAllRecords, { params: queryParams })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: null, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getAdminAllRecords', error)
+      return { success: false, data: null, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async getAdminAllPairs(params?: {
+    month?: number
+    year?: number
+    userId?: string
+    pageNumber?: number
+    pageSize?: number
+  }): Promise<ResponseResult<any>> {
+    try {
+      const queryParams: any = {}
+      if (params?.month) queryParams.month = params.month
+      if (params?.year) queryParams.year = params.year
+      if (params?.userId) queryParams.userId = params.userId
+      if (params?.pageNumber) queryParams.pageNumber = params.pageNumber
+      if (params?.pageSize) queryParams.pageSize = params.pageSize
+
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.adminAllPairs, { params: queryParams })
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: null, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getAdminAllPairs', error)
+      return { success: false, data: null, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async updateAttendanceTime(data: { id: string; newCheckedInAt: string }): Promise<ResponseResult<any>> {
+    try {
+      const response = await apiClient.put<any>(API_ENDPOINTS.attendance.adminUpdateRecord, data)
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: null, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'updateAttendanceTime', error)
+      return { success: false, data: null, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async cancelAttendanceRecord(recordId: string): Promise<ResponseResult<any>> {
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.attendance.adminCancelRecord(recordId))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: null, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'cancelAttendanceRecord', error)
+      return { success: false, data: null, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
 }
 
 export default new AttendanceService()

@@ -21,6 +21,10 @@ export const API_ENDPOINTS = {
     adminGenerateReport: '/attendance/admin/generate-report',
     adminHistoryList: '/attendance/admin/history-list',
     myHistory: '/attendance/my-history',
+    adminAllRecords: '/Attendance/admin/all-records',
+    adminAllPairs: '/Attendance/admin/all-pairs',
+    adminUpdateRecord: '/Attendance/admin/update-record',
+    adminCancelRecord: (recordId: string) => `/Attendance/admin/cancel-record/${recordId}`,
     unassigned: '/Attendance/unassigned',
     missedSessions: '/Attendance/missed-sessions'
   },

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { toLocalDateString } from '@/utils/dateTime'
+
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
@@ -69,7 +71,7 @@ const EnrollStudentDrawer = ({ open, onClose, student, classOptions = [], onEnro
       return
     }
 
-    setEnrollmentDate(new Date().toISOString().split('T')[0])
+    setEnrollmentDate(toLocalDateString())
 
     if (classOptions.length === 1) {
       setSelectedClassId(classOptions[0].id)
@@ -104,7 +106,7 @@ const EnrollStudentDrawer = ({ open, onClose, student, classOptions = [], onEnro
       const response = await studentService.enrollStudent({
         studentId: student.id,
         classId: selectedClassId,
-        enrollmentDate: enrollmentDate || new Date().toISOString().split('T')[0],
+        enrollmentDate: enrollmentDate || toLocalDateString(),
         notes: notes || undefined
       })
 

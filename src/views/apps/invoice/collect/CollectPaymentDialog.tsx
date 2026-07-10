@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+import { toLocalISOString } from '@/utils/dateTime'
+
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Checkbox from '@mui/material/Checkbox'
@@ -317,7 +319,7 @@ return
 
       const basePayload = {
         studentId,
-        paymentDate: new Date().toISOString(),
+        paymentDate: toLocalISOString(),
         method: PAYMENT_METHOD_MAP[method] ?? 0,
         transactionRef: transactionRef || undefined,
         transferProofImageUrl: transferProofUrl || undefined,
@@ -418,7 +420,7 @@ return {
                   amount,
                   discountAmount: hasTuitionLine && discountAmount > 0 ? discountAmount : undefined,
                   discountReason: hasTuitionLine && discountAmount > 0 ? discountReason.trim() : undefined,
-                  paymentDate: new Date().toISOString(),
+                  paymentDate: toLocalISOString(),
                   method: PAYMENT_METHOD_MAP[method] ?? 0,
                   description: description || note || undefined,
                   transactionRef: transactionRef || undefined,

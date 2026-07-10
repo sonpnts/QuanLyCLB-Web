@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
+import { toLocalISOString } from '@/utils/dateTime'
+
 import Alert from '@mui/material/Alert'
 import Autocomplete from '@mui/material/Autocomplete'
 import Button from '@mui/material/Button'
@@ -227,7 +229,7 @@ return
               productVariantId: formData.productVariantId || undefined,
               quantity,
               unitPrice,
-              saleDate: formData.saleDate || sale.saleDate || new Date().toISOString(),
+              saleDate: formData.saleDate || sale.saleDate || toLocalISOString(),
               isActive: sale.isActive !== false,
               soldByUserId: formData.soldByUserId || undefined,
               buyerName: formData.buyerName.trim() || undefined,

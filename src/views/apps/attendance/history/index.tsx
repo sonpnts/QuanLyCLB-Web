@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 
 import Link from 'next/link'
 
+import { toLocalDateString } from '@/utils/dateTime'
+
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -58,14 +60,14 @@ type DailyLogGroup = {
 
 const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
 
-const today = new Date().toISOString().slice(0, 10)
+const today = toLocalDateString()
 
 const oneMonthAgo = (() => {
   const date = new Date()
 
   date.setMonth(date.getMonth() - 1)
 
-  return date.toISOString().slice(0, 10)
+  return toLocalDateString(date)
 })()
 
 const parseDateString = (value: string) => {

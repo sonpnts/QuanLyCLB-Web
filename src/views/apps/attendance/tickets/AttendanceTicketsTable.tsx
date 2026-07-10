@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
+import { toLocalDateString } from '@/utils/dateTime'
+
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -130,8 +132,8 @@ const AttendanceTicketsTable = () => {
     try {
       setLoadingOptions(true)
       const now = new Date()
-      const fromDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-      const toDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
+      const fromDate = toLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1))
+      const toDate = toLocalDateString(new Date(now.getFullYear(), now.getMonth() + 1, 0))
 
       const response = await attendanceService.getUnassignedAttendances({ fromDate, toDate })
       if (response.success && response.data) {
