@@ -27,7 +27,7 @@ export interface CheckOutRequest {
 }
 
 export interface ManualAttendanceRequest {
-  classScheduleId: string
+  classId?: string
   userId: string
   occurredAt: string // DateTime
   status: AttendanceStatus

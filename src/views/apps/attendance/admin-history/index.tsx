@@ -347,9 +347,9 @@ const AdminAttendanceHistoryView = () => {
     try {
       let successCount = 0, failCount = 0
       for (const item of addMissingDates.filter(m => addSelectedDates.has(m.date))) {
-        const ci = await attendanceService.createManualAttendance({ classScheduleId: '00000000-0000-0000-0000-000000000000', userId: addUserId, occurredAt: `${item.date}T${item.checkInTime}:00+07:00`, status: 0, notes: `Thêm bởi Admin - ${item.className}` })
+        const ci = await attendanceService.createManualAttendance({ classId: item.classId, userId: addUserId, occurredAt: `${item.date}T${item.checkInTime}:00+07:00`, status: 0, notes: `Thêm bởi Admin - ${item.className}` })
         if (ci.success) successCount++; else failCount++
-        const co = await attendanceService.createManualAttendance({ classScheduleId: '00000000-0000-0000-0000-000000000000', userId: addUserId, occurredAt: `${item.date}T${item.checkOutTime}:00+07:00`, status: 1, notes: `Thêm bởi Admin - ${item.className}` })
+        const co = await attendanceService.createManualAttendance({ classId: item.classId, userId: addUserId, occurredAt: `${item.date}T${item.checkOutTime}:00+07:00`, status: 1, notes: `Thêm bởi Admin - ${item.className}` })
         if (co.success) successCount++; else failCount++
       }
       if (failCount === 0) showNotification(`Đã thêm thành công ${successCount} lượt chấm công`, 'success')
