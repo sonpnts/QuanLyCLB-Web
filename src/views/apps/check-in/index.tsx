@@ -152,16 +152,39 @@ const CheckInView = () => {
       return
     }
 
-    if (!navigator.permissions?.query) {
-      setLocationPermissionState(previous => (previous === 'denied' || previous === 'granted' ? previous : 'unknown'))
+    if (navigator.permissions?.query) {
+      try {
+        const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName })
 
-      return
+        if (status.state === 'denied' || status.state === 'granted' || status.state === 'prompt') {
+          setLocationPermissionState(status.state as LocationPermissionState)
+
+          return
+        }
+      } catch {
+        // Permissions API exists but query failed — fall through to probe
+      }
     }
 
+    // Fallback: some browsers (Samsung Internet, older Chrome) don't support
+    // permissions.query for geolocation or return wrong states. Probe with
+    // a lightweight getCurrentPosition to detect the real availability.
     try {
-      const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName })
+      await new Promise<void>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          () => resolve(),
+          (err) => {
+            if (err.code === 1) {
+              setLocationPermissionState('denied')
+            }
 
-      setLocationPermissionState(status.state as LocationPermissionState)
+            resolve()
+          },
+          { timeout: 3000, maximumAge: 60000, enableHighAccuracy: false }
+        )
+      })
+
+      setLocationPermissionState(previous => (previous === 'denied' ? previous : 'granted'))
     } catch {
       setLocationPermissionState(previous => (previous === 'denied' || previous === 'granted' ? previous : 'unknown'))
     }
@@ -189,6 +212,40 @@ const CheckInView = () => {
     }
   }, [refreshLocationPermissionState])
 
+  const getBrowserDeniedHint = () => {
+    const ua = navigator.userAgent || ''
+
+    if (/SamsungBrowser/i.test(ua)) {
+      return 'Samsung Internet: Mở Cài đặt → Quyền trang web → Vị trí → Cho phép.'
+    }
+
+    if (/OPR|Opera/i.test(ua)) {
+      return 'Opera: Nhấn icon khóa bên trái thanh địa chỉ → Vị trí → Cho phép.'
+    }
+
+    if (/Chrome/i.test(ua) && !/Edge|Edg/i.test(ua)) {
+      return 'Chrome: Nhấn icon khóa 🔒 bên trái thanh địa chỉ → Quyền trang → Vị trí → Cho phép.'
+    }
+
+    if (/Firefox/i.test(ua)) {
+      return 'Firefox: Nhấn icon khóa bên trái thanh địa chỉ → Quyền → Vị trí → Cho phép.'
+    }
+
+    if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) {
+      return 'Safari: Cài đặt Safari → Trang web → Vị trí → Cho phép.'
+    }
+
+    if (/Android/i.test(ua)) {
+      return 'Android: Vào Cài đặt → Ứng dụng → Trình duyệt → Quyền → Vị trí → Cho phép.'
+    }
+
+    if (/Windows|Macintosh|Linux/i.test(ua)) {
+      return 'Desktop: Nhấn icon khóa 🔒 bên trái thanh địa chỉ → Quyền trang → Vị trí → Cho phép.'
+    }
+
+    return 'Vui lòng mở cài đặt trình duyệt → Vị trí → Cho phép, rồi tải lại trang.'
+  }
+
   const requestLocation = useCallback(async (): Promise<{ latitude: number; longitude: number; accuracy: number } | null> => {
     setIsRequestingLocation(true)
     updateLocationError(null)
@@ -210,25 +267,21 @@ const CheckInView = () => {
       return null
     }
 
-    let permissionState: LocationPermissionState = 'unknown'
-
     if (navigator.permissions?.query) {
       try {
         const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName })
 
-        permissionState = status.state as LocationPermissionState
-        setLocationPermissionState(permissionState)
+        setLocationPermissionState(status.state as LocationPermissionState)
 
-        if (permissionState === 'denied') {
-          updateLocationError(
-            'Trình duyệt đang chặn quyền vị trí. Vui lòng mở Cài đặt trình duyệt → Vị trí → Cho phép, sau đó tải lại trang.'
-          )
+        if (status.state === 'denied') {
+          updateLocationError(getBrowserDeniedHint())
           setPermissionDenied(true)
           setIsRequestingLocation(false)
 
           return null
         }
       } catch {
+        // Permissions API not available for geolocation — continue to probe
       }
     }
 
@@ -270,11 +323,7 @@ const CheckInView = () => {
       const error = err as { code?: number; name?: string; message?: string } | undefined
 
       if (error?.code === 1 || error?.name === 'PermissionDenied' || error?.name === 'NotAllowedError') {
-        const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
-
-        errorMessage = isMobile
-          ? 'Quyền vị trí chưa được cấp. Vui lòng vào Cài đặt trình duyệt → Vị trí → Cho phép, rồi tải lại trang này.'
-          : 'Trình duyệt chưa được cấp quyền vị trí. Vui lòng bấm vào biểu tượng khóa 🔒 bên trái thanh địa chỉ, chọn "Cho phép" cho Vị trí, rồi tải lại trang.'
+        errorMessage = getBrowserDeniedHint()
         setPermissionDenied(true)
         setLocationPermissionState('denied')
       } else if (error?.code === 2 || error?.name === 'PositionUnavailable') {
@@ -484,7 +533,7 @@ const CheckInView = () => {
 
                   {locationPermissionState === 'denied' && !locationError && (
                     <Alert severity='error' className='mb-4 text-xs sm:text-sm'>
-                      Quyền vị trí bị chặn. Vui lòng vào cài đặt trình duyệt → Vị trí → Cho phép, rồi tải lại trang.
+                      {getBrowserDeniedHint()}
                     </Alert>
                   )}
 
