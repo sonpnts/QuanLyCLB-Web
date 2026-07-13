@@ -24,6 +24,8 @@ import Typography from '@mui/material/Typography'
 
 import classService from '@/services/classService'
 import cashHandoverService from '@/services/cashHandoverService'
+import { useAuth } from '@/contexts/authContext'
+import { hasAdminRole } from '@/utils/roleUtils'
 
 const currentYear = new Date().getFullYear()
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
@@ -32,6 +34,10 @@ const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i)
 const formatCurrency = (value: number) => value.toLocaleString('vi-VN') + 'đ'
 
 const TuitionDebtReportView = () => {
+  const { auth } = useAuth()
+  const isAdmin = hasAdminRole(auth?.roles)
+  const userId = auth?.user?.id
+
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<any>(null)
   const [classOptions, setClassOptions] = useState<{ id: string; name: string }[]>([])
@@ -44,13 +50,20 @@ const TuitionDebtReportView = () => {
 
   useEffect(() => {
     const loadOptions = async () => {
-      const classRes = await classService.getClasses({ isActive: true, pageSize: 1000 })
-      if (classRes.success && classRes.data) {
-        setClassOptions(classRes.data.map((c: any) => ({ id: c.id, name: `${c.code || ''} - ${c.name}` })))
+      if (isAdmin) {
+        const classRes = await classService.getClasses({ isActive: true, pageSize: 1000 })
+        if (classRes.success && classRes.data) {
+          setClassOptions(classRes.data.map((c: any) => ({ id: c.id, name: `${c.code || ''} - ${c.name}` })))
+        }
+      } else if (userId) {
+        const classRes = await classService.getClassesByUserId(userId)
+        if (classRes.success && classRes.data) {
+          setClassOptions(classRes.data.map((c: any) => ({ id: c.id, name: `${c.code || ''} - ${c.name}` })))
+        }
       }
     }
     loadOptions()
-  }, [])
+  }, [isAdmin, userId])
 
   useEffect(() => {
     const branchSet = new Map<string, string>()
@@ -68,6 +81,7 @@ const TuitionDebtReportView = () => {
       const response = await cashHandoverService.getTuitionDebtReport({
         classId: classId || undefined,
         branchId: branchId || undefined,
+        instructorId: !isAdmin && userId ? userId : undefined,
         sortBy,
         sortDescending
       })
@@ -79,7 +93,7 @@ const TuitionDebtReportView = () => {
     } finally {
       setLoading(false)
     }
-  }, [classId, branchId, sortBy, sortDescending])
+  }, [classId, branchId, sortBy, sortDescending, isAdmin, userId])
 
   useEffect(() => {
     loadData()
@@ -89,6 +103,7 @@ const TuitionDebtReportView = () => {
     await cashHandoverService.exportTuitionDebtReport({
       classId: classId || undefined,
       branchId: branchId || undefined,
+      instructorId: !isAdmin && userId ? userId : undefined,
       sortBy,
       sortDescending
     })

@@ -185,6 +185,7 @@ export const API_ENDPOINTS = {
   },
   reports: {
     studentList: '/reports/students/list',
+    allStudentsByClass: '/reports/students/all-by-class',
     classFinancial: '/reports/financial/class'
   },
   products: {

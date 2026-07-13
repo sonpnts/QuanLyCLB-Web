@@ -17,6 +17,10 @@ export interface AttendanceAdjustmentType {
   className?: string
   classScheduleId?: string
   adjustmentType: AttendanceType
+  dayOfWeek?: number
+  startTime?: string
+  endTime?: string
+  branchName?: string
   requestedCheckInAt?: string
   requestedCheckOutAt?: string
   reason: string

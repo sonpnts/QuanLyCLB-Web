@@ -285,7 +285,7 @@ class PaymentService {
       }
     } catch (error) {
       logger.error('PaymentService', 'getPayments', error)
-      
+
 return { success: true, data: [] }
     }
   }
@@ -317,7 +317,7 @@ return { success: true, data: [] }
 
       return {
         success: false,
-        message: error?.response?.data?.message || 'Loi ket noi may chu',
+        message: error?.response?.data?.message || 'Mất kết nối máy chủ',
         data: { totalRecords: 0, records: [] }
       }
     }
@@ -351,7 +351,7 @@ return { success: true, data: [] }
 
       return {
         success: false,
-        message: error?.response?.data?.message || 'Loi ket noi may chu',
+        message: error?.response?.data?.message || 'Mất kết nối máy chủ',
         data: {
           receiptCount: 0,
           totalTuition: 0,
@@ -389,10 +389,10 @@ return { success: true, data: [] }
       }
     } catch (error: any) {
       logger.error('PaymentService', 'getDiscountedReceipts', error)
-      
+
 return {
         success: false,
-        message: error?.response?.data?.message || 'Loi ket noi may chu',
+        message: error?.response?.data?.message || 'Mất kết nối máy chủ',
         data: { totalRecords: 0, records: [] }
       }
     }
@@ -416,7 +416,7 @@ return {
       return { success: true, data: normalizedQuote }
     } catch (error: any) {
       logger.error('PaymentService', 'getPaymentById', error)
-      
+
 return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -433,7 +433,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('PaymentService', 'createPayment', error)
-      
+
 return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -450,7 +450,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('PaymentService', 'createBulkPayment', error)
-      
+
 return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -467,7 +467,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('PaymentService', 'updatePayment', error)
-      
+
 return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -484,7 +484,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, message: apiResponse.message }
     } catch (error: any) {
       logger.error('PaymentService', 'deletePayment', error)
-      
+
 return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -501,7 +501,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data, message: apiResponse.message }
     } catch (error: any) {
       logger.error('PaymentService', 'restorePayment', error)
-      
+
 return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -518,7 +518,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: unwrapList(apiResponse.data) }
     } catch (error) {
       logger.error('PaymentService', 'getPaymentsByStudent', error)
-      
+
 return { success: true, data: [] }
     }
   }
@@ -535,7 +535,7 @@ return { success: true, data: [] }
       return { success: true, data: unwrapList(apiResponse.data) }
     } catch (error) {
       logger.error('PaymentService', 'getPaymentsByClass', error)
-      
+
 return { success: true, data: [] }
     }
   }
@@ -561,7 +561,7 @@ return { success: true, data: [] }
       return { success: true, data: normalizedQuote }
     } catch (error: any) {
       logger.error('PaymentService', 'getClassSummary', error)
-      
+
 return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
@@ -581,7 +581,7 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: apiResponse.data }
     } catch (error: any) {
       logger.error('PaymentService', 'getMonthlyReport', error)
-      
+
 return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }

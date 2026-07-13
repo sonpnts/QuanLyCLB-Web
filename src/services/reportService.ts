@@ -67,8 +67,40 @@ class ReportService {
     } catch (error: any) {
       logger.error('ReportService', 'exportClassStudentsExcel', error)
 
-      const errorMessage = await parseErrorMessage(error?.response?.data, 'Loi ket noi may chu')
+      const errorMessage = await parseErrorMessage(error?.response?.data, 'Mất kết nối máy chủ')
 
+      return { success: false, message: errorMessage }
+    }
+  }
+
+  async exportAllStudentsByClassExcel(): Promise<ResponseResult<ExportedFile>> {
+    const fallbackMessage = 'Không thể xuất file Excel'
+
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.reports.allStudentsByClass, {
+        params: { format: 'excel' },
+        responseType: 'blob'
+      })
+
+      if ((response.status ?? 200) >= 400) {
+        const errorMessage = await parseErrorMessage(response.data, fallbackMessage)
+        return { success: false, message: errorMessage }
+      }
+
+      const contentDisposition = response.headers?.['content-disposition'] as string | undefined
+      const fileNameMatch = contentDisposition?.match(/filename\*?=(?:UTF-8'')?\"?([^\";]+)\"?/i)
+      const fileName = fileNameMatch?.[1] ? decodeURIComponent(fileNameMatch[1]) : `DanhSachVoSinh.xlsx`
+
+      return {
+        success: true,
+        data: {
+          blob: response.data as Blob,
+          fileName
+        }
+      }
+    } catch (error: any) {
+      logger.error('ReportService', 'exportAllStudentsByClassExcel', error)
+      const errorMessage = await parseErrorMessage(error?.response?.data, fallbackMessage)
       return { success: false, message: errorMessage }
     }
   }

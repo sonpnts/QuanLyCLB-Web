@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback } from 'react'
@@ -16,6 +16,7 @@ import IconButton from '@mui/material/IconButton'
 import TablePagination from '@mui/material/TablePagination'
 import Box from '@mui/material/Box'
 import Chip from '@mui/material/Chip'
+import CircularProgress from '@mui/material/CircularProgress'
 import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
@@ -248,6 +249,33 @@ return
     },
     [showNotification]
   )
+
+  const [exportingAll, setExportingAll] = useState(false)
+
+  const handleExportAllStudents = useCallback(async () => {
+    try {
+      setExportingAll(true)
+      const response = await reportService.exportAllStudentsByClassExcel()
+
+      if (!response.success || !response.data) {
+        showNotification(response.message || 'Xuất Excel thất bại', 'error')
+        return
+      }
+
+      const url = window.URL.createObjectURL(response.data.blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = response.data.fileName
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.URL.revokeObjectURL(url)
+
+      showNotification('Đã xuất danh sách võ sinh theo lớp', 'success')
+    } finally {
+      setExportingAll(false)
+    }
+  }, [showNotification])
 
   const columns = useMemo<ColumnDef<ClassTypeWithAction, any>[]>(
     () => [
@@ -576,6 +604,16 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
               }}
             >
               Xuất Excel danh sách lớp
+            </Button>
+            <Button
+              color='primary'
+              variant='outlined'
+              startIcon={exportingAll ? <CircularProgress size={18} /> : <i className='ri-file-list-2-line text-xl' />}
+              className='max-sm:is-full'
+              disabled={data.length === 0 || exportingAll}
+              onClick={handleExportAllStudents}
+            >
+              Xuất toàn bộ võ sinh theo lớp
             </Button>
           </Box>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>

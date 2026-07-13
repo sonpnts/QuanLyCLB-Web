@@ -58,6 +58,21 @@ const DAY_OF_WEEK_MAP: Record<number, string> = {
   6: 'Thứ 7'
 }
 
+const DAY_OF_WEEK_NAME_MAP: Record<string, string> = {
+  Sunday: 'Chủ nhật',
+  Monday: 'Thứ 2',
+  Tuesday: 'Thứ 3',
+  Wednesday: 'Thứ 4',
+  Thursday: 'Thứ 5',
+  Friday: 'Thứ 6',
+  Saturday: 'Thứ 7'
+}
+
+const formatDayOfWeek = (value: number | string): string => {
+  if (typeof value === 'number') return DAY_OF_WEEK_MAP[value] || ''
+  return DAY_OF_WEEK_NAME_MAP[value as string] || value as string
+}
+
 const AttendanceTicketsTable = () => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
@@ -174,17 +189,11 @@ const AttendanceTicketsTable = () => {
     if (createDialogOpen) {
       if (adjustmentType === 'MakeupCheckIn') {
         loadValidSessions()
-      } else {
+      } else if (adjustmentType === 'CheckIn') {
         loadMissedSessions()
       }
     }
-  }, [createDialogOpen, adjustmentType, loadValidSessions, loadMissedSessions])
-
-  useEffect(() => {
-    if (createDialogOpen && adjustmentType === 'CheckIn') {
-      loadMissedSessions()
-    }
-  }, [createMonth, createYear, createDialogOpen, adjustmentType, loadMissedSessions])
+  }, [createDialogOpen, adjustmentType, createMonth, createYear, loadValidSessions, loadMissedSessions])
 
   const handleCreateAdjustment = async () => {
     if (!selectedSessionId) {
@@ -220,7 +229,7 @@ const AttendanceTicketsTable = () => {
           }
         }
       } else {
-        const session = missedSessions.find(s => s.classScheduleId === selectedSessionId)
+        const session = missedSessions.find(s => `${s.classScheduleId}_${s.sessionDate}` === selectedSessionId)
         if (session) {
           createData = {
             ...createData,
@@ -366,9 +375,9 @@ const AttendanceTicketsTable = () => {
             <Grid container spacing={3} sx={{ mb: 4 }}>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size='small'>
-                  <InputLabel>Trạng thái</InputLabel>
+                  <InputLabel id='filter-status-label' shrink>Trạng thái</InputLabel>
                   <Select
-                    label='Trạng thái'
+                    labelId='filter-status-label'
                     value={filterStatus}
                     onChange={e => setFilterStatus(e.target.value as AdjustmentStatus | '')}
                   >
@@ -382,9 +391,9 @@ const AttendanceTicketsTable = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size='small'>
-                  <InputLabel>Tháng</InputLabel>
+                  <InputLabel id='filter-month-label' shrink>Tháng</InputLabel>
                   <Select
-                    label='Tháng'
+                    labelId='filter-month-label'
                     value={filterMonth}
                     onChange={e => setFilterMonth(Number(e.target.value))}
                   >
@@ -396,9 +405,9 @@ const AttendanceTicketsTable = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size='small'>
-                  <InputLabel>Năm</InputLabel>
+                  <InputLabel id='filter-year-label' shrink>Năm</InputLabel>
                   <Select
-                    label='Năm'
+                    labelId='filter-year-label'
                     value={filterYear}
                     onChange={e => setFilterYear(Number(e.target.value))}
                   >
@@ -423,16 +432,17 @@ const AttendanceTicketsTable = () => {
             ) : (
               <>
                 <div className='overflow-x-auto'>
-                  <Table>
+                  <Table size='small'>
                     <TableHead>
                       <TableRow>
-                        <TableCell>Ngày điều chỉnh</TableCell>
-                        <TableCell>Lớp học</TableCell>
-                        {isAdmin && <TableCell>Huấn luyện viên</TableCell>}
-                        <TableCell>Loại</TableCell>
+                        <TableCell>Ngày</TableCell>
+                        {isAdmin && <TableCell>HLV</TableCell>}
+                        <TableCell>Lớp</TableCell>
+                        <TableCell>Thứ</TableCell>
+                        <TableCell>Giờ học</TableCell>
+                        <TableCell>Chi nhánh</TableCell>
                         <TableCell>Lý do</TableCell>
                         <TableCell>Trạng thái</TableCell>
-                        <TableCell>Ngày tạo</TableCell>
                         {isAdmin && <TableCell align='center'>Thao tác</TableCell>}
                       </TableRow>
                     </TableHead>
@@ -447,16 +457,22 @@ const AttendanceTicketsTable = () => {
                                 {formatDateVN(adj.adjustmentDate)}
                               </Typography>
                             </TableCell>
-                            <TableCell>
-                              <Typography variant='body2'>{adj.className || '-'}</Typography>
-                            </TableCell>
                             {isAdmin && (
                               <TableCell>
-                                <Typography variant='body2'>{adj.userName}</Typography>
+                                <Typography variant='body2'>{adj.userFullName || adj.userName}</Typography>
                               </TableCell>
                             )}
                             <TableCell>
-                              <Chip label={getAdjustmentTypeLabel(adj.adjustmentType)} size='small' variant='tonal' />
+                              <Typography variant='body2'>{adj.className || '-'}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant='body2'>{adj.dayOfWeek != null ? formatDayOfWeek(adj.dayOfWeek) : '-'}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant='body2'>{adj.startTime && adj.endTime ? `${adj.startTime} - ${adj.endTime}` : '-'}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant='body2'>{adj.branchName || '-'}</Typography>
                             </TableCell>
                             <TableCell>
                               <Typography variant='body2'>{adj.reason}</Typography>
@@ -509,60 +525,60 @@ const AttendanceTicketsTable = () => {
         <DialogTitle>Tạo phiếu chấm công bù</DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 2 }}>
-            <FormControl fullWidth>
-              <InputLabel>Loại điều chỉnh</InputLabel>
-              <Select
-                label='Loại điều chỉnh'
-                value={adjustmentType}
-                onChange={e => {
-                  setAdjustmentType(e.target.value as AttendanceType)
-                  setSelectedSessionId('')
-                }}
-              >
-                {ATTENDANCE_TYPES.map(t => (
-                  <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+              <FormControl fullWidth>
+                <InputLabel id='adjustment-type-label' shrink>Loại điều chỉnh</InputLabel>
+                <Select
+                  labelId='adjustment-type-label'
+                  value={adjustmentType}
+                  onChange={e => {
+                    setAdjustmentType(e.target.value as AttendanceType)
+                    setSelectedSessionId('')
+                  }}
+                >
+                  {ATTENDANCE_TYPES.map(t => (
+                    <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-            {adjustmentType === 'CheckIn' && (
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 6 }}>
-                  <FormControl fullWidth size='small'>
-                    <InputLabel>Tháng</InputLabel>
-                    <Select
-                      label='Tháng'
-                      value={createMonth}
-                      onChange={e => {
-                        setCreateMonth(Number(e.target.value))
-                        setSelectedSessionId('')
-                      }}
-                    >
-                      {MONTHS.map(m => (
-                        <MenuItem key={m} value={m}>Tháng {m}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+              {adjustmentType === 'CheckIn' && (
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 6 }}>
+                    <FormControl fullWidth size='small'>
+                      <InputLabel id='create-month-label' shrink>Tháng</InputLabel>
+                      <Select
+                        labelId='create-month-label'
+                        value={createMonth}
+                        onChange={e => {
+                          setCreateMonth(Number(e.target.value))
+                          setSelectedSessionId('')
+                        }}
+                      >
+                        {MONTHS.map(m => (
+                          <MenuItem key={m} value={m}>Tháng {m}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <FormControl fullWidth size='small'>
+                      <InputLabel id='create-year-label' shrink>Năm</InputLabel>
+                      <Select
+                        labelId='create-year-label'
+                        value={createYear}
+                        onChange={e => {
+                          setCreateYear(Number(e.target.value))
+                          setSelectedSessionId('')
+                        }}
+                      >
+                        {YEARS.map(y => (
+                          <MenuItem key={y} value={y}>{y}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
                 </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <FormControl fullWidth size='small'>
-                    <InputLabel>Năm</InputLabel>
-                    <Select
-                      label='Năm'
-                      value={createYear}
-                      onChange={e => {
-                        setCreateYear(Number(e.target.value))
-                        setSelectedSessionId('')
-                      }}
-                    >
-                      {YEARS.map(y => (
-                        <MenuItem key={y} value={y}>{y}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-            )}
+              )}
 
             <Divider />
 
@@ -638,28 +654,31 @@ const AttendanceTicketsTable = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {missedSessions.map(session => (
-                        <TableRow
-                          key={session.classScheduleId}
-                          hover
-                          selected={selectedSessionId === session.classScheduleId}
-                          onClick={() => setSelectedSessionId(session.classScheduleId)}
-                          sx={{ cursor: 'pointer' }}
-                        >
-                          <TableCell padding='checkbox'>
-                            <input
-                              type='radio'
-                              checked={selectedSessionId === session.classScheduleId}
-                              onChange={() => setSelectedSessionId(session.classScheduleId)}
-                            />
-                          </TableCell>
-                          <TableCell>{session.className}</TableCell>
-                          <TableCell>{DAY_OF_WEEK_MAP[session.dayOfWeek] || ''}</TableCell>
-                          <TableCell>{session.startTime} - {session.endTime}</TableCell>
-                          <TableCell>{formatDateVN(session.sessionDate)}</TableCell>
-                          <TableCell>{session.branchName || '-'}</TableCell>
-                        </TableRow>
-                      ))}
+                      {missedSessions.map(session => {
+                        const sessionKey = `${session.classScheduleId}_${session.sessionDate}`
+                        return (
+                          <TableRow
+                            key={sessionKey}
+                            hover
+                            selected={selectedSessionId === sessionKey}
+                            onClick={() => setSelectedSessionId(sessionKey)}
+                            sx={{ cursor: 'pointer' }}
+                          >
+                            <TableCell padding='checkbox'>
+                              <input
+                                type='radio'
+                                checked={selectedSessionId === sessionKey}
+                                onChange={() => setSelectedSessionId(sessionKey)}
+                              />
+                            </TableCell>
+                            <TableCell>{session.className}</TableCell>
+                            <TableCell>{formatDayOfWeek(session.dayOfWeek)}</TableCell>
+                            <TableCell>{session.startTime} - {session.endTime}</TableCell>
+                            <TableCell>{formatDateVN(session.sessionDate)}</TableCell>
+                            <TableCell>{session.branchName || '-'}</TableCell>
+                          </TableRow>
+                        )
+                      })}
                     </TableBody>
                   </Table>
                 </TableContainer>
@@ -700,7 +719,19 @@ const AttendanceTicketsTable = () => {
               <>
                 <Alert severity='info'>
                   <Typography variant='body2'>
-                    <strong>Huấn luyện viên:</strong> {selectedAdjustment.userName}
+                    <strong>Huấn luyện viên:</strong> {selectedAdjustment.userFullName || selectedAdjustment.userName}
+                  </Typography>
+                  <Typography variant='body2'>
+                    <strong>Lớp học:</strong> {selectedAdjustment.className || '-'}
+                  </Typography>
+                  <Typography variant='body2'>
+                    <strong>Thứ:</strong> {selectedAdjustment.dayOfWeek != null ? formatDayOfWeek(selectedAdjustment.dayOfWeek) : '-'}
+                  </Typography>
+                  <Typography variant='body2'>
+                    <strong>Giờ học:</strong> {selectedAdjustment.startTime && selectedAdjustment.endTime ? `${selectedAdjustment.startTime} - ${selectedAdjustment.endTime}` : '-'}
+                  </Typography>
+                  <Typography variant='body2'>
+                    <strong>Chi nhánh:</strong> {selectedAdjustment.branchName || '-'}
                   </Typography>
                   <Typography variant='body2'>
                     <strong>Ngày điều chỉnh:</strong> {formatDateVN(selectedAdjustment.adjustmentDate)}
@@ -714,9 +745,9 @@ const AttendanceTicketsTable = () => {
                 </Alert>
 
                 <FormControl fullWidth>
-                  <InputLabel>Ghi chú khi duyệt</InputLabel>
+                  <InputLabel id='approval-notes-label' shrink>Ghi chú khi duyệt</InputLabel>
                   <Select
-                    label='Ghi chú khi duyệt'
+                    labelId='approval-notes-label'
                     value={approvalNotes}
                     onChange={e => setApprovalNotes(e.target.value)}
                   >
