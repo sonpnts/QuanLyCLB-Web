@@ -676,7 +676,15 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
     }
   }
 
-  async updateAttendanceTime(data: { id: string; newCheckedInAt: string }): Promise<ResponseResult<any>> {
+  async updateAttendanceTime(data: {
+    id: string
+    newCheckedInAt: string
+    newCheckedOutAt?: string | null
+    newCheckInBranchId?: string | null
+    newCheckInClassId?: string | null
+    newCheckOutBranchId?: string | null
+    newCheckOutClassId?: string | null
+  }): Promise<ResponseResult<any>> {
     try {
       const response = await apiClient.put<any>(API_ENDPOINTS.attendance.adminUpdateRecord, data)
       const apiResponse = response.data

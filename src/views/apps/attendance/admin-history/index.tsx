@@ -119,7 +119,13 @@ const AdminAttendanceHistoryView = () => {
 
   const [editOpen, setEditOpen] = useState(false)
   const [editPair, setEditPair] = useState<PairRecord | null>(null)
-  const [editDateTime, setEditDateTime] = useState('')
+  const [editCheckInAt, setEditCheckInAt] = useState('')
+  const [editCheckOutAt, setEditCheckOutAt] = useState('')
+  const [editCheckInBranchId, setEditCheckInBranchId] = useState('')
+  const [editCheckOutBranchId, setEditCheckOutBranchId] = useState('')
+  const [editCheckInClassId, setEditCheckInClassId] = useState('')
+  const [editCheckOutClassId, setEditCheckOutClassId] = useState('')
+  const [editClasses, setEditClasses] = useState<{ id: string; code: string; name: string; branchId: string }[]>([])
   const [saving, setSaving] = useState(false)
 
   const [cancelTarget, setCancelTarget] = useState<PairRecord | null>(null)
@@ -209,31 +215,56 @@ const AdminAttendanceHistoryView = () => {
     }
   }
 
-  const openEdit = (pair: PairRecord) => {
+  const openEdit = async (pair: PairRecord) => {
     setEditPair(pair)
-    const dt = new Date(pair.checkInAt)
-    const vnTime = new Date(dt.getTime() + 7 * 60 * 60 * 1000)
-    const y = vnTime.getUTCFullYear()
-    const m = String(vnTime.getUTCMonth() + 1).padStart(2, '0')
-    const d = String(vnTime.getUTCDate()).padStart(2, '0')
-    const hh = String(vnTime.getUTCHours()).padStart(2, '0')
-    const mm = String(vnTime.getUTCMinutes()).padStart(2, '0')
-    setEditDateTime(`${y}-${m}-${d}T${hh}:${mm}`)
+
+    const toLocalInput = (iso: string) => {
+      const dt = new Date(iso)
+      const vnTime = new Date(dt.getTime() + 7 * 60 * 60 * 1000)
+      const y = vnTime.getUTCFullYear()
+      const m = String(vnTime.getUTCMonth() + 1).padStart(2, '0')
+      const d = String(vnTime.getUTCDate()).padStart(2, '0')
+      const hh = String(vnTime.getUTCHours()).padStart(2, '0')
+      const mm = String(vnTime.getUTCMinutes()).padStart(2, '0')
+      return `${y}-${m}-${d}T${hh}:${mm}`
+    }
+
+    setEditCheckInAt(toLocalInput(pair.checkInAt))
+    setEditCheckOutAt(pair.checkOutAt ? toLocalInput(pair.checkOutAt) : '')
+    setEditCheckInBranchId('')
+    setEditCheckOutBranchId('')
+    setEditCheckInClassId('')
+    setEditCheckOutClassId('')
+
+    try {
+      const classesRes = pair.userId
+        ? await classService.getClassesByUserId(pair.userId)
+        : { success: true, data: [] }
+
+      const classList = (classesRes.data || []).map((c: any) => ({ id: c.id, code: c.code, name: c.name, branchId: c.branchId || '' }))
+      setEditClasses(classList)
+    } catch {
+      setEditClasses([])
+    }
+
     setEditOpen(true)
   }
 
-  const toVNIso = (localDatetime: string) => `${localDatetime}:00+07:00`
-
   const handleSaveEdit = async () => {
-    if (!editPair || !editDateTime) return
+    if (!editPair || !editCheckInAt) return
     setSaving(true)
     try {
       const result = await attendanceService.updateAttendanceTime({
         id: editPair.id,
-        newCheckedInAt: toVNIso(editDateTime)
+        newCheckedInAt: `${editCheckInAt}:00+07:00`,
+        newCheckedOutAt: editCheckOutAt ? `${editCheckOutAt}:00+07:00` : null,
+        newCheckInBranchId: editCheckInBranchId || null,
+        newCheckInClassId: editCheckInClassId || null,
+        newCheckOutBranchId: editCheckOutBranchId || null,
+        newCheckOutClassId: editCheckOutClassId || null
       })
       if (result.success) {
-        showNotification('Đã cập nhật thời gian chấm công', 'success')
+        showNotification('Đã cập nhật chấm công', 'success')
         setEditOpen(false)
         loadPairs()
       } else {
@@ -614,9 +645,9 @@ const AdminAttendanceHistoryView = () => {
         )}
       </Box>
 
-      {/* Dialog chỉnh sửa giờ vào */}
+      {/* Dialog chỉnh sửa chấm công */}
       <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Chỉnh sửa thời gian chấm công</DialogTitle>
+        <DialogTitle>Chỉnh sửa chấm công</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             {editPair && (
@@ -625,13 +656,47 @@ const AdminAttendanceHistoryView = () => {
                 <Typography variant='body2'><strong>Ngày:</strong> {new Date(editPair.checkInAt).toLocaleDateString('vi-VN')}</Typography>
               </>
             )}
-            <TextField label='Thời gian vào mới' type='datetime-local' fullWidth value={editDateTime}
-              onChange={e => setEditDateTime(e.target.value)} InputLabelProps={{ shrink: true }} />
+            <TextField label='Giờ vào' type='datetime-local' fullWidth value={editCheckInAt}
+              onChange={e => setEditCheckInAt(e.target.value)} InputLabelProps={{ shrink: true }} />
+            <FormControl fullWidth size='small'>
+              <InputLabel>Lớp vào</InputLabel>
+              <Select value={editCheckInClassId} label='Lớp vào'
+                onChange={e => {
+                  const classId = e.target.value
+                  setEditCheckInClassId(classId)
+                  if (classId) {
+                    const matched = editClasses.find(c => c.id === classId)
+                    if (matched?.branchId) setEditCheckInBranchId(matched.branchId)
+                  }
+                }}>
+                <MenuItem value=''><em>Không đổi</em></MenuItem>
+                {editClasses.map(c => <MenuItem key={c.id} value={c.id}>{c.code} - {c.name}</MenuItem>)}
+              </Select>
+            </FormControl>
+
+            <TextField label='Giờ ra' type='datetime-local' fullWidth value={editCheckOutAt}
+              onChange={e => setEditCheckOutAt(e.target.value)} InputLabelProps={{ shrink: true }}
+              helperText={!editPair?.checkOutAt ? 'Chưa có giờ ra - nhập để tạo mới' : ''} />
+            <FormControl fullWidth size='small'>
+              <InputLabel>Lớp ra</InputLabel>
+              <Select value={editCheckOutClassId} label='Lớp ra'
+                onChange={e => {
+                  const classId = e.target.value
+                  setEditCheckOutClassId(classId)
+                  if (classId) {
+                    const matched = editClasses.find(c => c.id === classId)
+                    if (matched?.branchId) setEditCheckOutBranchId(matched.branchId)
+                  }
+                }}>
+                <MenuItem value=''><em>Không đổi</em></MenuItem>
+                {editClasses.map(c => <MenuItem key={c.id} value={c.id}>{c.code} - {c.name}</MenuItem>)}
+              </Select>
+            </FormControl>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditOpen(false)} disabled={saving}>Hủy</Button>
-          <Button variant='contained' onClick={handleSaveEdit} disabled={saving || !editDateTime}
+          <Button variant='contained' onClick={handleSaveEdit} disabled={saving || !editCheckInAt}
             startIcon={saving ? <CircularProgress size={16} /> : undefined}>{saving ? 'Đang lưu...' : 'Lưu'}</Button>
         </DialogActions>
       </Dialog>
