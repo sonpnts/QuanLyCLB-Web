@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { toLocalDateString } from '@/utils/dateTime'
 
@@ -93,10 +93,11 @@ const AttendanceTicketsTable = () => {
   const [selectedAdjustment, setSelectedAdjustment] = useState<AttendanceAdjustmentType | null>(null)
 
   const [adjustmentType, setAdjustmentType] = useState<AttendanceType>('MakeupCheckIn')
-  const [selectedSessionId, setSelectedSessionId] = useState('')
+  const [selectedSessionIds, setSelectedSessionIds] = useState<string[]>([])
   const [reason, setReason] = useState('')
   const [notes, setNotes] = useState('')
   const [approvalNotes, setApprovalNotes] = useState('')
+  const reasonRef = useRef<HTMLDivElement>(null)
 
   const [validSessions, setValidSessions] = useState<any[]>([])
   const [missedSessions, setMissedSessions] = useState<any[]>([])
@@ -146,9 +147,8 @@ const AttendanceTicketsTable = () => {
   const loadValidSessions = useCallback(async () => {
     try {
       setLoadingOptions(true)
-      const now = new Date()
-      const fromDate = toLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1))
-      const toDate = toLocalDateString(new Date(now.getFullYear(), now.getMonth() + 1, 0))
+      const fromDate = toLocalDateString(new Date(createYear, createMonth - 1, 1))
+      const toDate = toLocalDateString(new Date(createYear, createMonth, 0))
 
       const response = await attendanceService.getUnassignedAttendances({ fromDate, toDate })
       if (response.success && response.data) {
@@ -162,7 +162,7 @@ const AttendanceTicketsTable = () => {
     } finally {
       setLoadingOptions(false)
     }
-  }, [])
+  }, [createMonth, createYear])
 
   const loadMissedSessions = useCallback(async () => {
     try {
@@ -196,13 +196,15 @@ const AttendanceTicketsTable = () => {
   }, [createDialogOpen, adjustmentType, createMonth, createYear, loadValidSessions, loadMissedSessions])
 
   const handleCreateAdjustment = async () => {
-    if (!selectedSessionId) {
-      showNotification('Vui lòng chọn buổi học.', 'error')
+    if (selectedSessionIds.length === 0) {
+      showNotification('Vui lòng chọn ít nhất một buổi học.', 'error')
       return
     }
 
-    if (adjustmentType === 'CheckIn' && !reason) {
-      showNotification('Vui lòng chọn lý do.', 'error')
+    if (adjustmentType === 'CheckIn' && !reason.trim()) {
+      showNotification('Vui lòng nhập lý do.', 'warning')
+      reasonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      reasonRef.current?.querySelector('textarea')?.focus()
       return
     }
 
@@ -210,46 +212,54 @@ const AttendanceTicketsTable = () => {
       setLoading(true)
 
       const finalReason = adjustmentType === 'MakeupCheckIn' ? 'Dạy thay / Dạy bù' : reason
+      let successCount = 0, failCount = 0
 
-      let createData: any = {
-        adjustmentType,
-        reason: finalReason,
-        notes: notes || undefined
+      for (const sessionId of selectedSessionIds) {
+        let createData: any = {
+          adjustmentType,
+          reason: finalReason,
+          notes: notes || undefined
+        }
+
+        if (adjustmentType === 'MakeupCheckIn') {
+          const session = validSessions.find(s => s.id === sessionId)
+          if (session) {
+            createData = {
+              ...createData,
+              adjustmentDate: session.sessionDate,
+              attendanceRecordId: session.id,
+              requestedCheckInAt: session.checkInAt,
+              requestedCheckOutAt: session.checkOutAt
+            }
+          }
+        } else {
+          const session = missedSessions.find(s => `${s.classScheduleId}_${s.sessionDate}` === sessionId)
+          if (session) {
+            createData = {
+              ...createData,
+              adjustmentDate: session.sessionDate.split('T')[0],
+              classId: session.classId,
+              classScheduleId: session.classScheduleId
+            }
+          }
+        }
+
+        const response = await attendanceAdjustmentService.create(createData)
+        if (response.success) successCount++; else failCount++
       }
 
+      if (failCount === 0) {
+        showNotification(`Đã tạo thành công ${successCount} phiếu.`, 'success')
+      } else {
+        showNotification(`Thành công: ${successCount}, Thất bại: ${failCount}`, 'warning')
+      }
+      setSelectedSessionIds([])
       if (adjustmentType === 'MakeupCheckIn') {
-        const session = validSessions.find(s => s.id === selectedSessionId)
-        if (session) {
-          createData = {
-            ...createData,
-            adjustmentDate: session.sessionDate,
-            attendanceRecordId: session.id,
-            requestedCheckInAt: session.checkInAt,
-            requestedCheckOutAt: session.checkOutAt
-          }
-        }
+        await loadValidSessions()
       } else {
-        const session = missedSessions.find(s => `${s.classScheduleId}_${s.sessionDate}` === selectedSessionId)
-        if (session) {
-          createData = {
-            ...createData,
-            adjustmentDate: session.sessionDate.split('T')[0],
-            classId: session.classId,
-            classScheduleId: session.classScheduleId
-          }
-        }
+        await loadMissedSessions()
       }
-
-      const response = await attendanceAdjustmentService.create(createData)
-
-      if (response.success) {
-        showNotification('Tạo phiếu chấm công bù thành công.', 'success')
-        setCreateDialogOpen(false)
-        resetCreateForm()
-        loadAdjustments()
-      } else {
-        showNotification(response.message || 'Không thể tạo phiếu chấm công bù.', 'error')
-      }
+      loadAdjustments()
     } catch (error) {
       logger.error('AttendanceTicketsTable', 'Error creating adjustment', error)
       showNotification('Đã có lỗi khi tạo phiếu chấm công bù.', 'error')
@@ -316,7 +326,7 @@ const AttendanceTicketsTable = () => {
 
   const resetCreateForm = () => {
     setAdjustmentType('MakeupCheckIn')
-    setSelectedSessionId('')
+    setSelectedSessionIds([])
     setReason('')
     setNotes('')
     setCreateMonth(new Date().getMonth() + 1)
@@ -372,13 +382,13 @@ const AttendanceTicketsTable = () => {
             }
           />
           <CardContent>
-            <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid container spacing={2} sx={{ mb: 4 }}>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size='small'>
-                  <InputLabel id='filter-status-label' shrink>Trạng thái</InputLabel>
+                  <InputLabel>Trạng thái</InputLabel>
                   <Select
-                    labelId='filter-status-label'
                     value={filterStatus}
+                    label='Trạng thái'
                     onChange={e => setFilterStatus(e.target.value as AdjustmentStatus | '')}
                   >
                     <MenuItem value=''>Tất cả</MenuItem>
@@ -391,10 +401,10 @@ const AttendanceTicketsTable = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size='small'>
-                  <InputLabel id='filter-month-label' shrink>Tháng</InputLabel>
+                  <InputLabel>Tháng</InputLabel>
                   <Select
-                    labelId='filter-month-label'
                     value={filterMonth}
+                    label='Tháng'
                     onChange={e => setFilterMonth(Number(e.target.value))}
                   >
                     {MONTHS.map(m => (
@@ -405,10 +415,10 @@ const AttendanceTicketsTable = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size='small'>
-                  <InputLabel id='filter-year-label' shrink>Năm</InputLabel>
+                  <InputLabel>Năm</InputLabel>
                   <Select
-                    labelId='filter-year-label'
                     value={filterYear}
+                    label='Năm'
                     onChange={e => setFilterYear(Number(e.target.value))}
                   >
                     {YEARS.map(y => (
@@ -526,13 +536,13 @@ const AttendanceTicketsTable = () => {
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 2 }}>
               <FormControl fullWidth>
-                <InputLabel id='adjustment-type-label' shrink>Loại điều chỉnh</InputLabel>
+                <InputLabel>Loại điều chỉnh</InputLabel>
                 <Select
-                  labelId='adjustment-type-label'
                   value={adjustmentType}
+                  label='Loại điều chỉnh'
                   onChange={e => {
                     setAdjustmentType(e.target.value as AttendanceType)
-                    setSelectedSessionId('')
+                    setSelectedSessionIds([])
                   }}
                 >
                   {ATTENDANCE_TYPES.map(t => (
@@ -545,13 +555,13 @@ const AttendanceTicketsTable = () => {
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 6 }}>
                     <FormControl fullWidth size='small'>
-                      <InputLabel id='create-month-label' shrink>Tháng</InputLabel>
+                      <InputLabel>Tháng</InputLabel>
                       <Select
-                        labelId='create-month-label'
                         value={createMonth}
+                        label='Tháng'
                         onChange={e => {
                           setCreateMonth(Number(e.target.value))
-                          setSelectedSessionId('')
+                          setSelectedSessionIds([])
                         }}
                       >
                         {MONTHS.map(m => (
@@ -562,13 +572,13 @@ const AttendanceTicketsTable = () => {
                   </Grid>
                   <Grid size={{ xs: 6 }}>
                     <FormControl fullWidth size='small'>
-                      <InputLabel id='create-year-label' shrink>Năm</InputLabel>
+                      <InputLabel>Năm</InputLabel>
                       <Select
-                        labelId='create-year-label'
                         value={createYear}
+                        label='Năm'
                         onChange={e => {
                           setCreateYear(Number(e.target.value))
-                          setSelectedSessionId('')
+                          setSelectedSessionIds([])
                         }}
                       >
                         {YEARS.map(y => (
@@ -600,7 +610,16 @@ const AttendanceTicketsTable = () => {
                   <Table size='small'>
                     <TableHead>
                       <TableRow>
-                        <TableCell padding='checkbox'>Chọn</TableCell>
+                        <TableCell padding='checkbox'>
+                          <input
+                            type='checkbox'
+                            checked={selectedSessionIds.length === validSessions.length && validSessions.length > 0}
+                            onChange={e => {
+                              if (e.target.checked) setSelectedSessionIds(validSessions.map(s => s.id))
+                              else setSelectedSessionIds([])
+                            }}
+                          />
+                        </TableCell>
                         <TableCell>Ngày</TableCell>
                         <TableCell>Vào</TableCell>
                         <TableCell>Ra</TableCell>
@@ -613,15 +632,23 @@ const AttendanceTicketsTable = () => {
                         <TableRow
                           key={session.id}
                           hover
-                          selected={selectedSessionId === session.id}
-                          onClick={() => setSelectedSessionId(session.id)}
+                          selected={selectedSessionIds.includes(session.id)}
+                          onClick={() => {
+                            setSelectedSessionIds(prev =>
+                              prev.includes(session.id) ? prev.filter(id => id !== session.id) : [...prev, session.id]
+                            )
+                          }}
                           sx={{ cursor: 'pointer' }}
                         >
                           <TableCell padding='checkbox'>
                             <input
-                              type='radio'
-                              checked={selectedSessionId === session.id}
-                              onChange={() => setSelectedSessionId(session.id)}
+                              type='checkbox'
+                              checked={selectedSessionIds.includes(session.id)}
+                              onChange={() => {
+                                setSelectedSessionIds(prev =>
+                                  prev.includes(session.id) ? prev.filter(id => id !== session.id) : [...prev, session.id]
+                                )
+                              }}
                             />
                           </TableCell>
                           <TableCell>{formatDateVN(session.sessionDate)}</TableCell>
@@ -645,7 +672,16 @@ const AttendanceTicketsTable = () => {
                   <Table size='small'>
                     <TableHead>
                       <TableRow>
-                        <TableCell padding='checkbox'>Chọn</TableCell>
+                        <TableCell padding='checkbox'>
+                          <input
+                            type='checkbox'
+                            checked={selectedSessionIds.length === missedSessions.length && missedSessions.length > 0}
+                            onChange={e => {
+                              if (e.target.checked) setSelectedSessionIds(missedSessions.map(s => `${s.classScheduleId}_${s.sessionDate}`))
+                              else setSelectedSessionIds([])
+                            }}
+                          />
+                        </TableCell>
                         <TableCell>Lớp</TableCell>
                         <TableCell>Thứ</TableCell>
                         <TableCell>Giờ học</TableCell>
@@ -660,15 +696,23 @@ const AttendanceTicketsTable = () => {
                           <TableRow
                             key={sessionKey}
                             hover
-                            selected={selectedSessionId === sessionKey}
-                            onClick={() => setSelectedSessionId(sessionKey)}
+                            selected={selectedSessionIds.includes(sessionKey)}
+                            onClick={() => {
+                              setSelectedSessionIds(prev =>
+                                prev.includes(sessionKey) ? prev.filter(id => id !== sessionKey) : [...prev, sessionKey]
+                              )
+                            }}
                             sx={{ cursor: 'pointer' }}
                           >
                             <TableCell padding='checkbox'>
                               <input
-                                type='radio'
-                                checked={selectedSessionId === sessionKey}
-                                onChange={() => setSelectedSessionId(sessionKey)}
+                                type='checkbox'
+                                checked={selectedSessionIds.includes(sessionKey)}
+                                onChange={() => {
+                                  setSelectedSessionIds(prev =>
+                                    prev.includes(sessionKey) ? prev.filter(id => id !== sessionKey) : [...prev, sessionKey]
+                                  )
+                                }}
                               />
                             </TableCell>
                             <TableCell>{session.className}</TableCell>
@@ -689,6 +733,7 @@ const AttendanceTicketsTable = () => {
 
             {adjustmentType === 'CheckIn' && (
               <TextField
+                ref={reasonRef}
                 fullWidth
                 label='Lý do'
                 value={reason}
@@ -704,9 +749,9 @@ const AttendanceTicketsTable = () => {
           <Button
             onClick={handleCreateAdjustment}
             variant='contained'
-            disabled={loading || !selectedSessionId || (adjustmentType === 'CheckIn' && !reason)}
+            disabled={loading || selectedSessionIds.length === 0}
           >
-            {loading ? 'Đang tạo...' : 'Tạo phiếu'}
+            {loading ? 'Đang tạo...' : `Tạo ${selectedSessionIds.length > 0 ? selectedSessionIds.length : ''} phiếu`}
           </Button>
         </DialogActions>
       </Dialog>
@@ -745,10 +790,10 @@ const AttendanceTicketsTable = () => {
                 </Alert>
 
                 <FormControl fullWidth>
-                  <InputLabel id='approval-notes-label' shrink>Ghi chú khi duyệt</InputLabel>
+                  <InputLabel>Ghi chú khi duyệt</InputLabel>
                   <Select
-                    labelId='approval-notes-label'
                     value={approvalNotes}
+                    label='Ghi chú khi duyệt'
                     onChange={e => setApprovalNotes(e.target.value)}
                   >
                     <MenuItem value=''>Không có ghi chú</MenuItem>
