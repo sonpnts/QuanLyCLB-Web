@@ -670,7 +670,7 @@ const AdminAttendanceHistoryView = () => {
                   }
                 }}>
                 <MenuItem value=''><em>Không đổi</em></MenuItem>
-                {editClasses.map(c => <MenuItem key={c.id} value={c.id}>{c.code} - {c.name}</MenuItem>)}
+                {editClasses.map(c => <MenuItem key={c.id} value={c.id}>{c.code}</MenuItem>)}
               </Select>
             </FormControl>
 
@@ -689,7 +689,7 @@ const AdminAttendanceHistoryView = () => {
                   }
                 }}>
                 <MenuItem value=''><em>Không đổi</em></MenuItem>
-                {editClasses.map(c => <MenuItem key={c.id} value={c.id}>{c.code} - {c.name}</MenuItem>)}
+                {editClasses.map(c => <MenuItem key={c.id} value={c.id}>{c.code}</MenuItem>)}
               </Select>
             </FormControl>
           </Stack>
