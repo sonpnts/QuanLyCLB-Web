@@ -473,7 +473,14 @@ const CheckInView = () => {
   const isLatestIncompleteCheckIn = useCallback(() => {
     if (recentAttendances.length === 0) return false
     const latest = recentAttendances[0]
-    return latest.attendanceType === AttendanceType.CheckIn
+    if (latest.attendanceType !== AttendanceType.CheckIn) return false
+    const latestDate = new Date(latest.checkedInAt)
+    const today = getVietnamNow()
+    return (
+      latestDate.getFullYear() === today.getFullYear() &&
+      latestDate.getMonth() === today.getMonth() &&
+      latestDate.getDate() === today.getDate()
+    )
   }, [recentAttendances])
 
   return (

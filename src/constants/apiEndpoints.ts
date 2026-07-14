@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
     checkIn: '/Attendance/check-in',
     checkOut: '/Attendance/check-out',
     manual: '/Attendance/manual',
+    manualBulk: '/Attendance/manual/bulk',
     my: '/Attendance/my',
     myRecent: (count: number = 5) => `/Attendance/my/recent?count=${count}`,
     byUser: (userId: string) => `/Attendance/${userId}`,

@@ -29,10 +29,21 @@ export interface CheckOutRequest {
 export interface ManualAttendanceRequest {
   classId?: string
   userId: string
-  occurredAt: string // DateTime
-  status: AttendanceStatus
+  occurredAt: string
+  attendanceType: number
+  status: number
   notes?: string
   ticketId?: string
+}
+
+export interface BulkManualAttendanceRequest {
+  items: ManualAttendanceRequest[]
+}
+
+export interface BulkManualAttendanceResult {
+  successCount: number
+  failCount: number
+  errors: string[]
 }
 
 export interface CreateTicketRequest {
@@ -112,6 +123,30 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       logger.error('AttendanceService', 'createManualAttendance', error)
       
 return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
+  async createBulkManualAttendance(data: BulkManualAttendanceRequest): Promise<ResponseResult<BulkManualAttendanceResult>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.attendance.manualBulk, data)
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return {
+          success: false,
+          message: apiResponse.message,
+          data: apiResponse.data
+        }
+      }
+
+      return {
+        success: true,
+        data: apiResponse.data,
+        message: apiResponse.message
+      }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'createBulkManualAttendance', error)
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 

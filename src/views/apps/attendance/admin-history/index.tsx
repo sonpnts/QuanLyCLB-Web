@@ -79,8 +79,8 @@ interface UserOption {
 
 interface ClassOption {
   classId: string
-  classCode: string
-  className: string
+  code: string
+  name: string
   dayOfWeek: number
   startTime: string
   endTime: string
@@ -279,10 +279,10 @@ const AdminAttendanceHistoryView = () => {
         const items: ClassOption[] = []
         const schedules = c.schedules || []
         if (schedules.length === 0) {
-          items.push({ classId: c.id, classCode: c.classCode || '', className: c.className || c.name || '', dayOfWeek: -1, startTime: '', endTime: '', branchName: c.branchName || '' })
+          items.push({ classId: c.id, code: c.code || '', name: c.name || '', dayOfWeek: -1, startTime: '', endTime: '', branchName: c.branchName || '' })
         } else {
           for (const s of schedules) {
-            items.push({ classId: c.id, classCode: c.classCode || '', className: c.className || c.name || '', dayOfWeek: Number(s.dayOfWeek), startTime: s.startTime || '', endTime: s.endTime || '', branchName: s.branchName || c.branchName || '' })
+            items.push({ classId: c.id, code: c.code || '', name: c.name || '', dayOfWeek: Number(s.dayOfWeek), startTime: s.startTime || '', endTime: s.endTime || '', branchName: s.branch?.name || c.branchName || '' })
           }
         }
         return items
@@ -324,7 +324,7 @@ const AdminAttendanceHistoryView = () => {
       if (!matched) continue
       const dateStr = toLocalDateString(d)
       if (existingDates.has(dateStr)) continue
-      missing.push({ date: dateStr, dayOfWeek: dow, classId: matched.classId, className: matched.className, startTime: matched.startTime, endTime: matched.endTime, branchName: matched.branchName, checkInTime: matched.startTime || '08:00', checkOutTime: matched.endTime || '10:00' })
+      missing.push({ date: dateStr, dayOfWeek: dow, classId: matched.classId, className: matched.name, startTime: matched.startTime, endTime: matched.endTime, branchName: matched.branchName, checkInTime: matched.startTime || '08:00', checkOutTime: matched.endTime || '10:00' })
     }
     setAddMissingDates(missing)
     setAddSelectedDates(new Set(missing.map(m => m.date)))
@@ -345,15 +345,19 @@ const AdminAttendanceHistoryView = () => {
     if (!addUserId || addSelectedDates.size === 0) return
     setAddSaving(true)
     try {
-      let successCount = 0, failCount = 0
+      const items: { classId?: string; userId: string; occurredAt: string; attendanceType: number; status: number; notes: string }[] = []
       for (const item of addMissingDates.filter(m => addSelectedDates.has(m.date))) {
-        const ci = await attendanceService.createManualAttendance({ classId: item.classId, userId: addUserId, occurredAt: `${item.date}T${item.checkInTime}:00+07:00`, status: 0, notes: `Thêm bởi Admin - ${item.className}` })
-        if (ci.success) successCount++; else failCount++
-        const co = await attendanceService.createManualAttendance({ classId: item.classId, userId: addUserId, occurredAt: `${item.date}T${item.checkOutTime}:00+07:00`, status: 1, notes: `Thêm bởi Admin - ${item.className}` })
-        if (co.success) successCount++; else failCount++
+        const ciTime = item.checkInTime.length > 5 ? item.checkInTime.slice(0, 5) : item.checkInTime
+        const coTime = item.checkOutTime.length > 5 ? item.checkOutTime.slice(0, 5) : item.checkOutTime
+        items.push({ classId: item.classId, userId: addUserId, occurredAt: `${item.date}T${ciTime}:00+07:00`, attendanceType: 0, status: 0, notes: `Thêm bởi Admin - ${item.className}` })
+        items.push({ classId: item.classId, userId: addUserId, occurredAt: `${item.date}T${coTime}:00+07:00`, attendanceType: 1, status: 0, notes: `Thêm bởi Admin - ${item.className}` })
       }
-      if (failCount === 0) showNotification(`Đã thêm thành công ${successCount} lượt chấm công`, 'success')
-      else showNotification(`Thành công: ${successCount}, Thất bại: ${failCount}`, 'warning')
+      const result = await attendanceService.createBulkManualAttendance({ items })
+      if (result.success) {
+        showNotification(result.message || `Đã thêm thành công`, 'success')
+      } else {
+        showNotification(result.message || 'Thất bại', 'error')
+      }
       setAddOpen(false)
       loadPairs()
     } finally {
@@ -386,12 +390,12 @@ const AdminAttendanceHistoryView = () => {
   const addSelectedClassName = useMemo(() => {
     if (!addSelectedClassId) return ''
     const cls = addClasses.find(c => c.classId === addSelectedClassId)
-    return cls ? `${cls.classCode} - ${cls.className}` : ''
+    return cls ? cls.code : ''
   }, [addSelectedClassId, addClasses])
 
   const uniqueAddClasses = useMemo(() => {
     const map = new Map<string, ClassOption>()
-    for (const c of addClasses) { if (!map.has(c.classId)) map.set(c.classId, c) }
+    for (const c of addClasses) { if (c.dayOfWeek >= 0 && !map.has(c.classId)) map.set(c.classId, c) }
     return Array.from(map.values())
   }, [addClasses])
 
@@ -670,7 +674,7 @@ const AdminAttendanceHistoryView = () => {
                   <InputLabel>Lớp học</InputLabel>
                   <Select value={addSelectedClassId} label='Lớp học'
                     onChange={e => { setAddSelectedClassId(e.target.value); setAddMissingDates([]); setAddSelectedDates(new Set()) }}>
-                    {uniqueAddClasses.map(c => <MenuItem key={c.classId} value={c.classId}>{c.classCode} - {c.className} ({WEEKDAY_LABELS[c.dayOfWeek] || '?'})</MenuItem>)}
+                    {uniqueAddClasses.map(c => <MenuItem key={c.classId} value={c.classId}>{c.code}</MenuItem>)}
                   </Select>
                 </FormControl>
               </Grid>
@@ -678,7 +682,7 @@ const AdminAttendanceHistoryView = () => {
             {addLoading && <Box className='flex items-center justify-center py-4'><CircularProgress size={24} /><Typography variant='body2' sx={{ ml: 1 }}>Đang tải phân công lớp...</Typography></Box>}
             {!addLoading && addUserId && addClasses.length === 0 && <Alert severity='info'>HLV này chưa được phân công lớp nào.</Alert>}
             {!addLoading && addUserId && addClasses.length > 0 && !addSelectedClassId && <Alert severity='info'>Vui lòng chọn lớp để xem ngày chưa chấm công.</Alert>}
-            {addMissingDates.length > 0 && (
+            {addSelectedClassId && addMissingDates.length > 0 && (
               <>
                 <Alert severity='warning'>Có <strong>{addMissingDates.length}</strong> ngày chưa chấm công trong tháng {selectedMonth}/{selectedYear} cho lớp <strong>{addSelectedClassName}</strong>.</Alert>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

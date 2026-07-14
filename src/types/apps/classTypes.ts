@@ -48,6 +48,16 @@ export type ClassType = {
   leadInstructorId?: string
   coaches?: ClassUserAssignment[]
   assistants?: ClassUserAssignment[]
+  schedules?: {
+    id: string
+    classId: string
+    branchId: string
+    branch?: { id: string; name?: string } | null
+    dayOfWeek: number
+    startTime: string
+    endTime: string
+    isActive: boolean
+  }[]
 }
 
 export type ClassStatusType = {

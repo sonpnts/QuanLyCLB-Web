@@ -105,7 +105,7 @@ export interface ApiClassResponse {
     tuitionFee?: number
   } | null
   tuitionFee?: number
-  userIds?: string[] // API trả về userIds thay vì coachIds
+  userIds?: string[]
   coaches?: ApiClassUserAssignment[]
   assistants?: ApiClassUserAssignment[]
   isActive?: boolean
@@ -114,6 +114,16 @@ export interface ApiClassResponse {
   createdByUserId?: string | null
   updatedByUserId?: string | null
   currentStudents?: number
+  schedules?: {
+    id: string
+    classId: string
+    branchId: string
+    branch?: { id: string; name?: string } | null
+    dayOfWeek: number
+    startTime: string
+    endTime: string
+    isActive: boolean
+  }[]
 }
 
 export interface ClassPermissionCatalogItem {
@@ -152,10 +162,11 @@ class ClassService {
       createdBy: apiClass.createdByUserId || undefined,
       updatedDate: apiClass.updatedAt || undefined,
       updatedBy: apiClass.updatedByUserId || undefined,
-      coachIds: apiClass.userIds || [], // Map userIds sang coachIds cho frontend
+      coachIds: apiClass.userIds || [],
       leadInstructorId: apiClass.coaches?.find(c => c.isLeadInstructor)?.userId || apiClass.userIds?.[0],
       coaches: apiClass.coaches || [],
-      assistants: apiClass.assistants || []
+      assistants: apiClass.assistants || [],
+      schedules: apiClass.schedules || []
     }
   }
 
