@@ -312,10 +312,9 @@ const DashboardHome = () => {
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <StatCard
               title='Tổng học viên'
-              value={stats?.totalStudents ?? 0}
+              value={`${stats?.activeStudents ?? 0}/${stats?.totalStudents ?? 0}`}
               icon='ri-graduation-cap-line'
               color='primary'
-              subtitle={`${stats?.activeStudents ?? 0} đang học`}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -353,6 +352,14 @@ const DashboardHome = () => {
               value={stats?.pendingTransfers ?? 0}
               icon='ri-arrow-left-right-line'
               color='warning'
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <StatCard
+              title='Phiếu chấm công bù chờ duyệt'
+              value={stats?.pendingAdjustments ?? 0}
+              icon='ri-calendar-todo-line'
+              color='info'
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>

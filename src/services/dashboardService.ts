@@ -12,6 +12,7 @@ export interface DashboardStatisticsDto {
   totalBranches: number
   monthlyRevenue: number
   pendingTransfers: number
+  pendingAdjustments: number
   upcomingExams: number
   todayAttendance: number | { checkIns: number; checkOuts: number; totalScheduledSessions: number }
 }
