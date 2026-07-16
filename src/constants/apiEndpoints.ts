@@ -27,7 +27,9 @@ export const API_ENDPOINTS = {
     adminUpdateRecord: '/Attendance/admin/update-record',
     adminCancelRecord: (recordId: string) => `/Attendance/admin/cancel-record/${recordId}`,
     unassigned: '/Attendance/unassigned',
-    missedSessions: '/Attendance/missed-sessions'
+    missedSessions: '/Attendance/missed-sessions',
+    payrollPeriod: (month?: number, year?: number) =>
+      `/SystemConfig/payroll-period${month ? `?month=${month}` : ''}${year ? `${month ? '&' : '?'}year=${year}` : ''}`
   },
   auditLogs: {
     root: '/audit-logs',

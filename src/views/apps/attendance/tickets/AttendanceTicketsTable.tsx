@@ -104,6 +104,7 @@ const AttendanceTicketsTable = () => {
   const [loadingOptions, setLoadingOptions] = useState(false)
   const [createMonth, setCreateMonth] = useState<number>(new Date().getMonth() + 1)
   const [createYear, setCreateYear] = useState<number>(new Date().getFullYear())
+  const [payrollPeriod, setPayrollPeriod] = useState<{ fromDate: string; toDate: string; startDay: number; endDay: number } | null>(null)
 
   const loadAdjustments = useCallback(async () => {
     try {
@@ -147,12 +148,19 @@ const AttendanceTicketsTable = () => {
   const loadValidSessions = useCallback(async () => {
     try {
       setLoadingOptions(true)
-      const fromDate = toLocalDateString(new Date(createYear, createMonth - 1, 1))
-      const toDate = toLocalDateString(new Date(createYear, createMonth, 0))
 
-      const response = await attendanceService.getUnassignedAttendances({ fromDate, toDate })
-      if (response.success && response.data) {
-        setValidSessions(response.data)
+      const periodResponse = await attendanceService.getPayrollPeriod({ month: createMonth, year: createYear })
+      if (periodResponse.success && periodResponse.data) {
+        setPayrollPeriod(periodResponse.data)
+        const fromDate = periodResponse.data.fromDate
+        const toDate = periodResponse.data.toDate
+
+        const response = await attendanceService.getUnassignedAttendances({ fromDate, toDate })
+        if (response.success && response.data) {
+          setValidSessions(response.data)
+        } else {
+          setValidSessions([])
+        }
       } else {
         setValidSessions([])
       }
@@ -168,12 +176,18 @@ const AttendanceTicketsTable = () => {
     try {
       setLoadingOptions(true)
 
+      const periodResponse = await attendanceService.getPayrollPeriod({ month: createMonth, year: createYear })
+      if (periodResponse.success && periodResponse.data) {
+        setPayrollPeriod(periodResponse.data)
+      }
+
       const response = await attendanceService.getMissedSessions({
         month: createMonth,
         year: createYear
       })
       if (response.success && response.data) {
-        setMissedSessions(response.data)
+        const available = response.data.filter((s: any) => !s.hasExistingAdjustment)
+        setMissedSessions(available)
       } else {
         setMissedSessions([])
       }
@@ -213,6 +227,7 @@ const AttendanceTicketsTable = () => {
 
       const finalReason = adjustmentType === 'MakeupCheckIn' ? 'Dạy thay / Dạy bù' : reason
       let successCount = 0, failCount = 0
+      const errors: string[] = []
 
       for (const sessionId of selectedSessionIds) {
         let createData: any = {
@@ -245,13 +260,24 @@ const AttendanceTicketsTable = () => {
         }
 
         const response = await attendanceAdjustmentService.create(createData)
-        if (response.success) successCount++; else failCount++
+        if (response.success) {
+          successCount++
+        } else {
+          failCount++
+          const errorMsg = response.message || 'Lỗi không xác định'
+          const sessionLabel = adjustmentType === 'MakeupCheckIn'
+            ? `Buổi ${createData.adjustmentDate || ''}`
+            : `Buổi ${createData.adjustmentDate || ''}`
+          errors.push(`${sessionLabel}: ${errorMsg}`)
+        }
       }
 
       if (failCount === 0) {
         showNotification(`Đã tạo thành công ${successCount} phiếu.`, 'success')
+      } else if (successCount === 0) {
+        showNotification(`Tạo phiếu thất bại: ${errors.join('; ')}`, 'error')
       } else {
-        showNotification(`Thành công: ${successCount}, Thất bại: ${failCount}`, 'warning')
+        showNotification(`Thành công: ${successCount}, Thất bại: ${failCount}. Chi tiết: ${errors.join('; ')}`, 'warning')
       }
       setSelectedSessionIds([])
       if (adjustmentType === 'MakeupCheckIn') {
@@ -550,6 +576,15 @@ const AttendanceTicketsTable = () => {
                   ))}
                 </Select>
               </FormControl>
+
+              {payrollPeriod && (
+                <Alert severity='info'>
+                  <Typography variant='body2'>
+                    <strong>Thời gian bảng lương:</strong> Từ ngày {formatDateVN(payrollPeriod.fromDate)} đến ngày {formatDateVN(payrollPeriod.toDate)}
+                    {payrollPeriod.startDay !== 1 && ` (Ngày bắt đầu: ${payrollPeriod.startDay}, Ngày kết thúc: ${payrollPeriod.endDay})`}
+                  </Typography>
+                </Alert>
+              )}
 
               {adjustmentType === 'CheckIn' && (
                 <Grid container spacing={2}>

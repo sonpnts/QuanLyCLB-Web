@@ -715,6 +715,22 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: false, data: null, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
+
+  async getPayrollPeriod(params?: { month?: number; year?: number }): Promise<ResponseResult<any>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.attendance.payrollPeriod(params?.month, params?.year))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, data: null, message: apiResponse.message }
+      }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('AttendanceService', 'getPayrollPeriod', error)
+      return { success: false, data: null, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
 }
 
 export default new AttendanceService()
