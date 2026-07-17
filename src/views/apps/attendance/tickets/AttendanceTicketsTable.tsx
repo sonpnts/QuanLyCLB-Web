@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { toLocalDateString } from '@/utils/dateTime'
 
@@ -105,6 +105,7 @@ const AttendanceTicketsTable = () => {
   const [createMonth, setCreateMonth] = useState<number>(new Date().getMonth() + 1)
   const [createYear, setCreateYear] = useState<number>(new Date().getFullYear())
   const [payrollPeriod, setPayrollPeriod] = useState<{ fromDate: string; toDate: string; startDay: number; endDay: number } | null>(null)
+  const [filterMissedClassId, setFilterMissedClassId] = useState<string>('')
 
   const loadAdjustments = useCallback(async () => {
     try {
@@ -206,8 +207,23 @@ const AttendanceTicketsTable = () => {
       } else if (adjustmentType === 'CheckIn') {
         loadMissedSessions()
       }
+      setFilterMissedClassId('')
+      setSelectedSessionIds([])
     }
   }, [createDialogOpen, adjustmentType, createMonth, createYear, loadValidSessions, loadMissedSessions])
+
+  const uniqueMissedClasses = useMemo(() => {
+    const map = new Map<string, { classId: string; className: string; classCode: string }>()
+    for (const s of missedSessions) {
+      if (!map.has(s.classId)) map.set(s.classId, { classId: s.classId, className: s.className, classCode: s.classCode })
+    }
+    return Array.from(map.values())
+  }, [missedSessions])
+
+  const filteredMissedSessions = useMemo(() => {
+    if (!filterMissedClassId) return missedSessions
+    return missedSessions.filter(s => s.classId === filterMissedClassId)
+  }, [missedSessions, filterMissedClassId])
 
   const handleCreateAdjustment = async () => {
     if (selectedSessionIds.length === 0) {
@@ -633,6 +649,25 @@ const AttendanceTicketsTable = () => {
                 : 'Chọn buổi học chưa có chấm công (Thiếu chấm công)'}
             </Typography>
 
+            {adjustmentType === 'CheckIn' && uniqueMissedClasses.length > 0 && (
+              <FormControl fullWidth size='small'>
+                <InputLabel>Lọc theo lớp</InputLabel>
+                <Select
+                  value={filterMissedClassId}
+                  label='Lọc theo lớp'
+                  onChange={e => {
+                    setFilterMissedClassId(e.target.value)
+                    setSelectedSessionIds([])
+                  }}
+                >
+                  <MenuItem value=''>Tất cả lớp</MenuItem>
+                  {uniqueMissedClasses.map(c => (
+                    <MenuItem key={c.classId} value={c.classId}>{c.classCode} - {c.className}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+
             {loadingOptions ? (
               <Box className='flex justify-center py-4'>
                 <CircularProgress size={24} />
@@ -700,8 +735,8 @@ const AttendanceTicketsTable = () => {
                 </TableContainer>
               )
             ) : (
-              missedSessions.length === 0 ? (
-                <Alert severity='info'>Không có buổi học nào cần bổ sung chấm công.</Alert>
+              filteredMissedSessions.length === 0 ? (
+                <Alert severity='info'>Không có buổi học nào cần bổ sung chấm công{filterMissedClassId ? ' cho lớp đã chọn' : ''}.</Alert>
               ) : (
                 <TableContainer>
                   <Table size='small'>
@@ -710,9 +745,9 @@ const AttendanceTicketsTable = () => {
                         <TableCell padding='checkbox'>
                           <input
                             type='checkbox'
-                            checked={selectedSessionIds.length === missedSessions.length && missedSessions.length > 0}
+                            checked={selectedSessionIds.length === filteredMissedSessions.length && filteredMissedSessions.length > 0}
                             onChange={e => {
-                              if (e.target.checked) setSelectedSessionIds(missedSessions.map(s => `${s.classScheduleId}_${s.sessionDate}`))
+                              if (e.target.checked) setSelectedSessionIds(filteredMissedSessions.map(s => `${s.classScheduleId}_${s.sessionDate}`))
                               else setSelectedSessionIds([])
                             }}
                           />
@@ -725,7 +760,7 @@ const AttendanceTicketsTable = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {missedSessions.map(session => {
+                      {filteredMissedSessions.map(session => {
                         const sessionKey = `${session.classScheduleId}_${session.sessionDate}`
                         return (
                           <TableRow

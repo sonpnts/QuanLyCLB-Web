@@ -32,6 +32,9 @@ import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
+import Checkbox from '@mui/material/Checkbox'
+import ListItemText from '@mui/material/ListItemText'
+import Divider from '@mui/material/Divider'
 
 import attendanceService from '@/services/attendanceService'
 import userService from '@/services/userService'
@@ -154,6 +157,11 @@ const AdminAttendanceHistoryView = () => {
   const [reportRowsPerPage, setReportRowsPerPage] = useState(10)
   const [selectedReport, setSelectedReport] = useState<any>(null)
   const [reportDetailOpen, setReportDetailOpen] = useState(false)
+  const [reportExcelData, setReportExcelData] = useState<{ sheets: string[]; data: Record<string, any[][]> } | null>(null)
+  const [reportActiveSheet, setReportActiveSheet] = useState(0)
+  const [loadingExcel, setLoadingExcel] = useState(false)
+
+  const [allUsers, setAllUsers] = useState<UserOption[]>([])
 
   const loadPairs = useCallback(async () => {
     setLoading(true)
@@ -212,6 +220,32 @@ const AdminAttendanceHistoryView = () => {
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
+    }
+  }
+
+  const handlePreviewReport = async (report: any) => {
+    setSelectedReport(report)
+    setReportDetailOpen(true)
+    setLoadingExcel(true)
+    setReportExcelData(null)
+    setReportActiveSheet(0)
+    try {
+      const blob = await attendanceService.downloadReport(report.id)
+      if (blob) {
+        const XLSX = await import('xlsx')
+        const arrayBuffer = await blob.arrayBuffer()
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+        const data: Record<string, any[][]> = {}
+        for (const sheetName of workbook.SheetNames) {
+          const sheet = workbook.Sheets[sheetName]
+          data[sheetName] = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][]
+        }
+        setReportExcelData({ sheets: workbook.SheetNames, data })
+      }
+    } catch {
+      setReportExcelData(null)
+    } finally {
+      setLoadingExcel(false)
     }
   }
 
@@ -414,6 +448,33 @@ const AdminAttendanceHistoryView = () => {
     }
   }
 
+  const openPayrollDialog = async () => {
+    setDialogMonth(selectedMonth)
+    setDialogYear(selectedYear)
+    setSelectedUserIds(new Set())
+    setGenerateResult(null)
+    setDialogOpen(true)
+
+    try {
+      const response = await attendanceService.getAdminAllPairs({
+        month: selectedMonth,
+        year: selectedYear,
+        pageNumber: 1,
+        pageSize: 1000
+      })
+      if (response.success && response.data) {
+        const allPairs = response.data.items || []
+        const uniqueUsers = new Map<string, string>()
+        for (const p of allPairs) {
+          if (!uniqueUsers.has(p.userId)) uniqueUsers.set(p.userId, p.userName)
+        }
+        setAllUsers(Array.from(uniqueUsers.entries()).map(([id, fullName]) => ({ id, fullName })))
+      }
+    } catch {
+      setAllUsers([])
+    }
+  }
+
   const validPairs = pairs.filter(p => p.isValid)
   const invalidPairs = pairs.filter(p => !p.isValid)
   const totalDuration = validPairs.reduce((sum, p) => sum + p.durationMinutes, 0)
@@ -601,8 +662,8 @@ const AdminAttendanceHistoryView = () => {
 
         {activeTab === 1 && (
           <Card>
-            <CardHeader title='Lịch sử bảng lương đã tạo' subheader='Các bảng lương đã tạo trước đó, có thể tải về để xem chi tiết.'
-              action={<Button variant='contained' onClick={() => setDialogOpen(true)}>Tạo bảng lương</Button>} />
+            <CardHeader title='Lịch sử bảng lương đã tạo' subheader='Các bảng lương đã tạo trước đó, có thể xem trực tiếp hoặc tải về.'
+              action={<Button variant='contained' onClick={openPayrollDialog}>Tạo bảng lương</Button>} />
             <CardContent>
               {loadingReports ? (
                 <Box className='flex items-center justify-center py-10'><CircularProgress size={30} /></Box>
@@ -622,14 +683,24 @@ const AdminAttendanceHistoryView = () => {
                     </TableHead>
                     <TableBody>
                       {reportHistory.slice(reportPage * reportRowsPerPage, (reportPage + 1) * reportRowsPerPage).map((report: any) => (
-                        <TableRow key={report.id} hover sx={{ cursor: 'pointer' }} onClick={() => { setSelectedReport(report); setReportDetailOpen(true) }}>
+                        <TableRow key={report.id} hover sx={{ cursor: 'pointer' }} onClick={() => handlePreviewReport(report)}>
                           <TableCell><Typography fontWeight={500}>Tháng {report.month}/{report.year}</Typography></TableCell>
                           <TableCell>{report.instructorNames || '-'}</TableCell>
                           <TableCell>{report.createdByUserName || 'Hệ thống'}</TableCell>
                           <TableCell>{formatDateTimeVN(report.createdAt)}</TableCell>
                           <TableCell align='center'>
-                            <Button size='small' variant='outlined' startIcon={<i className='ri-download-line' />}
-                              onClick={(e) => { e.stopPropagation(); handleDownloadReport(report.id, report.fileName) }}>Tải về</Button>
+                            <Stack direction='row' spacing={0.5} justifyContent='center'>
+                              <Tooltip title='Xem bảng lương'>
+                                <IconButton size='small' color='primary' onClick={(e) => { e.stopPropagation(); handlePreviewReport(report) }}>
+                                  <i className='ri-eye-line' />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title='Tải về'>
+                                <IconButton size='small' onClick={(e) => { e.stopPropagation(); handleDownloadReport(report.id, report.fileName) }}>
+                                  <i className='ri-download-line' />
+                                </IconButton>
+                              </Tooltip>
+                            </Stack>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -804,28 +875,29 @@ const AdminAttendanceHistoryView = () => {
                 </FormControl>
               </Grid>
             </Grid>
-            <Typography variant='subtitle2' fontWeight={600}>Chọn huấn luyện viên ({pairs.length} có dữ liệu trên trang)</Typography>
-            {pairs.length > 0 && (
+            <Typography variant='subtitle2' fontWeight={600}>Chọn huấn luyện viên ({allUsers.length} có dữ liệu)</Typography>
+            {allUsers.length > 0 && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <input type='checkbox' checked={selectedUserIds.size === pairs.length} onChange={e => handleSelectAllPayrollUsers(e.target.checked)} />
-                <Typography variant='body2'>Chọn tất cả ({pairs.length})</Typography>
+                <Checkbox checked={selectedUserIds.size === allUsers.length && allUsers.length > 0}
+                  onChange={e => { if (e.target.checked) setSelectedUserIds(new Set(allUsers.map(u => u.id))); else setSelectedUserIds(new Set()) }} />
+                <Typography variant='body2'>Chọn tất cả ({allUsers.length})</Typography>
               </Box>
             )}
             <Box sx={{ maxHeight: 300, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
-              {pairs.length === 0 ? <Alert severity='info' sx={{ m: 1 }}>Không có dữ liệu.</Alert> : (
+              {allUsers.length === 0 ? <Alert severity='info' sx={{ m: 1 }}>Không có dữ liệu.</Alert> : (
                 <Stack spacing={0}>
-                  {pairs.filter((p, i, arr) => arr.findIndex(x => x.userId === p.userId) === i).map(pair => (
-                    <Box key={pair.userId} sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1, py: 0.5, borderBottom: 1, borderColor: 'divider' }}>
-                      <input type='checkbox' checked={selectedUserIds.has(pair.userId)}
-                        onChange={e => { const next = new Set(selectedUserIds); if (e.target.checked) next.add(pair.userId); else next.delete(pair.userId); setSelectedUserIds(next) }} />
-                      <Typography variant='body2' fontWeight={500}>{pair.userName}</Typography>
+                  {allUsers.map(user => (
+                    <Box key={user.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1, py: 0.5, borderBottom: 1, borderColor: 'divider' }}>
+                      <Checkbox checked={selectedUserIds.has(user.id)}
+                        onChange={e => { const next = new Set(selectedUserIds); if (e.target.checked) next.add(user.id); else next.delete(user.id); setSelectedUserIds(next) }} />
+                      <Typography variant='body2' fontWeight={500}>{user.fullName}</Typography>
                     </Box>
                   ))}
                 </Stack>
               )}
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <input type='checkbox' checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} />
+              <Checkbox checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} />
               <Typography variant='body2'>Gửi email báo cáo cho huấn luyện viên được chọn</Typography>
             </Box>
             {generateResult && (
@@ -841,31 +913,70 @@ const AdminAttendanceHistoryView = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog chi tiết báo cáo */}
-      <Dialog open={reportDetailOpen} onClose={() => setReportDetailOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Chi tiết bảng lương</DialogTitle>
+      {/* Dialog chi tiết báo cáo - xem trực tiếp */}
+      <Dialog open={reportDetailOpen} onClose={() => setReportDetailOpen(false)} maxWidth='xl' fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant='h6'>
+              {selectedReport ? `Bảng lương Tháng ${selectedReport.month}/${selectedReport.year}` : 'Chi tiết bảng lương'}
+            </Typography>
+            {selectedReport && (
+              <Button size='small' variant='outlined' startIcon={<i className='ri-download-line' />}
+                onClick={() => handleDownloadReport(selectedReport.id, selectedReport.fileName)}>Tải về</Button>
+            )}
+          </Box>
+        </DialogTitle>
         <DialogContent>
           {selectedReport && (
             <Stack spacing={2} sx={{ mt: 1 }}>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 1 }}>
-                <Typography variant='body2' color='text.secondary'>Tháng/Năm:</Typography>
-                <Typography variant='body2' fontWeight={500}>Tháng {selectedReport.month}/{selectedReport.year}</Typography>
-                <Typography variant='body2' color='text.secondary'>HLV:</Typography>
-                <Typography variant='body2' fontWeight={500}>{selectedReport.instructorNames || '-'}</Typography>
-                <Typography variant='body2' color='text.secondary'>Người tạo:</Typography>
-                <Typography variant='body2' fontWeight={500}>{selectedReport.createdByUserName || 'Hệ thống'}</Typography>
-                <Typography variant='body2' color='text.secondary'>Ngày tạo:</Typography>
-                <Typography variant='body2' fontWeight={500}>{formatDateTimeVN(selectedReport.createdAt)}</Typography>
-                <Typography variant='body2' color='text.secondary'>File:</Typography>
-                <Typography variant='body2' fontWeight={500}>{selectedReport.fileName}</Typography>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Chip label={`Tháng ${selectedReport.month}/${selectedReport.year}`} color='primary' variant='tonal' />
+                <Chip label={`HLV: ${selectedReport.instructorNames || '-'}`} variant='outlined' />
+                <Chip label={`Người tạo: ${selectedReport.createdByUserName || 'Hệ thống'}`} variant='outlined' />
+                <Chip label={`Ngày tạo: ${formatDateTimeVN(selectedReport.createdAt)}`} variant='outlined' />
               </Box>
+
+              <Divider />
+
+              {loadingExcel ? (
+                <Box className='flex items-center justify-center py-10'>
+                  <CircularProgress size={30} />
+                  <Typography variant='body2' sx={{ ml: 2 }}>Đang tải dữ liệu...</Typography>
+                </Box>
+              ) : reportExcelData ? (
+                <>
+                  {reportExcelData.sheets.length > 1 && (
+                    <Tabs value={reportActiveSheet} onChange={(_, v) => setReportActiveSheet(v)}>
+                      {reportExcelData.sheets.map((name, idx) => (
+                        <Tab key={idx} label={name} />
+                      ))}
+                    </Tabs>
+                  )}
+                  <Box sx={{ overflow: 'auto', maxHeight: '60vh', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                    <Table size='small' stickyHeader>
+                      <TableBody>
+                        {(reportExcelData.data[reportExcelData.sheets[reportActiveSheet]] || []).map((row, rowIdx) => (
+                          <TableRow key={rowIdx}>
+                            {row.map((cell, cellIdx) => (
+                              <TableCell key={cellIdx} sx={{ minWidth: 80, whiteSpace: 'nowrap' }}
+                                style={rowIdx === 0 ? { fontWeight: 600, backgroundColor: '#f5f5f5' } : undefined}>
+                                {cell != null ? String(cell) : ''}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                </>
+              ) : (
+                <Alert severity='info'>Không thể tải dữ liệu file Excel.</Alert>
+              )}
             </Stack>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setReportDetailOpen(false)}>Đóng</Button>
-          {selectedReport && <Button variant='contained' startIcon={<i className='ri-download-line' />}
-            onClick={() => handleDownloadReport(selectedReport.id, selectedReport.fileName)}>Tải về</Button>}
         </DialogActions>
       </Dialog>
     </>
