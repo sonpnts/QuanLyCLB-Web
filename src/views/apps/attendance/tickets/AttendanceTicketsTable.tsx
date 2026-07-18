@@ -101,6 +101,7 @@ const AttendanceTicketsTable = () => {
 
   const [validSessions, setValidSessions] = useState<any[]>([])
   const [missedSessions, setMissedSessions] = useState<any[]>([])
+  const [existingAdjustments, setExistingAdjustments] = useState<Set<string>>(new Set())
   const [loadingOptions, setLoadingOptions] = useState(false)
   const [createMonth, setCreateMonth] = useState<number>(new Date().getMonth() + 1)
   const [createYear, setCreateYear] = useState<number>(new Date().getFullYear())
@@ -156,9 +157,24 @@ const AttendanceTicketsTable = () => {
         const fromDate = periodResponse.data.fromDate
         const toDate = periodResponse.data.toDate
 
-        const response = await attendanceService.getUnassignedAttendances({ fromDate, toDate })
-        if (response.success && response.data) {
-          setValidSessions(response.data)
+        const [sessionRes, adjRes] = await Promise.all([
+          attendanceService.getUnassignedAttendances({ fromDate, toDate }),
+          attendanceAdjustmentService.getMyAdjustments({ month: createMonth, year: createYear, pageNumber: 1, pageSize: 500 })
+        ])
+
+        const existingDates = new Set<string>()
+        if (adjRes.success && adjRes.data?.items) {
+          for (const a of adjRes.data.items) {
+            if (a.adjustmentType === 'MakeupCheckIn' && (a.status === 'Pending' || a.status === 'Approved')) {
+              existingDates.add(a.adjustmentDate)
+            }
+          }
+        }
+        setExistingAdjustments(existingDates)
+
+        if (sessionRes.success && sessionRes.data) {
+          const filtered = sessionRes.data.filter((s: any) => !existingDates.has(s.sessionDate))
+          setValidSessions(filtered)
         } else {
           setValidSessions([])
         }
@@ -177,17 +193,32 @@ const AttendanceTicketsTable = () => {
     try {
       setLoadingOptions(true)
 
-      const periodResponse = await attendanceService.getPayrollPeriod({ month: createMonth, year: createYear })
-      if (periodResponse.success && periodResponse.data) {
-        setPayrollPeriod(periodResponse.data)
+      const [periodRes, sessionRes, adjRes] = await Promise.all([
+        attendanceService.getPayrollPeriod({ month: createMonth, year: createYear }),
+        attendanceService.getMissedSessions({ month: createMonth, year: createYear }),
+        attendanceAdjustmentService.getMyAdjustments({ month: createMonth, year: createYear, pageNumber: 1, pageSize: 500 })
+      ])
+
+      if (periodRes.success && periodRes.data) {
+        setPayrollPeriod(periodRes.data)
       }
 
-      const response = await attendanceService.getMissedSessions({
-        month: createMonth,
-        year: createYear
-      })
-      if (response.success && response.data) {
-        const available = response.data.filter((s: any) => !s.hasExistingAdjustment)
+      const existingDates = new Set<string>()
+      if (adjRes.success && adjRes.data?.items) {
+        for (const a of adjRes.data.items) {
+          if (a.adjustmentType === 'CheckIn' && (a.status === 'Pending' || a.status === 'Approved')) {
+            existingDates.add(a.adjustmentDate)
+          }
+        }
+      }
+      setExistingAdjustments(existingDates)
+
+      if (sessionRes.success && sessionRes.data) {
+        const available = sessionRes.data.filter((s: any) => {
+          if (s.hasExistingAdjustment) return false
+          const sessionDateStr = s.sessionDate?.split('T')[0] || s.sessionDate
+          return !existingDates.has(sessionDateStr)
+        })
         setMissedSessions(available)
       } else {
         setMissedSessions([])
@@ -209,6 +240,7 @@ const AttendanceTicketsTable = () => {
       }
       setFilterMissedClassId('')
       setSelectedSessionIds([])
+      setExistingAdjustments(new Set())
     }
   }, [createDialogOpen, adjustmentType, createMonth, createYear, loadValidSessions, loadMissedSessions])
 
@@ -373,6 +405,7 @@ const AttendanceTicketsTable = () => {
     setNotes('')
     setCreateMonth(new Date().getMonth() + 1)
     setCreateYear(new Date().getFullYear())
+    setExistingAdjustments(new Set())
   }
 
   const getStatusLabel = (status: AdjustmentStatus) => {
@@ -573,9 +606,9 @@ const AttendanceTicketsTable = () => {
         </Card>
       </Box>
 
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth='md' fullWidth>
+      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth='lg' fullWidth>
         <DialogTitle>Tạo phiếu chấm công bù</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ minHeight: '50vh' }}>
           <Stack spacing={3} sx={{ mt: 2 }}>
               <FormControl fullWidth>
                 <InputLabel>Loại điều chỉnh</InputLabel>
@@ -647,6 +680,9 @@ const AttendanceTicketsTable = () => {
               {adjustmentType === 'MakeupCheckIn'
                 ? 'Chọn lượt chấm công chưa gắn với lớp (Dạy thay / Dạy bù)'
                 : 'Chọn buổi học chưa có chấm công (Thiếu chấm công)'}
+              {selectedSessionIds.length > 0 && (
+                <Chip label={`Đã chọn ${selectedSessionIds.length}`} size='small' color='primary' sx={{ ml: 1 }} />
+              )}
             </Typography>
 
             {adjustmentType === 'CheckIn' && uniqueMissedClasses.length > 0 && (
@@ -676,11 +712,11 @@ const AttendanceTicketsTable = () => {
               validSessions.length === 0 ? (
                 <Alert severity='info'>Không có lượt chấm công hợp lệ nào trong tháng này.</Alert>
               ) : (
-                <TableContainer>
-                  <Table size='small'>
+                <TableContainer sx={{ maxHeight: '40vh', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                  <Table size='small' stickyHeader>
                     <TableHead>
                       <TableRow>
-                        <TableCell padding='checkbox'>
+                        <TableCell padding='checkbox' sx={{ bgcolor: 'background.paper' }}>
                           <input
                             type='checkbox'
                             checked={selectedSessionIds.length === validSessions.length && validSessions.length > 0}
@@ -690,11 +726,11 @@ const AttendanceTicketsTable = () => {
                             }}
                           />
                         </TableCell>
-                        <TableCell>Ngày</TableCell>
-                        <TableCell>Vào</TableCell>
-                        <TableCell>Ra</TableCell>
-                        <TableCell>Thời gian</TableCell>
-                        <TableCell>Chi nhánh</TableCell>
+                        <TableCell sx={{ bgcolor: 'background.paper' }}>Ngày</TableCell>
+                        <TableCell sx={{ bgcolor: 'background.paper' }}>Vào</TableCell>
+                        <TableCell sx={{ bgcolor: 'background.paper' }}>Ra</TableCell>
+                        <TableCell sx={{ bgcolor: 'background.paper' }}>Thời gian</TableCell>
+                        <TableCell sx={{ bgcolor: 'background.paper' }}>Chi nhánh</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -738,11 +774,11 @@ const AttendanceTicketsTable = () => {
               filteredMissedSessions.length === 0 ? (
                 <Alert severity='info'>Không có buổi học nào cần bổ sung chấm công{filterMissedClassId ? ' cho lớp đã chọn' : ''}.</Alert>
               ) : (
-                <TableContainer>
-                  <Table size='small'>
+                <TableContainer sx={{ maxHeight: '40vh', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                  <Table size='small' stickyHeader>
                     <TableHead>
                       <TableRow>
-                        <TableCell padding='checkbox'>
+                        <TableCell padding='checkbox' sx={{ bgcolor: 'background.paper' }}>
                           <input
                             type='checkbox'
                             checked={selectedSessionIds.length === filteredMissedSessions.length && filteredMissedSessions.length > 0}
@@ -752,11 +788,11 @@ const AttendanceTicketsTable = () => {
                             }}
                           />
                         </TableCell>
-                        <TableCell>Lớp</TableCell>
-                        <TableCell>Thứ</TableCell>
-                        <TableCell>Giờ học</TableCell>
-                        <TableCell>Ngày</TableCell>
-                        <TableCell>Chi nhánh</TableCell>
+                        <TableCell sx={{ bgcolor: 'background.paper' }}>Lớp</TableCell>
+                        <TableCell sx={{ bgcolor: 'background.paper' }}>Thứ</TableCell>
+                        <TableCell sx={{ bgcolor: 'background.paper' }}>Giờ học</TableCell>
+                        <TableCell sx={{ bgcolor: 'background.paper' }}>Ngày</TableCell>
+                        <TableCell sx={{ bgcolor: 'background.paper' }}>Chi nhánh</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
