@@ -29,6 +29,9 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import TableSortLabel from '@mui/material/TableSortLabel'
 import Paper from '@mui/material/Paper'
+import Tab from '@mui/material/Tab'
+import Tabs from '@mui/material/Tabs'
+import Badge from '@mui/material/Badge'
 
 import dashboardService from '@/services/dashboardService'
 import studentService from '@/services/studentService'
@@ -100,11 +103,13 @@ const StatusSection = ({
   items: NonNullable<DashboardSystemNotificationsDto['pendingItems']>
 }) => (
   <Box>
-    <Typography variant='subtitle2' className='mb-2'>
-      {title}
-    </Typography>
+    {title && (
+      <Typography variant='subtitle2' className='mb-2'>
+        {title}
+      </Typography>
+    )}
     <div className='flex flex-col gap-2'>
-      {items.length === 0 && <Typography color='text.secondary'>{emptyText}</Typography>}
+      {items.length === 0 && <Typography color='text.secondary' variant='body2'>{emptyText}</Typography>}
       {items.map(item => (
         <Box key={`${item.moduleKey}-${item.recordId}`} className='border rounded p-3'>
           <div className='flex justify-between items-start gap-3'>
@@ -126,7 +131,7 @@ const StatusSection = ({
                 </Typography>
               )}
             </div>
-            <Button component={Link} href={item.detailUrl} size='small' variant='outlined'>
+            <Button component={Link} href={item.detailUrl} size='small' variant='outlined' sx={{ flexShrink: 0 }}>
               Chi tiết
             </Button>
           </div>
@@ -161,6 +166,7 @@ const DashboardHome = () => {
 
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
   })
+  const [notificationTab, setNotificationTab] = useState(0)
 
   const { auth } = useAuth()
 
@@ -309,7 +315,7 @@ const DashboardHome = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <StatCard
               title='Tổng học viên'
               value={`${stats?.activeStudents ?? 0}/${stats?.totalStudents ?? 0}`}
@@ -317,62 +323,31 @@ const DashboardHome = () => {
               color='primary'
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <StatCard
-              title='Lớp hoạt động'
-              value={stats?.activeClasses ?? 0}
-              icon='ri-community-line'
-              color='success'
-              subtitle={`Tổng ${stats?.totalClasses ?? 0} lớp`}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <StatCard
-              title={`Doanh thu tháng ${monthText}/${yearText}`}
-              value={`${formatMoney(monthlyRevenue)} ₫`}
-              icon='ri-money-dollar-circle-line'
-              color='warning'
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              title='Huấn luyện viên'
-              value={stats?.totalInstructors ?? 0}
-              icon='ri-user-star-line'
-              color='info'
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard title='Chi nhánh' value={stats?.totalBranches ?? 0} icon='ri-map-pin-line' color='secondary' />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              title='Yêu cầu chuyển lớp chờ duyệt'
-              value={stats?.pendingTransfers ?? 0}
-              icon='ri-arrow-left-right-line'
-              color='warning'
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              title='Phiếu chấm công bù chờ duyệt'
-              value={stats?.pendingAdjustments ?? 0}
-              icon='ri-calendar-todo-line'
-              color='info'
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              title='Điểm danh hôm nay'
-              value={
-                typeof stats?.todayAttendance === 'object'
-                  ? (stats?.todayAttendance?.checkIns ?? 0)
-                  : (stats?.todayAttendance ?? 0)
-              }
-              icon='ri-calendar-check-line'
-              color='error'
-            />
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Card sx={{ height: '100%' }}>
+              <CardContent sx={{ p: '16px !important', display: 'flex', flexDirection: 'column', gap: 2, height: '100%', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant='caption' color='text.secondary'>HV mới tháng {monthText}/{yearText}</Typography>
+                  <Box className='flex items-center justify-between'>
+                    <Typography variant='h5' fontWeight={700}>{studentMonthStats?.newStudentsCount ?? 0}</Typography>
+                    <Button size='small' variant='outlined' disabled={!studentMonthStats?.newStudentsCount}
+                      onClick={() => setStudentListDialog({ open: true, title: `HV mới tháng ${monthText}/${yearText}`, list: studentMonthStats?.newStudentsList ?? [] })}>
+                      Xem
+                    </Button>
+                  </Box>
+                </Box>
+                <Box>
+                  <Typography variant='caption' color='text.secondary'>HV tạm nghỉ tháng {monthText}/{yearText}</Typography>
+                  <Box className='flex items-center justify-between'>
+                    <Typography variant='h5' fontWeight={700}>{studentMonthStats?.suspendedStudentsCount ?? 0}</Typography>
+                    <Button size='small' variant='outlined' color='warning' disabled={!studentMonthStats?.suspendedStudentsCount}
+                      onClick={() => setStudentListDialog({ open: true, title: `HV tạm nghỉ tháng ${monthText}/${yearText}`, list: studentMonthStats?.suspendedStudentsList ?? [] })}>
+                      Xem
+                    </Button>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
           </Grid>
         </>
       )}
@@ -397,110 +372,106 @@ const DashboardHome = () => {
         </Grid>
       )}
 
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card sx={{ height: '100%' }}>
-          <CardHeader title='Thống kê học viên theo tháng' />
-          <CardContent className='flex flex-col gap-3'>
-            <Box className='flex items-center justify-between'>
-              <Typography>
-                Học viên mới tháng {monthText}/{yearText}: <strong>{studentMonthStats?.newStudentsCount ?? 0}</strong>
-              </Typography>
-              <Button
-                size='small'
-                variant='outlined'
-                disabled={!studentMonthStats?.newStudentsCount}
-                onClick={() =>
-                  setStudentListDialog({
-                    open: true,
-                    title: `Học viên mới tháng ${monthText}/${yearText}`,
-                    list: studentMonthStats?.newStudentsList ?? []
-                  })
-                }
-              >
-                Xem danh sách
-              </Button>
-            </Box>
-            <Box className='flex items-center justify-between'>
-              <Typography>
-                Học viên tạm nghỉ tháng {monthText}/{yearText}: <strong>{studentMonthStats?.suspendedStudentsCount ?? 0}</strong>
-              </Typography>
-              <Button
-                size='small'
-                variant='outlined'
-                color='warning'
-                disabled={!studentMonthStats?.suspendedStudentsCount}
-                onClick={() =>
-                  setStudentListDialog({
-                    open: true,
-                    title: `Học viên tạm nghỉ tháng ${monthText}/${yearText}`,
-                    list: studentMonthStats?.suspendedStudentsList ?? []
-                  })
-                }
-              >
-                Xem danh sách
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card sx={{ height: '100%' }}>
+      <Grid size={{ xs: 12 }}>
+        <Card>
           <CardHeader
             title='Thông báo hệ thống'
-            subheader={
-              canViewAdminDashboard
-                ? 'Chờ duyệt lấy toàn bộ, đã duyệt và từ chối theo tháng đang chọn'
-                : 'Tác vụ của bạn'
-            }
+            subheader={canViewAdminDashboard ? 'Quản lý các yêu cầu chờ xử lý' : 'Tác vụ của bạn'}
           />
-          <CardContent className='flex flex-col gap-3'>
-            <div className='flex gap-2 flex-wrap'>
-              <Chip label={`Chờ duyệt: ${systemNotifications?.totalPending ?? 0}`} color='warning' variant='tonal' />
-              <Chip label={`Đã duyệt: ${systemNotifications?.totalApproved ?? 0}`} color='success' variant='tonal' />
-              <Chip label={`Từ chối: ${systemNotifications?.totalRejected ?? 0}`} color='error' variant='tonal' />
-              <Chip label={`Tổng: ${systemNotifications?.totalItems ?? 0}`} color='primary' variant='tonal' />
-            </div>
-            {!canViewNotifications && (
+          <CardContent sx={{ pt: 0 }}>
+            {!canViewNotifications ? (
               <Typography color='text.secondary'>Bạn chưa được cấp quyền xem thông báo hệ thống.</Typography>
-            )}
-          </CardContent>
-        </Card>
-      </Grid>
+            ) : (
+              <>
+                <Box className='flex gap-2 flex-wrap mb-3'>
+                  <Chip
+                    label={`Chờ duyệt: ${systemNotifications?.totalPending ?? 0}`}
+                    color='warning'
+                    variant='tonal'
+                    size='small'
+                  />
+                  <Chip
+                    label={`Đã duyệt: ${systemNotifications?.totalApproved ?? 0}`}
+                    color='success'
+                    variant='tonal'
+                    size='small'
+                  />
+                  <Chip
+                    label={`Từ chối: ${systemNotifications?.totalRejected ?? 0}`}
+                    color='error'
+                    variant='tonal'
+                    size='small'
+                  />
+                  <Chip
+                    label={`Tổng: ${systemNotifications?.totalItems ?? 0}`}
+                    color='primary'
+                    variant='tonal'
+                    size='small'
+                  />
+                </Box>
 
-      <Grid size={{ xs: 12, md: 4 }}>
-        <Card sx={{ height: '100%' }}>
-          <CardHeader title='Chờ duyệt' />
-          <CardContent>
-            <StatusSection
-              title='Danh sách'
-              emptyText='Không có yêu cầu chờ duyệt'
-              items={systemNotifications?.pendingItems ?? []}
-            />
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <Card sx={{ height: '100%' }}>
-          <CardHeader title='Đã duyệt' />
-          <CardContent>
-            <StatusSection
-              title='Danh sách'
-              emptyText='Không có mục đã duyệt'
-              items={(systemNotifications?.approvedItems ?? []).slice(0, 6)}
-            />
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <Card sx={{ height: '100%' }}>
-          <CardHeader title='Từ chối' />
-          <CardContent>
-            <StatusSection
-              title='Danh sách'
-              emptyText='Không có mục bị từ chối'
-              items={(systemNotifications?.rejectedItems ?? []).slice(0, 6)}
-            />
+                <Tabs
+                  value={notificationTab}
+                  onChange={(_, v) => setNotificationTab(v)}
+                  sx={{ minHeight: 36, mb: 2 }}
+                >
+                  <Tab
+                    label={
+                      <Badge
+                        badgeContent={systemNotifications?.totalPending ?? 0}
+                        color='warning'
+                        max={99}
+                        sx={{ '& .MuiBadge-badge': { right: -16, top: 2 } }}
+                      >
+                        Chờ duyệt
+                      </Badge>
+                    }
+                    sx={{ minHeight: 36, textTransform: 'none', fontWeight: 600 }}
+                  />
+                  <Tab
+                    label='Đã duyệt'
+                    sx={{ minHeight: 36, textTransform: 'none', fontWeight: 600 }}
+                  />
+                  <Tab
+                    label={
+                      <Badge
+                        badgeContent={systemNotifications?.totalRejected ?? 0}
+                        color='error'
+                        max={99}
+                        sx={{ '& .MuiBadge-badge': { right: -16, top: 2 } }}
+                      >
+                        Từ chối
+                      </Badge>
+                    }
+                    sx={{ minHeight: 36, textTransform: 'none', fontWeight: 600 }}
+                  />
+                </Tabs>
+
+                <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                  {notificationTab === 0 && (
+                    <StatusSection
+                      title=''
+                      emptyText='Không có yêu cầu chờ duyệt'
+                      items={systemNotifications?.pendingItems ?? []}
+                    />
+                  )}
+                  {notificationTab === 1 && (
+                    <StatusSection
+                      title=''
+                      emptyText='Không có mục đã duyệt'
+                      items={systemNotifications?.approvedItems ?? []}
+                    />
+                  )}
+                  {notificationTab === 2 && (
+                    <StatusSection
+                      title=''
+                      emptyText='Không có mục bị từ chối'
+                      items={systemNotifications?.rejectedItems ?? []}
+                    />
+                  )}
+                </Box>
+              </>
+            )}
           </CardContent>
         </Card>
       </Grid>
