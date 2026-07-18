@@ -528,6 +528,7 @@ const AttendanceTicketsTable = () => {
                         <TableCell>Chi nhánh</TableCell>
                         <TableCell>Lý do</TableCell>
                         <TableCell>Trạng thái</TableCell>
+                        <TableCell>Ngày tạo</TableCell>
                         {isAdmin && <TableCell align='center'>Thao tác</TableCell>}
                       </TableRow>
                     </TableHead>
@@ -892,6 +893,9 @@ const AttendanceTicketsTable = () => {
                   </Typography>
                   <Typography variant='body2'>
                     <strong>Lý do:</strong> {selectedAdjustment.reason}
+                  </Typography>
+                  <Typography variant='body2'>
+                    <strong>Ngày tạo yêu cầu:</strong> {formatDateTimeVN(selectedAdjustment.createdAt)}
                   </Typography>
                 </Alert>
 
