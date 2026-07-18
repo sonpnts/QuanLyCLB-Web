@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { toLocalDateString } from '@/utils/dateTime'
 
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -520,10 +519,10 @@ const AttendanceTicketsTable = () => {
                   <Table size='small'>
                     <TableHead>
                       <TableRow>
-                        <TableCell>Ngày</TableCell>
                         {isAdmin && <TableCell>HLV</TableCell>}
                         <TableCell>Lớp</TableCell>
                         <TableCell>Thứ</TableCell>
+                        <TableCell>Ngày công</TableCell>
                         <TableCell>Giờ học</TableCell>
                         <TableCell>Chi nhánh</TableCell>
                         <TableCell>Lý do</TableCell>
@@ -552,10 +551,19 @@ const AttendanceTicketsTable = () => {
                               <Typography variant='body2'>{adj.className || '-'}</Typography>
                             </TableCell>
                             <TableCell>
-                              <Typography variant='body2'>{adj.dayOfWeek != null ? formatDayOfWeek(adj.dayOfWeek) : '-'}</Typography>
+                              <Typography variant='body2'>
+                                {formatDateVN(adj.adjustmentDate)}
+                              </Typography>
                             </TableCell>
                             <TableCell>
-                              <Typography variant='body2'>{adj.startTime && adj.endTime ? `${adj.startTime} - ${adj.endTime}` : '-'}</Typography>
+                              <Typography variant='body2'>
+                                {adj.dayOfWeek != null ? formatDayOfWeek(adj.dayOfWeek) : '-'}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant='body2'>
+                                {adj.startTime && adj.endTime ? `${adj.startTime} - ${adj.endTime}` : '-'}
+                              </Typography>
                             </TableCell>
                             <TableCell>
                               <Typography variant='body2'>{adj.branchName || '-'}</Typography>
@@ -567,7 +575,7 @@ const AttendanceTicketsTable = () => {
                               <Chip label={statusInfo.label} color={statusInfo.color} variant='tonal' size='small' />
                             </TableCell>
                             <TableCell>
-                              <Typography variant='body2'>{formatDateVN(adj.createdAt)}</Typography>
+                              <Typography variant='body2'>{formatDateTimeVN(adj.createdAt)}</Typography>
                             </TableCell>
                             {isAdmin && (
                               <TableCell align='center'>
@@ -886,7 +894,7 @@ const AttendanceTicketsTable = () => {
                     <strong>Chi nhánh:</strong> {selectedAdjustment.branchName || '-'}
                   </Typography>
                   <Typography variant='body2'>
-                    <strong>Ngày điều chỉnh:</strong> {formatDateVN(selectedAdjustment.adjustmentDate)}
+                    <strong>Ngày công:</strong> {formatDateVN(selectedAdjustment.adjustmentDate)}
                   </Typography>
                   <Typography variant='body2'>
                     <strong>Loại:</strong> {getAdjustmentTypeLabel(selectedAdjustment.adjustmentType)}
