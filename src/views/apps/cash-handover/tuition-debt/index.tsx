@@ -290,7 +290,9 @@ const TuitionDebtReportView = () => {
               <Table size='small'>
                 <TableHead>
                   <TableRow>
+                    <TableCell>Mã HV</TableCell>
                     <TableCell>Họ và tên</TableCell>
+                    <TableCell>userIdZalo</TableCell>
                     <TableCell>Lớp</TableCell>
                     <TableCell>Chi nhánh</TableCell>
                     <TableCell align='center'>Tháng nợ</TableCell>
@@ -300,11 +302,12 @@ const TuitionDebtReportView = () => {
                 <TableBody>
                   {data.items.map((item: any) => (
                     <TableRow key={item.studentId}>
+                      <TableCell>{item.studentCode || '-'}</TableCell>
                       <TableCell>
                         <Typography fontWeight={500}>{item.studentName}</Typography>
                       </TableCell>
+                      <TableCell>{item.userIdZalo || '-'}</TableCell>
                       <TableCell>{item.className}</TableCell>
-                      <TableCell>{item.branchName || '-'}</TableCell>
                       <TableCell align='center'>
                         <div className='flex flex-wrap gap-1'>
                           {item.monthsOwedDetails?.map((m: string, idx: number) => (
