@@ -174,7 +174,7 @@ const TuitionDebtReportView = () => {
               <FormControl fullWidth>
                 <InputLabel>Sắp xếp</InputLabel>
                 <Select value={sortBy} label='Sắp xếp' onChange={e => setSortBy(e.target.value)}>
-                  <MenuItem value='months'>Số tháng nợ</MenuItem>
+                  {/*<MenuItem value='months'>Số tháng nợ</MenuItem>*/}
                   <MenuItem value='name'>Tên học viên</MenuItem>
                   <MenuItem value='class'>Tên lớp</MenuItem>
                 </Select>
