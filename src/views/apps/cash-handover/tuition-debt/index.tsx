@@ -202,22 +202,22 @@ const TuitionDebtReportView = () => {
       {/*      </CardContent>*/}
       {/*    </Card>*/}
       {/*  </Grid>*/}
-      {/*  <Grid size={{ xs: 12, sm: 4 }}>*/}
-      {/*    <Card variant='outlined'>*/}
-      {/*      <CardContent>*/}
-      {/*        <Typography variant='body2' color='text.secondary'>Tổng nợ</Typography>*/}
-      {/*        <Typography variant='h4' color='warning.main'>{formatCurrency(data?.totalDebtAmount ?? 0)}</Typography>*/}
-      {/*      </CardContent>*/}
-      {/*    </Card>*/}
-      {/*  </Grid>*/}
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card variant='outlined'>
             <CardContent>
-              <Typography variant='body2' color='text.secondary'>Tổng tháng nợ</Typography>
-              <Typography variant='h4'>{data?.items?.reduce((s: number, i: any) => s + i.monthsOwed, 0) ?? 0}</Typography>
-            </CardContent>
-          </Card>
+                <Typography variant='body2' color='text.secondary'>Tổng nợ</Typography>
+                <Typography variant='h4' color='warning.main'>{formatCurrency(data?.totalDebtAmount ?? 0)}</Typography>
+              </CardContent>
+            </Card>
         </Grid>
+      {/*  <Grid size={{ xs: 12, sm: 4 }}>*/}
+      {/*    <Card variant='outlined'>*/}
+      {/*      <CardContent>*/}
+      {/*        <Typography variant='body2' color='text.secondary'>Tổng tháng nợ</Typography>*/}
+      {/*        <Typography variant='h4'>{data?.items?.reduce((s: number, i: any) => s + i.monthsOwed, 0) ?? 0}</Typography>*/}
+      {/*      </CardContent>*/}
+      {/*    </Card>*/}
+      {/*  </Grid>*/}
       </Grid>
 
       {summaryByClass.length > 0 && (
