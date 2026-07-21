@@ -165,7 +165,7 @@ const TuitionDebtReportView = () => {
                 <Select value={classId} label='Lớp học' onChange={e => setClassId(e.target.value)}>
                   <MenuItem value=''>Tất cả</MenuItem>
                   {classOptions.map(c => (
-                    <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                    <MenuItem key={c.id} value={c.id}></MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -194,22 +194,22 @@ const TuitionDebtReportView = () => {
       </Card>
 
       <Grid container spacing={4}>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <Card variant='outlined'>
-            <CardContent>
-              <Typography variant='body2' color='text.secondary'>Tổng HV nợ</Typography>
-              <Typography variant='h4' color='error.main'>{data?.totalStudents ?? 0}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <Card variant='outlined'>
-            <CardContent>
-              <Typography variant='body2' color='text.secondary'>Tổng nợ</Typography>
-              <Typography variant='h4' color='warning.main'>{formatCurrency(data?.totalDebtAmount ?? 0)}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+      {/*  <Grid size={{ xs: 12, sm: 4 }}>*/}
+      {/*    <Card variant='outlined'>*/}
+      {/*      <CardContent>*/}
+      {/*        <Typography variant='body2' color='text.secondary'>Tổng HV nợ</Typography>*/}
+      {/*        <Typography variant='h4' color='error.main'>{data?.totalStudents ?? 0}</Typography>*/}
+      {/*      </CardContent>*/}
+      {/*    </Card>*/}
+      {/*  </Grid>*/}
+      {/*  <Grid size={{ xs: 12, sm: 4 }}>*/}
+      {/*    <Card variant='outlined'>*/}
+      {/*      <CardContent>*/}
+      {/*        <Typography variant='body2' color='text.secondary'>Tổng nợ</Typography>*/}
+      {/*        <Typography variant='h4' color='warning.main'>{formatCurrency(data?.totalDebtAmount ?? 0)}</Typography>*/}
+      {/*      </CardContent>*/}
+      {/*    </Card>*/}
+      {/*  </Grid>*/}
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card variant='outlined'>
             <CardContent>
@@ -229,7 +229,7 @@ const TuitionDebtReportView = () => {
                 <TableRow>
                   <TableCell>Lớp</TableCell>
                   <TableCell align='center'>Số HV nợ</TableCell>
-                  <TableCell align='center'>Tổng tháng nợ</TableCell>
+                  {/*<TableCell align='center'>Tổng tháng nợ</TableCell>*/}
                   <TableCell align='right'>Tổng nợ</TableCell>
                 </TableRow>
               </TableHead>
@@ -238,7 +238,7 @@ const TuitionDebtReportView = () => {
                   <TableRow key={row.classId}>
                     <TableCell>{row.className}</TableCell>
                     <TableCell align='center'>{row.studentCount}</TableCell>
-                    <TableCell align='center'>{row.totalMonthsOwed}</TableCell>
+                    {/*<TableCell align='center'>{row.totalMonthsOwed}</TableCell>*/}
                     <TableCell align='right'>{formatCurrency(row.totalDebt)}</TableCell>
                   </TableRow>
                 ))}
@@ -257,7 +257,7 @@ const TuitionDebtReportView = () => {
                 <TableRow>
                   <TableCell>Chi nhánh</TableCell>
                   <TableCell align='center'>Số HV nợ</TableCell>
-                  <TableCell align='center'>Tổng tháng nợ</TableCell>
+                  {/*<TableCell align='center'>Tổng tháng nợ</TableCell>*/}
                   <TableCell align='right'>Tổng nợ</TableCell>
                 </TableRow>
               </TableHead>
@@ -266,7 +266,7 @@ const TuitionDebtReportView = () => {
                   <TableRow key={row.name}>
                     <TableCell>{row.name}</TableCell>
                     <TableCell align='center'>{row.studentCount}</TableCell>
-                    <TableCell align='center'>{row.totalMonthsOwed}</TableCell>
+                    {/*<TableCell align='center'>{row.totalMonthsOwed}</TableCell>*/}
                     <TableCell align='right'>{formatCurrency(row.totalDebt)}</TableCell>
                   </TableRow>
                 ))}
