@@ -294,7 +294,6 @@ const TuitionDebtReportView = () => {
                     <TableCell>Họ và tên</TableCell>
                     <TableCell>userIdZalo</TableCell>
                     <TableCell>Lớp</TableCell>
-                    <TableCell>Chi nhánh</TableCell>
                     <TableCell align='center'>Tháng nợ</TableCell>
                     <TableCell align='right'>Tổng nợ</TableCell>
                   </TableRow>
