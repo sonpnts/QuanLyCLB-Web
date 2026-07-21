@@ -165,7 +165,7 @@ const TuitionDebtReportView = () => {
                 <Select value={classId} label='Lớp học' onChange={e => setClassId(e.target.value)}>
                   <MenuItem value=''>Tất cả</MenuItem>
                   {classOptions.map(c => (
-                    <MenuItem key={c.id} value={c.id}></MenuItem>
+                    <MenuItem key={c.id} value={c.id}>{c.id}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
