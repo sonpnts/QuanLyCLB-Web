@@ -3,6 +3,7 @@ import type { AxiosError, AxiosRequestConfig } from 'axios'
 
 import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 import { authStorage } from './authStorage'
+import { redirectToMaintenance, isOnPublicPage, isInMaintenanceMode } from './connectionMonitor'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.trim() ?? ''
 
@@ -125,7 +126,13 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Network errors (no response from server) — still reject
+    // Network errors (no response from server) — redirect to maintenance
+    if (!response && (error.code === 'ERR_NETWORK' || error.message === 'Network Error')) {
+      if (!isOnPublicPage() && !isInMaintenanceMode()) {
+        redirectToMaintenance()
+      }
+    }
+
     return Promise.reject(error)
   }
 )

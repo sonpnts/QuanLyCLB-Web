@@ -3,6 +3,7 @@ export const API_ENDPOINTS = {
     google: process.env.NEXT_PUBLIC_LOGGING_ENDPOINT ?? '/Auth/google',
     refresh: process.env.NEXT_PUBLIC_REFRESH_ENDPOINT ?? '/Auth/refresh'
   },
+  health: '/api/health',
   attendance: {
     checkIn: '/Attendance/check-in',
     checkOut: '/Attendance/check-out',
