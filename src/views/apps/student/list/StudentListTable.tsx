@@ -60,6 +60,7 @@ import { buildModulePermissionMap } from '@/utils/rbac'
 import { logger } from '@/utils/logger'
 import { formatDateVN } from '@/utils/dateTime'
 import { exportToExcel, formatVnDate, formatBool } from '@/utils/exportToExcel'
+import { formatBeltLevelOrder } from '@/utils/beltLevel'
 
 import tableStyles from '@core/styles/table.module.css'
 import { fuzzyFilter } from '@/utils/tableHelpers'
@@ -455,6 +456,12 @@ return p
         <Chip label={row.original.beltLevelName || 'Chưa có'} size='small' color='warning' variant='tonal' />
         )
       }),
+      columnHelper.accessor('beltLevelOrder', {
+        header: 'Số cấp đai',
+        cell: ({ row }) => (
+          <Typography>{formatBeltLevelOrder(row.original.beltLevelOrder)}</Typography>
+        )
+      }),
       {
         id: 'classes',
       header: 'Lớp đang học',
@@ -622,6 +629,11 @@ return (
                     },
     { header: 'Ngày sinh', accessor: 'dateOfBirth', formatter: formatVnDate },
     { header: 'Cấp đai', accessor: 'beltLevelName' as any },
+                    {
+      header: 'Số cấp đai',
+                      accessor: 'beltLevelOrder' as any,
+      formatter: (v: any) => formatBeltLevelOrder(v)
+                    },
                     {
       header: 'Lớp đang học',
                       accessor: r =>

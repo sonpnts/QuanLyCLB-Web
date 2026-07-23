@@ -28,6 +28,7 @@ import ZaloVerifyModal from './ZaloVerifyModal'
 
 // Form
 import { logger } from '@/utils/logger'
+import { formatBeltLevelOrder } from '@/utils/beltLevel'
 
 // Types
 import type { StudentType } from '@/types/apps/studentTypes'
@@ -404,16 +405,26 @@ return
               <Typography variant='caption' color='text.secondary'>
                 Cấp đai liên đoàn
               </Typography>
-              <Chip
-                label={student?.beltLevelName || 'Chưa có'}
-                size='small'
-                sx={{
-                  alignSelf: 'flex-start',
-                  bgcolor: 'primary.light',
-                  color: 'white',
-                  fontWeight: 600
-                }}
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Chip
+                  label={student?.beltLevelName || 'Chưa có'}
+                  size='small'
+                  sx={{
+                    alignSelf: 'flex-start',
+                    bgcolor: 'primary.light',
+                    color: 'white',
+                    fontWeight: 600
+                  }}
+                />
+                {student?.beltLevelOrder != null && (
+                  <Chip
+                    label={formatBeltLevelOrder(student.beltLevelOrder)}
+                    size='small'
+                    variant='outlined'
+                    sx={{ fontWeight: 600 }}
+                  />
+                )}
+              </Box>
               <Typography variant='caption' color='text.disabled'>
                 Dữ liệu đồng bộ với VTF
               </Typography>

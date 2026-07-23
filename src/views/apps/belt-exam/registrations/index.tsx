@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -556,12 +556,22 @@ const BeltExamRegistrationsView = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Typography variant='body2'>{row.currentBeltLevelName || text.noBelt}</Typography>
+                      <Box className='flex items-center gap-1'>
+                        <Typography variant='body2'>{row.currentBeltLevelName || text.noBelt}</Typography>
+                        {row.currentBeltLevelOrder != null && (
+                          <Chip label={row.currentBeltLevelOrder} size='small' variant='outlined' color='warning' />
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell>
-                      <Typography variant='body2' color='primary.main' fontWeight={600}>
-                        {row.targetBeltLevelName}
-                      </Typography>
+                      <Box className='flex items-center gap-1'>
+                        <Typography variant='body2' color='primary.main' fontWeight={600}>
+                          {row.targetBeltLevelName}
+                        </Typography>
+                        {row.targetBeltLevelOrder != null && (
+                          <Chip label={row.targetBeltLevelOrder} size='small' variant='outlined' color='primary' />
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell>
                       <Typography variant='body2'>

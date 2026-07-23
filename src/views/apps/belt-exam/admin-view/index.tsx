@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -43,6 +43,7 @@ import type { ClassType } from '@/types/apps/classTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
 import { exportToExcel } from '@/utils/exportToExcel'
+import { formatBeltLevelOrder } from '@/utils/beltLevel'
 import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
 
 interface Props {
@@ -59,8 +60,6 @@ const formatGender = (value?: boolean) => {
 
   return ''
 }
-
-const formatBeltOrder = (value?: number, fallback = '10') => String(value ?? fallback)
 
 const formatEducationLevel = (value?: string) => {
   switch (value) {
@@ -305,7 +304,7 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
       eligibleStudents
         .reduce<Array<{ label: string; order: number; count: number }>>((acc, student) => {
           const order = student.targetBeltLevelOrder ?? 0
-          const label = student.targetBeltLevelName || `Cấp ${formatBeltOrder(student.targetBeltLevelOrder, '')}`
+          const label = student.targetBeltLevelName || `Cấp ${formatBeltLevelOrder(student.targetBeltLevelOrder, '')}`
           const existing = acc.find(item => item.label === label && item.order === order)
 
           if (existing) {
@@ -404,8 +403,8 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
       dateOfBirth: formatDate(student.dateOfBirth),
       gender: formatGender(student.gender),
       phoneNumber: student.phoneNumber || '—',
-      currentBeltLevelOrder: formatBeltOrder(student.currentBeltLevelOrder),
-      targetBeltLevelOrder: formatBeltOrder(student.targetBeltLevelOrder, ''),
+      currentBeltLevelOrder: formatBeltLevelOrder(student.currentBeltLevelOrder),
+      targetBeltLevelOrder: formatBeltLevelOrder(student.targetBeltLevelOrder, ''),
       className: student.className,
       coachName: student.coachName,
       oneTimeFeesCompleted: student.oneTimeFeesCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành',
@@ -448,8 +447,8 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
         dateOfBirth: formatDate(student.dateOfBirth),
         gender: formatGender(student.gender),
         phoneNumber: student.phoneNumber || '—',
-        currentBeltLevelOrder: formatBeltOrder(student.currentBeltLevelOrder),
-        targetBeltLevelOrder: formatBeltOrder(student.targetBeltLevelOrder, ''),
+        currentBeltLevelOrder: formatBeltLevelOrder(student.currentBeltLevelOrder),
+        targetBeltLevelOrder: formatBeltLevelOrder(student.targetBeltLevelOrder, ''),
         className: student.className
       }))
 
@@ -501,8 +500,8 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
         dateOfBirth: formatDate(student.dateOfBirth),
         gender: formatGender(student.gender),
         phoneNumber: student.phoneNumber || '—',
-        currentBeltLevelOrder: formatBeltOrder(student.currentBeltLevelOrder),
-        targetBeltLevelOrder: formatBeltOrder(student.targetBeltLevelOrder, ''),
+        currentBeltLevelOrder: formatBeltLevelOrder(student.currentBeltLevelOrder),
+        targetBeltLevelOrder: formatBeltLevelOrder(student.targetBeltLevelOrder, ''),
         className: student.className,
         coachName: student.coachName
       }))
@@ -1015,9 +1014,9 @@ return
                             <TableCell>{student.studentCode || '—'}</TableCell>
                             <TableCell>{student.dateOfBirth ? formatDate(student.dateOfBirth) : '—'}</TableCell>
                             <TableCell>{student.gender === undefined ? '—' : formatGender(student.gender)}</TableCell>
-                            <TableCell>{formatBeltOrder(student.currentBeltLevelOrder)}</TableCell>
+                            <TableCell>{formatBeltLevelOrder(student.currentBeltLevelOrder)}</TableCell>
                             <TableCell>
-                              <strong>{formatBeltOrder(student.targetBeltLevelOrder, '')}</strong>
+                              <strong>{formatBeltLevelOrder(student.targetBeltLevelOrder, '')}</strong>
                             </TableCell>
                             <TableCell>{student.phoneNumber || '—'}</TableCell>
                             <TableCell>{renderOneTimeFeeBadge(student)}</TableCell>

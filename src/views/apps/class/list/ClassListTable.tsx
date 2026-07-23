@@ -481,16 +481,6 @@ return { userId: id, fullName: u?.fullName || id, isLeadInstructor: false }
 
               {!isInactive && (
                 <IconButton
-                  onClick={() => router.push(`/apps/class/view/${row.original.id}`)}
-                  title='Xem chi tiết lớp'
-                  color='primary'
-                >
-                  <i className='ri-eye-line' />
-                </IconButton>
-              )}
-
-              {!isInactive && (
-                <IconButton
                   onClick={() => void handleExportClassStudents(row.original)}
                   title='Xuất Excel học viên'
                   color='success'
@@ -689,8 +679,10 @@ return (
                       <tr
                         key={row.id}
                         style={{
+                          cursor: 'pointer',
                           ...(isInactive ? { opacity: 0.6, backgroundColor: 'rgba(0,0,0,0.02)' } : {})
                         }}
+                        onClick={() => router.push(`/apps/class/view/${row.original.id}`)}
                       >
                         {row.getVisibleCells().map(cell => (
                           <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>

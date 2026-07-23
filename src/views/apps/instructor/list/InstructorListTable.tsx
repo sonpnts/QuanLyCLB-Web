@@ -33,6 +33,7 @@ import instructorService from '@/services/instructorService'
 import { useNotification } from '@/contexts/notificationContext'
 
 import { exportToExcel, formatBool } from '@/utils/exportToExcel'
+import { formatBeltLevelOrder } from '@/utils/beltLevel'
 
 // Styled Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -182,6 +183,10 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
         header: 'Cấp đai',
         cell: ({ row }) => <Typography variant='body2'>{row.original.beltLevelName || '-'}</Typography>
       }),
+      columnHelper.accessor('beltLevelOrder', {
+        header: 'Số cấp đai',
+        cell: ({ row }) => <Typography variant='body2'>{formatBeltLevelOrder(row.original.beltLevelOrder)}</Typography>
+      }),
       columnHelper.accessor('isActive', {
         header: 'Trạng thái',
         cell: ({ row }) => (
@@ -248,6 +253,11 @@ const InstructorListTable = ({ tableData }: { tableData?: InstructorType[] }) =>
                       { header: 'Email', accessor: 'email' as any },
                       { header: 'Số điện thoại', accessor: 'phoneNumber' as any },
                       { header: 'Cấp đai', accessor: 'beltLevelName' as any },
+                      {
+                        header: 'Số cấp đai',
+                        accessor: 'beltLevelOrder' as any,
+                        formatter: (v: any) => formatBeltLevelOrder(v)
+                      },
 
                       // { header: 'Chứng chỉ', accessor: 'certification' as any },
                       { header: 'Hoạt động', accessor: 'isActive' as any, formatter: v => formatBool(v, 'Có', 'Không') }

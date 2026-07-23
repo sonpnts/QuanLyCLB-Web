@@ -41,6 +41,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import { savePaymentInvoiceDraft } from '@/utils/paymentDraft'
 import { logger } from '@/utils/logger'
 import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
+import { formatBeltLevelOrder } from '@/utils/beltLevel'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 import TransferStudentDialog from './TransferStudentDialog'
@@ -476,6 +477,9 @@ return
               {activeStudent.beltLevelName && (
                 <Chip label={activeStudent.beltLevelName} size='small' color='warning' variant='tonal' />
               )}
+              {activeStudent.beltLevelOrder != null && (
+                <Chip label={formatBeltLevelOrder(activeStudent.beltLevelOrder)} size='small' color='warning' variant='outlined' />
+              )}
               {/*{activeStudent.userIdZalo ? (*/}
               {/*  <Chip label='Đã liên kết Zalo' size='small' color='success' variant='tonal' />*/}
               {/*) : (*/}
@@ -605,6 +609,12 @@ return
                       Cấp đai liên đoàn
                     </Typography>
                     <Typography variant='body1'>{activeStudent.beltLevelName || '-'}</Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Typography variant='body2' color='text.secondary'>
+                      Số cấp đai
+                    </Typography>
+                    <Typography variant='body1'>{formatBeltLevelOrder(activeStudent.beltLevelOrder)}</Typography>
                   </Grid>
                   <Grid size={{ xs: 12 }}>
                     <Typography variant='body2' color='text.secondary'>

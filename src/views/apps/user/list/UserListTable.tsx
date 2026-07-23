@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // React Imports
 import { useEffect, useState, useMemo } from 'react'
@@ -36,6 +36,7 @@ import {
 import type { ColumnDef } from '@tanstack/react-table'
 
 import { fuzzyFilter } from '@/utils/tableHelpers'
+import { formatBeltLevelOrder } from '@/utils/beltLevel'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
@@ -186,6 +187,15 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
               sx={{ fontWeight: 500 }}
             />
           )
+        }
+      }),
+      columnHelper.display({
+        id: 'beltLevelOrder',
+        header: 'Số cấp đai',
+        cell: ({ row }) => {
+          const order = row.original.beltLevelOrder
+
+          return <Typography variant='body2'>{formatBeltLevelOrder(order)}</Typography>
         }
       }),
       columnHelper.display({

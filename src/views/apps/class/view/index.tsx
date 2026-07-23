@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, useRef } from 'react'
 
@@ -39,6 +39,7 @@ import studentService from '@/services/studentService'
 
 // Utils
 import { formatDateVN } from '@/utils/dateTime'
+import { formatBeltLevelOrder } from '@/utils/beltLevel'
 import { getDayName } from '@/utils/constants'
 
 // Components
@@ -347,6 +348,7 @@ const ClassViewPage = ({ classId }: Props) => {
                           <TableCell>Ngày sinh</TableCell>
                           <TableCell>Giới tính</TableCell>
                           <TableCell>Cấp đai hiện tại</TableCell>
+                          <TableCell>Số cấp đai</TableCell>
                           {/*<TableCell>Trạng thái</TableCell>*/}
                           <TableCell>Thao tác</TableCell>
                         </TableRow>
@@ -368,6 +370,9 @@ const ClassViewPage = ({ classId }: Props) => {
                             </TableCell>
                             <TableCell>
                               <Chip label={student.beltLevelName || 'Chưa có'} size='small' color='warning' variant='tonal' />
+                            </TableCell>
+                            <TableCell>
+                              {formatBeltLevelOrder(student.beltLevelOrder)}
                             </TableCell>
                             {/*<TableCell>*/}
                             {/*  <Chip*/}
