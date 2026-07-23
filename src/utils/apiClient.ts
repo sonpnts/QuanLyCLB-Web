@@ -110,6 +110,9 @@ apiClient.interceptors.response.use(
         } catch (refreshError) {
           refreshPromise = null
           authStorage.clear()
+          if (!isOnPublicPage()) {
+            window.location.href = '/login'
+          }
         }
       }
     }

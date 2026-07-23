@@ -67,7 +67,8 @@ export async function pingServer(timeoutMs: number = 5000): Promise<boolean> {
 
     clearTimeout(timeoutId)
 
-    return response.ok
+    // 2xx hoặc 401/403 đều nghĩa server đang sống (401/403 chỉ là chưa có quyền)
+    return response.ok || response.status === 401 || response.status === 403
   } catch {
     return false
   }
