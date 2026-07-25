@@ -83,7 +83,7 @@ const AttendanceTicketsTable = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [totalCount, setTotalCount] = useState(0)
 
-  const [filterStatus, setFilterStatus] = useState<AdjustmentStatus | ''>('')
+  const [filterStatus, setFilterStatus] = useState<AdjustmentStatus | ''>('Pending')
   const [filterMonth, setFilterMonth] = useState<number>(new Date().getMonth() + 1)
   const [filterYear, setFilterYear] = useState<number>(new Date().getFullYear())
 

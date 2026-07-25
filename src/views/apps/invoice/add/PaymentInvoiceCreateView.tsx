@@ -1911,8 +1911,8 @@ return
       <StudentZaloLinkPromptDialog
         open={zaloPromptOpen}
         student={selectedStudent}
-        skipLabel='Không gửi'
-        message='Hãy thêm liên kết Zalo để thông báo xác nhận. Chọn không sẽ không gửi thông báo xác nhận cho phiếu thu này.'
+        skipLabel='Bỏ qua'
+        message='Học viên chưa liên kết Zalo để nhận thông báo đóng học phí. Vui lòng liên kết để nhận thông báo, hoặc bỏ qua nếu không cần.'
         onClose={() => setZaloPromptOpen(false)}
         onSkip={() => {
           setZaloPromptOpen(false)

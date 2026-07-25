@@ -284,7 +284,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
         open={zaloPromptOpen}
         student={zaloPromptStudent}
         skipLabel='Để sau'
-        message='Hãy thêm liên kết Zalo cho học viên để gửi xác nhận thanh toán và các thông báo sau này. Chọn để sau nếu bạn chưa muốn liên kết ngay.'
+        message='Học viên chưa liên kết Zalo để nhận thông báo đóng học phí. Vui lòng liên kết để nhận thông báo, hoặc bỏ qua nếu không cần.'
         onClose={() => {
           setZaloPromptOpen(false)
           setZaloPromptStudent(null)
