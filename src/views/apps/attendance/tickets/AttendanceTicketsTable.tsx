@@ -537,11 +537,6 @@ const AttendanceTicketsTable = () => {
 
                         return (
                           <TableRow key={adj.id} hover>
-                            <TableCell>
-                              <Typography variant='body2' className='font-medium'>
-                                {formatDateVN(adj.adjustmentDate)}
-                              </Typography>
-                            </TableCell>
                             {isAdmin && (
                               <TableCell>
                                 <Typography variant='body2'>{adj.userFullName || adj.userName}</Typography>
@@ -552,12 +547,12 @@ const AttendanceTicketsTable = () => {
                             </TableCell>
                             <TableCell>
                               <Typography variant='body2'>
-                                {formatDateVN(adj.adjustmentDate)}
+                                {adj.dayOfWeek != null ? formatDayOfWeek(adj.dayOfWeek) : '-'}
                               </Typography>
                             </TableCell>
                             <TableCell>
-                              <Typography variant='body2'>
-                                {adj.dayOfWeek != null ? formatDayOfWeek(adj.dayOfWeek) : '-'}
+                              <Typography variant='body2' className='font-medium'>
+                                {formatDateVN(adj.adjustmentDate)}
                               </Typography>
                             </TableCell>
                             <TableCell>
