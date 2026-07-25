@@ -802,7 +802,7 @@ return
           const retailUnitPrice = getProductUnitPrice(product, variant?.id)
           const effectiveUnitPrice = Math.max(0, retailUnitPrice - Number(item.bundleDiscountAmount || 0))
           const lineDiscountAmount = Math.max(0, retailUnitPrice - effectiveUnitPrice)
-          const lineDiscountReason = lineDiscountAmount > 0 ? `Áp dụng giá combo: ${bundle.name}` : undefined
+          const lineDiscountReason = lineDiscountAmount > 0 ? `Combo: ${bundle.name}` : undefined
 
           const quantity = Math.max(1, Number(item.quantity || 1))
           for (let index = 0; index < quantity; index += 1) {
@@ -811,7 +811,7 @@ return
               classId: effectiveClassId,
               productId: item.productId,
               productVariantId: variant?.id,
-              description: `${getProductDisplayName(product, variant?.id)} - combo ${bundle.name}`,
+              description: getProductDisplayName(product, variant?.id),
               discountAmount: lineDiscountAmount > 0 ? lineDiscountAmount : undefined,
               discountReason: lineDiscountReason
             })

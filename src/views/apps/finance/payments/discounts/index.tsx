@@ -37,7 +37,7 @@ type DiscountScope = 'manual' | 'approved' | 'combo' | 'mixed' | 'all'
 const discountScopeOptions: Array<{ value: DiscountScope; label: string }> = [
   { value: 'manual', label: 'Giảm trừ thủ công' },
   { value: 'approved', label: 'Miễn/giảm đã duyệt' },
-  { value: 'combo', label: 'Áp dụng giá combo' },
+  { value: 'combo', label: 'Combo' },
   { value: 'mixed', label: 'Kết hợp cả hai' },
   { value: 'all', label: 'Tất cả' }
 ]
