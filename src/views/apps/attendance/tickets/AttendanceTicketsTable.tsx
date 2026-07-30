@@ -35,6 +35,7 @@ import Divider from '@mui/material/Divider'
 
 import attendanceAdjustmentService from '@/services/attendanceAdjustmentService'
 import attendanceService from '@/services/attendanceService'
+import classService from '@/services/classService'
 import type { AttendanceAdjustmentType, AdjustmentStatus, AttendanceType } from '@/services/attendanceAdjustmentService'
 import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
@@ -72,6 +73,8 @@ const formatDayOfWeek = (value: number | string): string => {
   return DAY_OF_WEEK_NAME_MAP[value as string] || value as string
 }
 
+const timeOfIso = (s?: string): string => (s || '').split('T')[1]?.substring(0, 5) || ''
+
 const AttendanceTicketsTable = () => {
   const { auth } = useAuth()
   const { showNotification } = useNotification()
@@ -100,7 +103,8 @@ const AttendanceTicketsTable = () => {
 
   const [validSessions, setValidSessions] = useState<any[]>([])
   const [missedSessions, setMissedSessions] = useState<any[]>([])
-  const [existingAdjustments, setExistingAdjustments] = useState<Set<string>>(new Set())
+  const [allClasses, setAllClasses] = useState<{ id: string; code: string; name: string }[]>([])
+  const [selectedMakeupClassId, setSelectedMakeupClassId] = useState<string>('')
   const [loadingOptions, setLoadingOptions] = useState(false)
   const [createMonth, setCreateMonth] = useState<number>(new Date().getMonth() + 1)
   const [createYear, setCreateYear] = useState<number>(new Date().getFullYear())
@@ -146,6 +150,29 @@ const AttendanceTicketsTable = () => {
     loadAdjustments()
   }, [loadAdjustments])
 
+  // Khóa nhận diện 1 lượt chấm công: ngày + giờ:phút check-in
+  const makeupSessionKey = (dateTimeStr?: string) => {
+    const parts = (dateTimeStr || '').split('T')
+    return `${parts[0] || ''}_${(parts[1] || '').substring(0, 5)}`
+  }
+
+  const missedSessionKey = (classScheduleId?: string, sessionDate?: string) =>
+    `${classScheduleId || ''}_${(sessionDate || '').split('T')[0]}`
+
+  const loadMakeupClasses = useCallback(async () => {
+    try {
+      const classRes = await classService.getClassLookup({ isActive: true, pageSize: 1000 })
+      if (classRes.success && classRes.data) {
+        setAllClasses(classRes.data.map(c => ({ id: c.id, code: c.code, name: c.name })))
+      } else {
+        setAllClasses([])
+      }
+    } catch (error) {
+      logger.error('AttendanceTicketsTable', 'Error loading classes', error)
+      setAllClasses([])
+    }
+  }, [])
+
   const loadValidSessions = useCallback(async () => {
     try {
       setLoadingOptions(true)
@@ -161,18 +188,19 @@ const AttendanceTicketsTable = () => {
           attendanceAdjustmentService.getMyAdjustments({ month: createMonth, year: createYear, pageNumber: 1, pageSize: 500 })
         ])
 
-        const existingDates = new Set<string>()
+        // Loại trừ theo từng lượt chấm công (ngày + giờ vào), không phải theo ngày
+        const existingKeys = new Set<string>()
         if (adjRes.success && adjRes.data?.items) {
           for (const a of adjRes.data.items) {
             if (a.adjustmentType === 'MakeupCheckIn' && (a.status === 'Pending' || a.status === 'Approved')) {
-              existingDates.add(a.adjustmentDate)
+              existingKeys.add(makeupSessionKey(a.requestedCheckInAt))
             }
           }
         }
-        setExistingAdjustments(existingDates)
 
         if (sessionRes.success && sessionRes.data) {
-          const filtered = sessionRes.data.filter((s: any) => !existingDates.has(s.sessionDate))
+          const filtered = sessionRes.data.filter((s: any) =>
+            !s.classId && !existingKeys.has(makeupSessionKey(s.checkInAt)))
           setValidSessions(filtered)
         } else {
           setValidSessions([])
@@ -202,21 +230,20 @@ const AttendanceTicketsTable = () => {
         setPayrollPeriod(periodRes.data)
       }
 
-      const existingDates = new Set<string>()
+      // Loại trừ theo từng buổi học (lịch học + ngày), không phải theo ngày
+      const existingKeys = new Set<string>()
       if (adjRes.success && adjRes.data?.items) {
         for (const a of adjRes.data.items) {
           if (a.adjustmentType === 'CheckIn' && (a.status === 'Pending' || a.status === 'Approved')) {
-            existingDates.add(a.adjustmentDate)
+            existingKeys.add(missedSessionKey(a.classScheduleId, a.adjustmentDate))
           }
         }
       }
-      setExistingAdjustments(existingDates)
 
       if (sessionRes.success && sessionRes.data) {
         const available = sessionRes.data.filter((s: any) => {
           if (s.hasExistingAdjustment) return false
-          const sessionDateStr = s.sessionDate?.split('T')[0] || s.sessionDate
-          return !existingDates.has(sessionDateStr)
+          return !existingKeys.has(missedSessionKey(s.classScheduleId, s.sessionDate))
         })
         setMissedSessions(available)
       } else {
@@ -234,14 +261,15 @@ const AttendanceTicketsTable = () => {
     if (createDialogOpen) {
       if (adjustmentType === 'MakeupCheckIn') {
         loadValidSessions()
+        loadMakeupClasses()
       } else if (adjustmentType === 'CheckIn') {
         loadMissedSessions()
       }
       setFilterMissedClassId('')
       setSelectedSessionIds([])
-      setExistingAdjustments(new Set())
+      setSelectedMakeupClassId('')
     }
-  }, [createDialogOpen, adjustmentType, createMonth, createYear, loadValidSessions, loadMissedSessions])
+  }, [createDialogOpen, adjustmentType, createMonth, createYear, loadValidSessions, loadMissedSessions, loadMakeupClasses])
 
   const uniqueMissedClasses = useMemo(() => {
     const map = new Map<string, { classId: string; className: string; classCode: string }>()
@@ -259,6 +287,11 @@ const AttendanceTicketsTable = () => {
   const handleCreateAdjustment = async () => {
     if (selectedSessionIds.length === 0) {
       showNotification('Vui lòng chọn ít nhất một buổi học.', 'error')
+      return
+    }
+
+    if (adjustmentType === 'MakeupCheckIn' && !selectedMakeupClassId) {
+      showNotification('Vui lòng chọn lớp nhận công cho phiếu dạy thay / dạy bù.', 'warning')
       return
     }
 
@@ -289,7 +322,7 @@ const AttendanceTicketsTable = () => {
             createData = {
               ...createData,
               adjustmentDate: session.sessionDate,
-              attendanceRecordId: session.id,
+              classId: selectedMakeupClassId,
               requestedCheckInAt: session.checkInAt,
               requestedCheckOutAt: session.checkOutAt
             }
@@ -404,7 +437,7 @@ const AttendanceTicketsTable = () => {
     setNotes('')
     setCreateMonth(new Date().getMonth() + 1)
     setCreateYear(new Date().getFullYear())
-    setExistingAdjustments(new Set())
+    setSelectedMakeupClassId('')
   }
 
   const getStatusLabel = (status: AdjustmentStatus) => {
@@ -547,7 +580,11 @@ const AttendanceTicketsTable = () => {
                             </TableCell>
                             <TableCell>
                               <Typography variant='body2'>
-                                {adj.dayOfWeek != null ? formatDayOfWeek(adj.dayOfWeek) : '-'}
+                                {adj.dayOfWeek != null
+                                  ? formatDayOfWeek(adj.dayOfWeek)
+                                  : adj.adjustmentDate
+                                    ? DAY_OF_WEEK_MAP[new Date(adj.adjustmentDate).getDay()] || '-'
+                                    : '-'}
                               </Typography>
                             </TableCell>
                             <TableCell>
@@ -557,7 +594,11 @@ const AttendanceTicketsTable = () => {
                             </TableCell>
                             <TableCell>
                               <Typography variant='body2'>
-                                {adj.startTime && adj.endTime ? `${adj.startTime} - ${adj.endTime}` : '-'}
+                                {adj.startTime && adj.endTime
+                                  ? `${adj.startTime} - ${adj.endTime}`
+                                  : adj.requestedCheckInAt && adj.requestedCheckOutAt
+                                    ? `${timeOfIso(adj.requestedCheckInAt)} - ${timeOfIso(adj.requestedCheckOutAt)}`
+                                    : '-'}
                               </Typography>
                             </TableCell>
                             <TableCell>
@@ -682,12 +723,27 @@ const AttendanceTicketsTable = () => {
 
             <Typography variant='subtitle2' fontWeight={600}>
               {adjustmentType === 'MakeupCheckIn'
-                ? 'Chọn lượt chấm công chưa gắn với lớp (Dạy thay / Dạy bù)'
+                ? 'Chọn lượt chấm công hợp lệ chưa gắn với lớp (Dạy thay / Dạy bù)'
                 : 'Chọn buổi học chưa có chấm công (Thiếu chấm công)'}
               {selectedSessionIds.length > 0 && (
                 <Chip label={`Đã chọn ${selectedSessionIds.length}`} size='small' color='primary' sx={{ ml: 1 }} />
               )}
             </Typography>
+
+            {adjustmentType === 'MakeupCheckIn' && (
+              <FormControl fullWidth size='small' required>
+                <InputLabel>Chọn lớp nhận công</InputLabel>
+                <Select
+                  value={selectedMakeupClassId}
+                  label='Chọn lớp nhận công'
+                  onChange={e => setSelectedMakeupClassId(e.target.value)}
+                >
+                  {allClasses.map(c => (
+                    <MenuItem key={c.id} value={c.id}>{c.code} - {c.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
 
             {adjustmentType === 'CheckIn' && uniqueMissedClasses.length > 0 && (
               <FormControl fullWidth size='small'>
@@ -714,7 +770,7 @@ const AttendanceTicketsTable = () => {
               </Box>
             ) : adjustmentType === 'MakeupCheckIn' ? (
               validSessions.length === 0 ? (
-                <Alert severity='info'>Không có lượt chấm công hợp lệ nào trong tháng này.</Alert>
+                <Alert severity='info'>Không có lượt chấm công hợp lệ chưa gắn lớp nào trong tháng này.</Alert>
               ) : (
                 <TableContainer sx={{ maxHeight: '40vh', border: 1, borderColor: 'divider', borderRadius: 1 }}>
                   <Table size='small' stickyHeader>
@@ -880,10 +936,18 @@ const AttendanceTicketsTable = () => {
                     <strong>Lớp học:</strong> {selectedAdjustment.className || '-'}
                   </Typography>
                   <Typography variant='body2'>
-                    <strong>Thứ:</strong> {selectedAdjustment.dayOfWeek != null ? formatDayOfWeek(selectedAdjustment.dayOfWeek) : '-'}
+                    <strong>Thứ:</strong> {selectedAdjustment.dayOfWeek != null
+                      ? formatDayOfWeek(selectedAdjustment.dayOfWeek)
+                      : selectedAdjustment.adjustmentDate
+                        ? DAY_OF_WEEK_MAP[new Date(selectedAdjustment.adjustmentDate).getDay()] || '-'
+                        : '-'}
                   </Typography>
                   <Typography variant='body2'>
-                    <strong>Giờ học:</strong> {selectedAdjustment.startTime && selectedAdjustment.endTime ? `${selectedAdjustment.startTime} - ${selectedAdjustment.endTime}` : '-'}
+                    <strong>Giờ học:</strong> {selectedAdjustment.startTime && selectedAdjustment.endTime
+                      ? `${selectedAdjustment.startTime} - ${selectedAdjustment.endTime}`
+                      : selectedAdjustment.requestedCheckInAt && selectedAdjustment.requestedCheckOutAt
+                        ? `${timeOfIso(selectedAdjustment.requestedCheckInAt)} - ${timeOfIso(selectedAdjustment.requestedCheckOutAt)}`
+                        : '-'}
                   </Typography>
                   <Typography variant='body2'>
                     <strong>Chi nhánh:</strong> {selectedAdjustment.branchName || '-'}
