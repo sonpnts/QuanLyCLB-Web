@@ -131,7 +131,7 @@ return
             >
               <MenuItem value=''>Tất cả</MenuItem>
               <MenuItem value='Active'>Đang học</MenuItem>
-              <MenuItem value='Inactive'>Tạm nghỉ</MenuItem>
+              <MenuItem value='Suspended'>Tạm nghỉ</MenuItem>
               <MenuItem value='Completed'>Hoàn thành</MenuItem>
             </Select>
           </FormControl>

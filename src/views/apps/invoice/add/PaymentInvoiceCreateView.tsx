@@ -286,7 +286,7 @@ const PaymentInvoiceCreateView = () => {
         return
       }
 
-      const response = await studentService.getStudents({ classId: form.classId, pageSize: 1000 })
+      const response = await studentService.getStudents({ classId: form.classId, isSuspended: false, pageSize: 1000 })
       const rows = response.data || []
 
       setStudents(rows)

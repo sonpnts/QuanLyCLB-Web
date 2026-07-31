@@ -91,7 +91,8 @@ const AddStudentsToClassDrawer = ({ open, onClose, classData, onStudentsAdded }:
           pageNumber: nextPage,
           pageSize: PAGE_SIZE,
           keyword: keyword || undefined,
-          withoutClass: true
+          withoutClass: true,
+          isSuspended: false
         })
 
         if (requestId !== requestSequenceRef.current) return

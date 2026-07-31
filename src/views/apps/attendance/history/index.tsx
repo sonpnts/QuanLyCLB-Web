@@ -149,7 +149,7 @@ const AttendanceHistoryView = () => {
       setClassOptions(
         coachClasses.map((c: CoachClassOption) => ({
           id: c.classId,
-          name: `${c.classCode} - ${c.className}`
+          name: `${c.classCode}`
         }))
       )
     }

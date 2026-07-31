@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -90,7 +90,7 @@ const StudentTuitionDiscountPage = () => {
         return
       }
 
-      const res = await studentService.getStudents({ keyword, pageSize: 20 })
+      const res = await studentService.getStudents({ keyword, isSuspended: false, pageSize: 20 })
 
       if (!active) return
       setStudentOptions(res.data || [])

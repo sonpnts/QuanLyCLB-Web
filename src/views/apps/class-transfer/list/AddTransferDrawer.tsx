@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // React Imports
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
@@ -115,7 +115,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
 
     try {
       if (isAdmin) {
-        const res = await studentService.getStudents({ keyword, pageSize: 50 })
+        const res = await studentService.getStudents({ keyword, isSuspended: false, pageSize: 50 })
 
         setStudentOptions(res.success && res.data ? res.data : [])
 
@@ -137,7 +137,7 @@ const AddTransferDrawer = ({ open, handleClose, setData }: Props) => {
       }
 
       const responses = await Promise.all(
-        classIds.map(classId => studentService.getStudents({ classId, keyword, pageSize: 100 }))
+        classIds.map(classId => studentService.getStudents({ classId, keyword, isSuspended: false, pageSize: 100 }))
       )
 
       const merged = responses
