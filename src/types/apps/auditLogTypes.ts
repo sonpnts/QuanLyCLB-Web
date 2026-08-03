@@ -22,6 +22,7 @@ export type AuditAction =
   | 'CheckOut'
   | 'AttendanceManual'
   | 'AttendanceApprove'
+  | 'AttendanceMark'
   | 'ExamRegister'
   | 'ExamApprove'
   | 'ExamReject'
@@ -76,6 +77,7 @@ export const AuditActionColors: { [key: string]: ThemeColor } = {
   CheckOut: 'secondary',
   AttendanceManual: 'warning',
   AttendanceApprove: 'info',
+  AttendanceMark: 'primary',
   ExamRegister: 'primary',
   ExamApprove: 'success',
   ExamReject: 'error',
@@ -114,6 +116,7 @@ export const auditActionLabels: { [key: string]: string } = {
   CheckOut: 'Check-out',
   AttendanceManual: 'Chấm công thủ công',
   AttendanceApprove: 'Duyệt chấm công',
+  AttendanceMark: 'Điểm danh học viên',
   ExamRegister: 'Đăng ký thi',
   ExamApprove: 'Duyệt thi',
   ExamReject: 'Từ chối thi',
@@ -145,6 +148,7 @@ export const entityTypeLabels: { [key: string]: string } = {
   StudentEnrollment: 'Đăng ký học viên',
   Invoice: 'Hóa đơn',
   InvoiceDetail: 'Chi tiết hóa đơn',
+  StudentAttendance: 'Điểm danh học viên',
   BeltExamRegistration: 'Đăng ký thi đai',
   AttendanceAdjustment: 'Điều chỉnh chấm công',
   UserAccount: 'Tài khoản',

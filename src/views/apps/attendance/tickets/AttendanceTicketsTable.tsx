@@ -117,9 +117,13 @@ const AttendanceTicketsTable = () => {
 
       const params: any = {
         pageNumber: page + 1,
-        pageSize: rowsPerPage,
-        month: filterMonth,
-        year: filterYear
+        pageSize: rowsPerPage
+      }
+
+      // Chờ duyệt: hiển thị toàn bộ, không lọc theo tháng
+      if (filterStatus !== 'Pending') {
+        params.month = filterMonth
+        params.year = filterYear
       }
 
       if (filterStatus) params.status = filterStatus
@@ -489,14 +493,17 @@ const AttendanceTicketsTable = () => {
             }
           />
           <CardContent>
-            <Grid container spacing={2} sx={{ mb: 4 }}>
+            <Grid container spacing={2} sx={{ mb: 4 }} alignItems='center'>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size='small'>
                   <InputLabel>Trạng thái</InputLabel>
                   <Select
                     value={filterStatus}
                     label='Trạng thái'
-                    onChange={e => setFilterStatus(e.target.value as AdjustmentStatus | '')}
+                    onChange={e => {
+                      setFilterStatus(e.target.value as AdjustmentStatus | '')
+                      setPage(0)
+                    }}
                   >
                     <MenuItem value=''>Tất cả</MenuItem>
                     <MenuItem value='Pending'>Chờ duyệt</MenuItem>
@@ -506,34 +513,50 @@ const AttendanceTicketsTable = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <FormControl fullWidth size='small'>
-                  <InputLabel>Tháng</InputLabel>
-                  <Select
-                    value={filterMonth}
-                    label='Tháng'
-                    onChange={e => setFilterMonth(Number(e.target.value))}
-                  >
-                    {MONTHS.map(m => (
-                      <MenuItem key={m} value={m}>Tháng {m}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <FormControl fullWidth size='small'>
-                  <InputLabel>Năm</InputLabel>
-                  <Select
-                    value={filterYear}
-                    label='Năm'
-                    onChange={e => setFilterYear(Number(e.target.value))}
-                  >
-                    {YEARS.map(y => (
-                      <MenuItem key={y} value={y}>{y}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+              {filterStatus !== 'Pending' ? (
+                <>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <FormControl fullWidth size='small'>
+                      <InputLabel>Tháng</InputLabel>
+                      <Select
+                        value={filterMonth}
+                        label='Tháng'
+                        onChange={e => {
+                          setFilterMonth(Number(e.target.value))
+                          setPage(0)
+                        }}
+                      >
+                        {MONTHS.map(m => (
+                          <MenuItem key={m} value={m}>Tháng {m}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <FormControl fullWidth size='small'>
+                      <InputLabel>Năm</InputLabel>
+                      <Select
+                        value={filterYear}
+                        label='Năm'
+                        onChange={e => {
+                          setFilterYear(Number(e.target.value))
+                          setPage(0)
+                        }}
+                      >
+                        {YEARS.map(y => (
+                          <MenuItem key={y} value={y}>{y}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </>
+              ) : (
+                <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+                  <Typography variant='caption' color='text.secondary'>
+                    Đang hiển thị toàn bộ phiếu chờ duyệt (mọi thời gian).
+                  </Typography>
+                </Grid>
+              )}
             </Grid>
 
             {loading ? (

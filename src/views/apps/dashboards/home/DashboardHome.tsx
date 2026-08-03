@@ -29,9 +29,6 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import TableSortLabel from '@mui/material/TableSortLabel'
 import Paper from '@mui/material/Paper'
-import Tab from '@mui/material/Tab'
-import Tabs from '@mui/material/Tabs'
-import Badge from '@mui/material/Badge'
 
 import dashboardService from '@/services/dashboardService'
 import studentService from '@/services/studentService'
@@ -93,53 +90,85 @@ const StatCard = ({
   </Card>
 )
 
-const StatusSection = ({
-  title,
-  emptyText,
-  items
-}: {
-  title: string
-  emptyText: string
-  items: NonNullable<DashboardSystemNotificationsDto['pendingItems']>
-}) => (
-  <Box>
-    {title && (
-      <Typography variant='subtitle2' className='mb-2'>
-        {title}
-      </Typography>
-    )}
+const MODULE_META: Record<string, { icon: string; color: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary' }> = {
+  UserDocument: { icon: 'ri-file-list-3-line', color: 'info' },
+  ClassTransfer: { icon: 'ri-exchange-line', color: 'primary' },
+  CashHandover: { icon: 'ri-hand-coin-line', color: 'success' },
+  LeaveRequest: { icon: 'ri-calendar-event-line', color: 'secondary' },
+  TuitionDiscount: { icon: 'ri-money-dollar-circle-line', color: 'warning' },
+  AttendanceAdjustment: { icon: 'ri-time-line', color: 'error' }
+}
+
+const PendingRequests = ({ items }: { items: NonNullable<DashboardSystemNotificationsDto['pendingItems']> }) => {
+  if (items.length === 0) {
+    return (
+      <Box className='flex flex-col items-center justify-center gap-2 py-10'>
+        <CustomAvatar color='success' skin='light' size={56} variant='rounded'>
+          <i className='ri-checkbox-circle-line text-2xl' />
+        </CustomAvatar>
+        <Typography color='text.secondary'>Không có yêu cầu nào đang chờ duyệt.</Typography>
+      </Box>
+    )
+  }
+
+  return (
     <div className='flex flex-col gap-2'>
-      {items.length === 0 && <Typography color='text.secondary' variant='body2'>{emptyText}</Typography>}
-      {items.map(item => (
-        <Box key={`${item.moduleKey}-${item.recordId}`} className='border rounded p-3'>
-          <div className='flex justify-between items-start gap-3'>
-            <div>
+      {items.map(item => {
+        const meta = MODULE_META[item.moduleKey] ?? { icon: 'ri-notification-3-line', color: 'primary' as const }
+
+        return (
+          <Box
+            key={`${item.moduleKey}-${item.recordId}`}
+            className='border rounded p-3 flex items-center gap-3'
+            sx={{ transition: 'box-shadow .2s ease', '&:hover': { boxShadow: 3 } }}
+          >
+            <CustomAvatar color={meta.color} skin='light' size={42} variant='rounded'>
+              <i className={`${meta.icon} text-xl`} />
+            </CustomAvatar>
+            <div className='flex-1' style={{ minWidth: 0 }}>
               <Typography variant='body2' className='font-medium'>
                 {item.title}
               </Typography>
-              <Typography variant='caption' color='text.secondary'>
-                {item.moduleLabel} - {item.statusLabel}
-              </Typography>
+              <div className='flex items-center gap-2 flex-wrap'>
+                <Chip label={item.moduleLabel} color={meta.color} variant='tonal' size='small' />
+                <Typography variant='caption' color='text.secondary'>
+                  {formatSmallDate(item.createdAt)}
+                </Typography>
+              </div>
               {item.description && (
-                <Typography variant='caption' color='text.secondary' display='block'>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  display='block'
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: 'vertical'
+                  }}
+                >
                   {item.description}
                 </Typography>
               )}
-              {item.status === 'Rejected' && item.rejectedAt && (
-                <Typography variant='caption' color='error.main' display='block' sx={{ mt: 0.5, fontSize: '0.72rem' }}>
-                  Từ chối ngày {formatSmallDate(item.rejectedAt)}
-                </Typography>
-              )}
             </div>
-            <Button component={Link} href={item.detailUrl} size='small' variant='outlined' sx={{ flexShrink: 0 }}>
-              Chi tiết
+            <Button
+              component={Link}
+              href={item.detailUrl}
+              size='small'
+              variant='contained'
+              color='primary'
+              endIcon={<i className='ri-arrow-right-line' />}
+              sx={{ flexShrink: 0 }}
+            >
+              Xử lý
             </Button>
-          </div>
-        </Box>
-      ))}
+          </Box>
+        )
+      })}
     </div>
-  </Box>
-)
+  )
+}
 
 const DashboardHome = () => {
   const [stats, setStats] = useState<DashboardStatisticsDto | null>(null)
@@ -166,7 +195,6 @@ const DashboardHome = () => {
 
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
   })
-  const [notificationTab, setNotificationTab] = useState(0)
 
   const { auth } = useAuth()
 
@@ -229,6 +257,22 @@ const DashboardHome = () => {
     }
   }
 
+  // Yêu cầu chờ duyệt: tải 1 lần, hiển thị toàn bộ, không phụ thuộc tháng đã chọn
+  useEffect(() => {
+    if (!canViewNotifications) {
+      setSystemNotifications(null)
+      return
+    }
+
+    const loadNotifications = async () => {
+      const res = await dashboardService.getSystemNotifications({ maxItemsPerStatus: 100 })
+
+      if (res.success && res.data) setSystemNotifications(res.data)
+    }
+
+    loadNotifications()
+  }, [canViewNotifications])
+
   useEffect(() => {
     const load = async () => {
       const [yearStr, monthStr] = selectedMonth.split('-')
@@ -239,14 +283,11 @@ const DashboardHome = () => {
 
       try {
         if (canViewAdminDashboard) {
-          const [statsRes, revenueRes, studentRes, attendanceRes, notificationRes, studentMonthRes] = await Promise.all([
+          const [statsRes, revenueRes, studentRes, attendanceRes, studentMonthRes] = await Promise.all([
             dashboardService.getStatistics({ year, month }),
             dashboardService.getRevenue({ months: 6 }),
             dashboardService.getStudentStats(),
             dashboardService.getAttendanceStats(),
-            canViewNotifications
-              ? dashboardService.getSystemNotifications({ year, month, maxItemsPerStatus: 10 })
-              : Promise.resolve({ success: true, data: null } as any),
             dashboardService.getStudentMonthStats({ year, month })
           ])
 
@@ -254,22 +295,12 @@ const DashboardHome = () => {
           if (revenueRes.success && revenueRes.data) setRevenue(revenueRes.data)
           if (studentRes.success && studentRes.data) setStudentStats(studentRes.data)
           if (attendanceRes.success && attendanceRes.data) setAttendanceStats(attendanceRes.data)
-          if (notificationRes.success && notificationRes.data) setSystemNotifications(notificationRes.data)
           if (studentMonthRes.success && studentMonthRes.data) setStudentMonthStats(studentMonthRes.data)
-          if (!canViewNotifications) setSystemNotifications(null)
         } else {
           setStats(null)
           setRevenue([])
           setStudentStats(null)
           setAttendanceStats(null)
-
-          if (canViewNotifications) {
-            const notificationRes = await dashboardService.getSystemNotifications({ year, month, maxItemsPerStatus: 10 })
-
-            if (notificationRes.success && notificationRes.data) setSystemNotifications(notificationRes.data)
-          } else {
-            setSystemNotifications(null)
-          }
 
           const studentMonthRes = await dashboardService.getStudentMonthStats({ year, month })
 
@@ -281,7 +312,7 @@ const DashboardHome = () => {
     }
 
     load()
-  }, [selectedMonth, canViewAdminDashboard, canViewNotifications])
+  }, [selectedMonth, canViewAdminDashboard])
 
   if (loading) {
     return (
@@ -375,102 +406,28 @@ const DashboardHome = () => {
       <Grid size={{ xs: 12 }}>
         <Card>
           <CardHeader
-            title='Thông báo hệ thống'
-            subheader={canViewAdminDashboard ? 'Quản lý các yêu cầu chờ xử lý' : 'Tác vụ của bạn'}
+            title={
+              <div className='flex items-center gap-2'>
+                <span>Yêu cầu chờ duyệt</span>
+                {(systemNotifications?.totalPending ?? 0) > 0 && (
+                  <Chip
+                    label={systemNotifications?.totalPending}
+                    color='warning'
+                    size='small'
+                    sx={{ fontWeight: 700 }}
+                  />
+                )}
+              </div>
+            }
+            subheader={canViewAdminDashboard ? 'Tất cả yêu cầu đang chờ bạn xử lý' : 'Tác vụ đang chờ xử lý của bạn'}
           />
           <CardContent sx={{ pt: 0 }}>
             {!canViewNotifications ? (
               <Typography color='text.secondary'>Bạn chưa được cấp quyền xem thông báo hệ thống.</Typography>
             ) : (
-              <>
-                <Box className='flex gap-2 flex-wrap mb-3'>
-                  <Chip
-                    label={`Chờ duyệt: ${systemNotifications?.totalPending ?? 0}`}
-                    color='warning'
-                    variant='tonal'
-                    size='small'
-                  />
-                  <Chip
-                    label={`Đã duyệt: ${systemNotifications?.totalApproved ?? 0}`}
-                    color='success'
-                    variant='tonal'
-                    size='small'
-                  />
-                  <Chip
-                    label={`Từ chối: ${systemNotifications?.totalRejected ?? 0}`}
-                    color='error'
-                    variant='tonal'
-                    size='small'
-                  />
-                  <Chip
-                    label={`Tổng: ${systemNotifications?.totalItems ?? 0}`}
-                    color='primary'
-                    variant='tonal'
-                    size='small'
-                  />
-                </Box>
-
-                <Tabs
-                  value={notificationTab}
-                  onChange={(_, v) => setNotificationTab(v)}
-                  sx={{ minHeight: 36, mb: 2 }}
-                >
-                  <Tab
-                    label={
-                      <Badge
-                        badgeContent={systemNotifications?.totalPending ?? 0}
-                        color='warning'
-                        max={99}
-                        sx={{ '& .MuiBadge-badge': { right: -16, top: 2 } }}
-                      >
-                        Chờ duyệt
-                      </Badge>
-                    }
-                    sx={{ minHeight: 36, textTransform: 'none', fontWeight: 600 }}
-                  />
-                  <Tab
-                    label='Đã duyệt'
-                    sx={{ minHeight: 36, textTransform: 'none', fontWeight: 600 }}
-                  />
-                  <Tab
-                    label={
-                      <Badge
-                        badgeContent={systemNotifications?.totalRejected ?? 0}
-                        color='error'
-                        max={99}
-                        sx={{ '& .MuiBadge-badge': { right: -16, top: 2 } }}
-                      >
-                        Từ chối
-                      </Badge>
-                    }
-                    sx={{ minHeight: 36, textTransform: 'none', fontWeight: 600 }}
-                  />
-                </Tabs>
-
-                <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
-                  {notificationTab === 0 && (
-                    <StatusSection
-                      title=''
-                      emptyText='Không có yêu cầu chờ duyệt'
-                      items={systemNotifications?.pendingItems ?? []}
-                    />
-                  )}
-                  {notificationTab === 1 && (
-                    <StatusSection
-                      title=''
-                      emptyText='Không có mục đã duyệt'
-                      items={systemNotifications?.approvedItems ?? []}
-                    />
-                  )}
-                  {notificationTab === 2 && (
-                    <StatusSection
-                      title=''
-                      emptyText='Không có mục bị từ chối'
-                      items={systemNotifications?.rejectedItems ?? []}
-                    />
-                  )}
-                </Box>
-              </>
+              <Box sx={{ maxHeight: 480, overflowY: 'auto', pr: 1 }}>
+                <PendingRequests items={systemNotifications?.pendingItems ?? []} />
+              </Box>
             )}
           </CardContent>
         </Card>
