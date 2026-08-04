@@ -47,6 +47,12 @@ import { useAuth } from '@/contexts/authContext'
 const currentYear = new Date().getFullYear()
 const currentMonth = new Date().getMonth() + 1
 
+const getDefaultFromDate = () => {
+  const d = new Date()
+  d.setMonth(d.getMonth() - 2)
+  return toLocalDateString(d)
+}
+
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i)
 const WEEKDAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
@@ -108,8 +114,8 @@ const AdminAttendanceHistoryView = () => {
   const { showNotification } = useNotification()
 
   const [activeTab, setActiveTab] = useState(0)
-  const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth)
-  const [selectedYear, setSelectedYear] = useState<number>(currentYear)
+  const [fromDate, setFromDate] = useState<string>(getDefaultFromDate())
+  const [toDate, setToDate] = useState<string>(toLocalDateString(new Date()))
   const [selectedUserId, setSelectedUserId] = useState<string>('')
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(20)
@@ -163,12 +169,19 @@ const AdminAttendanceHistoryView = () => {
 
   const [allUsers, setAllUsers] = useState<UserOption[]>([])
 
+  const dateRangeInvalid = !fromDate || !toDate || fromDate > toDate
+
   const loadPairs = useCallback(async () => {
+    if (!fromDate || !toDate || fromDate > toDate) {
+      setPairs([])
+      setTotalCount(0)
+      return
+    }
     setLoading(true)
     try {
       const response = await attendanceService.getAdminAllPairs({
-        month: selectedMonth,
-        year: selectedYear,
+        fromDate,
+        toDate,
         userId: selectedUserId || undefined,
         pageNumber: page + 1,
         pageSize: rowsPerPage
@@ -184,7 +197,7 @@ const AdminAttendanceHistoryView = () => {
     } finally {
       setLoading(false)
     }
-  }, [selectedMonth, selectedYear, selectedUserId, page, rowsPerPage])
+  }, [fromDate, toDate, selectedUserId, page, rowsPerPage])
 
   useEffect(() => { loadPairs() }, [loadPairs])
 
@@ -200,12 +213,14 @@ const AdminAttendanceHistoryView = () => {
   const loadReportHistory = useCallback(async () => {
     setLoadingReports(true)
     try {
-      const response = await attendanceService.getReportHistory(selectedMonth, selectedYear)
-      setReportHistory(response.success && response.data ? response.data : [])
+      const response = await attendanceService.getReportHistory()
+      const reports = response.success && response.data ? response.data : []
+      reports.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      setReportHistory(reports)
     } finally {
       setLoadingReports(false)
     }
-  }, [selectedMonth, selectedYear])
+  }, [])
 
   useEffect(() => { if (activeTab === 1) loadReportHistory() }, [activeTab, loadReportHistory])
 
@@ -361,12 +376,12 @@ const AdminAttendanceHistoryView = () => {
   useEffect(() => { if (addUserId) loadAddClasses(addUserId) }, [addUserId, loadAddClasses])
 
   const loadMissingDates = useCallback(async () => {
-    if (!addUserId || !addSelectedClassId) { setAddMissingDates([]); return }
+    if (!addUserId || !addSelectedClassId || !fromDate || !toDate || fromDate > toDate) { setAddMissingDates([]); return }
     const classSchedules = addClasses.filter(c => c.classId === addSelectedClassId && c.dayOfWeek >= 0)
     if (classSchedules.length === 0) { setAddMissingDates([]); return }
 
     const existingDates = new Set<string>()
-    const attResponse = await attendanceService.getAdminAllPairs({ userId: addUserId, month: selectedMonth, year: selectedYear, pageSize: 500 })
+    const attResponse = await attendanceService.getAdminAllPairs({ userId: addUserId, fromDate, toDate, pageSize: 500 })
     if (attResponse.success && attResponse.data?.items) {
       for (const p of attResponse.data.items) {
         const dt = new Date(p.checkInAt)
@@ -375,12 +390,12 @@ const AdminAttendanceHistoryView = () => {
       }
     }
 
-    const startDate = new Date(selectedYear, selectedMonth - 1, 1)
+    const startDate = new Date(fromDate + 'T00:00:00')
     const today = new Date()
     const todayVN = new Date(today.getTime() + 7 * 60 * 60 * 1000)
     const todayDateOnly = new Date(todayVN.getUTCFullYear(), todayVN.getUTCMonth(), todayVN.getUTCDate())
-    const monthEnd = new Date(selectedYear, selectedMonth, 0)
-    const endDate = todayDateOnly <= monthEnd ? todayDateOnly : monthEnd
+    const rangeEnd = new Date(toDate + 'T00:00:00')
+    const endDate = todayDateOnly <= rangeEnd ? todayDateOnly : rangeEnd
     const missing: MissingDateItem[] = []
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -393,7 +408,7 @@ const AdminAttendanceHistoryView = () => {
     }
     setAddMissingDates(missing)
     setAddSelectedDates(new Set(missing.map(m => m.date)))
-  }, [addUserId, addSelectedClassId, addClasses, selectedMonth, selectedYear])
+  }, [addUserId, addSelectedClassId, addClasses, fromDate, toDate])
 
   useEffect(() => { if (addUserId && addSelectedClassId) loadMissingDates() }, [addUserId, addSelectedClassId, loadMissingDates])
 
@@ -448,32 +463,52 @@ const AdminAttendanceHistoryView = () => {
     }
   }
 
-  const openPayrollDialog = async () => {
-    setDialogMonth(selectedMonth)
-    setDialogYear(selectedYear)
-    setSelectedUserIds(new Set())
-    setGenerateResult(null)
-    setDialogOpen(true)
-
+  const loadPayrollUsers = useCallback(async (month: number, year: number) => {
     try {
-      const response = await attendanceService.getAdminAllPairs({
-        month: selectedMonth,
-        year: selectedYear,
-        pageNumber: 1,
-        pageSize: 1000
-      })
+      const params: { month?: number; year?: number; fromDate?: string; toDate?: string; pageNumber: number; pageSize: number } = { pageNumber: 1, pageSize: 1000 }
+
+      // Kỳ lương có thể theo ngày tùy chỉnh (vd: 26 tháng trước - 25 tháng này) nên ưu tiên lấy theo khoảng ngày của kỳ lương
+      const periodRes = await attendanceService.getPayrollPeriod({ month, year })
+      const period = periodRes.success ? periodRes.data : null
+      if (period?.fromDate && period?.toDate) {
+        params.fromDate = String(period.fromDate).slice(0, 10)
+        params.toDate = String(period.toDate).slice(0, 10)
+      } else {
+        params.month = month
+        params.year = year
+      }
+
+      const response = await attendanceService.getAdminAllPairs(params)
       if (response.success && response.data) {
         const allPairs = response.data.items || []
         const uniqueUsers = new Map<string, string>()
         for (const p of allPairs) {
           if (!uniqueUsers.has(p.userId)) uniqueUsers.set(p.userId, p.userName)
         }
-        setAllUsers(Array.from(uniqueUsers.entries()).map(([id, fullName]) => ({ id, fullName })))
+        const users = Array.from(uniqueUsers.entries()).map(([id, fullName]) => ({ id, fullName }))
+        setAllUsers(users)
+        setSelectedUserIds(prev => new Set([...prev].filter(id => users.some(u => u.id === id))))
+      } else {
+        setAllUsers([])
+        setSelectedUserIds(new Set())
       }
     } catch {
       setAllUsers([])
+      setSelectedUserIds(new Set())
     }
+  }, [])
+
+  const openPayrollDialog = () => {
+    setDialogMonth(currentMonth)
+    setDialogYear(currentYear)
+    setSelectedUserIds(new Set())
+    setGenerateResult(null)
+    setDialogOpen(true)
   }
+
+  useEffect(() => {
+    if (dialogOpen) loadPayrollUsers(dialogMonth, dialogYear)
+  }, [dialogOpen, dialogMonth, dialogYear, loadPayrollUsers])
 
   const validPairs = pairs.filter(p => p.isValid)
   const invalidPairs = pairs.filter(p => !p.isValid)
@@ -511,20 +546,16 @@ const AdminAttendanceHistoryView = () => {
             <CardContent>
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid size={{ xs: 12, sm: 3 }}>
-                  <FormControl fullWidth size='small'>
-                    <InputLabel>Tháng</InputLabel>
-                    <Select value={selectedMonth} label='Tháng' onChange={e => { setSelectedMonth(Number(e.target.value)); setPage(0) }}>
-                      {MONTHS.map(m => <MenuItem key={m} value={m}>Tháng {m}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                  <TextField fullWidth size='small' type='date' label='Từ ngày' value={fromDate}
+                    onChange={e => { setFromDate(e.target.value); setPage(0) }}
+                    InputLabelProps={{ shrink: true }} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 3 }}>
-                  <FormControl fullWidth size='small'>
-                    <InputLabel>Năm</InputLabel>
-                    <Select value={selectedYear} label='Năm' onChange={e => { setSelectedYear(Number(e.target.value)); setPage(0) }}>
-                      {YEARS.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                  <TextField fullWidth size='small' type='date' label='Đến ngày' value={toDate}
+                    onChange={e => { setToDate(e.target.value); setPage(0) }}
+                    InputLabelProps={{ shrink: true }}
+                    error={dateRangeInvalid}
+                    helperText={dateRangeInvalid ? 'Khoảng ngày không hợp lệ' : ''} />
                 </Grid>
                 {!isCoach && (
                   <Grid size={{ xs: 12, sm: 4 }}>
@@ -647,7 +678,7 @@ const AdminAttendanceHistoryView = () => {
                         </TableRow>
                       ))}
                       {pairs.length === 0 && (
-                        <TableRow><TableCell colSpan={11} align='center'><Typography color='text.secondary'>Không có dữ liệu chấm công trong tháng này.</Typography></TableCell></TableRow>
+                        <TableRow><TableCell colSpan={11} align='center'><Typography color='text.secondary'>Không có dữ liệu chấm công trong khoảng thời gian này.</Typography></TableCell></TableRow>
                       )}
                     </TableBody>
                   </Table>
@@ -791,7 +822,7 @@ const AdminAttendanceHistoryView = () => {
       <Dialog open={addOpen} onClose={() => setAddOpen(false)} maxWidth='md' fullWidth>
         <DialogTitle>
           <Typography variant='h6'>Thêm lượt chấm công</Typography>
-          <Typography variant='body2' color='text.secondary'>Chọn HLV và lớp, hiển thị các ngày đã qua trong tháng {selectedMonth}/{selectedYear} chưa có chấm công.</Typography>
+          <Typography variant='body2' color='text.secondary'>Chọn HLV và lớp, hiển thị các ngày đã qua trong khoảng {fromDate.split('-').reverse().join('/')} - {toDate.split('-').reverse().join('/')} chưa có chấm công.</Typography>
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -820,7 +851,7 @@ const AdminAttendanceHistoryView = () => {
             {!addLoading && addUserId && addClasses.length > 0 && !addSelectedClassId && <Alert severity='info'>Vui lòng chọn lớp để xem ngày chưa chấm công.</Alert>}
             {addSelectedClassId && addMissingDates.length > 0 && (
               <>
-                <Alert severity='warning'>Có <strong>{addMissingDates.length}</strong> ngày chưa chấm công trong tháng {selectedMonth}/{selectedYear} cho lớp <strong>{addSelectedClassName}</strong>.</Alert>
+                <Alert severity='warning'>Có <strong>{addMissingDates.length}</strong> ngày chưa chấm công trong khoảng {fromDate.split('-').reverse().join('/')} - {toDate.split('-').reverse().join('/')} cho lớp <strong>{addSelectedClassName}</strong>.</Alert>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant='subtitle2' fontWeight={600}>Chọn ngày ({addSelectedDates.size}/{addMissingDates.length})</Typography>
                   <Button size='small' onClick={toggleAddAll}>{addSelectedDates.size === addMissingDates.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}</Button>
@@ -848,7 +879,7 @@ const AdminAttendanceHistoryView = () => {
                 </Box>
               </>
             )}
-            {addSelectedClassId && addMissingDates.length === 0 && !addLoading && <Alert severity='success'>Tất cả các ngày trong tháng đã có chấm công.</Alert>}
+            {addSelectedClassId && addMissingDates.length === 0 && !addLoading && <Alert severity='success'>Tất cả các ngày trong khoảng thời gian này đã có chấm công.</Alert>}
           </Stack>
         </DialogContent>
         <DialogActions>

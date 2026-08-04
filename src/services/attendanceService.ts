@@ -650,6 +650,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
   async getAdminAllPairs(params?: {
     month?: number
     year?: number
+    fromDate?: string
+    toDate?: string
     userId?: string
     pageNumber?: number
     pageSize?: number
@@ -658,6 +660,8 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       const queryParams: any = {}
       if (params?.month) queryParams.month = params.month
       if (params?.year) queryParams.year = params.year
+      if (params?.fromDate) queryParams.fromDate = params.fromDate
+      if (params?.toDate) queryParams.toDate = params.toDate
       if (params?.userId) queryParams.userId = params.userId
       if (params?.pageNumber) queryParams.pageNumber = params.pageNumber
       if (params?.pageSize) queryParams.pageSize = params.pageSize
