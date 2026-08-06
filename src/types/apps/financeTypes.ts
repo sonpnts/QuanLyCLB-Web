@@ -49,6 +49,10 @@ export type FinanceTransactionSummaryType = {
   examFeeTotal: number
   productSalesTotal: number
   receiptTotal: number
+  registrationFeeTotal: number
+  facilityFeeTotal: number
+  codeChangeFeeTotal: number
+  otherFeesTotal: number
   fromDate?: string
   toDate?: string
   classId?: string

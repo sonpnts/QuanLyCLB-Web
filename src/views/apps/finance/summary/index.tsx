@@ -52,6 +52,10 @@ type SummaryTotals = {
   examFeeTotal: number
   productSalesTotal: number
   coachCollectedTotal: number
+  registrationFeeTotal: number
+  facilityFeeTotal: number
+  codeChangeFeeTotal: number
+  otherFeesTotal: number
 }
 
 const pad2 = (value: number) => String(value).padStart(2, '0')
@@ -105,7 +109,11 @@ const emptyTotals = (): SummaryTotals => ({
   tuitionTotal: 0,
   examFeeTotal: 0,
   productSalesTotal: 0,
-  coachCollectedTotal: 0
+  coachCollectedTotal: 0,
+  registrationFeeTotal: 0,
+  facilityFeeTotal: 0,
+  codeChangeFeeTotal: 0,
+  otherFeesTotal: 0
 })
 
 const FinanceSummaryView = () => {
@@ -166,7 +174,10 @@ const FinanceSummaryView = () => {
         const nextClasses = classRes.success && classRes.data ? classRes.data : []
         const nextBranches = branchRes.success && branchRes.data ? branchRes.data : []
         const nextInstructors = instructorRes.success && instructorRes.data ? instructorRes.data : []
-        const currentUserInstructorId = nextInstructors.find(item => item.id === auth?.user?.id)?.id || auth?.user?.id || ''
+
+        // Chỉ tự động chọn HLV khi tài khoản đăng nhập thực sự là HLV;
+        // admin phải tự chọn HLV trong danh sách để tránh hiển thị 0đ sai lệch.
+        const currentUserInstructorId = nextInstructors.find(item => item.id === auth?.user?.id)?.id || ''
 
         setClasses(nextClasses)
         setBranches(nextBranches)
@@ -319,7 +330,11 @@ return
         tuitionTotal: summary?.tuitionTotal || 0,
         examFeeTotal: summary?.examFeeTotal || 0,
         productSalesTotal: summary?.productSalesTotal || 0,
-        coachCollectedTotal: summary?.receiptTotal || 0
+        coachCollectedTotal: summary?.receiptTotal || 0,
+        registrationFeeTotal: summary?.registrationFeeTotal || 0,
+        facilityFeeTotal: summary?.facilityFeeTotal || 0,
+        codeChangeFeeTotal: summary?.codeChangeFeeTotal || 0,
+        otherFeesTotal: summary?.otherFeesTotal || 0
       })
 
       setCollections(collectionRows)
@@ -376,8 +391,7 @@ return instructorName
       ...prev,
       statisticsMode: mode,
       classId: mode === 'class' ? prev.classId : '',
-      branchId: mode === 'branch' ? prev.branchId : '',
-      instructorId: mode === 'instructor' ? (prev.instructorId || auth?.user?.id || '') : prev.instructorId
+      branchId: mode === 'branch' ? prev.branchId : ''
     }))
   }
 
@@ -403,6 +417,10 @@ return
       { ten: 'Tổng học phí đã thu', soTien: totals.tuitionTotal },
       { ten: 'Tổng lệ phí thi cấp đã thu', soTien: totals.examFeeTotal },
       { ten: 'Tổng doanh thu bán sản phẩm', soTien: totals.productSalesTotal },
+      { ten: 'Tổng phí đăng ký đã thu', soTien: totals.registrationFeeTotal },
+      { ten: 'Tổng phí CSVC đã thu', soTien: totals.facilityFeeTotal },
+      { ten: 'Tổng phí chuyển mã đã thu', soTien: totals.codeChangeFeeTotal },
+      { ten: 'Tổng các khoản phí khác đã thu', soTien: totals.otherFeesTotal },
       { ten: 'Tổng tiền theo biên lai', soTien: totals.coachCollectedTotal }
     ]
 
@@ -630,6 +648,18 @@ return
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 6, xl: 3 }}>
               <SummaryCard title='Tổng tiền theo biên lai' amount={totals.coachCollectedTotal} color='warning.main' />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 3 }}>
+              <SummaryCard title='Tổng phí đăng ký đã thu' amount={totals.registrationFeeTotal} color='secondary.main' />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 3 }}>
+              <SummaryCard title='Tổng phí CSVC đã thu' amount={totals.facilityFeeTotal} color='secondary.main' />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 3 }}>
+              <SummaryCard title='Tổng phí chuyển mã đã thu' amount={totals.codeChangeFeeTotal} color='secondary.main' />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4, xl: 3 }}>
+              <SummaryCard title='Tổng các khoản phí khác đã thu' amount={totals.otherFeesTotal} color='secondary.main' />
             </Grid>
           </Grid>
 
