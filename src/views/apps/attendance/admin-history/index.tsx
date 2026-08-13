@@ -929,8 +929,11 @@ const AdminAttendanceHistoryView = () => {
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Checkbox checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} />
-              <Typography variant='body2'>Gửi email báo cáo cho huấn luyện viên được chọn</Typography>
+              <Typography variant='body2'>Gửi email kèm file chấm công riêng cho từng huấn luyện viên</Typography>
             </Box>
+            <Alert severity='info'>
+              Mỗi huấn luyện viên được tạo <strong>1 file chấm công riêng</strong>và chỉ gửi tới email của chính họ.
+            </Alert>
             {generateResult && (
               <Alert severity={generateResult.success ? 'success' : 'error'}>{generateResult.message}
                 {generateResult.data?.items && <Box sx={{ mt: 1 }}>{generateResult.data.items.map((item: any) => <Typography key={item.userId} variant='body2'>{item.userName}: {item.emailSent ? 'Đã gửi email' : 'Không gửi email'}{item.emailError && ` (${item.emailError})`}</Typography>)}</Box>}
