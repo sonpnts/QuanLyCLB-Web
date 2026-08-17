@@ -8,7 +8,7 @@ export const formatBeltLevelOrder = (order?: number | null, fallback = '—'): s
 
   if (order >= 1 && order <= 10) return String(order)
 
-  if (order > 10) return `${order - 10} Đẳng`
+  if (order > 10) return `${order - 10}`
 
   return String(order)
 }
