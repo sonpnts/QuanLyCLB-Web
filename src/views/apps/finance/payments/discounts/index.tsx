@@ -156,7 +156,7 @@ const DiscountedReceiptsView = () => {
     <Card>
       <CardHeader
         title='Biên lai có giảm trừ'
-        subheader='Mặc định hiển thị tất cả các loại giảm trừ. Bạn có thể đổi bộ lọc để xem giảm trừ thủ công, giảm trừ đã duyệt, giá combo hoặc biên lai kết hợp.'
+        // subheader='Mặc định hiển thị tất cả các loại giảm trừ. Bạn có thể đổi bộ lọc để xem giảm trừ thủ công, giảm trừ đã duyệt, giá combo hoặc biên lai kết hợp.'
       />
       <CardContent>
         <Stack spacing={3}>

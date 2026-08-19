@@ -734,7 +734,10 @@ return
     const effectiveClassId = isGuest ? undefined : (form.classId || undefined)
 
     if (form.tuitionEnabled) {
-      tuitionMonths.forEach((row) => {
+      // Sắp xếp theo thứ tự tháng tăng dần (tháng nhỏ trước) trước khi tạo biên lai
+      const sortedTuitionMonths = [...tuitionMonths].sort((a, b) => a.year - b.year || a.month - b.month)
+
+      sortedTuitionMonths.forEach((row) => {
         items.push({
           type: PAYMENT_TYPE_TUITION,
           classId: effectiveClassId,

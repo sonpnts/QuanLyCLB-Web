@@ -588,9 +588,12 @@ const AddPaymentDrawer = ({ open, handleClose, setData, mode = 'normal' }: Props
       }
 
       const hasAddOnProducts = addOnProducts.length > 0
+
+      // Sắp xếp theo thứ tự tháng tăng dần (tháng nhỏ trước) trước khi tạo biên lai
+      const sortedTuitionMonths = [...tuitionMonths].sort((a, b) => a.year - b.year || a.month - b.month)
       const tuitionItems =
         formData.type === PAYMENT_TYPE_TUITION
-          ? tuitionMonths.map((item, index) => ({
+          ? sortedTuitionMonths.map((item, index) => ({
               type: PAYMENT_TYPE_TUITION,
               classId: formData.classId,
               forMonth: item.month,

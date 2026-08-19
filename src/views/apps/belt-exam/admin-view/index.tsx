@@ -986,8 +986,8 @@ return
                         <TableCell>{renderSortHeader('Mã HV', 'studentCode')}</TableCell>
                         <TableCell>{renderSortHeader('Ngày sinh', 'dateOfBirth')}</TableCell>
                         <TableCell>{renderSortHeader('Giới tính', 'gender')}</TableCell>
-                        <TableCell>{renderSortHeader('Cấp hiện tại', 'currentBeltLevelOrder')}</TableCell>
-                        <TableCell>{renderSortHeader('Cấp thi', 'targetBeltLevelOrder')}</TableCell>
+                        <TableCell>{renderSortHeader('Cấp đai hiện tại', 'currentBeltLevelOrder')}</TableCell>
+                        <TableCell>{renderSortHeader('Cấp đai dự thi', 'targetBeltLevelOrder')}</TableCell>
                         <TableCell>{renderSortHeader('SDT', 'phoneNumber')}</TableCell>
                         <TableCell>{renderSortHeader('Phí 1 lần', 'oneTimeFeesCompleted')}</TableCell>
                         <TableCell>{renderSortHeader('Lệ phí', 'hasPaid')}</TableCell>
@@ -1014,9 +1014,33 @@ return
                             <TableCell>{student.studentCode || '—'}</TableCell>
                             <TableCell>{student.dateOfBirth ? formatDate(student.dateOfBirth) : '—'}</TableCell>
                             <TableCell>{student.gender === undefined ? '—' : formatGender(student.gender)}</TableCell>
-                            <TableCell>{formatBeltLevelOrder(student.currentBeltLevelOrder)}</TableCell>
                             <TableCell>
-                              <strong>{formatBeltLevelOrder(student.targetBeltLevelOrder, '')}</strong>
+                              <Box className='flex items-center gap-1'>
+                                <Typography variant='body2'>{student.currentBeltLevelName || '—'}</Typography>
+                                {student.currentBeltLevelOrder != null && (
+                                  <Chip
+                                    label={student.currentBeltLevelOrder}
+                                    size='small'
+                                    variant='outlined'
+                                    color='warning'
+                                  />
+                                )}
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Box className='flex items-center gap-1'>
+                                <Typography variant='body2' color='primary.main' fontWeight={600}>
+                                  {student.targetBeltLevelName}
+                                </Typography>
+                                {student.targetBeltLevelOrder != null && (
+                                  <Chip
+                                    label={student.targetBeltLevelOrder}
+                                    size='small'
+                                    variant='outlined'
+                                    color='primary'
+                                  />
+                                )}
+                              </Box>
                             </TableCell>
                             <TableCell>{student.phoneNumber || '—'}</TableCell>
                             <TableCell>{renderOneTimeFeeBadge(student)}</TableCell>
