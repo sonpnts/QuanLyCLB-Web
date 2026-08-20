@@ -36,7 +36,8 @@ import type {
   CreateRegistrationListItemRequest,
   EligibleStudentForExamType,
   ExamSessionType,
-  ExamType
+  ExamType,
+  RegistrationListItemType
 } from '@/types/apps/beltExamTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { hasPermission } from '@/utils/permissionUtils'
@@ -55,6 +56,7 @@ interface Props {
 interface StudentRow extends EligibleStudentForExamType {
   selected: boolean
   selectedTargetBeltId: string
+  currentRegistration?: RegistrationListItemType
 }
 
 const sortEligibleStudents = (students: EligibleStudentForExamType[]) =>
@@ -75,16 +77,24 @@ const mapStudentsToRows = (
     registrationList?.registrations.map(registration => [registration.studentId, registration] as const) ?? []
   )
 
-  return sortEligibleStudents(eligibleStudents).map(student => {
-    const registration = registrationsByStudentId.get(student.studentId)
+  return sortEligibleStudents(
+    eligibleStudents.filter(
+      student =>
+        student.isRegistrationProfileComplete ||
+        !(student.currentBeltLevelName === null || student.currentBeltLevelName === 'Unknown')
+    )
+  ).map(student => {
+    const currentRegistration = registrationsByStudentId.get(student.studentId)
 
     return {
       ...student,
-      selected: Boolean(registration),
-      selectedTargetBeltId: registration?.targetBeltLevelId ?? student.suggestedTargetBeltLevelId ?? ''
+      currentRegistration,
+      selected: Boolean(currentRegistration),
+      selectedTargetBeltId: currentRegistration?.targetBeltLevelId ?? student.suggestedTargetBeltLevelId ?? ''
     }
   })
 }
+
 
 const isSessionReadOnly = (session: ExamSessionType) => {
   if (session.isLocked || session.status === 'Locked') return true
@@ -247,8 +257,13 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     return Boolean(currentRegistrationsByStudentId.get(student.studentId)?.isFeePaid)
   }
 
+  // Chỉ khóa khi học viên đang ở danh sách HLV khác VÀ đã đóng lệ phí;
+  // chưa đóng lệ phí thì HLV khác vẫn được tích chuyển về danh sách của mình.
   const isStudentLockedByAnotherList = (student: StudentRow) =>
-    student.alreadyRegistered && student.existingRegistrationListId !== myList?.id
+    student.alreadyRegistered && student.existingRegistrationListId !== myList?.id && Boolean(student.alreadyRegisteredIsFeePaid)
+
+  const isStudentInOtherListUnpaid = (student: StudentRow) =>
+    student.alreadyRegistered && student.existingRegistrationListId !== myList?.id && !student.alreadyRegisteredIsFeePaid
 
   const hasStudentProfileIssue = (student: StudentRow) => !student.isRegistrationProfileComplete
 
@@ -530,6 +545,8 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                         <TableCell>
                           {isLockedByAnotherList ? (
                             <Chip label='Đã đăng ký' color='info' size='small' variant='tonal' />
+                          ) : isStudentInOtherListUnpaid(student) ? (
+                            <Chip label='HLV khác' color='secondary' size='small' variant='tonal' />
                           ) : isPaidInCurrentList ? (
                             <Chip label='Đã đóng phí' color='success' size='small' variant='tonal' />
                           ) : isCurrentListStudent ? (
