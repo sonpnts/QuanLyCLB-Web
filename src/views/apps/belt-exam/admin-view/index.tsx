@@ -35,6 +35,7 @@ import Typography from '@mui/material/Typography'
 
 import studentService from '@/services/studentService'
 import classService from '@/services/classService'
+import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import type { AdminExamSessionViewType, AdminExamStudentRowType } from '@/types/apps/beltExamTypes'
@@ -44,7 +45,9 @@ import type { StudentType } from '@/types/apps/studentTypes'
 import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
 import { exportToExcel } from '@/utils/exportToExcel'
 import { formatBeltLevelOrder } from '@/utils/beltLevel'
+import { buildModulePermissionMap } from '@/utils/rbac'
 import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
+import ViewStudentDrawer from '@/views/apps/student/list/ViewStudentDrawer'
 
 interface Props {
   sessionId: string
@@ -174,6 +177,13 @@ const sortAdminStudents = (
 
 const BeltExamAdminView = ({ sessionId }: Props) => {
   const { showNotification } = useNotification()
+  const { auth } = useAuth()
+
+  const studentPermissions = useMemo(
+    () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'Student'),
+    [auth?.permissions, auth?.roles]
+  )
+
   const [data, setData] = useState<AdminExamSessionViewType | null>(null)
   const [loading, setLoading] = useState(true)
   const [onlyPaid, setOnlyPaid] = useState(false)
@@ -184,6 +194,7 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
   const [sortBy, setSortBy] = useState<AdminSortField>('currentBeltLevelOrder')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
+  const [viewStudentOpen, setViewStudentOpen] = useState(false)
   const [editStudentOpen, setEditStudentOpen] = useState(false)
   const [loadingStudent, setLoadingStudent] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
@@ -363,14 +374,14 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
     [allGroups]
   )
 
-  const openStudentEditor = async (studentId: string) => {
+  const openStudentDrawer = async (studentId: string) => {
     try {
       setLoadingStudent(true)
       const result = await studentService.getStudentById(studentId)
 
       if (result.success && result.data) {
         setSelectedStudent(result.data)
-        setEditStudentOpen(true)
+        setViewStudentOpen(true)
       } else {
         showNotification(result.message || 'Không thể tải thông tin học viên.', 'error')
       }
@@ -1002,7 +1013,7 @@ return
                           <TableRow
                             key={student.registrationId}
                             hover
-                            onClick={() => openStudentEditor(student.studentId)}
+                            onClick={() => openStudentDrawer(student.studentId)}
                             sx={{ cursor: 'pointer' }}
                           >
                             <TableCell>{stt}</TableCell>
@@ -1074,6 +1085,23 @@ return
         </Box>
       )}
 
+      <ViewStudentDrawer
+        open={viewStudentOpen}
+        onClose={() => {
+          setViewStudentOpen(false)
+          setSelectedStudent(null)
+        }}
+        student={selectedStudent}
+        onEdit={
+          studentPermissions.canUpdate
+            ? student => {
+                setViewStudentOpen(false)
+                setSelectedStudent(student)
+                setEditStudentOpen(true)
+              }
+            : undefined
+        }
+      />
       <EditStudentDrawer
         open={editStudentOpen}
         onClose={() => setEditStudentOpen(false)}

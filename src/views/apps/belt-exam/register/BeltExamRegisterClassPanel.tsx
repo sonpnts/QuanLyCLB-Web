@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
@@ -41,8 +41,10 @@ import type {
 import type { StudentType } from '@/types/apps/studentTypes'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
+import { buildModulePermissionMap } from '@/utils/rbac'
 import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
 import EditStudentDrawer from '@/views/apps/student/list/EditStudentDrawer'
+import ViewStudentDrawer from '@/views/apps/student/list/ViewStudentDrawer'
 
 interface Props {
   session: ExamSessionType
@@ -102,6 +104,11 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     hasPermission(auth?.permissions, 'BeltExam.Admin.Approve') ||
     hasAdminRole(auth?.roles)
 
+  const studentPermissions = useMemo(
+    () => buildModulePermissionMap(auth?.permissions, auth?.roles, 'Student'),
+    [auth?.permissions, auth?.roles]
+  )
+
   const [myClasses, setMyClasses] = useState<{ id: string; name: string }[]>([])
   const [selectedClassId, setSelectedClassId] = useState<string>('')
   const [students, setStudents] = useState<StudentRow[]>([])
@@ -109,6 +116,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const [loadingStudents, setLoadingStudents] = useState(false)
   const [saving, setSaving] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(null)
+  const [viewStudentOpen, setViewStudentOpen] = useState(false)
   const [editStudentOpen, setEditStudentOpen] = useState(false)
   const [loadingStudent, setLoadingStudent] = useState(false)
   const readOnly = isSessionReadOnly(session)
@@ -207,14 +215,14 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     reloadClassData(selectedClassId)
   }, [reloadClassData, selectedClassId])
 
-  const openStudentEditor = async (studentId: string) => {
+  const openStudentDrawer = async (studentId: string) => {
     try {
       setLoadingStudent(true)
       const result = await studentService.getStudentById(studentId)
 
       if (result.success && result.data) {
         setSelectedStudent(result.data)
-        setEditStudentOpen(true)
+        setViewStudentOpen(true)
       } else {
         showNotification(result.message || 'Không thể tải thông tin học viên', 'error')
       }
@@ -370,7 +378,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                 </TableHead>
                 <TableBody>
                   {myList.registrations.map((registration, index) => (
-                    <TableRow key={registration.id} hover onClick={() => openStudentEditor(registration.studentId)} sx={{ cursor: 'pointer' }}>
+                    <TableRow key={registration.id} hover onClick={() => openStudentDrawer(registration.studentId)} sx={{ cursor: 'pointer' }}>
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{registration.studentName}</TableCell>
                       <TableCell>{registration.currentBeltLevelName ?? '—'}</TableCell>
@@ -469,7 +477,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                       <TableRow
                         key={student.studentId}
                         hover
-                        onClick={() => openStudentEditor(student.studentId)}
+                        onClick={() => openStudentDrawer(student.studentId)}
                         selected={student.selected}
                         sx={{ opacity: isLockedByAnotherList ? 0.5 : 1, cursor: 'pointer' }}
                       >
@@ -555,6 +563,23 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
           <CircularProgress />
         </Box>
       )}
+      <ViewStudentDrawer
+        open={viewStudentOpen}
+        onClose={() => {
+          setViewStudentOpen(false)
+          setSelectedStudent(null)
+        }}
+        student={selectedStudent}
+        onEdit={
+          studentPermissions.canUpdate
+            ? student => {
+                setViewStudentOpen(false)
+                setSelectedStudent(student)
+                setEditStudentOpen(true)
+              }
+            : undefined
+        }
+      />
       <EditStudentDrawer
         open={editStudentOpen}
         onClose={() => setEditStudentOpen(false)}
