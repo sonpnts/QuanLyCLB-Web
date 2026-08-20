@@ -53,12 +53,12 @@ const TuitionDebtReportView = () => {
       if (isAdmin) {
         const classRes = await classService.getClasses({ isActive: true, pageSize: 1000 })
         if (classRes.success && classRes.data) {
-          setClassOptions(classRes.data.map((c: any) => ({ id: c.id, name: `${c.code || ''} - ${c.name}` })))
+          setClassOptions(classRes.data.map((c: any) => ({ id: c.id, name: c.code })))
         }
       } else if (userId) {
         const classRes = await classService.getClassesByUserId(userId)
         if (classRes.success && classRes.data) {
-          setClassOptions(classRes.data.map((c: any) => ({ id: c.id, name: `${c.code || ''} - ${c.name}` })))
+          setClassOptions(classRes.data.map((c: any) => ({ id: c.id, name: c.code })))
         }
       }
     }
@@ -149,10 +149,15 @@ const TuitionDebtReportView = () => {
     <Box className='flex flex-col gap-6'>
       <Card>
         <CardHeader
-          title='Báo cáo nợ học phí võ sinh'
-          subheader='Thống kê học viên chưa đóng học phí theo lớp, chi nhánh.'
+          title='Báo cáo nợ phí sinh hoạt'
+          subheader='Thống kê học viên chưa đóng phí sinh hoạt theo lớp, chi nhánh.'
           action={
-            <Button variant='outlined' color='primary' onClick={handleExport} startIcon={<i className='ri-download-line' />}>
+            <Button
+              variant='outlined'
+              color='primary'
+              onClick={handleExport}
+              startIcon={<i className='ri-download-line' />}
+            >
               Xuất Excel
             </Button>
           }
@@ -165,7 +170,9 @@ const TuitionDebtReportView = () => {
                 <Select value={classId} label='Lớp học' onChange={e => setClassId(e.target.value)}>
                   <MenuItem value=''>Tất cả</MenuItem>
                   {classOptions.map(c => (
-                    <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                    <MenuItem key={c.id} value={c.id}>
+                      {c.name}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -183,7 +190,11 @@ const TuitionDebtReportView = () => {
             <Grid size={{ xs: 12, sm: 4 }}>
               <FormControl fullWidth>
                 <InputLabel>Thứ tự</InputLabel>
-                <Select value={String(sortDescending)} label='Thứ tự' onChange={e => setSortDescending(e.target.value === 'true')}>
+                <Select
+                  value={String(sortDescending)}
+                  label='Thứ tự'
+                  onChange={e => setSortDescending(e.target.value === 'true')}
+                >
                   <MenuItem value='true'>Giảm dần</MenuItem>
                   <MenuItem value='false'>Tăng dần</MenuItem>
                 </Select>
@@ -194,30 +205,34 @@ const TuitionDebtReportView = () => {
       </Card>
 
       <Grid container spacing={4}>
-      {/*  <Grid size={{ xs: 12, sm: 4 }}>*/}
-      {/*    <Card variant='outlined'>*/}
-      {/*      <CardContent>*/}
-      {/*        <Typography variant='body2' color='text.secondary'>Tổng HV nợ</Typography>*/}
-      {/*        <Typography variant='h4' color='error.main'>{data?.totalStudents ?? 0}</Typography>*/}
-      {/*      </CardContent>*/}
-      {/*    </Card>*/}
-      {/*  </Grid>*/}
+        {/*  <Grid size={{ xs: 12, sm: 4 }}>*/}
+        {/*    <Card variant='outlined'>*/}
+        {/*      <CardContent>*/}
+        {/*        <Typography variant='body2' color='text.secondary'>Tổng HV nợ</Typography>*/}
+        {/*        <Typography variant='h4' color='error.main'>{data?.totalStudents ?? 0}</Typography>*/}
+        {/*      </CardContent>*/}
+        {/*    </Card>*/}
+        {/*  </Grid>*/}
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card variant='outlined'>
             <CardContent>
-                <Typography variant='body2' color='text.secondary'>Tổng nợ</Typography>
-                <Typography variant='h4' color='warning.main'>{formatCurrency(data?.totalDebtAmount ?? 0)}</Typography>
-              </CardContent>
-            </Card>
+              <Typography variant='body2' color='text.secondary'>
+                Tổng nợ
+              </Typography>
+              <Typography variant='h4' color='warning.main'>
+                {formatCurrency(data?.totalDebtAmount ?? 0)}
+              </Typography>
+            </CardContent>
+          </Card>
         </Grid>
-      {/*  <Grid size={{ xs: 12, sm: 4 }}>*/}
-      {/*    <Card variant='outlined'>*/}
-      {/*      <CardContent>*/}
-      {/*        <Typography variant='body2' color='text.secondary'>Tổng tháng nợ</Typography>*/}
-      {/*        <Typography variant='h4'>{data?.items?.reduce((s: number, i: any) => s + i.monthsOwed, 0) ?? 0}</Typography>*/}
-      {/*      </CardContent>*/}
-      {/*    </Card>*/}
-      {/*  </Grid>*/}
+        {/*  <Grid size={{ xs: 12, sm: 4 }}>*/}
+        {/*    <Card variant='outlined'>*/}
+        {/*      <CardContent>*/}
+        {/*        <Typography variant='body2' color='text.secondary'>Tổng tháng nợ</Typography>*/}
+        {/*        <Typography variant='h4'>{data?.items?.reduce((s: number, i: any) => s + i.monthsOwed, 0) ?? 0}</Typography>*/}
+        {/*      </CardContent>*/}
+        {/*    </Card>*/}
+        {/*  </Grid>*/}
       </Grid>
 
       {summaryByClass.length > 0 && (
@@ -234,14 +249,16 @@ const TuitionDebtReportView = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {summaryByClass.sort((a: any, b: any) => b.totalMonthsOwed - a.totalMonthsOwed).map((row: any) => (
-                  <TableRow key={row.classId}>
-                    <TableCell>{row.className}</TableCell>
-                    <TableCell align='center'>{row.studentCount}</TableCell>
-                    {/*<TableCell align='center'>{row.totalMonthsOwed}</TableCell>*/}
-                    <TableCell align='right'>{formatCurrency(row.totalDebt)}</TableCell>
-                  </TableRow>
-                ))}
+                {summaryByClass
+                  .sort((a: any, b: any) => b.totalMonthsOwed - a.totalMonthsOwed)
+                  .map((row: any) => (
+                    <TableRow key={row.classId}>
+                      <TableCell>{row.className}</TableCell>
+                      <TableCell align='center'>{row.studentCount}</TableCell>
+                      {/*<TableCell align='center'>{row.totalMonthsOwed}</TableCell>*/}
+                      <TableCell align='right'>{formatCurrency(row.totalDebt)}</TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </CardContent>
@@ -262,14 +279,16 @@ const TuitionDebtReportView = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {summaryByBranch.sort((a: any, b: any) => b.totalMonthsOwed - a.totalMonthsOwed).map((row: any) => (
-                  <TableRow key={row.name}>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell align='center'>{row.studentCount}</TableCell>
-                    {/*<TableCell align='center'>{row.totalMonthsOwed}</TableCell>*/}
-                    <TableCell align='right'>{formatCurrency(row.totalDebt)}</TableCell>
-                  </TableRow>
-                ))}
+                {summaryByBranch
+                  .sort((a: any, b: any) => b.totalMonthsOwed - a.totalMonthsOwed)
+                  .map((row: any) => (
+                    <TableRow key={row.name}>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell align='center'>{row.studentCount}</TableCell>
+                      {/*<TableCell align='center'>{row.totalMonthsOwed}</TableCell>*/}
+                      <TableCell align='right'>{formatCurrency(row.totalDebt)}</TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </CardContent>
@@ -292,7 +311,7 @@ const TuitionDebtReportView = () => {
                   <TableRow>
                     <TableCell>Mã HV</TableCell>
                     <TableCell>Họ và tên</TableCell>
-                    <TableCell>userIdZalo</TableCell>
+                    <TableCell>Zalo</TableCell>
                     <TableCell>Lớp</TableCell>
                     <TableCell align='center'>Tháng nợ</TableCell>
                     <TableCell align='right'>Tổng nợ</TableCell>
@@ -305,7 +324,7 @@ const TuitionDebtReportView = () => {
                       <TableCell>
                         <Typography fontWeight={500}>{item.studentName}</Typography>
                       </TableCell>
-                      <TableCell>{item.userIdZalo || '-'}</TableCell>
+                      <TableCell>{item.userIdZalo ? 'Đã liên kết' : '-'}</TableCell>
                       <TableCell>{item.className}</TableCell>
                       <TableCell align='center'>
                         <div className='flex flex-wrap gap-1'>
