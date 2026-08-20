@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
@@ -58,6 +58,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -108,6 +109,7 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
   )
 
   const [addPaymentOpen, setAddPaymentOpen] = useState(false)
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
   const [replacementOpen, setReplacementOpen] = useState(false)
   const [receiptModalOpen, setReceiptModalOpen] = useState(false)
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
@@ -196,7 +198,17 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
       columnHelper.accessor('studentName', {
         header: 'Học viên',
         cell: ({ row }) => (
-          <Typography className='font-medium' color='text.primary'>
+          <Typography
+            className='font-medium'
+            color={row.original.studentId ? 'primary' : 'text.primary'}
+            sx={row.original.studentId ? { cursor: 'pointer' } : undefined}
+            onClick={event => {
+              if (!row.original.studentId) return
+
+              event.stopPropagation()
+              openStudentDrawer(row.original.studentId)
+            }}
+          >
             {row.original.studentName || '-'}
           </Typography>
         )
@@ -330,7 +342,7 @@ return (
         }
       }
     ],
-    []
+    [openStudentDrawer]
   )
 
   const table = useReactTable({
@@ -528,6 +540,7 @@ return (
         </DialogActions>
       </Dialog>
 
+      {studentDrawerElement}
     </>
   )
 }

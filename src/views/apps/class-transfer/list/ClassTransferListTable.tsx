@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 // React Imports
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
@@ -51,6 +51,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import { useAuth } from '@/contexts/authContext'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -107,6 +108,7 @@ const ClassTransferListTable = () => {
   const { showNotification } = useNotification()
   const { auth } = useAuth()
   const isAdmin = hasPermission(auth?.permissions, 'ClassTransfer.Approve') || hasAdminRole(auth?.roles)
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
 
   // Refs để tránh duplicate calls
   const showNotificationRef = useRef(showNotification)
@@ -229,7 +231,12 @@ return
       columnHelper.accessor('studentName', {
         header: 'Học viên',
         cell: ({ row }) => (
-          <Typography className='font-medium' color='text.primary'>
+          <Typography
+            className='font-medium'
+            color='primary'
+            sx={{ cursor: 'pointer' }}
+            onClick={() => openStudentDrawer(row.original.studentId)}
+          >
             {row.original.studentName}
           </Typography>
         )
@@ -330,7 +337,7 @@ return (
         }
       }
     ],
-    [handleCancel, isAdmin]
+    [handleCancel, isAdmin, openStudentDrawer]
   )
 
   const table = useReactTable({
@@ -471,6 +478,8 @@ return (
       )}
 
       <AddTransferDrawer open={addTransferOpen} handleClose={() => setAddTransferOpen(false)} setData={setData} />
+
+      {studentDrawerElement}
     </>
   )
 }

@@ -24,6 +24,7 @@ import znsLogService from '@/services/znsLogService'
 import type { ZnsLogType } from '@/types/apps/znsLogTypes'
 import { formatDateTimeVN } from '@/utils/dateTime'
 import ReceiptModal from '@/views/apps/invoice/list/ReceiptModal'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 const ZnsLogListView = () => {
   const [rows, setRows] = useState<ZnsLogType[]>([])
@@ -40,6 +41,7 @@ const ZnsLogListView = () => {
   const [retryingId, setRetryingId] = useState<string | null>(null)
   const [selectedReceiptNumber, setSelectedReceiptNumber] = useState<string | null>(null)
   const [receiptModalOpen, setReceiptModalOpen] = useState(false)
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -214,7 +216,18 @@ const ZnsLogListView = () => {
                   rows.map(row => (
                     <tr key={row.id} onClick={() => setSelectedRow(row)} style={{ cursor: 'pointer' }}>
                       <td>
-                        <Typography variant='body2' className='font-medium'>
+                        <Typography
+                          variant='body2'
+                          className='font-medium'
+                          color={row.studentId ? 'primary' : 'text.primary'}
+                          sx={row.studentId ? { cursor: 'pointer' } : undefined}
+                          onClick={event => {
+                            if (!row.studentId) return
+
+                            event.stopPropagation()
+                            openStudentDrawer(row.studentId)
+                          }}
+                        >
                           {row.studentName || '-'}
                         </Typography>
                       </td>
@@ -375,6 +388,8 @@ const ZnsLogListView = () => {
           setSelectedReceiptNumber(null)
         }}
       />
+
+      {studentDrawerElement}
     </>
   )
 }

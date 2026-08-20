@@ -32,6 +32,7 @@ import DialogActions from '@mui/material/DialogActions'
 import zaloLinkService from '@/services/zaloLinkService'
 import studentService from '@/services/studentService'
 import ZaloVerifyModal from '@/views/apps/student/list/ZaloVerifyModal'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 import { useNotification } from '@/contexts/notificationContext'
 
 import type { ZaloLinkCoachOverviewType, ZaloLinkCoachStudentRowType } from '@/types/apps/zaloLinkTypes'
@@ -53,6 +54,7 @@ const emptyOverview: ZaloLinkCoachOverviewType = {
 
 export default function ZaloLinkCoachView() {
   const { showNotification } = useNotification()
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
 
   const [loading, setLoading] = useState(false)
   const [overview, setOverview] = useState<ZaloLinkCoachOverviewType | null>(null)
@@ -272,7 +274,15 @@ return
 return (
                       <TableRow key={`${r.classId}_${r.studentId}`} hover>
                         <TableCell>{r.studentCode}</TableCell>
-                        <TableCell>{r.studentName}</TableCell>
+                        <TableCell>
+                          <Typography
+                            color='primary'
+                            sx={{ cursor: 'pointer' }}
+                            onClick={() => openStudentDrawer(r.studentId)}
+                          >
+                            {r.studentName}
+                          </Typography>
+                        </TableCell>
                         <TableCell>{r.phoneNumber || '-'}</TableCell>
                         <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                           {r.classCode}
@@ -331,6 +341,8 @@ return (
           </Button>
         </DialogActions>
       </Dialog>
+
+      {studentDrawerElement}
     </Box>
   )
 }

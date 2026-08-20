@@ -37,6 +37,7 @@ import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { savePaymentInvoiceDraft } from '@/utils/paymentDraft'
 import { exportToExcel, formatVnCurrency } from '@/utils/exportToExcel'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 const YEARS = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() - i)
@@ -79,6 +80,7 @@ const PaymentCollectView = () => {
   const router = useRouter()
   const { auth } = useAuth()
   const { showNotification } = useNotification()
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
   const [month, setMonth] = useState(new Date().getMonth() + 1)
   const [year, setYear] = useState(new Date().getFullYear())
   const [summary, setSummary] = useState<CoachPaymentSummaryType | AdminPaymentSummaryType | null>(null)
@@ -587,7 +589,13 @@ const PaymentCollectView = () => {
                                 <TableRow key={student.studentId}>
                                   <TableCell>
                                     <Box className='flex items-center gap-2 flex-wrap'>
-                                      <Typography>{student.studentName}</Typography>
+                                      <Typography
+                                        color='primary'
+                                        sx={{ cursor: 'pointer' }}
+                                        onClick={() => openStudentDrawer(student.studentId)}
+                                      >
+                                        {student.studentName}
+                                      </Typography>
                                       {student.examFeeAmount > 0 ? (
                                         <Chip
                                           label={`${student.examFeeCount} lệ phí thi chưa đóng`}
@@ -709,6 +717,8 @@ const PaymentCollectView = () => {
           )}
         </>
       )}
+
+      {studentDrawerElement}
     </Box>
   )
 }

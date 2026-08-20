@@ -24,6 +24,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import studentService, { type TuitionDiscountRequestRow } from '@/services/studentService'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { formatDateTimeVN } from '@/utils/dateTime'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 const formatVnd = (value: number) => `${Math.round(value || 0).toLocaleString('vi-VN')}đ`
 const toMonthValue = (month?: number | null, year?: number | null) => (month && year ? `${year}-${String(month).padStart(2, '0')}` : '')
@@ -50,6 +51,7 @@ const statusChip = (status: string | number) => {
 
 const StudentTuitionDiscountPage = () => {
   const { showNotification } = useNotification()
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
 
   const [studentKeyword, setStudentKeyword] = useState('')
   const [studentOptions, setStudentOptions] = useState<StudentType[]>([])
@@ -264,7 +266,12 @@ const StudentTuitionDiscountPage = () => {
                 {rows.map(row => (
                   <TableRow key={row.id}>
                     <TableCell>
-                      <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                      <Typography
+                        variant='body2'
+                        sx={{ fontWeight: 600, cursor: 'pointer' }}
+                        color='primary'
+                        onClick={() => openStudentDrawer(row.studentId)}
+                      >
                         {row.studentName}
                       </Typography>
                       <Typography variant='caption' color='text.secondary'>
@@ -290,6 +297,8 @@ const StudentTuitionDiscountPage = () => {
           </TableContainer>
         </CardContent>
       </Card>
+
+      {studentDrawerElement}
     </Box>
   )
 }

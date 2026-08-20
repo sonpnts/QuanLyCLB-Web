@@ -26,6 +26,7 @@ import classService from '@/services/classService'
 import cashHandoverService from '@/services/cashHandoverService'
 import { useAuth } from '@/contexts/authContext'
 import { hasAdminRole } from '@/utils/roleUtils'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 const currentYear = new Date().getFullYear()
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
@@ -37,6 +38,8 @@ const TuitionDebtReportView = () => {
   const { auth } = useAuth()
   const isAdmin = hasAdminRole(auth?.roles)
   const userId = auth?.user?.id
+
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
 
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<any>(null)
@@ -322,7 +325,14 @@ const TuitionDebtReportView = () => {
                     <TableRow key={item.studentId}>
                       <TableCell>{item.studentCode || '-'}</TableCell>
                       <TableCell>
-                        <Typography fontWeight={500}>{item.studentName}</Typography>
+                        <Typography
+                          fontWeight={500}
+                          color='primary'
+                          sx={{ cursor: 'pointer' }}
+                          onClick={() => openStudentDrawer(item.studentId)}
+                        >
+                          {item.studentName}
+                        </Typography>
                       </TableCell>
                       <TableCell>{item.userIdZalo ? 'Đã liên kết' : '-'}</TableCell>
                       <TableCell>{item.className}</TableCell>
@@ -346,6 +356,8 @@ const TuitionDebtReportView = () => {
           )}
         </CardContent>
       </Card>
+
+      {studentDrawerElement}
     </Box>
   )
 }

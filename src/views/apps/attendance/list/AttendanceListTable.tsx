@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -40,6 +40,7 @@ import studentAttendanceService, {
 } from '@/services/studentAttendanceService'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { formatDateTimeVN } from '@/utils/dateTime'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 const WEEKDAY_LABELS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
 
@@ -124,6 +125,7 @@ const AttendanceListTable = () => {
   const [missingOverview, setMissingOverview] = useState<MissingAttendanceOverviewType | null>(null)
 
   const [sheet, setSheet] = useState<AttendanceSheetType | null>(null)
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
   const [loading, setLoading] = useState(false)
   const [loadingDates, setLoadingDates] = useState(false)
   const [loadingMissingSessions, setLoadingMissingSessions] = useState(false)
@@ -615,7 +617,15 @@ return
 
                     return (
                       <TableRow key={student.studentId}>
-                        <TableCell>{student.studentName}</TableCell>
+                        <TableCell>
+                          <Typography
+                            color='primary'
+                            sx={{ cursor: 'pointer' }}
+                            onClick={() => openStudentDrawer(student.studentId)}
+                          >
+                            {student.studentName}
+                          </Typography>
+                        </TableCell>
                         <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{student.phoneNumber || '-'}</TableCell>
                         <TableCell align='center'>
                           <Checkbox
@@ -658,6 +668,8 @@ return
           ) : null}
         </Box>
       </CardContent>
+
+      {studentDrawerElement}
     </Card>
   )
 }

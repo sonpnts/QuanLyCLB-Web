@@ -42,6 +42,7 @@ import studentAttendanceService, {
 } from '@/services/studentAttendanceService'
 import { formatDateTimeVN } from '@/utils/dateTime'
 import { hasAdminRole } from '@/utils/roleUtils'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 type FilterClass = {
   id: string
@@ -116,6 +117,8 @@ const getStudentStatus = (student: AttendanceSheetStudentType) => {
 const AttendanceHistoryView = () => {
   const { auth } = useAuth()
   const isAdmin = hasAdminRole(auth?.roles)
+
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
 
   const [loading, setLoading] = useState(false)
   const [loadingMissingSessions, setLoadingMissingSessions] = useState(false)
@@ -681,7 +684,15 @@ const AttendanceHistoryView = () => {
                       return (
                         <TableRow key={student.studentId}>
                           <TableCell>{index + 1}</TableCell>
-                          <TableCell>{student.studentName}</TableCell>
+                          <TableCell>
+                            <Typography
+                              color='primary'
+                              sx={{ cursor: 'pointer' }}
+                              onClick={() => openStudentDrawer(student.studentId)}
+                            >
+                              {student.studentName}
+                            </Typography>
+                          </TableCell>
                           <TableCell>{student.phoneNumber || '-'}</TableCell>
                           <TableCell align='center'>
                             <Chip label={status.label} color={status.color} variant='tonal' size='small' />
@@ -697,6 +708,8 @@ const AttendanceHistoryView = () => {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {studentDrawerElement}
     </>
   )
 }

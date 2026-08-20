@@ -35,6 +35,7 @@ import type {
   OneTimeFeeAdminStatusType
 } from '@/types/apps/oneTimeFeeTypes'
 import { formatDateTimeVN } from '@/utils/dateTime'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 const formatCurrency = (amount?: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(amount || 0))
@@ -58,6 +59,7 @@ const translatePaidSource = (value?: string | null) => {
 
 const OneTimeFeeStatusAdminView = () => {
   const { showNotification } = useNotification()
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
 
   const [loadingFilters, setLoadingFilters] = useState(true)
   const [loadingTable, setLoadingTable] = useState(false)
@@ -296,7 +298,12 @@ return
                       <TableRow key={`${row.studentId}-${row.feeCode}`}>
                         <TableCell>
                           <Stack spacing={0.5}>
-                            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                            <Typography
+                              variant='body2'
+                              sx={{ fontWeight: 600, cursor: 'pointer' }}
+                              color='primary'
+                              onClick={() => openStudentDrawer(row.studentId)}
+                            >
                               {row.studentName}
                             </Typography>
                             <Typography variant='caption' color='text.secondary'>
@@ -410,6 +417,8 @@ return
           </Button>
         </DialogActions>
       </Dialog>
+
+      {studentDrawerElement}
     </Card>
   )
 }

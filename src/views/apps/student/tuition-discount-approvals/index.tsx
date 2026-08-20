@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useState } from 'react'
 
@@ -27,6 +27,7 @@ import Typography from '@mui/material/Typography'
 import { useNotification } from '@/contexts/notificationContext'
 import studentService, { type PaginatedResult, type TuitionDiscountRequestRow } from '@/services/studentService'
 import { formatDateTimeVN } from '@/utils/dateTime'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 const formatVnd = (value: number) => `${Math.round(value || 0).toLocaleString('vi-VN')}đ`
 
@@ -47,6 +48,7 @@ const emptyPagedResult = (): PaginatedResult<TuitionDiscountRequestRow> => ({
 
 const StudentTuitionDiscountApprovalsPage = () => {
   const { showNotification } = useNotification()
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
 
   const [tab, setTab] = useState(0)
   const [keyword, setKeyword] = useState('')
@@ -246,7 +248,12 @@ const StudentTuitionDiscountApprovalsPage = () => {
                 {activeRows.map(row => (
                   <TableRow key={row.id}>
                     <TableCell>
-                      <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                      <Typography
+                        variant='body2'
+                        sx={{ fontWeight: 600, cursor: 'pointer' }}
+                        color='primary'
+                        onClick={() => openStudentDrawer(row.studentId)}
+                      >
                         {row.studentName}
                       </Typography>
                       <Typography variant='caption' color='text.secondary'>
@@ -346,6 +353,8 @@ const StudentTuitionDiscountApprovalsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {studentDrawerElement}
     </Box>
   )
 }

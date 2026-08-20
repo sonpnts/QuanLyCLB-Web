@@ -31,6 +31,7 @@ import Typography from '@mui/material/Typography'
 
 import { useNotification } from '@/contexts/notificationContext'
 import miniAppLinkService from '@/services/miniAppLinkService'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 import type {
   MiniAppLinkClassOptionType,
   MiniAppLinkedPhoneType,
@@ -53,6 +54,7 @@ const emptyPhoneDialog: PhoneDialogState = {
 
 export default function MiniAppLinkManagementView() {
   const { showNotification } = useNotification()
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
 
   const [classes, setClasses] = useState<MiniAppLinkClassOptionType[]>([])
   const [rows, setRows] = useState<MiniAppManagedStudentRowType[]>([])
@@ -286,7 +288,13 @@ export default function MiniAppLinkManagementView() {
                       <TableRow key={student.studentId} hover>
                         <TableCell sx={{ minWidth: 220 }}>
                           <Stack spacing={0.5}>
-                            <Typography variant='body2' fontWeight={600}>
+                            <Typography
+                              variant='body2'
+                              fontWeight={600}
+                              color='primary'
+                              sx={{ cursor: 'pointer' }}
+                              onClick={() => openStudentDrawer(student.studentId)}
+                            >
                               {student.studentName}
                             </Typography>
                             <Typography variant='caption' color='text.secondary'>
@@ -426,6 +434,8 @@ export default function MiniAppLinkManagementView() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {studentDrawerElement}
     </Box>
   )
 }

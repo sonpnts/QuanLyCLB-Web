@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -35,6 +35,7 @@ import useConfirmActionDialog from '@/hooks/useConfirmAction'
 import { formatDateVN } from '@/utils/dateTime'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { buildModulePermissionMap } from '@/utils/rbac'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 import AddLeaveRequestDrawer from './AddLeaveRequestDrawer'
 import TableFilters from './TableFilters'
@@ -85,6 +86,7 @@ const LeaveRequestListTable = () => {
 
   const { showNotification } = useNotification()
   const { confirm, confirmDialog } = useConfirmActionDialog()
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
   const showNotificationRef = useRef(showNotification)
 
   showNotificationRef.current = showNotification
@@ -168,7 +170,14 @@ return
         header: 'Học viên',
         cell: ({ row }) => (
           <div>
-            <Typography className='font-medium'>{row.original.studentName}</Typography>
+            <Typography
+              className='font-medium'
+              color='primary'
+              sx={{ cursor: 'pointer' }}
+              onClick={() => openStudentDrawer(row.original.studentId)}
+            >
+              {row.original.studentName}
+            </Typography>
             <Typography variant='caption' color='text.secondary'>
               {row.original.studentPhone || '-'}
             </Typography>
@@ -221,7 +230,7 @@ return
     }
 
     return nextColumns
-  }, [handleDelete, leaveRequestPermissions.canDelete])
+  }, [handleDelete, leaveRequestPermissions.canDelete, openStudentDrawer])
 
   const table = useReactTable({
     data,
@@ -317,6 +326,7 @@ return
         <AddLeaveRequestDrawer open={addRequestOpen} handleClose={() => setAddRequestOpen(false)} setData={setData} />
       )}
       {confirmDialog}
+      {studentDrawerElement}
     </>
   )
 }

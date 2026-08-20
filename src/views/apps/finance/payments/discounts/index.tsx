@@ -31,6 +31,7 @@ import paymentService from '@/services/paymentService'
 import type { ClassType } from '@/types/apps/classTypes'
 import type { PaymentRecordType } from '@/types/apps/paymentTypes'
 import { formatDateTimeVN } from '@/utils/dateTime'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 type DiscountScope = 'manual' | 'approved' | 'combo' | 'mixed' | 'all'
 
@@ -72,6 +73,7 @@ const getDiscountScopeColor = (row: PaymentRecordType): 'warning' | 'info' | 'se
 const DiscountedReceiptsView = () => {
   const router = useRouter()
   const { showNotification } = useNotification()
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
 
   const [loadingFilters, setLoadingFilters] = useState(true)
   const [loadingTable, setLoadingTable] = useState(false)
@@ -293,7 +295,17 @@ const DiscountedReceiptsView = () => {
                         <TableCell>{row.className || '-'}</TableCell>
                         <TableCell>{formatDateTime(row.paymentDate)}</TableCell>
                         <TableCell>
-                          <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                          <Typography
+                            variant='body2'
+                            sx={{ fontWeight: 600, cursor: row.studentId ? 'pointer' : 'default' }}
+                            color={row.studentId ? 'primary' : 'text.primary'}
+                            onClick={event => {
+                              if (!row.studentId) return
+
+                              event.stopPropagation()
+                              openStudentDrawer(row.studentId)
+                            }}
+                          >
                             {row.studentName || '-'}
                           </Typography>
                         </TableCell>
@@ -343,6 +355,8 @@ const DiscountedReceiptsView = () => {
           />
         </Stack>
       </CardContent>
+
+      {studentDrawerElement}
     </Card>
   )
 }

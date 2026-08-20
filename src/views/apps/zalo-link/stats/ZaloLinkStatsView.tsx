@@ -28,6 +28,7 @@ import TextField from '@mui/material/TextField'
 
 import zaloLinkService from '@/services/zaloLinkService'
 import type { ZaloLinkLookupResultType, ZaloLinkOverviewType, ZaloUnlinkedStudentRowType } from '@/types/apps/zaloLinkTypes'
+import useStudentViewDrawer from '@/views/apps/student/list/useStudentViewDrawer'
 
 const getRateChip = (rate?: number | null) => {
   const safeRate = typeof rate === 'number' && Number.isFinite(rate) ? rate : 0
@@ -37,6 +38,8 @@ const getRateChip = (rate?: number | null) => {
 }
 
 export default function ZaloLinkStatsView() {
+  const { openStudentDrawer, studentDrawerElement } = useStudentViewDrawer()
+
   const [loadingStats, setLoadingStats] = useState(false)
   const [loadingUnlinked, setLoadingUnlinked] = useState(false)
 
@@ -213,7 +216,12 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
           ) : (
             <Paper variant='outlined' className='p-4 space-y-2'>
               <Box className='flex flex-wrap items-center gap-3'>
-                <Typography variant='h6'>
+                <Typography
+                  variant='h6'
+                  color='primary'
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => openStudentDrawer(lookupResult.studentId)}
+                >
                   {lookupResult.studentName} <span className='text-textSecondary'>({lookupResult.studentCode})</span>
                 </Typography>
                 {lookupResult.isSuspended && <Chip size='small' label='Tạm dừng' color='warning' variant='tonal' />}
@@ -349,7 +357,15 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                   {unlinked.map(r => (
                     <TableRow key={`${r.classId}_${r.studentId}`}>
                       <TableCell>{r.studentCode}</TableCell>
-                      <TableCell>{r.studentName}</TableCell>
+                      <TableCell>
+                        <Typography
+                          color='primary'
+                          sx={{ cursor: 'pointer' }}
+                          onClick={() => openStudentDrawer(r.studentId)}
+                        >
+                          {r.studentName}
+                        </Typography>
+                      </TableCell>
                       <TableCell>{r.phoneNumber}</TableCell>
                       <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                         {r.className} <span className='text-textSecondary'>({r.classCode})</span>
@@ -362,6 +378,8 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
           )}
         </CardContent>
       </Card>
+
+      {studentDrawerElement}
     </Box>
   )
 }
