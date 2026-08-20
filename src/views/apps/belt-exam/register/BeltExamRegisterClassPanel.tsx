@@ -532,7 +532,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                         hover
                         onClick={() => openStudentDrawer(student.studentId)}
                         selected={student.selected}
-                        sx={{ opacity: isLockedByAnotherList ? 0.5 : 1, cursor: 'pointer' }}
+                        sx={{ opacity: 1, cursor: 'pointer' }}
                       >
                         <TableCell padding='checkbox' onClick={event => event.stopPropagation()}>
                           <Checkbox
@@ -594,13 +594,9 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                           />
                         </TableCell>
                         <TableCell>
-                          {isLockedByAnotherList ? (
-                            <Chip label='Đã đăng ký' color='info' size='small' variant='tonal' />
-                          ) : isRegisteredByOtherCoach ? (
-                            <Chip label='HLV khác' color='secondary' size='small' variant='tonal' />
-                          ) : isPaidInCurrentList ? (
+                          {isPaidInCurrentList || (isRegisteredByOtherCoach && student.alreadyRegisteredIsFeePaid) ? (
                             <Chip label='Đã đóng phí' color='success' size='small' variant='tonal' />
-                          ) : isCurrentListStudent ? (
+                          ) : isCurrentListStudent || isRegisteredByOtherCoach ? (
                             <Chip label='Nháp' color='warning' size='small' variant='tonal' />
                           ) : (
                             <Chip label='Chưa đăng ký' color='default' size='small' variant='outlined' />
