@@ -49,6 +49,7 @@ export const API_ENDPOINTS = {
     sessions: '/belt-exams/sessions',
     sessionById: (id: string) => `/belt-exams/sessions/${id}`,
     registrations: '/belt-exams/registrations',
+    registrationById: (id: string) => `/belt-exams/registrations/${id}`,
     registrationBatch: '/belt-exams/registrations/batch',
     registrationResult: (id: string) => `/belt-exams/registrations/${id}/result`,
 

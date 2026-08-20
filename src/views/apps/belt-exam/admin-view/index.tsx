@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import Accordion from '@mui/material/Accordion'
 import AccordionDetails from '@mui/material/AccordionDetails'
@@ -20,6 +20,7 @@ import DialogContentText from '@mui/material/DialogContentText'
 import DialogTitle from '@mui/material/DialogTitle'
 import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import IconButton from '@mui/material/IconButton'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
@@ -201,26 +202,28 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
   const [classes, setClasses] = useState<ClassType[]>([])
   const [loadingClasses, setLoadingClasses] = useState(false)
   const [unregisteredClassesOpen, setUnregisteredClassesOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<AdminExamStudentRowType | null>(null)
+  const [deletingRegistration, setDeletingRegistration] = useState(false)
+
+  const loadAdminView = useCallback(async () => {
+    try {
+      setLoading(true)
+      const result = await beltExamService.getAdminView(sessionId, false)
+
+      if (result.success && result.data) {
+        setData(result.data)
+        setExpandedGroups([])
+      } else {
+        showNotification(result.message || 'Không thể tải dữ liệu kỳ thi.', 'error')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [sessionId, showNotification])
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true)
-        const result = await beltExamService.getAdminView(sessionId, false)
-
-        if (result.success && result.data) {
-          setData(result.data)
-          setExpandedGroups([])
-        } else {
-          showNotification(result.message || 'Không thể tải dữ liệu kỳ thi.', 'error')
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadData()
-  }, [sessionId, showNotification])
+    loadAdminView()
+  }, [loadAdminView])
 
   useEffect(() => {
     const loadClasses = async () => {
@@ -392,6 +395,30 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
 
   const handleStudentUpdated = (updated: StudentType) => {
     setSelectedStudent(updated)
+  }
+
+  // Admin xóa đăng ký thi của võ sinh (xóa mềm IsActive = false).
+  // Khi HLV đăng ký lại, hệ thống sẽ tính lại cấp đai theo mã mới nhất.
+  const canManageRegistrations =
+    data != null && !data.isLocked && (data.status === 'Open' || data.status === 'Draft')
+
+  const handleDeleteRegistration = async () => {
+    if (!deleteTarget) return
+
+    try {
+      setDeletingRegistration(true)
+      const result = await beltExamService.deleteRegistration(deleteTarget.registrationId)
+
+      if (result.success) {
+        showNotification(`Đã xóa đăng ký thi của học viên ${deleteTarget.studentName}.`, 'success')
+        setDeleteTarget(null)
+        await loadAdminView()
+      } else {
+        showNotification(result.message || 'Không thể xóa đăng ký thi.', 'error')
+      }
+    } finally {
+      setDeletingRegistration(false)
+    }
   }
 
   const fetchFullAdminView = async () => {
@@ -1003,6 +1030,7 @@ return
                         <TableCell>{renderSortHeader('Phí 1 lần', 'oneTimeFeesCompleted')}</TableCell>
                         <TableCell>{renderSortHeader('Lệ phí', 'hasPaid')}</TableCell>
                         <TableCell>{renderSortHeader('Điều kiện thi', 'eligible')}</TableCell>
+                        {canManageRegistrations && <TableCell align='center'>Thao tác</TableCell>}
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -1057,6 +1085,25 @@ return
                             <TableCell>{renderOneTimeFeeBadge(student)}</TableCell>
                             <TableCell>{renderPaidBadge(student)}</TableCell>
                             <TableCell>{renderEligibleBadge(student)}</TableCell>
+                            {canManageRegistrations && (
+                              <TableCell align='center'>
+                                <IconButton
+                                  size='small'
+                                  color='error'
+                                  title={
+                                    student.hasPaid
+                                      ? 'Xóa đăng ký thi (đã đóng lệ phí — không ảnh hưởng hóa đơn)'
+                                      : 'Xóa đăng ký thi'
+                                  }
+                                  onClick={event => {
+                                    event.stopPropagation()
+                                    setDeleteTarget(student)
+                                  }}
+                                >
+                                  <i className='ri-delete-bin-6-line' />
+                                </IconButton>
+                              </TableCell>
+                            )}
                           </TableRow>
                         )
                       })}
@@ -1108,6 +1155,37 @@ return
         student={selectedStudent}
         onSaved={handleStudentUpdated}
       />
+
+      <Dialog open={Boolean(deleteTarget)} onClose={() => (deletingRegistration ? null : setDeleteTarget(null))}>
+        <DialogTitle>Xác nhận xóa đăng ký thi</DialogTitle>
+        <DialogContent>
+          <DialogContentText component='div'>
+            Bạn có chắc muốn xóa đăng ký thi của học viên <strong>{deleteTarget?.studentName}</strong>
+            {deleteTarget?.targetBeltLevelName ? (
+              <>
+                {' '}(cấp thi: <strong>{deleteTarget.targetBeltLevelName}</strong>)
+              </>
+            ) : null}?
+            <br />
+            Đăng ký sẽ bị xóa khỏi danh sách. Nếu HLV đăng ký lại, hệ thống sẽ tính lại cấp đai theo mã võ sinh mới nhất.
+            {deleteTarget?.hasPaid ? (
+              <>
+                <br />
+                <strong>Lưu ý:</strong> học viên này đã đóng lệ phí — việc xóa chỉ ẩn đăng ký,{' '}
+                <strong>KHÔNG</strong> ảnh hưởng đến hóa đơn hay trạng thái đóng phí.
+              </>
+            ) : null}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)} disabled={deletingRegistration}>
+            Hủy
+          </Button>
+          <Button variant='contained' color='error' onClick={handleDeleteRegistration} disabled={deletingRegistration}>
+            {deletingRegistration ? <CircularProgress size={18} /> : 'Xóa đăng ký'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={lockDialogOpen} onClose={() => setLockDialogOpen(false)}>
         <DialogTitle>Xác nhận chốt danh sách</DialogTitle>

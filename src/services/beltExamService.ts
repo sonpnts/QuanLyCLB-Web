@@ -172,6 +172,22 @@ class BeltExamService {
     }
   }
 
+  // Xóa mềm đăng ký thi (admin) - khi đăng ký lại hệ thống sẽ tính lại cấp đai theo mã mới nhất
+  async deleteRegistration(id: string): Promise<ResponseResult<null>> {
+    try {
+      const response = await apiClient.delete<any>(API_ENDPOINTS.beltExams.registrationById(id))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('BeltExamService', 'deleteRegistration', error)
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
   async batchExamRegistration(data: BatchExamRegistrationRequest): Promise<ResponseResult<ExamRegistrationType[]>> {
     try {
       const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.registrationBatch, data)
