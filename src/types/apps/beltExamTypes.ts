@@ -81,6 +81,7 @@ export type EligibleStudentForExamType = {
   isRegistrationProfileComplete: boolean
   registrationProfileNote?: string
   alreadyRegisteredIsFeePaid?: boolean
+  existingRegistrationId?: string
 }
 
 export type RegistrationListItemType = {

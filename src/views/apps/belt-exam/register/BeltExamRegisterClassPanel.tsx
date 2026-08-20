@@ -11,6 +11,11 @@ import CardHeader from '@mui/material/CardHeader'
 import Checkbox from '@mui/material/Checkbox'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogContentText from '@mui/material/DialogContentText'
+import DialogTitle from '@mui/material/DialogTitle'
 import FormControl from '@mui/material/FormControl'
 import IconButton from '@mui/material/IconButton'
 import InputLabel from '@mui/material/InputLabel'
@@ -86,10 +91,12 @@ const mapStudentsToRows = (
   ).map(student => {
     const currentRegistration = registrationsByStudentId.get(student.studentId)
 
+    // Học viên đã đăng ký (kể cả do HLV khác tạo) vẫn hiển thị ở trạng thái đã tích;
+    // HLV có thể bỏ tích để HỦY đăng ký do HLV khác tạo (xem handler ở checkbox).
     return {
       ...student,
       currentRegistration,
-      selected: Boolean(currentRegistration),
+      selected: Boolean(currentRegistration) || student.alreadyRegistered,
       selectedTargetBeltId: currentRegistration?.targetBeltLevelId ?? student.suggestedTargetBeltLevelId ?? ''
     }
   })
@@ -245,6 +252,30 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     setSelectedStudent(updated)
   }
 
+  const [cancelOtherTarget, setCancelOtherTarget] = useState<StudentRow | null>(null)
+  const [cancelingOtherListRegistration, setCancelingOtherListRegistration] = useState(false)
+
+  // Bỏ tích học viên do HLV khác đăng ký => hủy đăng ký đó (xóa mềm).
+  // Sau khi hủy, hệ thống sẽ cho phép đăng ký lại (chạy lại quy trình đăng ký, cấp đai theo mã mới nhất).
+  const handleCancelOtherListRegistration = async () => {
+    if (!cancelOtherTarget?.existingRegistrationId) return
+
+    try {
+      setCancelingOtherListRegistration(true)
+      const result = await beltExamService.deleteRegistration(cancelOtherTarget.existingRegistrationId)
+
+      if (result.success) {
+        showNotification(`Đã hủy đăng ký của học viên ${cancelOtherTarget.studentName}.`, 'success')
+        setCancelOtherTarget(null)
+        await reloadClassData(selectedClassId)
+      } else {
+        showNotification(result.message || 'Không thể hủy đăng ký này.', 'error')
+      }
+    } finally {
+      setCancelingOtherListRegistration(false)
+    }
+  }
+
   const currentRegistrationsByStudentId = new Map(
     myList?.registrations.map(registration => [registration.studentId, registration] as const) ?? []
   )
@@ -257,27 +288,33 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
     return Boolean(currentRegistrationsByStudentId.get(student.studentId)?.isFeePaid)
   }
 
-  // Chỉ khóa khi học viên đang ở danh sách HLV khác VÀ đã đóng lệ phí;
-  // chưa đóng lệ phí thì HLV khác vẫn được tích chuyển về danh sách của mình.
-  const isStudentLockedByAnotherList = (student: StudentRow) =>
-    student.alreadyRegistered && student.existingRegistrationListId !== myList?.id && Boolean(student.alreadyRegisteredIsFeePaid)
+  // Học viên đang nằm trong danh sách do HLV khác tạo (đã đăng ký nhưng không thuộc danh sách của mình)
+  const isStudentRegisteredByOtherCoach = (student: StudentRow) =>
+    student.alreadyRegistered && student.existingRegistrationListId !== myList?.id
 
-  const isStudentInOtherListUnpaid = (student: StudentRow) =>
-    student.alreadyRegistered && student.existingRegistrationListId !== myList?.id && !student.alreadyRegisteredIsFeePaid
+  // Chỉ khóa khi học viên đang ở danh sách HLV khác VÀ đã đóng lệ phí (chỉ admin xóa được);
+  // chưa đóng lệ phí thì HLV khác vẫn được hủy (bỏ tích) rồi đăng ký lại.
+  const isStudentLockedByAnotherList = (student: StudentRow) =>
+    isStudentRegisteredByOtherCoach(student) && Boolean(student.alreadyRegisteredIsFeePaid)
 
   const hasStudentProfileIssue = (student: StudentRow) => !student.isRegistrationProfileComplete
 
   const isStudentSelectable = (student: StudentRow) =>
-    !isStudentLockedByAnotherList(student) && !isStudentPaidInCurrentList(student) && !hasStudentProfileIssue(student)
+    !isStudentRegisteredByOtherCoach(student) && !isStudentPaidInCurrentList(student) && !hasStudentProfileIssue(student)
 
   const isStudentEditable = (student: StudentRow) => !readOnly && isStudentSelectable(student)
+
+  // Học viên thuộc danh sách HLV khác: chỉ học viên của danh sách mình/chưa đăng ký thực sự đưa vào payload lưu
+  const isStudentSavableForOwnList = (student: StudentRow) =>
+    student.selected && student.selectedTargetBeltId && !isStudentRegisteredByOtherCoach(student)
 
   const handleSelectAll = (checked: boolean) => {
     if (readOnly) return
 
     setStudents(prev =>
       prev.map(student => {
-        if (isStudentLockedByAnotherList(student)) return student
+        // Đăng ký do HLV khác tạo không bị ảnh hưởng bởi chọn tất cả/bỏ tất cả
+        if (isStudentRegisteredByOtherCoach(student)) return student
         if (isStudentPaidInCurrentList(student)) return { ...student, selected: true }
         if (!checked) return { ...student, selected: false }
         if (hasStudentProfileIssue(student)) return student
@@ -300,7 +337,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
       return
     }
 
-    const selectedStudents = students.filter(student => student.selected && student.selectedTargetBeltId)
+    const selectedStudents = students.filter(isStudentSavableForOwnList)
 
     if (selectedStudents.length === 0 && !myList) {
       showNotification('Vui lòng chọn ít nhất 1 học viên và cấp thi', 'warning')
@@ -482,6 +519,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                 </TableHead>
                 <TableBody>
                   {students.map(student => {
+                    const isRegisteredByOtherCoach = isStudentRegisteredByOtherCoach(student)
                     const isLockedByAnotherList = isStudentLockedByAnotherList(student)
                     const isPaidInCurrentList = isStudentPaidInCurrentList(student)
                     const isCurrentListStudent = isStudentInCurrentList(student)
@@ -498,9 +536,22 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                       >
                         <TableCell padding='checkbox' onClick={event => event.stopPropagation()}>
                           <Checkbox
-                            checked={student.selected}
-                            disabled={readOnly || isLockedByAnotherList || isPaidInCurrentList || (hasProfileIssue && !student.selected)}
+                            checked={isRegisteredByOtherCoach ? true : student.selected}
+                            disabled={
+                              readOnly ||
+                              isLockedByAnotherList ||
+                              isPaidInCurrentList ||
+                              (hasProfileIssue && !student.selected && !isRegisteredByOtherCoach)
+                            }
                             onChange={event => {
+                              // Đăng ký do HLV khác tạo: bỏ tích => mở xác nhận HỦY đăng ký đó.
+                              // (Tích lại sau khi đã hủy sẽ đăng ký bình thường với dữ liệu mới nhất.)
+                              if (isRegisteredByOtherCoach) {
+                                if (!event.target.checked) setCancelOtherTarget(student)
+
+                                return
+                              }
+
                               setStudents(prev =>
                                 prev.map(item =>
                                   item.studentId === student.studentId ? { ...item, selected: event.target.checked } : item
@@ -545,7 +596,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                         <TableCell>
                           {isLockedByAnotherList ? (
                             <Chip label='Đã đăng ký' color='info' size='small' variant='tonal' />
-                          ) : isStudentInOtherListUnpaid(student) ? (
+                          ) : isRegisteredByOtherCoach ? (
                             <Chip label='HLV khác' color='secondary' size='small' variant='tonal' />
                           ) : isPaidInCurrentList ? (
                             <Chip label='Đã đóng phí' color='success' size='small' variant='tonal' />
@@ -603,6 +654,26 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
         student={selectedStudent}
         onSaved={handleStudentUpdated}
       />
+
+      <Dialog open={Boolean(cancelOtherTarget)} onClose={() => (cancelingOtherListRegistration ? null : setCancelOtherTarget(null))}>
+        <DialogTitle>Xác nhận hủy đăng ký</DialogTitle>
+        <DialogContent>
+          <DialogContentText component='div'>
+            Học viên <strong>{cancelOtherTarget?.studentName}</strong> đang nằm trong danh sách đăng ký của HLV khác.
+            <br />
+            Hủy đăng ký này? Sau khi hủy, học viên có thể được đăng ký lại (hệ thống sẽ tính lại cấp đai theo mã mới nhất);
+            dữ liệu đóng phí (nếu có) không bị ảnh hưởng.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCancelOtherTarget(null)} disabled={cancelingOtherListRegistration}>
+            Không
+          </Button>
+          <Button variant='contained' color='error' onClick={handleCancelOtherListRegistration} disabled={cancelingOtherListRegistration}>
+            {cancelingOtherListRegistration ? <CircularProgress size={18} /> : 'Hủy đăng ký'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
