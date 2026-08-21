@@ -381,7 +381,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
           <Typography variant='body2' color='text.secondary'>
             Ngày thi: {formatDateVN(session.examDate)}
             {session.registrationDeadline && (
-              <> • Hạn đăng ký: {formatDateVN(session.registrationDeadline)}</>
+              <> • Hạn đăng ký: {formatDateTimeVN(session.registrationDeadline)}</>
             )}
           </Typography>
         </Box>
@@ -507,12 +507,10 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                       />
                     </TableCell>
                     <TableCell>Họ tên</TableCell>
+                    <TableCell>Cấp thi dự thi</TableCell>
+                    <TableCell>Cấp hiện tại</TableCell>
                     <TableCell>Ngày sinh</TableCell>
                     <TableCell>Giới tính</TableCell>
-                    <TableCell>Cấp hiện tại (chữ)</TableCell>
-                    <TableCell>Cấp hiện tại (số)</TableCell>
-                    <TableCell>Cấp thi (chữ)</TableCell>
-                    <TableCell>Cấp thi (số)</TableCell>
                     <TableCell>Hồ sơ đăng ký</TableCell>
                     <TableCell>Trạng thái</TableCell>
                   </TableRow>
@@ -576,15 +574,34 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                           )}
                         </TableCell>
                         <TableCell>
+                          <Box className='flex items-center gap-1'>
+                            <Typography variant='body2' color='primary.main' fontWeight={600}>
+                              {currentRegistration?.targetBeltLevelName || student.suggestedTargetBeltLevelName || '—'}
+                            </Typography>
+                            {(currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder) != null && (
+                              <Chip
+                                label={currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder}
+                                size='small'
+                                variant='outlined'
+                                color='primary'
+                              />
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box className='flex items-center gap-1'>
+                            <Typography variant='body2'>{student.currentBeltLevelName ?? '—'}</Typography>
+                            {student.currentBeltOrder != null && (
+                              <Chip label={student.currentBeltOrder} size='small' variant='outlined' color='warning' />
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
                           <Typography variant='body2'>
                             {formatDateVN(student.dateOfBirth, '—')}
                           </Typography>
                         </TableCell>
                         <TableCell>{student.gender === true ? 'Nam' : student.gender === false ? 'Nữ' : '—'}</TableCell>
-                        <TableCell>{student.currentBeltLevelName ?? '—'}</TableCell>
-                        <TableCell>{student.currentBeltOrder ?? '—'}</TableCell>
-                        <TableCell>{currentRegistration?.targetBeltLevelName || student.suggestedTargetBeltLevelName || '—'}</TableCell>
-                        <TableCell>{currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder ?? '—'}</TableCell>
                         <TableCell>
                           <Chip
                             label={student.isRegistrationProfileComplete ? 'Đủ hồ sơ' : 'Thiếu hồ sơ'}

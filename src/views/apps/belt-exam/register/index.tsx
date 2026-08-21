@@ -18,7 +18,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import type { ExamSessionType } from '@/types/apps/beltExamTypes'
 import { examSessionStatusColors, examSessionStatusLabels } from '@/types/apps/beltExamTypes'
-import { formatDateVN } from '@/utils/dateTime'
+import { formatDateTimeVN, formatDateVN } from '@/utils/dateTime'
 
 import BeltExamRegisterClassPanel from './BeltExamRegisterClassPanel'
 
@@ -112,7 +112,7 @@ const BeltExamRegisterView = () => {
                           variant='body2'
                           color={daysLeft !== null && daysLeft <= 3 ? 'error' : 'text.secondary'}
                         >
-                          Hạn đăng ký: {formatDateVN(deadline)}
+                          Hạn đăng ký: {formatDateTimeVN(deadline)}
                           {daysLeft !== null && daysLeft >= 0 && <strong className='ml-1'>(còn {daysLeft} ngày)</strong>}
                           {daysLeft !== null && daysLeft < 0 && <strong className='ml-1 text-red-500'>Đã hết hạn</strong>}
                         </Typography>

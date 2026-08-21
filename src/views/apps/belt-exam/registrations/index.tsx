@@ -501,15 +501,15 @@ const BeltExamRegistrationsView = () => {
                 <TableRow>
                   <TableCell sx={{ width: 110 }}>{text.code}</TableCell>
                   <TableCell sx={{ width: 220 }}>{renderSortHeader(text.student, 'studentName')}</TableCell>
-                  {/*<TableCell>{renderSortHeader(text.examSession, 'examSessionName')}</TableCell>*/}
-                  <TableCell sx={{ width: 170 }}>{renderSortHeader(text.class, 'className')}</TableCell>
-                  <TableCell sx={{ width: 180 }}>
-                    {renderSortHeader(text.registrationStatus, 'registrationFeeStatus')}
-                  </TableCell>
+                  <TableCell sx={{ width: 150 }}>{renderSortHeader(text.targetBelt, 'targetBeltLevelOrder')}</TableCell>
                   <TableCell sx={{ width: 150 }}>
                     {renderSortHeader(text.currentBelt, 'currentBeltLevelOrder')}
                   </TableCell>
-                  <TableCell sx={{ width: 150 }}>{renderSortHeader(text.targetBelt, 'targetBeltLevelOrder')}</TableCell>
+                  <TableCell sx={{ width: 180 }}>
+                    {renderSortHeader(text.registrationStatus, 'registrationFeeStatus')}
+                  </TableCell>
+                  {/*<TableCell>{renderSortHeader(text.examSession, 'examSessionName')}</TableCell>*/}
+                  <TableCell sx={{ width: 170 }}>{renderSortHeader(text.class, 'className')}</TableCell>
                   <TableCell sx={{ width: 210 }}>
                     {renderSortHeader(text.registeredBy, 'registeredByUserName')}
                   </TableCell>
@@ -536,9 +536,23 @@ const BeltExamRegistrationsView = () => {
                       {/*  {formatDateTime(row.createdAt)}*/}
                       {/*</Typography>*/}
                     </TableCell>
-                    {/*<TableCell>{row.examSessionName}</TableCell>*/}
                     <TableCell>
-                      <Typography variant='body2'>{row.className}</Typography>
+                      <Box className='flex items-center gap-1'>
+                        <Typography variant='body2' color='primary.main' fontWeight={600}>
+                          {row.targetBeltLevelName}
+                        </Typography>
+                        {row.targetBeltLevelOrder != null && (
+                          <Chip label={row.targetBeltLevelOrder} size='small' variant='outlined' color='primary' />
+                        )}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box className='flex items-center gap-1'>
+                        <Typography variant='body2'>{row.currentBeltLevelName || text.noBelt}</Typography>
+                        {row.currentBeltLevelOrder != null && (
+                          <Chip label={row.currentBeltLevelOrder} size='small' variant='outlined' color='warning' />
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell>
                       <Box className='flex flex-col items-start gap-1'>
@@ -555,29 +569,15 @@ const BeltExamRegistrationsView = () => {
                         {/*)}*/}
                       </Box>
                     </TableCell>
+                    {/*<TableCell>{row.examSessionName}</TableCell>*/}
                     <TableCell>
-                      <Box className='flex items-center gap-1'>
-                        <Typography variant='body2'>{row.currentBeltLevelName || text.noBelt}</Typography>
-                        {row.currentBeltLevelOrder != null && (
-                          <Chip label={row.currentBeltLevelOrder} size='small' variant='outlined' color='warning' />
-                        )}
-                      </Box>
+                      <Typography variant='body2'>{row.className}</Typography>
                     </TableCell>
-                    <TableCell>
-                      <Box className='flex items-center gap-1'>
-                        <Typography variant='body2' color='primary.main' fontWeight={600}>
-                          {row.targetBeltLevelName}
-                        </Typography>
-                        {row.targetBeltLevelOrder != null && (
-                          <Chip label={row.targetBeltLevelOrder} size='small' variant='outlined' color='primary' />
-                        )}
-                      </Box>
-                    </TableCell>
+
                     <TableCell>
                       <Typography variant='body2'>
                         {row.registeredByUserName || '-'} {formatDateTime(row.createdAt)}
                       </Typography>
-
                     </TableCell>
                   </TableRow>
                 ))}
