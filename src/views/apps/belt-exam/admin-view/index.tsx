@@ -442,7 +442,9 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
       gender: formatGender(student.gender),
       phoneNumber: student.phoneNumber || '—',
       currentBeltLevelOrder: formatBeltLevelOrder(student.currentBeltLevelOrder),
+      currentBeltLevelName: student.currentBeltLevelName || '—',
       targetBeltLevelOrder: formatBeltLevelOrder(student.targetBeltLevelOrder, ''),
+      targetBeltLevelName: student.targetBeltLevelName || '—',
       className: student.className,
       coachName: student.coachName,
       oneTimeFeesCompleted: student.oneTimeFeesCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành',
@@ -486,7 +488,9 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
         gender: formatGender(student.gender),
         phoneNumber: student.phoneNumber || '—',
         currentBeltLevelOrder: formatBeltLevelOrder(student.currentBeltLevelOrder),
+        currentBeltLevelName: student.currentBeltLevelName || '—',
         targetBeltLevelOrder: formatBeltLevelOrder(student.targetBeltLevelOrder, ''),
+        targetBeltLevelName: student.targetBeltLevelName || '—',
         className: student.className
       }))
 
@@ -501,7 +505,9 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
           { header: 'Giới tính', accessor: 'gender', width: 12 },
           { header: 'SĐT', accessor: 'phoneNumber', width: 16 },
           { header: 'Cấp đai hiện tại', accessor: 'currentBeltLevelOrder', width: 20 },
+          { header: 'Tên cấp đai hiện tại', accessor: 'currentBeltLevelName', width: 24 },
           { header: 'Cấp đai dự thi', accessor: 'targetBeltLevelOrder', width: 20 },
+          { header: 'Tên cấp đai dự thi', accessor: 'targetBeltLevelName', width: 24 },
           { header: 'Lớp', accessor: 'className', width: 18 }
         ],
         rows
@@ -539,7 +545,9 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
         gender: formatGender(student.gender),
         phoneNumber: student.phoneNumber || '—',
         currentBeltLevelOrder: formatBeltLevelOrder(student.currentBeltLevelOrder),
+        currentBeltLevelName: student.currentBeltLevelName || '—',
         targetBeltLevelOrder: formatBeltLevelOrder(student.targetBeltLevelOrder, ''),
+        targetBeltLevelName: student.targetBeltLevelName || '—',
         className: student.className,
         coachName: student.coachName
       }))
@@ -555,7 +563,9 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
           { header: 'Giới tính', accessor: 'gender', width: 12 },
           { header: 'SĐT', accessor: 'phoneNumber', width: 16 },
           { header: 'Cấp đai hiện tại', accessor: 'currentBeltLevelOrder', width: 20 },
+          { header: 'Tên cấp đai hiện tại', accessor: 'currentBeltLevelName', width: 24 },
           { header: 'Cấp đai dự thi', accessor: 'targetBeltLevelOrder', width: 20 },
+          { header: 'Tên cấp đai dự thi', accessor: 'targetBeltLevelName', width: 24 },
           { header: 'Lớp', accessor: 'className', width: 18 },
           { header: 'HLV', accessor: 'coachName', width: 20 }
         ],
@@ -587,7 +597,9 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
           { header: 'Giới tính', accessor: 'gender', width: 12 },
           { header: 'SĐT', accessor: 'phoneNumber', width: 16 },
           { header: 'Cấp hiện tại', accessor: 'currentBeltLevelOrder', width: 16 },
+          { header: 'Tên cấp đai hiện tại', accessor: 'currentBeltLevelName', width: 24 },
           { header: 'Cấp dự thi', accessor: 'targetBeltLevelOrder', width: 16 },
+          { header: 'Tên cấp đai dự thi', accessor: 'targetBeltLevelName', width: 24 },
           { header: 'Lớp', accessor: 'className', width: 18 },
           { header: 'HLV', accessor: 'coachName', width: 20 },
           { header: 'Phí 1 lần', accessor: 'oneTimeFeesCompleted', width: 18 },
