@@ -110,14 +110,14 @@ export default function ZaloLinkStatsView() {
     if (!selectedClassId) return 'Tất cả lớp'
     const found = classes.find(c => c.classId === selectedClassId)
 
-    
+
 return found ? `${found.className} (${found.classCode})` : 'Lớp'
   }, [selectedClassId, classes])
 
   return (
     <Box className='space-y-6'>
       <Card>
-        <CardHeader title='Thống kê liên kết Zalo (theo UserIdZalo)' />
+        <CardHeader title='Thống kê liên kết Zalo' />
         <CardContent>
           {loadingStats ? (
             <Box className='flex justify-center py-8'>
@@ -188,7 +188,13 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                 label='Số điện thoại'
                 value={lookupPhone}
                 onChange={e => setLookupPhone(e.target.value)}
-                InputProps={{ startAdornment: <InputAdornment position='start'><i className='ri-phone-line' /></InputAdornment> }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <i className='ri-phone-line' />
+                    </InputAdornment>
+                  )
+                }}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 5 }}>
@@ -197,7 +203,13 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                 label='UserIdZalo'
                 value={lookupUserId}
                 onChange={e => setLookupUserId(e.target.value)}
-                InputProps={{ startAdornment: <InputAdornment position='start'><i className='ri-user-3-line' /></InputAdornment> }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <i className='ri-user-3-line' />
+                    </InputAdornment>
+                  )
+                }}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 2 }} className='flex items-center'>
@@ -238,7 +250,7 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                     {lookupResult.classes.map(c => (
                       <Box key={c.classId} className='flex items-center justify-between gap-2'>
                         <Typography variant='body2'>
-                          {c.className} <span className='text-textSecondary'>({c.classCode})</span> - {c.branchName}
+                          {c.classCode} - {c.branchName}
                         </Typography>
                         {c.isActiveEnrollment ? (
                           <Chip size='small' label='Đang học' color='success' variant='tonal' />
@@ -272,10 +284,7 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                 <TableHead>
                   <TableRow>
                     <TableCell>Lớp</TableCell>
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Chi nhánh</TableCell>
-                    <TableCell align='center'>Tổng</TableCell>
-                    <TableCell align='center'>Đã LK</TableCell>
-                    <TableCell align='center'>Chưa LK</TableCell>
+                    <TableCell align='center'>Chưa liên kết</TableCell>
                     <TableCell align='center'>Tỉ lệ</TableCell>
                   </TableRow>
                 </TableHead>
@@ -289,12 +298,10 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                       sx={{ cursor: 'pointer' }}
                     >
                       <TableCell>
-                        <Typography variant='body2' noWrap>{c.className} ({c.classCode})</Typography>
-                        <Typography variant='caption' color='text.secondary' sx={{ display: { md: 'none' } }}>{c.branchName}</Typography>
+                        <Typography variant='body2' noWrap>
+                          {c.classCode}
+                        </Typography>
                       </TableCell>
-                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{c.branchName}</TableCell>
-                      <TableCell align='center'>{c.totalStudents}</TableCell>
-                      <TableCell align='center'>{c.linkedStudents}</TableCell>
                       <TableCell align='center'>{c.unlinkedStudents}</TableCell>
                       <TableCell align='center'>{getRateChip(c.linkedRate)}</TableCell>
                     </TableRow>
@@ -307,13 +314,13 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
       </Card>
 
       <Card>
-        <CardHeader
-          title='Danh sách chưa liên kết'
-          subheader='Dựa trên Student.UserIdZalo rỗng/null (đang học)'
-        />
+        <CardHeader title='Danh sách chưa liên kết' />
         <CardContent>
           <Box className='flex flex-wrap items-center gap-3 mb-4'>
-            <FormControl size='small' sx={{ minWidth: { xs: '100%', sm: 260 }, flex: { xs: '1 1 100%', sm: '0 0 auto' } }}>
+            <FormControl
+              size='small'
+              sx={{ minWidth: { xs: '100%', sm: 260 }, flex: { xs: '1 1 100%', sm: '0 0 auto' } }}
+            >
               <InputLabel id='zalo-link-class-filter'>Lọc theo lớp</InputLabel>
               <Select
                 labelId='zalo-link-class-filter'
@@ -324,7 +331,7 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                 <MenuItem value=''>Tất cả lớp</MenuItem>
                 {classes.map(c => (
                   <MenuItem key={c.classId} value={c.classId}>
-                    {c.className} ({c.classCode})
+                    {c.classCode}
                   </MenuItem>
                 ))}
               </Select>
@@ -349,8 +356,6 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                   <TableRow>
                     <TableCell>Mã HV</TableCell>
                     <TableCell>Họ tên</TableCell>
-                    <TableCell>SĐT</TableCell>
-                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Lớp</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -365,10 +370,6 @@ return found ? `${found.className} (${found.classCode})` : 'Lớp'
                         >
                           {r.studentName}
                         </Typography>
-                      </TableCell>
-                      <TableCell>{r.phoneNumber}</TableCell>
-                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                        {r.className} <span className='text-textSecondary'>({r.classCode})</span>
                       </TableCell>
                     </TableRow>
                   ))}
