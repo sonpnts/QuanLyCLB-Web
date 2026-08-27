@@ -218,7 +218,6 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
                   </Select>
                 </FormControl>
               </Grid>
-s
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth>
                   <InputLabel>Giới tính</InputLabel>
