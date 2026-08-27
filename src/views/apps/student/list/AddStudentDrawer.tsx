@@ -184,7 +184,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
               <Select label='Lớp' value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)}>
                 {classOptions.map(cls => (
                   <MenuItem key={cls.id} value={cls.id}>
-                    {cls.name} ({cls.code})
+                    {cls.code}
                   </MenuItem>
                 ))}
               </Select>
@@ -197,32 +197,6 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
                   fullWidth
                   value={formData.fullName}
                   onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label='CCCD / Số định danh cá nhân'
-                  fullWidth
-                  value={formData.personalIdNumber}
-                  onChange={e => setFormData({ ...formData, personalIdNumber: e.target.value })}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  label='Địa chỉ'
-                  fullWidth
-                  value={formData.address}
-                  onChange={e => setFormData({ ...formData, address: e.target.value })}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label='Ngày sinh'
-                  type='date'
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  value={formData.dateOfBirth}
-                  onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -244,16 +218,48 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
                   </Select>
                 </FormControl>
               </Grid>
+s
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth>
                   <InputLabel>Giới tính</InputLabel>
-                  <Select label='Giới tính' value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
+                  <Select
+                    label='Giới tính'
+                    value={formData.gender}
+                    onChange={e => setFormData({ ...formData, gender: e.target.value })}
+                  >
                     <MenuItem value=''>Chọn giới tính</MenuItem>
                     <MenuItem value='true'>Nam</MenuItem>
                     <MenuItem value='false'>Nữ</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  label='Ngày sinh'
+                  type='date'
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.dateOfBirth}
+                  onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  label='CCCD / Số định danh cá nhân'
+                  fullWidth
+                  value={formData.personalIdNumber}
+                  onChange={e => setFormData({ ...formData, personalIdNumber: e.target.value })}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  label='Địa chỉ'
+                  fullWidth
+                  value={formData.address}
+                  onChange={e => setFormData({ ...formData, address: e.target.value })}
+                />
+              </Grid>
+
               <Grid size={{ xs: 12 }}>
                 <TextField
                   label='Ghi chú'
