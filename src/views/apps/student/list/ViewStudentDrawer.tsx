@@ -99,6 +99,27 @@ const formatDate = (value?: string) => formatDateVN(value)
 const formatDateTime = (value?: string) => formatDateTimeVN(value)
 const formatCurrency = (value?: number) => `${Number(value || 0).toLocaleString('vi-VN')}đ`
 
+const formatEducationLevel = (value?: string) => {
+  switch (value) {
+    case 'Cap1':
+      return 'Cấp 1'
+    case 'Cap2':
+      return 'Cấp 2'
+    case '12/12':
+      return '12/12'
+    case 'ChuaDiHoc':
+      return 'Chưa đi học'
+    case 'TrungCap':
+      return 'Trung cấp'
+    case 'CaoDang':
+      return 'Cao đẳng'
+    case 'DaiHoc':
+      return 'Đại học'
+    default:
+      return value || '-'
+  }
+}
+
 const ViewStudentDrawer = ({ open, onClose, student, onEdit, onSuspend, onResume, onTransferred }: Props) => {
   const router = useRouter()
   const { showNotification } = useNotification()
@@ -621,6 +642,12 @@ return
                       Địa chỉ
                     </Typography>
                     <Typography variant='body1'>{activeStudent.address || '-'}</Typography>
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant='body2' color='text.secondary'>
+                      Học vấn
+                    </Typography>
+                    <Typography variant='body1'>{formatEducationLevel(activeStudent.educationLevel)}</Typography>
                   </Grid>
                   {activeStudent.notes && (
                     <Grid size={{ xs: 12 }}>
