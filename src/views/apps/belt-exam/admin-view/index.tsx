@@ -67,24 +67,20 @@ const formatGender = (value?: boolean) => {
 
 const formatEducationLevel = (value?: string) => {
   switch (value) {
-    case 'THCS':
-      return 'THCS'
-    case 'THPT':
-      return 'THPT'
-    case 'TieuHoc':
-      return 'Tiểu học'
+    case 'Cap2':
+      return 'Cấp 2'
+    case '12/12':
+      return '12/12'
+    case 'Cap1':
+      return 'Cấp 1'
     case 'ChuaDiHoc':
       return 'Chưa đi học'
-    case 'DaiHoc':
-      return 'Đại học'
-    case 'ThacSi':
-      return 'Thạc sĩ'
-    case 'TienSi':
-      return 'Tiến sĩ'
-    case 'CaoDang':
-      return 'Cao đẳng'
     case 'TrungCap':
       return 'Trung cấp'
+    case 'CaoDang':
+      return 'Cao đẳng'
+    case 'DaiHoc':
+      return 'Đại học'
     default:
       return value || ''
   }

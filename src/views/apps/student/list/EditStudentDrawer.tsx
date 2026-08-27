@@ -369,15 +369,13 @@ return
                   <InputLabel>Trình độ học vấn</InputLabel>
                   <Select {...field} label='Trình độ học vấn'>
                     <MenuItem value=''>Chọn trình độ</MenuItem>
-                    <MenuItem value='THCS'>THCS</MenuItem>
-                    <MenuItem value='THPT'>THPT</MenuItem>
-                    <MenuItem value='TieuHoc'>Tiểu học</MenuItem>
+                    <MenuItem value='Cap2'>Cấp 2</MenuItem>
+                    <MenuItem value='12/12'>12/12</MenuItem>
+                    <MenuItem value='Cap1'>Cấp 1</MenuItem>
                     <MenuItem value='ChuaDiHoc'>Chưa đi học</MenuItem>
                     <MenuItem value='TrungCap'>Trung cấp</MenuItem>
                     <MenuItem value='CaoDang'>Cao đẳng</MenuItem>
                     <MenuItem value='DaiHoc'>Đại học</MenuItem>
-                    <MenuItem value='ThacSi'>Thạc sĩ</MenuItem>
-                    <MenuItem value='TienSi'>Tiến sĩ</MenuItem>
                   </Select>
                 </FormControl>
               )}
