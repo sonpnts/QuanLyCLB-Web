@@ -252,12 +252,22 @@ const MemberCodeSearchDialog = ({ open, onClose, onSelect }: Props) => {
                             sx={{ height: 20, fontSize: '0.7rem' }}
                           />
                         ) : (
-                          <Typography variant='body2' color='text.secondary'>—</Typography>
+                          <Typography variant='body2' color='text.secondary'>
+                            —
+                          </Typography>
                         )}
                       </TableCell>
                       <TableCell sx={{ py: 1 }}>
                         <Box>
-                          <Typography variant='body2' fontWeight={500} noWrap sx={{ maxWidth: isMobile ? 120 : 180 }}>
+                          <Typography
+                            variant='body2'
+                            fontWeight={500}
+                            noWrap
+                            sx={{
+                              maxWidth: 'none',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
                             {m.fullName}
                           </Typography>
                           {isMobile && (
