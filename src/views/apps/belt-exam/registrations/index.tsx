@@ -37,6 +37,7 @@ import type { ExamRegistrationType, ExamSessionType } from '@/types/apps/beltExa
 import type { ClassType } from '@/types/apps/classTypes'
 import type { StudentType } from '@/types/apps/studentTypes'
 import { exportToExcel } from '@/utils/exportToExcel'
+import { formatDateVN } from '@/utils/dateTime'
 import { hasPermission } from '@/utils/permissionUtils'
 import { buildModulePermissionMap } from '@/utils/rbac'
 import { hasAdminRole } from '@/utils/roleUtils'
@@ -59,6 +60,7 @@ const text = {
   loadError: 'Không thể tải danh sách đăng ký thi cấp',
   student: 'Học viên',
   code: 'Mã',
+  dateOfBirth: 'Ngày sinh',
   registrationStatus: 'Trạng thái đăng ký',
   currentBelt: 'Cấp đai hiện tại',
   targetBelt: 'Cấp đai dự thi',
@@ -341,19 +343,20 @@ const BeltExamRegistrationsView = () => {
       setExporting(true)
 
       exportToExcel({
-        filename: `Dang-ky-thi-cap-${selectedSession?.name || 'Danh-sach'}`,
+        filename: `DanhSachKyThi-${selectedSession?.name || ''}`,
         sheetName: 'DangKyThiCap',
         columns: [
           { header: 'STT', accessor: 'stt', width: 8 },
           { header: 'Mã HV', accessor: 'studentCode', width: 14 },
-          { header: 'Học viên', accessor: 'studentName', width: 28 },
+          { header: 'Họ và tên', accessor: 'studentName', width: 28 },
+          { header: 'Ngày sinh', accessor: 'birthdate', width: 14 },
+          { header: 'Cấp đai dự thi', accessor: 'targetBelt', width: 18 },
+          { header: 'Số cấp đai dự thi', accessor: 'targetBeltOrder', width: 18 },
+          { header: 'Cấp đai hiện tại', accessor: 'currentBelt', width: 18 },
+          { header: 'Số cấp đai hiện tại', accessor: 'currentBeltOrder', width: 18 },
           { header: 'Kỳ thi', accessor: 'examSessionName', width: 24 },
           { header: 'Lớp', accessor: 'className', width: 18 },
           { header: text.registrationStatus, accessor: 'registrationStatus', width: 24 },
-          { header: 'Cấp đai hiện tại', accessor: 'currentBelt', width: 18 },
-          { header: 'Số cấp đai hiện tại', accessor: 'currentBeltOrder', width: 18 },
-          { header: 'Cấp đai dự thi', accessor: 'targetBelt', width: 18 },
-          { header: 'Số cấp đai dự thi', accessor: 'targetBeltOrder', width: 18 },
           { header: 'Người đăng ký', accessor: 'registeredBy', width: 22 },
           { header: 'Thời gian đăng ký', accessor: 'createdAt', width: 20 }
         ],
@@ -361,6 +364,7 @@ const BeltExamRegistrationsView = () => {
           stt: index + 1,
           studentCode: row.studentCode || '-',
           studentName: row.studentName,
+          birthdate: formatDateVN(row.dateOfBirth, ''),
           examSessionName: row.examSessionName,
           className: row.className,
           registrationStatus: getRegistrationFeeStatus(row).label,
@@ -477,7 +481,7 @@ const BeltExamRegistrationsView = () => {
             <Table
               size='small'
               sx={{
-                minWidth: 980,
+                minWidth: 1090,
                 tableLayout: 'fixed',
                 '& .MuiTableCell-root': {
                   px: 1.5,
@@ -501,6 +505,7 @@ const BeltExamRegistrationsView = () => {
                 <TableRow>
                   <TableCell sx={{ width: 110 }}>{text.code}</TableCell>
                   <TableCell sx={{ width: 220 }}>{renderSortHeader(text.student, 'studentName')}</TableCell>
+                  <TableCell sx={{ width: 110 }}>{text.dateOfBirth}</TableCell>
                   <TableCell sx={{ width: 150 }}>{renderSortHeader(text.targetBelt, 'targetBeltLevelOrder')}</TableCell>
                   <TableCell sx={{ width: 150 }}>
                     {renderSortHeader(text.currentBelt, 'currentBeltLevelOrder')}
@@ -535,6 +540,9 @@ const BeltExamRegistrationsView = () => {
                       {/*<Typography variant='caption' color='text.secondary'>*/}
                       {/*  {formatDateTime(row.createdAt)}*/}
                       {/*</Typography>*/}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant='body2'>{formatDateVN(row.dateOfBirth)}</Typography>
                     </TableCell>
                     <TableCell>
                       <Box className='flex items-center gap-1'>
