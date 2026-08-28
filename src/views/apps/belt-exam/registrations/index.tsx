@@ -541,9 +541,7 @@ const BeltExamRegistrationsView = () => {
                       {/*  {formatDateTime(row.createdAt)}*/}
                       {/*</Typography>*/}
                     </TableCell>
-                    <TableCell>
-                      <Typography variant='body2'>{formatDateVN(row.dateOfBirth)}</Typography>
-                    </TableCell>
+
                     <TableCell>
                       <Box className='flex items-center gap-1'>
                         <Typography variant='body2' color='primary.main' fontWeight={600}>
@@ -561,6 +559,9 @@ const BeltExamRegistrationsView = () => {
                           <Chip label={row.currentBeltLevelOrder} size='small' variant='outlined' color='warning' />
                         )}
                       </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant='body2'>{formatDateVN(row.dateOfBirth)}</Typography>
                     </TableCell>
                     <TableCell>
                       <Box className='flex flex-col items-start gap-1'>
