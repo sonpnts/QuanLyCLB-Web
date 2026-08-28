@@ -349,9 +349,9 @@ const BeltExamRegistrationsView = () => {
           { header: 'STT', accessor: 'stt', width: 8 },
           { header: 'Mã HV', accessor: 'studentCode', width: 14 },
           { header: 'Họ và tên', accessor: 'studentName', width: 28 },
-          { header: 'Ngày sinh', accessor: 'birthdate', width: 14 },
           { header: 'Cấp đai dự thi', accessor: 'targetBelt', width: 18 },
           { header: 'Số cấp đai dự thi', accessor: 'targetBeltOrder', width: 18 },
+          { header: 'Ngày sinh', accessor: 'birthdate', width: 14 },
           { header: 'Cấp đai hiện tại', accessor: 'currentBelt', width: 18 },
           { header: 'Số cấp đai hiện tại', accessor: 'currentBeltOrder', width: 18 },
           { header: 'Kỳ thi', accessor: 'examSessionName', width: 24 },
@@ -505,11 +505,11 @@ const BeltExamRegistrationsView = () => {
                 <TableRow>
                   <TableCell sx={{ width: 110 }}>{text.code}</TableCell>
                   <TableCell sx={{ width: 220 }}>{renderSortHeader(text.student, 'studentName')}</TableCell>
-                  <TableCell sx={{ width: 110 }}>{text.dateOfBirth}</TableCell>
                   <TableCell sx={{ width: 150 }}>{renderSortHeader(text.targetBelt, 'targetBeltLevelOrder')}</TableCell>
                   <TableCell sx={{ width: 150 }}>
                     {renderSortHeader(text.currentBelt, 'currentBeltLevelOrder')}
                   </TableCell>
+                  <TableCell sx={{ width: 110 }}>{text.dateOfBirth}</TableCell>
                   <TableCell sx={{ width: 180 }}>
                     {renderSortHeader(text.registrationStatus, 'registrationFeeStatus')}
                   </TableCell>
