@@ -1,4 +1,4 @@
-﻿// Next Imports
+// Next Imports
 
 // MUI Imports
 import Script from 'next/script'
@@ -26,7 +26,16 @@ export const metadata = {
   icons: {
     icon: [{ url: '/images/logos/logo.svg', type: 'image/svg+xml' }],
     shortcut: ['/images/logos/logo.svg'],
-    apple: [{ url: '/images/logos/logo.svg', type: 'image/svg+xml' }]
+    apple: [{ url: '/images/logos/logo-apple.png', sizes:"180x180", type: 'image/png' }]
+  },
+ appleWebApp: {
+
+    capable: true,
+
+    statusBarStyle: "default",
+
+    title: "CMIS",
+
   },
   openGraph: {
     title: 'CMIS - Tấn Đạt Taekwondo',
