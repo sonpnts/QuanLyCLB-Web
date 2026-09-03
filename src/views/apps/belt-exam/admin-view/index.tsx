@@ -472,9 +472,31 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
       setExporting(true)
       const fullData = await fetchFullAdminView()
 
+      // const exportStudents = fullData.coachGroups
+      //   .flatMap(group => group.students)
+      //   .filter(student => student.hasPaid && student.oneTimeFeesCompleted)
+
       const exportStudents = fullData.coachGroups
         .flatMap(group => group.students)
         .filter(student => student.hasPaid && student.oneTimeFeesCompleted)
+        .sort((a, b) => {
+          // 1. Tên HLV
+          const coachCompare = (a.coachName || '').localeCompare(b.coachName || '', 'vi')
+
+          if (coachCompare !== 0) {
+            return coachCompare
+          }
+
+          // 2. Lớp
+          const classCompare = (a.className || '').localeCompare(b.className || '', 'vi')
+
+          if (classCompare !== 0) {
+            return classCompare
+          }
+
+          // 3. Mã HV
+          return (a.studentCode || '').localeCompare(b.studentCode || '', 'vi', { numeric: true })
+        })
 
       const rows = exportStudents.map((student, index) => ({
         stt: index + 1,
@@ -522,10 +544,34 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
       setExporting(true)
       const fullData = await fetchFullAdminView()
 
+      // const exportStudents = fullData.coachGroups
+      //   .flatMap(group => group.students)
+      //   .filter(isEligibleStudent)
+      //   .filter(hasStudentCode)
+
+
       const exportStudents = fullData.coachGroups
         .flatMap(group => group.students)
         .filter(isEligibleStudent)
         .filter(hasStudentCode)
+        .sort((a, b) => {
+          // 1. Tên HLV
+          const coachCompare = (a.coachName || '').localeCompare(b.coachName || '', 'vi')
+
+          if (coachCompare !== 0) {
+            return coachCompare
+          }
+
+          // 2. Lớp
+          const classCompare = (a.className || '').localeCompare(b.className || '', 'vi')
+
+          if (classCompare !== 0) {
+            return classCompare
+          }
+
+          // 3. Mã HV
+          return (a.studentCode || '').localeCompare(b.studentCode || '', 'vi', { numeric: true })
+        })
 
       if (exportStudents.length === 0) {
         showNotification('Không có học viên đủ điều kiện nào đã có mã HV để xuất danh sách thi.', 'info')
@@ -580,7 +626,31 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
     try {
       setExporting(true)
       const fullData = await fetchFullAdminView()
-      const rows = buildFullRegistrationRows(fullData.coachGroups.flatMap(group => group.students))
+
+      // const rows = buildFullRegistrationRows(fullData.coachGroups.flatMap(group => group.students))
+
+      const students = fullData.coachGroups
+        .flatMap(group => group.students)
+        .sort((a, b) => {
+          // 1. Tên HLV
+          const coachCompare = (a.coachName || '').localeCompare(b.coachName || '', 'vi')
+
+          if (coachCompare !== 0) {
+            return coachCompare
+          }
+
+          // 2. Tên lớp
+          const classCompare = (a.className || '').localeCompare(b.className || '', 'vi')
+
+          if (classCompare !== 0) {
+            return classCompare
+          }
+
+          // 3. Mã học viên
+          return (a.studentCode || '').localeCompare(b.studentCode || '', 'vi', { numeric: true })
+        })
+
+      const rows = buildFullRegistrationRows(students)
 
       exportToExcel({
         filename: `Toan-bo-danh-sach-da-dang-ky-${fullData.sessionName}`,
@@ -618,10 +688,33 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
       setExporting(true)
       const fullData = await fetchFullAdminView()
 
+      // const missingCodeStudents = fullData.coachGroups
+      //   .flatMap(group => group.students)
+      //   .filter(isEligibleStudent)
+      //   .filter(isMissingStudentCode)
+
       const missingCodeStudents = fullData.coachGroups
         .flatMap(group => group.students)
         .filter(isEligibleStudent)
         .filter(isMissingStudentCode)
+        .sort((a, b) => {
+          // 1. Tên HLV
+          const coachCompare = (a.coachName || '').localeCompare(b.coachName || '', 'vi')
+
+          if (coachCompare !== 0) {
+            return coachCompare
+          }
+
+          // 2. Lớp
+          const classCompare = (a.className || '').localeCompare(b.className || '', 'vi')
+
+          if (classCompare !== 0) {
+            return classCompare
+          }
+
+          // 3. Mã HV
+          return (a.studentCode || '').localeCompare(b.studentCode || '', 'vi', { numeric: true })
+        })
 
       if (missingCodeStudents.length === 0) {
         showNotification('Không có học viên nào thiếu mã HV để xuất file import.', 'info')
