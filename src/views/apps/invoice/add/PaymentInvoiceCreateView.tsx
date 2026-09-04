@@ -177,6 +177,7 @@ const PaymentInvoiceCreateView = () => {
   const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false)
   const [previewReceiptNumber, setPreviewReceiptNumber] = useState<string | null>(null)
   const [tuitionDebtMonths, setTuitionDebtMonths] = useState<TuitionDebtMonthType[]>([])
+  const [debtResolvedStudentId, setDebtResolvedStudentId] = useState('')
   const initializedDraftRef = useRef(false)
   const tuitionTouchedRef = useRef(false)
   const examTouchedRef = useRef(false)
@@ -259,6 +260,7 @@ const PaymentInvoiceCreateView = () => {
 
     initializedDraftRef.current = true
     debtFetchedStudentRef.current = '' // buộc tải lại các tháng nợ khi mở draft mới
+    setDebtResolvedStudentId('')
     setForm(prev => ({
       ...prev,
       classId: draftInfo.classId || prev.classId,
@@ -312,7 +314,11 @@ const PaymentInvoiceCreateView = () => {
     const loadTuitionDebtMonths = async () => {
       if (!form.studentId) {
         debtFetchedStudentRef.current = ''
-        if (isMounted) setTuitionDebtMonths([])
+
+        if (isMounted) {
+          setTuitionDebtMonths([])
+          setDebtResolvedStudentId('')
+        }
 
         return
       }
@@ -328,18 +334,21 @@ const PaymentInvoiceCreateView = () => {
 
       setTuitionDebtMonths(months)
 
-      if (months.length === 0) return
+      if (months.length > 0) {
+        setTuitionMonths(prev => {
+          const existingKeys = new Set(prev.map(row => `${row.month}/${row.year}`))
+          const missingMonths = months.filter(item => !existingKeys.has(`${item.month}/${item.year}`))
 
-      setTuitionMonths(prev => {
-        const existingKeys = new Set(prev.map(row => `${row.month}/${row.year}`))
-        const missingMonths = months.filter(item => !existingKeys.has(`${item.month}/${item.year}`))
+          if (missingMonths.length === 0) return prev
 
-        if (missingMonths.length === 0) return prev
+          return [...prev, ...missingMonths.map(item => createTuitionMonthRow(item.month, item.year))].sort(
+            (a, b) => a.year - b.year || a.month - b.month
+          )
+        })
+      }
 
-        return [...prev, ...missingMonths.map(item => createTuitionMonthRow(item.month, item.year))].sort(
-          (a, b) => a.year - b.year || a.month - b.month
-        )
-      })
+      // Đánh dấu tháng nợ đã tải xong -> lúc này mới tải học phí quote (tránh gọi API 2 đợt)
+      setDebtResolvedStudentId(form.studentId)
     }
 
     loadTuitionDebtMonths()
@@ -358,6 +367,9 @@ const PaymentInvoiceCreateView = () => {
 
         return
       }
+
+      // Chờ các tháng nợ được tải và chọn sẵn xong mới tính học phí (tránh gọi API 2 đợt)
+      if (debtResolvedStudentId !== form.studentId) return
 
       try {
         if (isMounted) setLoadingQuote(true)
@@ -401,7 +413,7 @@ const PaymentInvoiceCreateView = () => {
     return () => {
       isMounted = false
     }
-  }, [form.classId, form.studentId, tuitionMonths])
+  }, [form.classId, form.studentId, tuitionMonths, debtResolvedStudentId])
 
   useEffect(() => {
     let isMounted = true
@@ -451,7 +463,10 @@ const PaymentInvoiceCreateView = () => {
     return () => {
       isMounted = false
     }
-  }, [form.classId, form.studentId, form.selectedExamRegistrationId])
+    // Chỉ tải lại khi đổi lớp/học viên — KHÔNG phụ thuộc selectedExamRegistrationId
+    // vì chính effect này set giá trị mặc định (tránh gọi API exam-fee-options 2 lần)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.classId, form.studentId])
 
   useEffect(() => {
     let isMounted = true
