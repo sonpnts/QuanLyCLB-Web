@@ -166,6 +166,7 @@ export const API_ENDPOINTS = {
     classStatistics: (classId: string) => `/payments/statistics/class/${classId}`,
     overdue: '/payments/overdue',
     tuitionQuote: '/payments/tuition-quote',
+    tuitionDebtMonths: (studentId: string) => `/payments/tuition-debt-months/${studentId}`,
     examFeeOptions: '/payments/exam-fee-options',
 
     uploadTransferProof: '/payments/upload-transfer-proof',

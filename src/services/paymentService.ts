@@ -131,6 +131,12 @@ export interface TuitionQuoteType {
   message?: string
 }
 
+export interface TuitionDebtMonthType {
+  year: number
+  month: number
+  label: string
+}
+
 export interface ExamFeeOptionType {
   registrationId: string
   examSessionId: string
@@ -646,6 +652,32 @@ return { success: false, message: error?.response?.data?.message || 'Lỗi kết
       return { success: true, data: normalizedQuote }
     } catch (error: any) {
       return { success: false, message: error?.response?.data?.message || 'L???i k???t n???i m??y ch???' }
+    }
+  }
+
+  async getTuitionDebtMonths(studentId: string): Promise<ResponseResult<TuitionDebtMonthType[]>> {
+    try {
+      const response = await apiClient.get<any>(API_ENDPOINTS.payments.tuitionDebtMonths(studentId))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) {
+        return { success: false, message: apiResponse.message }
+      }
+
+      const debtMonths = Array.isArray(apiResponse.data?.debtMonths) ? apiResponse.data.debtMonths : []
+
+      return {
+        success: true,
+        data: debtMonths
+          .map((item: any) => ({
+            year: Number(item?.year ?? item?.Year ?? 0),
+            month: Number(item?.month ?? item?.Month ?? 0),
+            label: String(item?.label ?? item?.Label ?? '')
+          }))
+          .filter((item: TuitionDebtMonthType) => item.year > 0 && item.month >= 1 && item.month <= 12)
+      }
+    } catch (error: any) {
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
     }
   }
 

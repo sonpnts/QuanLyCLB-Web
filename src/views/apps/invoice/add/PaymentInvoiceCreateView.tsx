@@ -32,7 +32,7 @@ import { useAuth } from '@/contexts/authContext'
 import { useNotification } from '@/contexts/notificationContext'
 import classService from '@/services/classService'
 import oneTimeFeeService from '@/services/oneTimeFeeService'
-import paymentService, { type ExamFeeOptionType, type TuitionQuoteType } from '@/services/paymentService'
+import paymentService, { type ExamFeeOptionType, type TuitionDebtMonthType, type TuitionQuoteType } from '@/services/paymentService'
 import productService from '@/services/productService'
 import studentService from '@/services/studentService'
 import StudentZaloLinkPromptDialog from '@/components/student/StudentZaloLinkPromptDialog'
@@ -176,9 +176,11 @@ const PaymentInvoiceCreateView = () => {
   const [zaloPromptOpen, setZaloPromptOpen] = useState(false)
   const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false)
   const [previewReceiptNumber, setPreviewReceiptNumber] = useState<string | null>(null)
+  const [tuitionDebtMonths, setTuitionDebtMonths] = useState<TuitionDebtMonthType[]>([])
   const initializedDraftRef = useRef(false)
   const tuitionTouchedRef = useRef(false)
   const examTouchedRef = useRef(false)
+  const debtFetchedStudentRef = useRef('')
 
   const [form, setForm] = useState({
     classId: '',
@@ -256,6 +258,7 @@ const PaymentInvoiceCreateView = () => {
     if (!draftInfo || initializedDraftRef.current || loadingInit) return
 
     initializedDraftRef.current = true
+    debtFetchedStudentRef.current = '' // buộc tải lại các tháng nợ khi mở draft mới
     setForm(prev => ({
       ...prev,
       classId: draftInfo.classId || prev.classId,
@@ -300,6 +303,51 @@ const PaymentInvoiceCreateView = () => {
 
     loadStudents()
   }, [form.classId, form.studentId])
+
+  // Tải các tháng nợ phí sinh hoạt của học viên (logic giống báo cáo nợ phí sinh hoạt)
+  // và tự động chọn sẵn vào danh sách học phí tháng cần thu
+  useEffect(() => {
+    let isMounted = true
+
+    const loadTuitionDebtMonths = async () => {
+      if (!form.studentId) {
+        debtFetchedStudentRef.current = ''
+        if (isMounted) setTuitionDebtMonths([])
+
+        return
+      }
+
+      if (debtFetchedStudentRef.current === form.studentId) return
+      debtFetchedStudentRef.current = form.studentId
+
+      const response = await paymentService.getTuitionDebtMonths(form.studentId)
+
+      if (!isMounted || debtFetchedStudentRef.current !== form.studentId) return
+
+      const months = response.success && response.data ? response.data : []
+
+      setTuitionDebtMonths(months)
+
+      if (months.length === 0) return
+
+      setTuitionMonths(prev => {
+        const existingKeys = new Set(prev.map(row => `${row.month}/${row.year}`))
+        const missingMonths = months.filter(item => !existingKeys.has(`${item.month}/${item.year}`))
+
+        if (missingMonths.length === 0) return prev
+
+        return [...prev, ...missingMonths.map(item => createTuitionMonthRow(item.month, item.year))].sort(
+          (a, b) => a.year - b.year || a.month - b.month
+        )
+      })
+    }
+
+    loadTuitionDebtMonths()
+
+    return () => {
+      isMounted = false
+    }
+  }, [form.studentId, draftInfo])
 
   useEffect(() => {
     let isMounted = true
@@ -468,6 +516,15 @@ const PaymentInvoiceCreateView = () => {
       })),
     [tuitionMonths, tuitionQuotes]
   )
+
+  // Danh sách năm cho dropdown — bổ sung cả các năm nợ cũ nằm ngoài khoảng mặc định
+  const tuitionYearOptions = useMemo(() => {
+    const years = new Set<number>(YEARS)
+
+    tuitionMonths.forEach(row => years.add(row.year))
+
+    return Array.from(years).sort((a, b) => a - b)
+  }, [tuitionMonths])
 
   useEffect(() => {
     if (!form.examEnabled || oneTimeFeeOptions.length === 0) return
@@ -1346,6 +1403,13 @@ return
                       }
                       label='Thu học phí tháng'
                     />
+                    {tuitionDebtMonths.length > 0 && (
+                      <Alert severity='warning'>
+                        Học viên đang nợ phí sinh hoạt {tuitionDebtMonths.length} tháng:{' '}
+                        <strong>{tuitionDebtMonths.map(item => item.label).join(', ')}</strong>. Các tháng nợ đã được chọn
+                        sẵn bên dưới.
+                      </Alert>
+                    )}
                     {form.tuitionEnabled && (
                       <Stack spacing={3}>
                         <Box className='flex justify-end'>
@@ -1386,7 +1450,7 @@ return
                                           value={String(row.year)}
                                           onChange={event => updateTuitionMonth(row.id, { year: Number(event.target.value) })}
                                         >
-                                          {YEARS.map(year => (
+                                          {tuitionYearOptions.map(year => (
                                             <MenuItem key={year} value={String(year)}>
                                               {year}
                                             </MenuItem>
