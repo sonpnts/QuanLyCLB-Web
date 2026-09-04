@@ -342,6 +342,30 @@ const BeltExamRegistrationsView = () => {
     try {
       setExporting(true)
 
+      // Lấy thêm nợ phí sinh hoạt / ngày nhập học / lịch sử thanh toán 5 tháng gần nhất từ admin view
+      const tuitionInfoByRegistrationId = new Map<
+        string,
+        { tuitionDebt: string; enrollmentDate: string; recentPaidTuition: string }
+      >()
+
+      try {
+        const adminViewRes = await beltExamService.getAdminView(examSessionId, false)
+
+        if (adminViewRes.success && adminViewRes.data) {
+          for (const group of adminViewRes.data.coachGroups) {
+            for (const student of group.students) {
+              tuitionInfoByRegistrationId.set(student.registrationId, {
+                tuitionDebt: student.tuitionDebtMonths?.join(', ') || '',
+                enrollmentDate: formatDateVN(student.studentCreatedAt, ''),
+                recentPaidTuition: student.recentPaidTuitionMonths?.join(', ') || ''
+              })
+            }
+          }
+        }
+      } catch {
+        // Không chặn việc xuất file nếu không lấy được dữ liệu bổ sung
+      }
+
       exportToExcel({
         filename: `DanhSachKyThi-${selectedSession?.name || ''}`,
         sheetName: 'DangKyThiCap',
@@ -358,23 +382,33 @@ const BeltExamRegistrationsView = () => {
           { header: 'Lớp', accessor: 'className', width: 18 },
           { header: text.registrationStatus, accessor: 'registrationStatus', width: 24 },
           { header: 'Người đăng ký', accessor: 'registeredBy', width: 22 },
-          { header: 'Thời gian đăng ký', accessor: 'createdAt', width: 20 }
+          { header: 'Thời gian đăng ký', accessor: 'createdAt', width: 20 },
+          { header: 'Nợ phí sinh hoạt', accessor: 'tuitionDebt', width: 22 },
+          { header: 'Ngày nhập học', accessor: 'enrollmentDate', width: 16 },
+          { header: 'Lịch sử thanh toán 5 tháng gần nhất', accessor: 'recentPaidTuition', width: 36 }
         ],
-        rows: sortedRegistrations.map((row, index) => ({
-          stt: index + 1,
-          studentCode: row.studentCode || '-',
-          studentName: row.studentName,
-          birthdate: formatDateVN(row.dateOfBirth, ''),
-          examSessionName: row.examSessionName,
-          className: row.className,
-          registrationStatus: getRegistrationFeeStatus(row).label,
-          currentBelt: row.currentBeltLevelName || text.noBelt,
-          currentBeltOrder: row.currentBeltLevelOrder ?? '',
-          targetBelt: row.targetBeltLevelName,
-          targetBeltOrder: row.targetBeltLevelOrder ?? '',
-          registeredBy: row.registeredByUserName || '-',
-          createdAt: formatDateTime(row.createdAt)
-        }))
+        rows: sortedRegistrations.map((row, index) => {
+          const tuitionInfo = tuitionInfoByRegistrationId.get(row.id)
+
+          return {
+            stt: index + 1,
+            studentCode: row.studentCode || '-',
+            studentName: row.studentName,
+            birthdate: formatDateVN(row.dateOfBirth, ''),
+            examSessionName: row.examSessionName,
+            className: row.className,
+            registrationStatus: getRegistrationFeeStatus(row).label,
+            currentBelt: row.currentBeltLevelName || text.noBelt,
+            currentBeltOrder: row.currentBeltLevelOrder ?? '',
+            targetBelt: row.targetBeltLevelName,
+            targetBeltOrder: row.targetBeltLevelOrder ?? '',
+            registeredBy: row.registeredByUserName || '-',
+            createdAt: formatDateTime(row.createdAt),
+            tuitionDebt: tuitionInfo?.tuitionDebt || '',
+            enrollmentDate: tuitionInfo?.enrollmentDate || '',
+            recentPaidTuition: tuitionInfo?.recentPaidTuition || ''
+          }
+        })
       })
 
       showNotification(text.exportSuccess, 'success')

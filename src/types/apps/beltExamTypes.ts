@@ -132,6 +132,9 @@ export type AdminExamStudentRowType = {
   oneTimeFeesCompleted: boolean
   paidAt?: string
   paymentRecordId?: string
+  studentCreatedAt?: string
+  tuitionDebtMonths?: string[]
+  recentPaidTuitionMonths?: string[]
 }
 
 export type AdminExamGroupByCoachType = {

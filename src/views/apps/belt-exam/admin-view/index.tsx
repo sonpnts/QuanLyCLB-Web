@@ -86,6 +86,16 @@ const formatEducationLevel = (value?: string) => {
   }
 }
 
+// Nợ phí sinh hoạt: liệt kê các tháng nợ (MM/yy), trống nếu không nợ
+const formatTuitionDebt = (student: AdminExamStudentRowType) =>
+  student.tuitionDebtMonths && student.tuitionDebtMonths.length > 0 ? student.tuitionDebtMonths.join(', ') : ''
+
+// Lịch sử thanh toán: tối đa 5 tháng phí sinh hoạt đã đóng gần nhất (MM/yy)
+const formatRecentPaidTuition = (student: AdminExamStudentRowType) =>
+  student.recentPaidTuitionMonths && student.recentPaidTuitionMonths.length > 0
+    ? student.recentPaidTuitionMonths.join(', ')
+    : ''
+
 type AdminSortField =
   | 'studentName'
   | 'studentCode'
@@ -445,7 +455,10 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
       coachName: student.coachName,
       oneTimeFeesCompleted: student.oneTimeFeesCompleted ? 'Đã hoàn thành' : 'Chưa hoàn thành',
       examFeePaid: student.hasPaid ? 'Đã đóng' : 'Chưa đóng',
-      eligible: student.oneTimeFeesCompleted && student.hasPaid ? 'Đủ điều kiện' : 'Chưa đủ điều kiện'
+      eligible: student.oneTimeFeesCompleted && student.hasPaid ? 'Đủ điều kiện' : 'Chưa đủ điều kiện',
+      tuitionDebt: formatTuitionDebt(student),
+      enrollmentDate: formatDate(student.studentCreatedAt),
+      recentPaidTuition: formatRecentPaidTuition(student)
     }))
 
   const handleLock = async () => {
@@ -509,7 +522,10 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
         currentBeltLevelName: student.currentBeltLevelName || '—',
         targetBeltLevelOrder: formatBeltLevelOrder(student.targetBeltLevelOrder, ''),
         targetBeltLevelName: student.targetBeltLevelName || '—',
-        className: student.className
+        className: student.className,
+        tuitionDebt: formatTuitionDebt(student),
+        enrollmentDate: formatDate(student.studentCreatedAt),
+        recentPaidTuition: formatRecentPaidTuition(student)
       }))
 
       exportToExcel({
@@ -526,7 +542,10 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
           { header: 'Tên cấp đai hiện tại', accessor: 'currentBeltLevelName', width: 24 },
           { header: 'Cấp đai dự thi', accessor: 'targetBeltLevelOrder', width: 20 },
           { header: 'Tên cấp đai dự thi', accessor: 'targetBeltLevelName', width: 24 },
-          { header: 'Lớp', accessor: 'className', width: 18 }
+          { header: 'Lớp', accessor: 'className', width: 18 },
+          { header: 'Nợ phí sinh hoạt', accessor: 'tuitionDebt', width: 22 },
+          { header: 'Ngày nhập học', accessor: 'enrollmentDate', width: 16 },
+          { header: 'Lịch sử thanh toán 5 tháng gần nhất', accessor: 'recentPaidTuition', width: 36 }
         ],
         rows
       })
@@ -591,7 +610,10 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
         targetBeltLevelOrder: formatBeltLevelOrder(student.targetBeltLevelOrder, ''),
         targetBeltLevelName: student.targetBeltLevelName || '—',
         className: student.className,
-        coachName: student.coachName
+        coachName: student.coachName,
+        tuitionDebt: formatTuitionDebt(student),
+        enrollmentDate: formatDate(student.studentCreatedAt),
+        recentPaidTuition: formatRecentPaidTuition(student)
       }))
 
       exportToExcel({
@@ -609,7 +631,10 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
           { header: 'Cấp đai dự thi', accessor: 'targetBeltLevelOrder', width: 20 },
           { header: 'Tên cấp đai dự thi', accessor: 'targetBeltLevelName', width: 24 },
           { header: 'Lớp', accessor: 'className', width: 18 },
-          { header: 'HLV', accessor: 'coachName', width: 20 }
+          { header: 'HLV', accessor: 'coachName', width: 20 },
+          { header: 'Nợ phí sinh hoạt', accessor: 'tuitionDebt', width: 22 },
+          { header: 'Ngày nhập học', accessor: 'enrollmentDate', width: 16 },
+          { header: 'Lịch sử thanh toán 5 tháng gần nhất', accessor: 'recentPaidTuition', width: 36 }
         ],
         rows
       })
@@ -670,7 +695,10 @@ const BeltExamAdminView = ({ sessionId }: Props) => {
           { header: 'HLV', accessor: 'coachName', width: 20 },
           { header: 'Phí 1 lần', accessor: 'oneTimeFeesCompleted', width: 18 },
           { header: 'Lệ phí thi', accessor: 'examFeePaid', width: 16 },
-          { header: 'Điều kiện thi', accessor: 'eligible', width: 18 }
+          { header: 'Điều kiện thi', accessor: 'eligible', width: 18 },
+          { header: 'Nợ phí sinh hoạt', accessor: 'tuitionDebt', width: 22 },
+          { header: 'Ngày nhập học', accessor: 'enrollmentDate', width: 16 },
+          { header: 'Lịch sử thanh toán 5 tháng gần nhất', accessor: 'recentPaidTuition', width: 36 }
         ],
         rows
       })
@@ -730,7 +758,10 @@ return
         personalIdNumber: student.personalIdNumber || '',
         educationLevel: formatEducationLevel(student.educationLevel),
         class: student.className,
-        coachName: student.coachName
+        coachName: student.coachName,
+        tuitionDebt: formatTuitionDebt(student),
+        enrollmentDate: formatDate(student.studentCreatedAt),
+        recentPaidTuition: formatRecentPaidTuition(student)
       }))
 
       exportToExcel({
@@ -744,7 +775,10 @@ return
           { header: 'CMND/CCCD', accessor: 'personalIdNumber', width: 18 },
           { header: 'Trình độ văn hóa', accessor: 'educationLevel', width: 18 },
           { header: 'Lớp', accessor: 'class', width: 18 },
-          { header: 'HLV', accessor: 'coachName', width: 20 }
+          { header: 'HLV', accessor: 'coachName', width: 20 },
+          { header: 'Nợ phí sinh hoạt', accessor: 'tuitionDebt', width: 22 },
+          { header: 'Ngày nhập học', accessor: 'enrollmentDate', width: 16 },
+          { header: 'Lịch sử thanh toán 5 tháng gần nhất', accessor: 'recentPaidTuition', width: 36 }
         ],
         rows
       })
