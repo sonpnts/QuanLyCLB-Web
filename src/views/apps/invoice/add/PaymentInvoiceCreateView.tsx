@@ -1406,8 +1406,7 @@ return
                     {tuitionDebtMonths.length > 0 && (
                       <Alert severity='warning'>
                         Học viên đang nợ phí sinh hoạt {tuitionDebtMonths.length} tháng:{' '}
-                        <strong>{tuitionDebtMonths.map(item => item.label).join(', ')}</strong>. Các tháng nợ đã được chọn
-                        sẵn bên dưới.
+                        <strong>{tuitionDebtMonths.map(item => item.label).join(', ')}</strong>.
                       </Alert>
                     )}
                     {form.tuitionEnabled && (
