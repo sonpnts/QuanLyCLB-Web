@@ -937,18 +937,18 @@ return
             >
               Dữ liệu học viên import
             </Button>
-            {!data.isLocked && (
-              <Button
-                variant='contained'
-                color='error'
-                size='small'
-                startIcon={<i className='ri-lock-line' />}
-                onClick={() => setLockDialogOpen(true)}
-                fullWidth
-              >
-                Chốt danh sách
-              </Button>
-            )}
+            {/*{!data.isLocked && (*/}
+            {/*  <Button*/}
+            {/*    variant='contained'*/}
+            {/*    color='error'*/}
+            {/*    size='small'*/}
+            {/*    startIcon={<i className='ri-lock-line' />}*/}
+            {/*    onClick={() => setLockDialogOpen(true)}*/}
+            {/*    fullWidth*/}
+            {/*  >*/}
+            {/*    Chốt danh sách*/}
+            {/*  </Button>*/}
+            {/*)}*/}
           </Box>
         </CardContent>
       </Card>
@@ -959,11 +959,11 @@ return
           { label: 'Đã đóng tiền', value: data.totalPaid, color: 'success.main' },
           { label: 'Chưa đóng tiền', value: data.totalUnpaid, color: 'warning.main' },
           { label: 'Đủ điều kiện thi', value: eligibleStudents.length, color: 'secondary.main' },
-          {
-            label: 'Tổng đã thu',
-            value: `${data.totalAmountCollected.toLocaleString('vi-VN')} đ`,
-            color: 'info.main'
-          }
+          // {
+          //   label: 'Tổng đã thu',
+          //   value: `${data.totalAmountCollected.toLocaleString('vi-VN')} đ`,
+          //   color: 'info.main'
+          // }
         ].map(stat => (
           <Card key={stat.label}>
             <CardContent className='text-center py-3'>

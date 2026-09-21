@@ -349,7 +349,7 @@ const DashboardHome = () => {
           <Grid size={{ xs: 12, sm: 6 }}>
             <StatCard
               title='Tổng học viên'
-              value={`${stats?.activeStudents ?? 0}/${stats?.totalStudents ?? 0}`}
+              value={`${stats?.activeStudents ?? 0}`}
               icon='ri-graduation-cap-line'
               color='primary'
             />
