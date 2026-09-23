@@ -602,7 +602,7 @@ return
                 <TableHead>
                   <TableRow>
                     <TableCell>Học viên</TableCell>
-                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Số điện thoại</TableCell>
+                    {/*<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Số điện thoại</TableCell>*/}
                     <TableCell align='center'>Đi học</TableCell>
                     <TableCell align='center'>Nghỉ có phép</TableCell>
                     <TableCell align='center'>Nghỉ không phép</TableCell>
@@ -626,7 +626,7 @@ return
                             {student.studentName}
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{student.phoneNumber || '-'}</TableCell>
+                        {/*<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{student.phoneNumber || '-'}</TableCell>*/}
                         <TableCell align='center'>
                           <Checkbox
                             checked={isPresent}
