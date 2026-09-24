@@ -198,10 +198,10 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
                         <TableRow>
                           <TableCell>Lớp</TableCell>
                           <TableCell align='right'>Tổng ghi nhận</TableCell>
-                          <TableCell align='right'>Đã nộp trước</TableCell>
-                          <TableCell align='right'>Khoản trừ</TableCell>
-                          <TableCell align='right'>Bàn giao kỳ này</TableCell>
-                          <TableCell align='right'>Còn lại</TableCell>
+                          {/*<TableCell align='right'>Đã nộp trước</TableCell>*/}
+                          {/*<TableCell align='right'>Khoản trừ</TableCell>*/}
+                          {/*<TableCell align='right'>Bàn giao kỳ này</TableCell>*/}
+                          {/*<TableCell align='right'>Còn lại</TableCell>*/}
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -209,14 +209,14 @@ const CashHandoverDetailDialog = ({ open, data, onClose }: Props) => {
                           <TableRow key={detail.classId}>
                             <TableCell>{detail.className}</TableCell>
                             <TableCell align='right'>{formatCurrency(detail.snapshotTotalAmount)}</TableCell>
-                            <TableCell align='right'>{formatCurrency(detail.previousHandedOverAmount)}</TableCell>
-                            <TableCell align='right'>
-                              {detail.totalDeductionAmount > 0 ? (
-                                <Typography color='error.main'>-{formatCurrency(detail.totalDeductionAmount)}</Typography>
-                              ) : '—'}
-                            </TableCell>
-                            <TableCell align='right'>{formatCurrency(detail.amountHandedOver)}</TableCell>
-                            <TableCell align='right'>{formatCurrency(detail.remainingAmountAfterHandover)}</TableCell>
+                            {/*<TableCell align='right'>{formatCurrency(detail.previousHandedOverAmount)}</TableCell>*/}
+                            {/*<TableCell align='right'>*/}
+                            {/*  {detail.totalDeductionAmount > 0 ? (*/}
+                            {/*    <Typography color='error.main'>-{formatCurrency(detail.totalDeductionAmount)}</Typography>*/}
+                            {/*  ) : '—'}*/}
+                            {/*</TableCell>*/}
+                            {/*<TableCell align='right'>{formatCurrency(detail.amountHandedOver)}</TableCell>*/}
+                            {/*<TableCell align='right'>{formatCurrency(detail.remainingAmountAfterHandover)}</TableCell>*/}
                           </TableRow>
                         ))}
                       </TableBody>
