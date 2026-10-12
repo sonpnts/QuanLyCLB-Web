@@ -139,6 +139,21 @@ class BeltExamService {
     }
   }
 
+  async closeSession(id: string): Promise<ResponseResult<ExamSessionType>> {
+    try {
+      const response = await apiClient.post<any>(API_ENDPOINTS.beltExams.closeSession(id))
+      const apiResponse = response.data
+
+      if (!apiResponse.isSuccess) return { success: false, message: apiResponse.message }
+
+      return { success: true, data: apiResponse.data, message: apiResponse.message }
+    } catch (error: any) {
+      logger.error('BeltExamService', 'closeSession', error)
+
+      return { success: false, message: error?.response?.data?.message || 'Lỗi kết nối máy chủ' }
+    }
+  }
+
   async getExamRegistrations(params?: any): Promise<ResponseResult<ExamRegistrationType[]>> {
     try {
       const response = await apiClient.get<any>(API_ENDPOINTS.beltExams.registrations, { params })

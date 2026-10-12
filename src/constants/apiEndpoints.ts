@@ -61,6 +61,7 @@ export const API_ENDPOINTS = {
     myRegistrationList: (sessionId: string) => `/belt-exams/${sessionId}/registration-list/mine`,
     removeStudentFromList: (listId: string, studentId: string) =>
       `/belt-exams/registration-list/${listId}/student/${studentId}`,
+    closeSession: (sessionId: string) => `/belt-exams/sessions/${sessionId}/close`,
     openSession: (sessionId: string) => `/belt-exams/sessions/${sessionId}/open`,
     lockSession: (sessionId: string) => `/belt-exams/${sessionId}/lock`,
     adminView: (sessionId: string) => `/belt-exams/${sessionId}/admin-view`,

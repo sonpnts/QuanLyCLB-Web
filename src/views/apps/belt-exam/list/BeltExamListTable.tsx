@@ -33,7 +33,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 
 import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
-import type { ExamSessionType } from '@/types/apps/beltExamTypes'
+import { ExamSessionType, getEffectiveExamSessionStatus } from '@/types/apps/beltExamTypes'
 import { getEffectiveExamSessionStatusDisplay, examTypeLabels } from '@/types/apps/beltExamTypes'
 import { fuzzyFilter } from '@/utils/tableHelpers'
 import tableStyles from '@core/styles/table.module.css'
@@ -77,6 +77,7 @@ const BeltExamListTable = () => {
   const [loading, setLoading] = useState(false)
   const [selectedExam, setSelectedExam] = useState<ExamSessionType | null>(null)
   const [openDialogOpen, setOpenDialogOpen] = useState(false)
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false)
 
   const dataLoadedRef = useRef(false)
 
@@ -118,6 +119,30 @@ const BeltExamListTable = () => {
       )
       showNotification('Đã mở kỳ thi cho HLV đăng ký.', 'success')
       setOpenDialogOpen(false)
+      setSelectedExam(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCloseSession = async () => {
+    if (!selectedExam) return
+
+    try {
+      setLoading(true)
+      const response = await beltExamService.closeSession(selectedExam.id)
+
+      if (!response.success) {
+        showNotification(response.message || 'Không thể Ẩn đăng ký.', 'error')
+
+        return
+      }
+
+      setData(prev =>
+        sortSessions(prev.map(session => (session.id === selectedExam.id ? { ...session, status: 'Draft' } : session)))
+      )
+      showNotification('Đã ẩn kỳ thi.', 'success')
+      setCloseDialogOpen(false)
       setSelectedExam(null)
     } finally {
       setLoading(false)
@@ -214,6 +239,18 @@ const BeltExamListTable = () => {
                   }}
                 >
                   <i className='ri-door-open-line' />
+                </IconButton>
+              )}
+              {exam.status === 'Open' && getEffectiveExamSessionStatus(row.original) != 'Expired' && (
+                <IconButton
+                  color='error'
+                  title='Ẩn hiển thị'
+                  onClick={() => {
+                    setSelectedExam(exam)
+                    setCloseDialogOpen(true)
+                  }}
+                >
+                  <i className='ri-door-closed-line' />
                 </IconButton>
               )}
               <IconButton
@@ -335,6 +372,29 @@ const BeltExamListTable = () => {
           </Button>
           <Button variant='contained' color='success' onClick={handleOpenSession} disabled={loading}>
             Mở đăng ký
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={closeDialogOpen} onClose={() => setCloseDialogOpen(false)} maxWidth='sm' fullWidth>
+        <DialogTitle>Ẩn kỳ thi</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Kỳ thi <strong>{selectedExam?.name}</strong> sẽ chuyển sang trạng thái ẩn đăng ký.
+          </Typography>
+
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setCloseDialogOpen(false)
+              setSelectedExam(null)
+            }}
+          >
+            Hủy
+          </Button>
+          <Button variant='contained' color='success' onClick={handleCloseSession} disabled={loading}>
+            Ẩn
           </Button>
         </DialogActions>
       </Dialog>
