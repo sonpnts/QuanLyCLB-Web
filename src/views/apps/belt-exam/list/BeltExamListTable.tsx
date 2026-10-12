@@ -138,11 +138,11 @@ const BeltExamListTable = () => {
             <Typography className='font-medium' color='text.primary'>
               {row.original.name}
             </Typography>
-            {row.original.description && (
-              <Typography variant='caption' color='text.secondary'>
-                {row.original.description}
-              </Typography>
-            )}
+            {/*{row.original.description && (*/}
+            {/*  <Typography variant='caption' color='text.secondary'>*/}
+            {/*    {row.original.description}*/}
+            {/*  </Typography>*/}
+            {/*)}*/}
           </Box>
         )
       }),

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react'
 
+import MDEditor from '@uiw/react-md-editor'
+import '@uiw/react-md-editor/markdown-editor.css'
+import '@uiw/react-markdown-preview/markdown.css'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
@@ -21,6 +24,7 @@ import { useNotification } from '@/contexts/notificationContext'
 import beltExamService from '@/services/beltExamService'
 import type { ExamSessionType, ExamType } from '@/types/apps/beltExamTypes'
 import { examTypeLabels } from '@/types/apps/beltExamTypes'
+import Box from '@mui/material/Box'
 
 type Props = {
   open: boolean
@@ -196,14 +200,24 @@ const EditExamSessionDrawer = ({ open, session, onClose, setData }: Props) => {
             // helperText='Đây là hạn dùng cho bước HLV đăng ký, không nhập lại ở lúc mở kỳ thi.'
           />
 
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            label='Mô tả'
-            value={formData.description}
-            onChange={event => setFormData(prev => ({ ...prev, description: event.target.value }))}
-          />
+          <Box className='w-full'>
+            <Typography variant='body2' className='mb-2'>
+              Mô tả
+            </Typography>
+
+            <MDEditor
+              value={formData.description ?? ''}
+              onChange={value =>
+                setFormData(prev => ({
+                  ...prev,
+                  description: value ?? ''
+                }))
+              }
+              preview='live'
+              height={250}
+              visibleDragbar={false}
+            />
+          </Box>
 
           <FormControlLabel
             control={

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -113,8 +115,12 @@ const BeltExamRegisterView = () => {
                           color={daysLeft !== null && daysLeft <= 3 ? 'error' : 'text.secondary'}
                         >
                           Hạn đăng ký: {formatDateTimeVN(deadline)}
-                          {daysLeft !== null && daysLeft >= 0 && <strong className='ml-1'>(còn {daysLeft} ngày)</strong>}
-                          {daysLeft !== null && daysLeft < 0 && <strong className='ml-1 text-red-500'>Đã hết hạn</strong>}
+                          {daysLeft !== null && daysLeft >= 0 && (
+                            <strong className='ml-1'>(còn {daysLeft} ngày)</strong>
+                          )}
+                          {daysLeft !== null && daysLeft < 0 && (
+                            <strong className='ml-1 text-red-500'>Đã hết hạn</strong>
+                          )}
                         </Typography>
                       </Box>
                     )}
@@ -126,6 +132,46 @@ const BeltExamRegisterView = () => {
                         </Typography>
                       </Box>
                     )}
+
+                    {session.description && (
+                      <Box className='mt-2 rounded-lg border border-solid border-gray-200 p-3 dark:border-gray-700'>
+                        <Box className='mb-2 flex items-center gap-2'>
+                          <i className='ri-information-line text-primary' />
+                          <Typography variant='subtitle2' fontWeight={700}>
+                            Nội dung thông báo
+                          </Typography>
+                        </Box>
+
+                        <Box className='text-sm leading-6 break-words'>
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              p: ({ children }) => (
+                                <Typography variant='body2' component='div' className='mb-2 last:mb-0'>
+                                  {children}
+                                </Typography>
+                              ),
+                              strong: ({ children }) => <strong className='font-bold text-red-600'>{children}</strong>,
+                              ul: ({ children }) => <ul className='my-2 list-disc pl-5'>{children}</ul>,
+                              ol: ({ children }) => <ol className='my-2 list-decimal pl-5'>{children}</ol>,
+                              a: ({ children, href }) => (
+                                <a
+                                  href={href && /^(https?:\/\/|mailto:)/i.test(href) ? href : undefined}
+                                  target='_blank'
+                                  rel='noopener noreferrer'
+                                  className='text-primary underline'
+                                >
+                                  {children}
+                                </a>
+                              )
+                            }}
+                          >
+                            {session.description}
+                          </ReactMarkdown>
+                        </Box>
+                      </Box>
+                    )}
+
                     <Box className='mt-auto pt-3'>
                       <Button
                         fullWidth

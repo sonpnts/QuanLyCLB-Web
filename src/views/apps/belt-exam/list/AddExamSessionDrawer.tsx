@@ -2,6 +2,11 @@
 
 import { useState } from 'react'
 
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import MDEditor from '@uiw/react-md-editor'
+import '@uiw/react-md-editor/markdown-editor.css'
+import '@uiw/react-markdown-preview/markdown.css'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
@@ -157,14 +162,26 @@ const AddExamSessionDrawer = ({ open, handleClose, setData }: Props) => {
             InputLabelProps={{ shrink: true }}
             helperText='HLV sẽ dùng trực tiếp hạn này khi kỳ thi được mở đăng ký.'
           />
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            label='Mô tả'
-            value={formData.description}
-            onChange={event => setFormData(prev => ({ ...prev, description: event.target.value }))}
-          />
+
+          <div data-color-mode='light' className='w-full'>
+            <Typography variant='subtitle2' className='mb-2'>
+              Mô tả
+            </Typography>
+
+            <MDEditor
+              value={formData.description}
+              onChange={value =>
+                setFormData(prev => ({
+                  ...prev,
+                  description: value ?? ''
+                }))
+              }
+              preview='live'
+              height={250}
+              visibleDragbar={false}
+            />
+          </div>
+
           <div className='flex items-center gap-4'>
             <Button variant='contained' type='submit' disabled={loading}>
               {loading ? 'Đang xử lý...' : 'Tạo kỳ thi'}

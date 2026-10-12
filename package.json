@@ -48,6 +48,7 @@
     "@tiptap/pm": "^2.10.4",
     "@tiptap/react": "^2.10.4",
     "@tiptap/starter-kit": "^2.10.4",
+    "@uiw/react-md-editor": "^4.1.2",
     "@vercel/speed-insights": "^2.0.0",
     "apexcharts": "3.49.0",
     "bootstrap-icons": "1.11.3",
@@ -71,6 +72,7 @@
     "react-hook-form": "7.54.1",
     "react-image-crop": "^11.0.10",
     "react-map-gl": "7.1.8",
+    "react-markdown": "^10.1.0",
     "react-perfect-scrollbar": "1.5.8",
     "react-player": "2.16.0",
     "react-redux": "9.2.0",
@@ -78,6 +80,7 @@
     "react-toastify": "10.0.6",
     "react-use": "17.6.0",
     "recharts": "2.15.0",
+    "remark-gfm": "^4.0.1",
     "server-only": "0.0.1",
     "valibot": "0.42.1",
     "xlsx": "^0.18.5"
