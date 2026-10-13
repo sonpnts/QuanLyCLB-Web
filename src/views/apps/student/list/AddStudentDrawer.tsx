@@ -203,7 +203,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
                 <FormControl fullWidth required>
                   <InputLabel>Trình độ học vấn</InputLabel>
                   <Select
-                    label='Trình độ học vấn'
+                    label='Trình độ học vấn *'
                     value={formData.educationLevel}
                     onChange={e => setFormData({ ...formData, educationLevel: e.target.value })}
                   >
@@ -222,7 +222,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
                 <FormControl fullWidth>
                   <InputLabel>Giới tính</InputLabel>
                   <Select
-                    label='Giới tính'
+                    label='Giới tính *'
                     value={formData.gender}
                     onChange={e => setFormData({ ...formData, gender: e.target.value })}
                   >
@@ -252,7 +252,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
-                  label='Địa chỉ'
+                  label='Địa chỉ *'
                   fullWidth
                   value={formData.address}
                   onChange={e => setFormData({ ...formData, address: e.target.value })}
