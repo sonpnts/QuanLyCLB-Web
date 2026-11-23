@@ -1384,7 +1384,10 @@ return
                       <TextField fullWidth label='Ghi chú chung' value={form.note} onChange={event => setForm(prev => ({ ...prev, note: event.target.value }))} />
                     </Grid>
                     {form.method === PAYMENT_METHOD_BANK_TRANSFER && (
+
+
                       <Grid size={{ xs: 12 }}>
+                        <Alert className="mb-3" severity='error'>Toàn bộ các loại hóa đơn theo phương thức Chuyển Khoản, bắt buộc số tiền CK = Tổng tiền biên lai + % thuế</Alert>
                         <Stack spacing={2}>
                           <Button component='label' variant='outlined' startIcon={uploading ? <CircularProgress size={16} /> : <i className='ri-image-add-line' />}>
                             Chọn ảnh minh chứng
@@ -1620,6 +1623,7 @@ return
               <Card>
                 <CardHeader
                   title='Mua sản phẩm'
+                  subheader='Thêm loại sản phẩm là combo để được áp dụng giảm giá'
                   action={
                     <Stack direction='row' spacing={2}>
                       {bundles.length > 0 && (
@@ -1633,7 +1637,7 @@ return
                     </Stack>
                   }
                 />
-                <CardContent>
+                <CardContent >
                   {productRows.length === 0 ? (
                     <Alert severity='info'>Chưa có sản phẩm nào được chọn.</Alert>
                   ) : (
@@ -1933,13 +1937,17 @@ return
                         <Typography className='text-right'>{selectedClass?.name || draftInfo?.className || '-'}</Typography>
                       </div>
                     </Stack>
+                    {!studentHasZalo && (
+                      <Alert severity='warning'>Chưa liên kết zalo, sẽ KHÔNG nhận được biên lai</Alert>
+
+                    )}
                   </Paper>
                   <div className='flex items-center justify-between'>
                     <Typography color='text.secondary'>Học phí</Typography>
                     <Typography>{form.tuitionEnabled ? formatCurrency(tuitionPayableAmount) : '-'}</Typography>
                   </div>
                   <div className='flex items-center justify-between'>
-                    <Typography color='text.secondary'>Lệ phí thi cấp</Typography>
+                    <Typography color='text.secondary'>Lệ phí thi</Typography>
                     <Typography>{form.examEnabled ? formatCurrency(examFeeAmount) : '-'}</Typography>
                   </div>
                   <div className='flex items-center justify-between'>
