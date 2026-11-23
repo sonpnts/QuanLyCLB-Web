@@ -353,7 +353,6 @@ const InvoiceListTable = ({
     </div>
   )
 
-  /* ---------- Bảng (desktop): gộp 10 cột còn 6 ---------- */
 
   const desktopTable = (
     <table className={tableStyles.table}>
@@ -381,7 +380,6 @@ const InvoiceListTable = ({
               onClick={() => openReceiptPreview(row.receiptNumber)}
               className='cursor-pointer'
             >
-              {/* Biên lai: số + ngày thu */}
               <td>
                 <Typography color='primary.main' className='font-mono text-sm' fontWeight={600}>
                   {row.receiptNumber}
@@ -391,7 +389,6 @@ const InvoiceListTable = ({
                 </Typography>
               </td>
 
-              {/* Học viên: tên + lớp */}
               <td>
                 <Typography color='text.primary' fontWeight={500}>
                   {row.studentName}
@@ -401,17 +398,17 @@ const InvoiceListTable = ({
                 </Typography>
               </td>
 
-              {/* Khoản thu: loại thu + kỳ */}
               <td>
-                {renderTypeChips(row)}
-                {getPeriodLabel(row) && (
-                  <Typography variant='body2' color='text.secondary' className='mbs-1'>
-                    Kỳ: {getPeriodLabel(row)}
-                  </Typography>
-                )}
+                <div className='max-is-[240px]'>
+                  {renderTypeChips(row)}
+                  {getPeriodLabel(row) && (
+                    <Typography variant='body2' color='text.secondary' className='mbs-1'>
+                      Kỳ: {getPeriodLabel(row)}
+                    </Typography>
+                  )}
+                </div>
               </td>
 
-              {/* Thanh toán: phương thức + người thu (cạnh nhau) */}
               <td>
                 <div className='flex items-center gap-2 flex-wrap'>
                   {renderMethodChip(row)}
@@ -439,7 +436,6 @@ const InvoiceListTable = ({
     </table>
   )
 
-  /* ---------- Danh sách thẻ (điện thoại) ---------- */
 
   const mobileList =
     receipts.length === 0 ? (
@@ -463,7 +459,6 @@ const InvoiceListTable = ({
               }}
               className='flex flex-col gap-2 p-4 cursor-pointer active:bg-actionHover'
             >
-              {/* Dòng 1: học viên + tổng tiền */}
               <div className='flex items-start justify-between gap-3'>
                 <div className='min-is-0'>
                   <Typography color='text.primary' fontWeight={600} className='break-words'>
@@ -630,7 +625,7 @@ const InvoiceListTable = ({
         )}
 
         <TablePagination
-          rowsPerPageOptions={[10, 25, 50]}
+          rowsPerPageOptions={[10, 25, 50, 100]}
           component='div'
           className='border-bs'
           count={totalCount}
