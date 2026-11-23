@@ -162,9 +162,9 @@ const DiscountedReceiptsView = () => {
       />
       <CardContent>
         <Stack spacing={3}>
-          <Alert severity='info'>
-            Mặc định hiển thị tất cả các loại giảm trừ. Bạn có thể lọc riêng theo loại giảm trừ thủ công, miễn/giảm học phí đã duyệt, hoặc giá combo ở bộ lọc phía dưới.
-          </Alert>
+          {/*<Alert severity='info'>*/}
+          {/*  Mặc định hiển thị tất cả các loại giảm trừ. Bạn có thể lọc riêng theo loại giảm trừ thủ công, miễn/giảm học phí đã duyệt, hoặc giá combo ở bộ lọc phía dưới.*/}
+          {/*</Alert>*/}
 
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
             <TextField
