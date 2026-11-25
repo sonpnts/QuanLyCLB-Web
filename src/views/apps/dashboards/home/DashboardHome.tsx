@@ -50,6 +50,7 @@ import { useAuth } from '@/contexts/authContext'
 import { hasPermission } from '@/utils/permissionUtils'
 import { hasAdminRole } from '@/utils/roleUtils'
 import { formatDateVN } from '@/utils/dateTime'
+import CheckInView from '@views/apps/check-in'
 
 const formatMoney = (value: number) => new Intl.NumberFormat('vi-VN').format(value)
 
@@ -171,6 +172,11 @@ const PendingRequests = ({ items }: { items: NonNullable<DashboardSystemNotifica
 }
 
 const DashboardHome = () => {
+
+  const { auth } = useAuth()
+
+  const canViewCheckin = hasPermission(auth?.permissions, 'CheckIn.Create')
+
   const [stats, setStats] = useState<DashboardStatisticsDto | null>(null)
   const [revenue, setRevenue] = useState<RevenueStatisticsDto[]>([])
   const [studentStats, setStudentStats] = useState<StudentStatisticsDto | null>(null)
@@ -196,7 +202,6 @@ const DashboardHome = () => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
   })
 
-  const { auth } = useAuth()
 
   const canViewAdminDashboard = useMemo(
     () => hasPermission(auth?.permissions, 'Dashboard.Admin.View') || hasAdminRole(auth?.roles),
@@ -356,23 +361,61 @@ const DashboardHome = () => {
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Card sx={{ height: '100%' }}>
-              <CardContent sx={{ p: '16px !important', display: 'flex', flexDirection: 'column', gap: 2, height: '100%', justifyContent: 'space-between' }}>
+              <CardContent
+                sx={{
+                  p: '16px !important',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  height: '100%',
+                  justifyContent: 'space-between'
+                }}
+              >
                 <Box>
-                  <Typography variant='caption' color='text.secondary'>HV mới tháng {monthText}/{yearText}</Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    HV mới tháng {monthText}/{yearText}
+                  </Typography>
                   <Box className='flex items-center justify-between'>
-                    <Typography variant='h5' fontWeight={700}>{studentMonthStats?.newStudentsCount ?? 0}</Typography>
-                    <Button size='small' variant='outlined' disabled={!studentMonthStats?.newStudentsCount}
-                      onClick={() => setStudentListDialog({ open: true, title: `HV mới tháng ${monthText}/${yearText}`, list: studentMonthStats?.newStudentsList ?? [] })}>
+                    <Typography variant='h5' fontWeight={700}>
+                      {studentMonthStats?.newStudentsCount ?? 0}
+                    </Typography>
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      disabled={!studentMonthStats?.newStudentsCount}
+                      onClick={() =>
+                        setStudentListDialog({
+                          open: true,
+                          title: `HV mới tháng ${monthText}/${yearText}`,
+                          list: studentMonthStats?.newStudentsList ?? []
+                        })
+                      }
+                    >
                       Xem
                     </Button>
                   </Box>
                 </Box>
                 <Box>
-                  <Typography variant='caption' color='text.secondary'>HV tạm nghỉ tháng {monthText}/{yearText}</Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    HV tạm nghỉ tháng {monthText}/{yearText}
+                  </Typography>
                   <Box className='flex items-center justify-between'>
-                    <Typography variant='h5' fontWeight={700}>{studentMonthStats?.suspendedStudentsCount ?? 0}</Typography>
-                    <Button size='small' variant='outlined' color='warning' disabled={!studentMonthStats?.suspendedStudentsCount}
-                      onClick={() => setStudentListDialog({ open: true, title: `HV tạm nghỉ tháng ${monthText}/${yearText}`, list: studentMonthStats?.suspendedStudentsList ?? [] })}>
+                    <Typography variant='h5' fontWeight={700}>
+                      {studentMonthStats?.suspendedStudentsCount ?? 0}
+                    </Typography>
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      color='warning'
+                      disabled={!studentMonthStats?.suspendedStudentsCount}
+                      onClick={() =>
+                        setStudentListDialog({
+                          open: true,
+                          title: `HV tạm nghỉ tháng ${monthText}/${yearText}`,
+                          list: studentMonthStats?.suspendedStudentsList ?? []
+                        })
+                      }
+                    >
                       Xem
                     </Button>
                   </Box>
@@ -381,6 +424,12 @@ const DashboardHome = () => {
             </Card>
           </Grid>
         </>
+      )}
+
+      {canViewCheckin && (
+        <Grid size={{ xs: 12 }}>
+            <CheckInView />
+        </Grid>
       )}
 
       {!canViewAdminDashboard && (
