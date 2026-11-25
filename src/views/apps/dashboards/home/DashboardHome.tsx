@@ -426,12 +426,6 @@ const DashboardHome = () => {
         </>
       )}
 
-      {canViewCheckin && (
-        <Grid size={{ xs: 12 }}>
-            <CheckInView />
-        </Grid>
-      )}
-
       {!canViewAdminDashboard && (
         <Grid size={{ xs: 12 }}>
           <Card>
@@ -449,6 +443,12 @@ const DashboardHome = () => {
               </FormControl>
             </CardContent>
           </Card>
+        </Grid>
+      )}
+
+      {canViewCheckin && (
+        <Grid size={{ xs: 12 }}>
+          <CheckInView />
         </Grid>
       )}
 
