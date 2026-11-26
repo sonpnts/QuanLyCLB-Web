@@ -170,11 +170,11 @@ export const WebPushOnboardingPopup: React.FC = () => {
           </Avatar>
           <Box>
             <Typography variant='h6' fontWeight={700}>
-              Nhận thông báo từ CMIS
+              Nhận thông báo từ hệ thống CMIS
             </Typography>
-            <Typography variant='caption' color='text.secondary'>
-              Tấn Đạt Taekwondo Club
-            </Typography>
+            {/*<Typography variant='caption' color='text.secondary'>*/}
+            {/*  Tấn Đạt Taekwondo Club*/}
+            {/*</Typography>*/}
           </Box>
         </Box>
         <IconButton size='small' onClick={handleDismissLater} disabled={loading}>
