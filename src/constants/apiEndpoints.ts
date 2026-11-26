@@ -45,6 +45,17 @@ export const API_ENDPOINTS = {
     root: '/zns-logs',
     retry: (id: string) => `/zns-logs/${id}/retry`
   },
+  webpush: {
+    config: '/webpush/config',
+    subscriptions: '/webpush/subscriptions',
+    myStatus: (endpoint?: string) =>
+      `/webpush/subscriptions/me${endpoint ? `?endpoint=${encodeURIComponent(endpoint)}` : ''}`,
+    subscribersCount: '/webpush/subscribers-count',
+    send: '/webpush/send',
+    cancel: (id: string) => `/webpush/${id}/cancel`,
+    history: '/webpush/history',
+    detail: (id: string) => `/webpush/${id}`
+  },
   beltExams: {
     sessions: '/belt-exams/sessions',
     sessionById: (id: string) => `/belt-exams/sessions/${id}`,

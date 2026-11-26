@@ -23,6 +23,7 @@ import '@assets/iconify-icons/generated-icons.css'
 export const metadata = {
   title: 'CMIS - Tấn Đạt Taekwondo',
   description: 'Central Management Information System - Hệ thống thông tin quản lý tập trung',
+  manifest: '/manifest.json',
   icons: {
     icon: [{ url: '/images/logos/logo.svg', type: 'image/svg+xml' }],
     shortcut: ['/images/logos/logo.svg'],

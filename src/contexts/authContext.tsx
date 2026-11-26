@@ -14,6 +14,7 @@ import { API_ENDPOINTS } from '@/constants/apiEndpoints'
 import { apiClient } from '@/utils/apiClient'
 import { authStorage } from '@/utils/authStorage'
 import type { AuthSnapshot, AuthUser } from '@/utils/authStorage'
+import { clearPopupDismissed } from '@/utils/webPush'
 
 type ApiAuthResponse = {
   accessToken?: string
@@ -137,6 +138,7 @@ export const AuthProvider = ({ children }: ChildrenType) => {
 
   const logout = useCallback(() => {
     authStorage.clear()
+    clearPopupDismissed()
     setAuth(null)
   }, [])
 

@@ -224,6 +224,11 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         label: 'Nhật ký cronjob',
         icon: 'ri-time-line',
         href: '/apps/cron-job-log/list'
+      },
+      {
+        label: 'Thông báo Web Push',
+        icon: 'ri-notification-3-line',
+        href: '/admin/web-push'
       }
     ]
   },
