@@ -207,8 +207,8 @@ export const WebPushOnboardingPopup: React.FC = () => {
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant='body2' color='text.secondary'>
-              Bật thông báo để nhận các thông báo quan trọng từ câu lạc bộ, ngay cả khi <strong>đã đóng website</strong> hoặc{' '}
-              <strong>không mở trình duyệt</strong>.
+              Bật thông báo để nhận các thông báo quan trọng từ câu lạc bộ, ngay cả khi <strong>đã đóng website</strong>{' '}
+              hoặc <strong>không mở trình duyệt</strong>.
             </Typography>
 
             <Box
@@ -376,7 +376,6 @@ export const WebPushOnboardingPopup: React.FC = () => {
                         5. Đăng nhập và bấm <strong>"Bật thông báo"</strong> để cấp quyền.
                       </div>
 
-
                       {/* Video hướng dẫn (YouTube Shorts - tỉ lệ dọc 9:16) */}
                       <Box
                         sx={{
@@ -392,7 +391,7 @@ export const WebPushOnboardingPopup: React.FC = () => {
                         }}
                       >
                         <iframe
-                          src='https://www.youtube.com/embed/6_kJ7Lak2gQ?autoplay=1&mute=1&loop=1&playlist=6_kJ7Lak2gQ&rel=0&playsinline=1'
+                          src='https://www.youtube.com/embed/zgGcQa3dpFk?autoplay=1&mute=1&loop=1&playlist=zgGcQa3dpFk&rel=0&playsinline=1'
                           title='Video hướng dẫn iOS'
                           allow='autoplay; encrypted-media; picture-in-picture'
                           allowFullScreen
