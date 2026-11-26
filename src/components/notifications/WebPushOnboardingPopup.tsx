@@ -207,7 +207,7 @@ export const WebPushOnboardingPopup: React.FC = () => {
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant='body2' color='text.secondary'>
-              Bật thông báo để nhận các thông báo quan trọng từ câu lạc bộ <strong>đã đóng website</strong> hoặc{' '}
+              Bật thông báo để nhận các thông báo quan trọng từ câu lạc bộ, ngay cả khi <strong>đã đóng website</strong> hoặc{' '}
               <strong>không mở trình duyệt</strong>.
             </Typography>
 
