@@ -24,13 +24,18 @@ export default function WebPushAdminPage() {
 
   return (
     <RoleGuard>
-      <Box sx={{ p: { xs: 2, md: 3 } }}>
+      <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
         {/* Header */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant='h4' fontWeight={700} gutterBottom>
+        <Box sx={{ mb: { xs: 2, md: 3 } }}>
+          <Typography
+            variant='h4'
+            fontWeight={700}
+            gutterBottom
+            sx={{ fontSize: { xs: '1.35rem', sm: '1.75rem', md: '2.125rem' } }}
+          >
             Quản trị Web Push Notification
           </Typography>
-          <Typography variant='body2' color='text.secondary'>
+          <Typography variant='body2' color='text.secondary' sx={{ fontSize: { xs: '0.8125rem', sm: '0.875rem' } }}>
             Quản lý và phát thông báo trực tiếp đến trình duyệt máy tính, điện thoại Android và iPhone/iPad của võ sinh, phụ huynh và huấn luyện viên.
           </Typography>
         </Box>
@@ -43,7 +48,20 @@ export default function WebPushAdminPage() {
           <Tabs
             value={activeTab}
             onChange={(_, val) => setActiveTab(val)}
-            sx={{ px: 2, borderBottom: '1px solid', borderColor: 'divider' }}
+            variant='scrollable'
+            scrollButtons='auto'
+            allowScrollButtonsMobile
+            sx={{
+              px: { xs: 1, sm: 2 },
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              '& .MuiTab-root': {
+                minHeight: { xs: 44, sm: 48 },
+                py: { xs: 1, sm: 1.5 },
+                fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+                whiteSpace: 'nowrap'
+              }
+            }}
           >
             <Tab
               value='compose'

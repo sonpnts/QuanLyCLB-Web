@@ -509,7 +509,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                     <TableCell>Họ tên</TableCell>
                     <TableCell>Cấp thi dự thi</TableCell>
                     <TableCell>Cấp hiện tại</TableCell>
-                    <TableCell>Ngày sinh</TableCell>
+                    {/*<TableCell>Ngày sinh</TableCell>*/}
                     <TableCell>Giới tính</TableCell>
                     <TableCell>Hồ sơ đăng ký</TableCell>
                     <TableCell>Trạng thái</TableCell>
@@ -552,21 +552,24 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 
                               setStudents(prev =>
                                 prev.map(item =>
-                                  item.studentId === student.studentId ? { ...item, selected: event.target.checked } : item
+                                  item.studentId === student.studentId
+                                    ? { ...item, selected: event.target.checked }
+                                    : item
                                 )
                               )
                             }}
                           />
                         </TableCell>
                         <TableCell>
-                          <Typography variant='body2' className='font-medium'>
+                          <Typography variant='body2' color='text.primary' fontWeight={600}>
                             {student.studentName}
                           </Typography>
-                          {student.studentCode && (
-                            <Typography variant='caption' color='text.secondary'>
-                              {student.studentCode}
-                            </Typography>
-                          )}
+
+                          <Typography variant='caption' color='text.secondary' component='div'>
+                            {formatDateVN(student.dateOfBirth)}
+                            {student.studentCode && ` | ${student.studentCode}`}
+                          </Typography>
+
                           {student.registrationProfileNote && (
                             <Typography variant='caption' sx={{ color: 'warning.main', display: 'block' }}>
                               {student.registrationProfileNote}
@@ -578,9 +581,12 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                             <Typography variant='body2' color='primary.main' fontWeight={600}>
                               {currentRegistration?.targetBeltLevelName || student.suggestedTargetBeltLevelName || '—'}
                             </Typography>
-                            {(currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder) != null && (
+                            {(currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder) !=
+                              null && (
                               <Chip
-                                label={currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder}
+                                label={
+                                  currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder
+                                }
                                 size='small'
                                 variant='outlined'
                                 color='primary'
@@ -596,11 +602,9 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                             )}
                           </Box>
                         </TableCell>
-                        <TableCell>
-                          <Typography variant='body2'>
-                            {formatDateVN(student.dateOfBirth, '—')}
-                          </Typography>
-                        </TableCell>
+                        {/*<TableCell>*/}
+                        {/*  <Typography variant='body2'>{formatDateVN(student.dateOfBirth, '—')}</Typography>*/}
+                        {/*</TableCell>*/}
                         <TableCell>{student.gender === true ? 'Nam' : student.gender === false ? 'Nữ' : '—'}</TableCell>
                         <TableCell>
                           <Chip

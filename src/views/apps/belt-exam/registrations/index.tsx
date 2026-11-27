@@ -515,8 +515,9 @@ const BeltExamRegistrationsView = () => {
             <Table
               size='small'
               sx={{
-                minWidth: 1090,
-                tableLayout: 'fixed',
+                width: 'max-content',
+                tableLayout: 'auto',
+                minWidth: '100%',
                 '& .MuiTableCell-root': {
                   px: 1.5,
                   py: 1,
@@ -537,19 +538,19 @@ const BeltExamRegistrationsView = () => {
             >
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ width: 110 }}>{text.code}</TableCell>
-                  <TableCell sx={{ width: 220 }}>{renderSortHeader(text.student, 'studentName')}</TableCell>
-                  <TableCell sx={{ width: 150 }}>{renderSortHeader(text.targetBelt, 'targetBeltLevelOrder')}</TableCell>
-                  <TableCell sx={{ width: 150 }}>
+                  <TableCell >{text.code}</TableCell>
+                  <TableCell>{renderSortHeader(text.student, 'studentName')}</TableCell>
+                  <TableCell >{renderSortHeader(text.targetBelt, 'targetBeltLevelOrder')}</TableCell>
+                  <TableCell >
                     {renderSortHeader(text.currentBelt, 'currentBeltLevelOrder')}
                   </TableCell>
-                  <TableCell sx={{ width: 110 }}>{text.dateOfBirth}</TableCell>
-                  <TableCell sx={{ width: 180 }}>
+                  {/*<TableCell sx={{ width: 110 }}>{text.dateOfBirth}</TableCell>*/}
+                  <TableCell>
                     {renderSortHeader(text.registrationStatus, 'registrationFeeStatus')}
                   </TableCell>
                   {/*<TableCell>{renderSortHeader(text.examSession, 'examSessionName')}</TableCell>*/}
-                  <TableCell sx={{ width: 170 }}>{renderSortHeader(text.class, 'className')}</TableCell>
-                  <TableCell sx={{ width: 210 }}>
+                  <TableCell >{renderSortHeader(text.class, 'className')}</TableCell>
+                  <TableCell>
                     {renderSortHeader(text.registeredBy, 'registeredByUserName')}
                   </TableCell>
                 </TableRow>
@@ -571,9 +572,9 @@ const BeltExamRegistrationsView = () => {
                       <Typography variant='body2' color='text.primary' fontWeight={600}>
                         {row.studentName}
                       </Typography>
-                      {/*<Typography variant='caption' color='text.secondary'>*/}
-                      {/*  {formatDateTime(row.createdAt)}*/}
-                      {/*</Typography>*/}
+                      <Typography variant='caption' color='text.secondary'>
+                        {formatDateVN(row.dateOfBirth)}
+                      </Typography>
                     </TableCell>
 
                     <TableCell>
@@ -594,9 +595,9 @@ const BeltExamRegistrationsView = () => {
                         )}
                       </Box>
                     </TableCell>
-                    <TableCell>
-                      <Typography variant='body2'>{formatDateVN(row.dateOfBirth)}</Typography>
-                    </TableCell>
+                    {/*<TableCell>*/}
+                    {/*  <Typography variant='body2'>{formatDateVN(row.dateOfBirth)}</Typography>*/}
+                    {/*</TableCell>*/}
                     <TableCell>
                       <Box className='flex flex-col items-start gap-1'>
                         <Chip

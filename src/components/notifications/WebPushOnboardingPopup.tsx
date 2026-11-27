@@ -17,6 +17,7 @@ import Tab from '@mui/material/Tab'
 import Avatar from '@mui/material/Avatar'
 import IconButton from '@mui/material/IconButton'
 import { useTheme } from '@mui/material/styles'
+import useMediaQuery from '@mui/material/useMediaQuery'
 
 import { useAuth } from '@/contexts/authContext'
 import {
@@ -32,6 +33,7 @@ import {
 
 export const WebPushOnboardingPopup: React.FC = () => {
   const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const { isAuthenticated, isInitialized } = useAuth()
 
   const [open, setOpen] = useState(false)
@@ -149,40 +151,49 @@ export const WebPushOnboardingPopup: React.FC = () => {
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 3,
-          p: 1,
+          borderRadius: { xs: 2.5, sm: 3 },
+          p: { xs: 0.5, sm: 1 },
+          m: { xs: 2, sm: 3 },
+          width: { xs: 'calc(100% - 32px)', sm: '100%' },
+          maxHeight: { xs: 'calc(100% - 32px)', sm: '90vh' },
           boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
           overflow: 'hidden'
         }
       }}
     >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <DialogTitle
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: { xs: 2, sm: 3 },
+          py: { xs: 1.5, sm: 2 },
+          pb: 1
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.2, sm: 1.5 } }}>
           <Avatar
             sx={{
               bgcolor: 'primary.main',
               color: 'primary.contrastText',
-              width: 44,
-              height: 44
+              width: { xs: 36, sm: 44 },
+              height: { xs: 36, sm: 44 }
             }}
           >
-            <i className='ri-notification-3-line' style={{ fontSize: '1.5rem' }} />
+            <i className='ri-notification-3-line' style={{ fontSize: isMobile ? '1.25rem' : '1.5rem' }} />
           </Avatar>
           <Box>
-            <Typography variant='h6' fontWeight={700}>
+            <Typography variant='h6' fontWeight={700} sx={{ fontSize: { xs: '0.95rem', sm: '1.25rem' }, lineHeight: 1.3 }}>
               Nhận thông báo từ hệ thống CMIS
             </Typography>
-            {/*<Typography variant='caption' color='text.secondary'>*/}
-            {/*  Tấn Đạt Taekwondo Club*/}
-            {/*</Typography>*/}
           </Box>
         </Box>
-        <IconButton size='small' onClick={handleDismissLater} disabled={loading}>
+        <IconButton size='small' onClick={handleDismissLater} disabled={loading} sx={{ ml: 1 }}>
           <i className='ri-close-line' />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 1 }}>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 }, pt: 1, pb: 1 }}>
         {success ? (
           <Box sx={{ py: 3, textAlign: 'center' }}>
             <Avatar
@@ -213,17 +224,19 @@ export const WebPushOnboardingPopup: React.FC = () => {
 
             <Box
               sx={{
-                p: 2,
+                p: { xs: 1.5, sm: 2 },
                 borderRadius: 2,
                 bgcolor: 'action.hover',
                 border: '1px dashed',
                 borderColor: 'divider',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                justifyContent: 'space-between',
+                gap: 1.5
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: { xs: '100%', sm: 'auto' } }}>
                 <i
                   className={
                     deviceInfo.platform === 'ios'
@@ -232,19 +245,12 @@ export const WebPushOnboardingPopup: React.FC = () => {
                         ? 'ri-android-fill'
                         : 'ri-computer-line'
                   }
-                  style={{ fontSize: '1.6rem', color: theme.palette.primary.main }}
+                  style={{ fontSize: '1.6rem', color: theme.palette.primary.main, flexShrink: 0 }}
                 />
-                <Box>
-                  <Typography variant='body2' fontWeight={600}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography variant='body2' fontWeight={600} noWrap>
                     {deviceInfo.deviceName} • {deviceInfo.browserName}
                   </Typography>
-                  {/*<Typography variant='caption' color='text.secondary'>*/}
-                  {/*  {deviceInfo.platform === 'ios'*/}
-                  {/*    ? isStandalone*/}
-                  {/*      ? 'Chế độ Ứng dụng màn hình chính'*/}
-                  {/*      : 'Yêu cầu thêm vào Màn hình chính'*/}
-                  {/*    : 'Hỗ trợ Web Push trực tiếp'}*/}
-                  {/*</Typography>*/}
                 </Box>
               </Box>
               <Chip
@@ -252,6 +258,7 @@ export const WebPushOnboardingPopup: React.FC = () => {
                 label={deviceInfo.platform === 'ios' && !isStandalone ? 'Cần thao tác' : 'Sẵn sàng'}
                 color={deviceInfo.platform === 'ios' && !isStandalone ? 'warning' : 'primary'}
                 variant='tonal'
+                sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, flexShrink: 0 }}
               />
             </Box>
 
@@ -278,7 +285,7 @@ export const WebPushOnboardingPopup: React.FC = () => {
                 <Box
                   sx={{
                     mt: 1.5,
-                    p: 2,
+                    p: { xs: 1.5, sm: 2 },
                     borderRadius: 2,
                     bgcolor: 'background.default',
                     border: '1px solid',
@@ -291,9 +298,9 @@ export const WebPushOnboardingPopup: React.FC = () => {
                     variant='fullWidth'
                     sx={{ minHeight: 36, mb: 2 }}
                   >
-                    <Tab value='desktop' label='Máy tính' sx={{ minHeight: 36, py: 0.5, fontSize: '0.8rem' }} />
-                    <Tab value='android' label='Android' sx={{ minHeight: 36, py: 0.5, fontSize: '0.8rem' }} />
-                    <Tab value='ios' label='iPhone / iPad' sx={{ minHeight: 36, py: 0.5, fontSize: '0.8rem' }} />
+                    <Tab value='desktop' label='Máy tính' sx={{ minHeight: 36, py: 0.5, fontSize: { xs: '0.75rem', sm: '0.8rem' } }} />
+                    <Tab value='android' label='Android' sx={{ minHeight: 36, py: 0.5, fontSize: { xs: '0.75rem', sm: '0.8rem' } }} />
+                    <Tab value='ios' label='iPhone / iPad' sx={{ minHeight: 36, py: 0.5, fontSize: { xs: '0.75rem', sm: '0.8rem' } }} />
                   </Tabs>
 
                   {activeTab === 'desktop' && (
@@ -314,7 +321,7 @@ export const WebPushOnboardingPopup: React.FC = () => {
                       </div>
                       <div>
                         2. Trình duyệt sẽ hiển thị hộp thoại hỏi{' '}
-                        <em>"{window?.location?.hostname || 'Website'} muốn gửi thông báo cho bạn"</em>.
+                        <em>"{typeof window !== 'undefined' ? window.location?.hostname || 'Website' : 'Website'} muốn gửi thông báo cho bạn"</em>.
                       </div>
                       <div>
                         3. Chọn <strong>"Cho phép" (Allow)</strong> để hoàn tất.
@@ -381,13 +388,14 @@ export const WebPushOnboardingPopup: React.FC = () => {
                         sx={{
                           position: 'relative',
                           width: '100%',
-                          maxWidth: 315,
+                          maxWidth: { xs: 200, sm: 260 },
                           aspectRatio: '9 / 16',
                           mx: 'auto',
-                          mt: 1,
-                          borderRadius: 1,
+                          mt: 1.5,
+                          borderRadius: 1.5,
                           overflow: 'hidden',
-                          bgcolor: 'black'
+                          bgcolor: 'black',
+                          boxShadow: '0 4px 14px rgba(0,0,0,0.2)'
                         }}
                       >
                         <iframe
@@ -414,12 +422,22 @@ export const WebPushOnboardingPopup: React.FC = () => {
         )}
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2, pt: 1, justifyContent: 'space-between' }}>
+      <DialogActions
+        sx={{
+          px: { xs: 2, sm: 3 },
+          pb: { xs: 2, sm: 2.5 },
+          pt: 1.5,
+          flexDirection: { xs: 'column-reverse', sm: 'row' },
+          justifyContent: 'space-between',
+          gap: { xs: 1.2, sm: 1.5 }
+        }}
+      >
         <Button
           variant='text'
           color='secondary'
           onClick={handleDismissLater}
           disabled={loading || success}
+          fullWidth={isMobile}
           sx={{ textTransform: 'none' }}
         >
           Để sau
@@ -429,6 +447,7 @@ export const WebPushOnboardingPopup: React.FC = () => {
           color='primary'
           onClick={handleEnablePush}
           disabled={loading || success}
+          fullWidth={isMobile}
           startIcon={
             loading ? <CircularProgress size={16} color='inherit' /> : <i className='ri-notification-3-line' />
           }

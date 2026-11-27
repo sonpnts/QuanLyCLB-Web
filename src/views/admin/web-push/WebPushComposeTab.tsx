@@ -221,15 +221,17 @@ export const WebPushComposeTab: React.FC<Props> = ({ onNotificationCreated }) =>
   }
 
   return (
-    <Grid container spacing={4}>
+    <Grid container spacing={{ xs: 2.5, md: 4 }}>
       {/* Form Compose */}
       <Grid size={{ xs: 12, md: 7 }}>
         <Card>
           <CardHeader
             title='Tạo và gửi thông báo mới'
             subheader='Gửi thông báo đẩy Web Push đến người dùng CMIS theo điều kiện'
+            titleTypographyProps={{ sx: { fontSize: { xs: '1.15rem', sm: '1.25rem' }, fontWeight: 700 } }}
+            subheaderTypographyProps={{ sx: { fontSize: { xs: '0.8rem', sm: '0.875rem' } } }}
           />
-          <CardContent>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
             {feedback && (
               <Alert severity={feedback.type} sx={{ mb: 3 }}>
                 {feedback.message}
@@ -404,7 +406,7 @@ export const WebPushComposeTab: React.FC<Props> = ({ onNotificationCreated }) =>
                   variant='contained'
                   size='large'
                   startIcon={<i className='ri-send-plane-fill' />}
-                  sx={{ mt: 2 }}
+                  sx={{ mt: 2, py: { xs: 1.25, sm: 1.5 }, width: { xs: '100%', sm: 'auto' } }}
                 >
                   {sendTiming === 'scheduled' ? 'Lên lịch gửi thông báo' : 'Gửi thông báo ngay'}
                 </Button>
@@ -420,8 +422,10 @@ export const WebPushComposeTab: React.FC<Props> = ({ onNotificationCreated }) =>
           <CardHeader
             title='Xem trước thông báo (Live Preview)'
             subheader='Mô phỏng hiển thị trên máy tính và điện thoại'
+            titleTypographyProps={{ sx: { fontSize: { xs: '1.15rem', sm: '1.25rem' }, fontWeight: 700 } }}
+            subheaderTypographyProps={{ sx: { fontSize: { xs: '0.8rem', sm: '0.875rem' } } }}
           />
-          <CardContent>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
             {/* Desktop Mockup */}
             <Typography variant='caption' fontWeight={700} color='text.secondary' sx={{ mb: 1, display: 'block' }}>
               MÁY TÍNH (Windows / Mac)

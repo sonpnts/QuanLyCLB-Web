@@ -46,6 +46,17 @@ export const WebPushSubscribersTab: React.FC = () => {
       <CardHeader
         title='Thiết bị đã kết nối nhận thông báo'
         subheader='Danh sách các thiết bị người dùng đã cấp quyền và kích hoạt nhận Web Push thành công'
+        titleTypographyProps={{ sx: { fontSize: { xs: '1.15rem', sm: '1.25rem' }, fontWeight: 700 } }}
+        subheaderTypographyProps={{ sx: { fontSize: { xs: '0.8rem', sm: '0.875rem' } } }}
+        sx={{
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: { xs: 1.5, sm: 0 },
+          '& .MuiCardHeader-action': {
+            m: 0,
+            alignSelf: { xs: 'flex-start', sm: 'center' }
+          }
+        }}
         action={
           <Button
             size='small'
@@ -57,9 +68,9 @@ export const WebPushSubscribersTab: React.FC = () => {
           </Button>
         }
       />
-      <CardContent>
-        <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-          <Table size='small'>
+      <CardContent sx={{ p: { xs: 1.5, sm: 3 } }}>
+        <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflowX: 'auto', width: '100%' }}>
+          <Table size='small' sx={{ minWidth: 680 }}>
             <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 600 }}>Người dùng</TableCell>

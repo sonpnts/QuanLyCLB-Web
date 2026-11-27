@@ -227,7 +227,7 @@ const PaymentListTable = ({ createSignal }: { createSignal?: number }) => {
           const typeVal = row.original.type
           const numericType = normalizePaymentType(typeVal, 3)
 
-          
+
 return (
             <Chip
               label={paymentTypeLabels[numericType] || String(typeVal)}
@@ -281,7 +281,7 @@ return (
           const methodVal = row.original.method
           const numericMethod = normalizePaymentMethod(methodVal, 0)
 
-          
+
 return (
             <Chip
               label={paymentMethodLabels[numericMethod] || String(methodVal)}
@@ -323,7 +323,7 @@ return (
         cell: ({ row }) => {
           const isBankTransfer = isBankTransferMethod(row.original.method)
 
-          
+
 return (
             <div className='flex items-center' onClick={event => event.stopPropagation()}>
               {isBankTransfer && row.original.transferProofImageUrl && (
@@ -417,7 +417,7 @@ return (
               </Button>
             )}
             <Button variant='contained' onClick={() => setAddPaymentOpen(true)}>
-              Thêm thanh toán
+              Tạo biên lai
             </Button>
           </div>
         </div>

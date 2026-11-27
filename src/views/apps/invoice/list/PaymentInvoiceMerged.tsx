@@ -184,7 +184,7 @@ const PaymentInvoiceMerged = () => {
     <Box className='flex flex-col gap-4'>
       <Box className='flex items-center justify-between gap-3 flex-wrap'>
         <Box>
-          <Typography variant='h5'>Lịch sử thanh toán theo biên lai</Typography>
+          <Typography variant='h5'>Lịch sử biên lai</Typography>
         </Box>
 
         <Box className='flex gap-2 flex-wrap'>
@@ -193,8 +193,7 @@ const PaymentInvoiceMerged = () => {
               Tạo hóa đơn thay
             </Button>
           )}
-          <Button variant='contained' onClick={() => router.push('/apps/invoice/add')}>
-            Thêm thanh toán
+          <Button variant='contained' onClick={() => router.push('/apps/invoice/add')}>Tạo biên lai
           </Button>
         </Box>
       </Box>

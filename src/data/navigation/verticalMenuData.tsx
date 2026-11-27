@@ -164,7 +164,7 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         href: '/apps/belt-exam/register'
       },
       {
-        label: 'DS đăng ký thi',
+        label: 'Danh sách đã đăng ký thi',
         icon: 'ri-list-check-3',
         href: '/apps/belt-exam/registrations'
       }
@@ -198,6 +198,11 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         label: 'Tài liệu của tôi',
         icon: 'ri-folder-user-line',
         href: '/apps/my-documents'
+      },
+      {
+        label: 'Hướng dẫn sử dụng',
+        icon: 'ri-question-line',
+        href: '/apps/help'
       }
     ]
   },

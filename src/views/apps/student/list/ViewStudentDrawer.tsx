@@ -833,7 +833,7 @@ return
                     startIcon={<i className='ri-bank-card-line' />}
                     onClick={handleOpenInvoice}
                   >
-                    Thêm thanh toán
+                    Tạo thanh toán
                   </Button>
                 </Box>
 

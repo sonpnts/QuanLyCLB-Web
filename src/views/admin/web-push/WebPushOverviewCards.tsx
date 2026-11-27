@@ -67,36 +67,36 @@ export const WebPushOverviewCards: React.FC<Props> = ({ refreshTrigger }) => {
   }, [refreshTrigger])
 
   return (
-    <Grid container spacing={3} sx={{ mb: 4 }}>
-      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-        <Card>
-          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ bgcolor: 'primary.lighter', color: 'primary.main', width: 48, height: 48 }}>
-              <i className='ri-smartphone-line' style={{ fontSize: '1.6rem' }} />
+    <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} sx={{ mb: { xs: 2.5, md: 4 } }}>
+      <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.2, sm: 2 }, p: { xs: 1.5, sm: 2 } }}>
+            <Avatar sx={{ bgcolor: 'primary.lighter', color: 'primary.main', width: { xs: 38, sm: 48 }, height: { xs: 38, sm: 48 }, flexShrink: 0 }}>
+              <i className='ri-smartphone-line' style={{ fontSize: '1.35rem' }} />
             </Avatar>
-            <Box>
-              <Typography variant='h5' fontWeight={700}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant='h5' fontWeight={700} sx={{ fontSize: { xs: '1.15rem', sm: '1.5rem' } }}>
                 {stats.subscribersCount}
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Thiết bị đã kết nối
+              <Typography variant='body2' color='text.secondary' sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' }, lineHeight: 1.2 }}>
+                Thiết bị kết nối
               </Typography>
             </Box>
           </CardContent>
         </Card>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-        <Card>
-          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ bgcolor: 'success.lighter', color: 'success.main', width: 48, height: 48 }}>
-              <i className='ri-check-double-line' style={{ fontSize: '1.6rem' }} />
+      <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.2, sm: 2 }, p: { xs: 1.5, sm: 2 } }}>
+            <Avatar sx={{ bgcolor: 'success.lighter', color: 'success.main', width: { xs: 38, sm: 48 }, height: { xs: 38, sm: 48 }, flexShrink: 0 }}>
+              <i className='ri-check-double-line' style={{ fontSize: '1.35rem' }} />
             </Avatar>
-            <Box>
-              <Typography variant='h5' fontWeight={700}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant='h5' fontWeight={700} sx={{ fontSize: { xs: '1.15rem', sm: '1.5rem' } }}>
                 {stats.sentCount}
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body2' color='text.secondary' sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' }, lineHeight: 1.2 }}>
                 Thông báo đã phát
               </Typography>
             </Box>
@@ -104,17 +104,17 @@ export const WebPushOverviewCards: React.FC<Props> = ({ refreshTrigger }) => {
         </Card>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-        <Card>
-          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ bgcolor: 'info.lighter', color: 'info.main', width: 48, height: 48 }}>
-              <i className='ri-time-line' style={{ fontSize: '1.6rem' }} />
+      <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.2, sm: 2 }, p: { xs: 1.5, sm: 2 } }}>
+            <Avatar sx={{ bgcolor: 'info.lighter', color: 'info.main', width: { xs: 38, sm: 48 }, height: { xs: 38, sm: 48 }, flexShrink: 0 }}>
+              <i className='ri-time-line' style={{ fontSize: '1.35rem' }} />
             </Avatar>
-            <Box>
-              <Typography variant='h5' fontWeight={700}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant='h5' fontWeight={700} sx={{ fontSize: { xs: '1.15rem', sm: '1.5rem' } }}>
                 {stats.scheduledCount}
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body2' color='text.secondary' sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' }, lineHeight: 1.2 }}>
                 Đang chờ lịch gửi
               </Typography>
             </Box>
@@ -122,18 +122,18 @@ export const WebPushOverviewCards: React.FC<Props> = ({ refreshTrigger }) => {
         </Card>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-        <Card>
-          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ bgcolor: 'warning.lighter', color: 'warning.main', width: 48, height: 48 }}>
-              <i className='ri-percent-line' style={{ fontSize: '1.6rem' }} />
+      <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.2, sm: 2 }, p: { xs: 1.5, sm: 2 } }}>
+            <Avatar sx={{ bgcolor: 'warning.lighter', color: 'warning.main', width: { xs: 38, sm: 48 }, height: { xs: 38, sm: 48 }, flexShrink: 0 }}>
+              <i className='ri-percent-line' style={{ fontSize: '1.35rem' }} />
             </Avatar>
-            <Box>
-              <Typography variant='h5' fontWeight={700}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant='h5' fontWeight={700} sx={{ fontSize: { xs: '1.15rem', sm: '1.5rem' } }}>
                 {stats.successRate}%
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Tỷ lệ gửi thành công
+              <Typography variant='body2' color='text.secondary' sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' }, lineHeight: 1.2 }}>
+                Tỷ lệ thành công
               </Typography>
             </Box>
           </CardContent>

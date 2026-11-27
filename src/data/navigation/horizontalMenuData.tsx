@@ -166,6 +166,11 @@ const horizontalMenuData = (): HorizontalMenuDataType[] => [
         href: '/apps/cron-job-log/list'
       }
     ]
+  },
+  {
+    label: 'Hướng dẫn sử dụng',
+    icon: 'ri-question-line',
+    href: '/apps/help'
   }
 ]
 

@@ -141,8 +141,10 @@ export const WebPushHistoryTab: React.FC<Props> = ({ refreshTrigger }) => {
       <CardHeader
         title='Lịch sử và lịch trình thông báo'
         subheader='Theo dõi trạng thái phân phát, tỷ lệ nhận thông báo và chi tiết lỗi'
+        titleTypographyProps={{ sx: { fontSize: { xs: '1.15rem', sm: '1.25rem' }, fontWeight: 700 } }}
+        subheaderTypographyProps={{ sx: { fontSize: { xs: '0.8rem', sm: '0.875rem' } } }}
       />
-      <CardContent>
+      <CardContent sx={{ p: { xs: 1.5, sm: 3 } }}>
         {actionFeedback && (
           <Alert severity='success' onClose={() => setActionFeedback(null)} sx={{ mb: 2 }}>
             {actionFeedback}
@@ -150,16 +152,16 @@ export const WebPushHistoryTab: React.FC<Props> = ({ refreshTrigger }) => {
         )}
 
         {/* Filters */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 3 }}>
           <TextField
             size='small'
             placeholder='Tìm kiếm tiêu đề, nội dung...'
             value={keyword}
             onChange={e => setKeyword(e.target.value)}
-            sx={{ flex: '1 1 200px' }}
+            sx={{ flex: { xs: '1 1 100%', sm: '1 1 200px' } }}
           />
 
-          <FormControl size='small' sx={{ minWidth: 160 }}>
+          <FormControl size='small' sx={{ flex: { xs: '1 1 100%', sm: '0 0 160px' } }}>
             <InputLabel>Trạng thái</InputLabel>
             <Select value={status} label='Trạng thái' onChange={e => setStatus(e.target.value)}>
               <MenuItem value='All'>Tất cả trạng thái</MenuItem>
@@ -178,7 +180,7 @@ export const WebPushHistoryTab: React.FC<Props> = ({ refreshTrigger }) => {
             value={fromDate}
             onChange={e => setFromDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
-            sx={{ width: 150 }}
+            sx={{ flex: { xs: '1 1 calc(50% - 6px)', sm: '0 0 140px' } }}
           />
 
           <TextField
@@ -188,7 +190,7 @@ export const WebPushHistoryTab: React.FC<Props> = ({ refreshTrigger }) => {
             value={toDate}
             onChange={e => setToDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
-            sx={{ width: 150 }}
+            sx={{ flex: { xs: '1 1 calc(50% - 6px)', sm: '0 0 140px' } }}
           />
 
           <Button
@@ -199,14 +201,15 @@ export const WebPushHistoryTab: React.FC<Props> = ({ refreshTrigger }) => {
               setPage(0)
               fetchHistory()
             }}
+            sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' } }}
           >
             Làm mới
           </Button>
         </Box>
 
         {/* Table */}
-        <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-          <Table size='small'>
+        <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflowX: 'auto', width: '100%' }}>
+          <Table size='small' sx={{ minWidth: 680 }}>
             <TableHead sx={{ bgcolor: 'action.hover' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 600 }}>Thông báo</TableCell>
@@ -336,37 +339,50 @@ export const WebPushHistoryTab: React.FC<Props> = ({ refreshTrigger }) => {
       </CardContent>
 
       {/* Detail Modal */}
-      <Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth='md' fullWidth>
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant='h6' fontWeight={700}>
+      <Dialog
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        maxWidth='md'
+        fullWidth
+        PaperProps={{
+          sx: {
+            m: { xs: 1.5, sm: 3 },
+            width: { xs: 'calc(100% - 24px)', sm: '100%' },
+            maxHeight: { xs: 'calc(100% - 24px)', sm: '90vh' },
+            borderRadius: { xs: 2.5, sm: 3 }
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 } }}>
+          <Typography variant='h6' fontWeight={700} sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             Chi tiết thông báo & Nhật ký gửi
           </Typography>
           <IconButton size='small' onClick={() => setDetailOpen(false)}>
             <i className='ri-close-line' />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 } }}>
           {loadingDetail ? (
             <Box sx={{ py: 4, textAlign: 'center' }}>
               <CircularProgress size={32} />
             </Box>
           ) : detailItem ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-              <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
-                <Typography variant='h6' fontWeight={700}>
+              <Box sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'action.hover', borderRadius: 2 }}>
+                <Typography variant='h6' fontWeight={700} sx={{ fontSize: { xs: '0.95rem', sm: '1.15rem' } }}>
                   {detailItem.title}
                 </Typography>
-                <Typography variant='body2' sx={{ mt: 0.5 }}>
+                <Typography variant='body2' sx={{ mt: 0.5, fontSize: { xs: '0.8125rem', sm: '0.875rem' } }}>
                   {detailItem.body}
                 </Typography>
                 {detailItem.url && (
-                  <Typography variant='caption' color='primary.main' sx={{ display: 'block', mt: 1 }}>
+                  <Typography variant='caption' color='primary.main' sx={{ display: 'block', mt: 1, wordBreak: 'break-all' }}>
                     Liên kết: {detailItem.url}
                   </Typography>
                 )}
               </Box>
 
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 2 }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: { xs: 1.5, sm: 2 } }}>
                 <Box>
                   <Typography variant='caption' color='text.secondary'>Trạng thái:</Typography>
                   <Box sx={{ mt: 0.5 }}>{getStatusChip(detailItem.status)}</Box>
@@ -391,8 +407,8 @@ export const WebPushHistoryTab: React.FC<Props> = ({ refreshTrigger }) => {
                 Danh sách thiết bị nhận ({detailItem.deliveryLogs?.length || 0})
               </Typography>
 
-              <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, maxHeight: 300 }}>
-                <Table size='small' stickyHeader>
+              <TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, maxHeight: 300, overflowX: 'auto', width: '100%' }}>
+                <Table size='small' stickyHeader sx={{ minWidth: 540 }}>
                   <TableHead>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 600 }}>Người dùng</TableCell>
