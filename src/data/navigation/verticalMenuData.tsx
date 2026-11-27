@@ -10,7 +10,7 @@ const verticalMenuData = (): VerticalMenuDataType[] => [
     children: [
       {
         label: 'Trang chủ',
-        icon: 'ri-dashboard-line',
+        icon: 'ri-home-smile-line',
         href: '/dashboards/home'
       }
     ]
@@ -26,7 +26,7 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
     children: [
       {
         label: 'Trang chủ',
-        icon: 'ri-dashboard-line',
+        icon: 'ri-home-smile-line',
         href: '/dashboards/home'
       }
     ]
@@ -46,14 +46,29 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         href: '/apps/class/list'
       },
       {
-        label: 'Huấn luyện viên',
-        icon: 'ri-user-star-line',
-        href: '/apps/instructor/list'
-      },
-      {
         label: 'Học viên',
         icon: 'ri-graduation-cap-line',
         href: '/apps/student/list'
+      },
+      {
+        label: 'Giảm học phí',
+        icon: 'ri-percent-line',
+        href: '/apps/student/tuition-discount'
+      },
+      {
+        label: 'Liên kết Zalo',
+        icon: 'ri-chat-check-line',
+        href: '/apps/zalo-link/coach'
+      },
+      {
+        label: 'Mini App Zalo',
+        icon: 'ri-smartphone-line',
+        href: '/apps/miniapp/links'
+      },
+      {
+        label: 'Duyệt giảm học phí',
+        icon: 'ri-file-list-3-line',
+        href: '/apps/student/tuition-discount-approvals'
       },
       {
         label: 'Người dùng',
@@ -61,9 +76,39 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         href: '/apps/user/list'
       },
       {
+        label: 'Tài liệu',
+        icon: 'ri-folder-line',
+        href: '/apps/user-documents/list'
+      },
+      {
         label: 'Chuyển lớp',
         icon: 'ri-arrow-left-right-line',
         href: '/apps/class-transfer/list'
+      },
+      {
+        label: 'Sản phẩm',
+        icon: 'ri-box-3-line',
+        href: '/apps/product/list'
+      },
+      {
+        label: 'Combo sản phẩm',
+        icon: 'ri-gift-2-line',
+        href: '/apps/product/bundles'
+      },
+      {
+        label: 'Bán sản phẩm',
+        icon: 'ri-shopping-cart-line',
+        href: '/apps/product-sale/list'
+      },
+      {
+        label: 'Kho sản phẩm',
+        icon: 'ri-store-2-line',
+        href: '/apps/product/inventory'
+      },
+      {
+        label: 'Báo cáo sản phẩm',
+        icon: 'ri-bar-chart-box-line',
+        href: '/apps/product/report'
       }
     ]
   },
@@ -99,7 +144,7 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
     ]
   },
   {
-    label: 'Tài chính & Lương',
+    label: 'Tài chính',
     isSection: true,
     children: [
       {
@@ -108,19 +153,9 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         href: '/apps/invoice/collect'
       },
       {
-        label: 'Thanh toán',
+        label: 'Biên lai',
         icon: 'ri-wallet-line',
         href: '/apps/invoice/list'
-      },
-      {
-        label: 'Sản phẩm',
-        icon: 'ri-price-tag-3-line',
-        href: '/apps/product/list'
-      },
-      {
-        label: 'Bán sản phẩm',
-        icon: 'ri-shopping-bag-3-line',
-        href: '/apps/product-sale/list'
       },
       {
         label: 'Thống kê tài chính',
@@ -128,44 +163,39 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         href: '/apps/finance/summary'
       },
       {
+        label: 'Biên lai giảm trừ',
+        icon: 'ri-file-list-3-line',
+        href: '/apps/finance/payments/discounts'
+      },
+      {
         label: 'Bàn giao tiền',
         icon: 'ri-hand-coin-line',
         href: '/apps/cash-handover/list'
       },
       {
-        label: 'Bảng lương',
+        label: 'Nợ phí sinh hoạt',
         icon: 'ri-money-dollar-circle-line',
-        href: '/apps/payroll/list'
-      },
-      {
-        label: 'Cấu hình lương',
-        icon: 'ri-money-dollar-circle-line',
-        href: '/apps/payroll/salary-config'
-      },
+        href: '/apps/cash-handover/tuition-debt'
+      }
     ]
   },
   {
-    label: 'Cấp đai & Thi',
+    label: 'Kỳ thi',
     isSection: true,
     children: [
       {
-        label: 'Cấp đai',
-        icon: 'ri-award-line',
-        href: '/apps/belt-level/list'
-      },
-      {
-        label: 'Thi cấp đai',
-        icon: 'ri-medal-line',
+        label: 'Quản lý kỳ thi',
+        icon: 'ri-calendar-event-line',
         href: '/apps/belt-exam/list'
       },
       {
-        label: 'Kỳ thi',
-        icon: 'ri-trophy-line',
+        label: 'Đăng ký thi',
+        icon: 'ri-file-edit-line',
         href: '/apps/belt-exam/register'
       },
       {
-        label: 'Danh sách đã đăng ký thi',
-        icon: 'ri-list-check-3',
+        label: 'Danh sách kỳ thi',
+        icon: 'ri-clipboard-line',
         href: '/apps/belt-exam/registrations'
       }
     ]
@@ -174,6 +204,11 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
     label: 'Cá nhân',
     isSection: true,
     children: [
+      {
+        label: 'Lịch của tôi',
+        icon: 'ri-calendar-check-line',
+        href: '/apps/my-schedule'
+      },
       {
         label: 'Chấm công',
         icon: 'ri-map-pin-line',
@@ -207,7 +242,7 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
     ]
   },
   {
-    label: 'Phân quyền',
+    label: 'Hệ thống',
     isSection: true,
     children: [
       {
@@ -231,20 +266,39 @@ const _fullMenuData = (): VerticalMenuDataType[] => [
         href: '/apps/cron-job-log/list'
       },
       {
+        label: 'Nhật ký ZNS',
+        icon: 'ri-message-2-line',
+        href: '/apps/zns-log/list'
+      },
+      {
+        label: 'Cấu hình hệ thống',
+        icon: 'ri-settings-line',
+        href: '/settings/system-config'
+      },
+      {
+        label: 'Thống kê liên kết Zalo',
+        icon: 'ri-chat-check-line',
+        href: '/apps/zalo-link/stats'
+      },
+      {
+        label: 'Cấu hình phí 1 lần',
+        icon: 'ri-price-tag-3-line',
+        href: '/settings/one-time-fees'
+      },
+      {
+        label: 'Tổng hợp phí 1 lần',
+        icon: 'ri-bar-chart-grouped-line',
+        href: '/settings/one-time-fees/statuses'
+      },
+      {
         label: 'Thông báo Web Push',
         icon: 'ri-notification-3-line',
         href: '/admin/web-push'
-      }
-    ]
-  },
-  {
-    label: 'Cài đặt',
-    isSection: true,
-    children: [
+      },
       {
-        label: 'Cài đặt hệ thống',
-        icon: 'ri-settings-3-line',
-        href: '/settings/system-config'
+        label: 'Cấp đai',
+        icon: 'ri-award-line',
+        href: '/apps/belt-level/list'
       }
     ]
   }
