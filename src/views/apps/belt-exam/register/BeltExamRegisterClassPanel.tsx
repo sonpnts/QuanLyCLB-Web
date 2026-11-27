@@ -138,6 +138,9 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const [loadingStudent, setLoadingStudent] = useState(false)
   const readOnly = isSessionReadOnly(session)
 
+  // Kỳ thi miễn phí (lệ phí = 0đ): không áp dụng cơ chế khóa theo đóng phí
+  const isFreeExam = session.examFee != null && session.examFee <= 0
+
   const loadMyClasses = useCallback(async () => {
     try {
       if (isAdmin) {
@@ -282,9 +285,17 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
 
   const isStudentInCurrentList = (student: StudentRow) => currentRegistrationsByStudentId.has(student.studentId)
 
+  // Dùng để HIỂN THỊ trạng thái: kỳ thi 0đ coi như đã đóng
   const isStudentPaidInCurrentList = (student: StudentRow) => {
-    // Nếu lệ phí thi = 0 thì coi như đã đóng
-    if (session.examFee != null && session.examFee <= 0) return true
+    if (isFreeExam) return true
+
+    return Boolean(currentRegistrationsByStudentId.get(student.studentId)?.isFeePaid)
+  }
+
+  // Dùng để KHÓA: chỉ khóa khi kỳ thi có phí (> 0) và học viên đã đóng phí trong danh sách của mình
+  const isStudentFeeLockedInCurrentList = (student: StudentRow) => {
+    if (isFreeExam) return false
+
     return Boolean(currentRegistrationsByStudentId.get(student.studentId)?.isFeePaid)
   }
 
@@ -292,15 +303,17 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
   const isStudentRegisteredByOtherCoach = (student: StudentRow) =>
     student.alreadyRegistered && student.existingRegistrationListId !== myList?.id
 
-  // Chỉ khóa khi học viên đang ở danh sách HLV khác VÀ đã đóng lệ phí (chỉ admin xóa được);
-  // chưa đóng lệ phí thì HLV khác vẫn được hủy (bỏ tích) rồi đăng ký lại.
+  // Chỉ khóa khi kỳ thi có phí (> 0) VÀ học viên đang ở danh sách HLV khác VÀ đã đóng lệ phí (chỉ admin xóa được);
+  // chưa đóng lệ phí (hoặc kỳ thi 0đ) thì HLV khác vẫn được hủy (bỏ tích) rồi đăng ký lại.
   const isStudentLockedByAnotherList = (student: StudentRow) =>
-    isStudentRegisteredByOtherCoach(student) && Boolean(student.alreadyRegisteredIsFeePaid)
+    !isFreeExam && isStudentRegisteredByOtherCoach(student) && Boolean(student.alreadyRegisteredIsFeePaid)
 
   const hasStudentProfileIssue = (student: StudentRow) => !student.isRegistrationProfileComplete
 
   const isStudentSelectable = (student: StudentRow) =>
-    !isStudentRegisteredByOtherCoach(student) && !isStudentPaidInCurrentList(student) && !hasStudentProfileIssue(student)
+    !isStudentRegisteredByOtherCoach(student) &&
+    !isStudentFeeLockedInCurrentList(student) &&
+    !hasStudentProfileIssue(student)
 
   const isStudentEditable = (student: StudentRow) => !readOnly && isStudentSelectable(student)
 
@@ -315,7 +328,8 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
       prev.map(student => {
         // Đăng ký do HLV khác tạo không bị ảnh hưởng bởi chọn tất cả/bỏ tất cả
         if (isStudentRegisteredByOtherCoach(student)) return student
-        if (isStudentPaidInCurrentList(student)) return { ...student, selected: true }
+        // Chỉ giữ nguyên trạng thái đã tích khi bị khóa do đã đóng phí (kỳ thi có phí)
+        if (isStudentFeeLockedInCurrentList(student)) return { ...student, selected: true }
         if (!checked) return { ...student, selected: false }
         if (hasStudentProfileIssue(student)) return student
 
@@ -439,8 +453,8 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={(session.examFee != null && session.examFee <= 0) || registration.isFeePaid ? 'Đã đóng' : 'Chưa đóng'}
-                          color={(session.examFee != null && session.examFee <= 0) || registration.isFeePaid ? 'success' : 'warning'}
+                          label={isFreeExam || registration.isFeePaid ? 'Đã đóng' : 'Chưa đóng'}
+                          color={isFreeExam || registration.isFeePaid ? 'success' : 'warning'}
                           size='small'
                           variant='tonal'
                         />
@@ -520,6 +534,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                     const isRegisteredByOtherCoach = isStudentRegisteredByOtherCoach(student)
                     const isLockedByAnotherList = isStudentLockedByAnotherList(student)
                     const isPaidInCurrentList = isStudentPaidInCurrentList(student)
+                    const isFeeLockedInCurrentList = isStudentFeeLockedInCurrentList(student)
                     const isCurrentListStudent = isStudentInCurrentList(student)
                     const currentRegistration = currentRegistrationsByStudentId.get(student.studentId)
                     const hasProfileIssue = hasStudentProfileIssue(student)
@@ -538,7 +553,7 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                             disabled={
                               readOnly ||
                               isLockedByAnotherList ||
-                              isPaidInCurrentList ||
+                              isFeeLockedInCurrentList ||
                               (hasProfileIssue && !student.selected && !isRegisteredByOtherCoach)
                             }
                             onChange={event => {
@@ -583,15 +598,15 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                             </Typography>
                             {(currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder) !=
                               null && (
-                              <Chip
-                                label={
-                                  currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder
-                                }
-                                size='small'
-                                variant='outlined'
-                                color='primary'
-                              />
-                            )}
+                                <Chip
+                                  label={
+                                    currentRegistration?.targetBeltLevelOrder ?? student.suggestedTargetBeltLevelOrder
+                                  }
+                                  size='small'
+                                  variant='outlined'
+                                  color='primary'
+                                />
+                              )}
                           </Box>
                         </TableCell>
                         <TableCell>
@@ -615,10 +630,16 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
                           />
                         </TableCell>
                         <TableCell>
-                          {isPaidInCurrentList || (isRegisteredByOtherCoach && student.alreadyRegisteredIsFeePaid) ? (
+                          {isFeeLockedInCurrentList ||
+                          (!isFreeExam && isRegisteredByOtherCoach && student.alreadyRegisteredIsFeePaid) ? (
                             <Chip label='Đã đóng phí' color='success' size='small' variant='tonal' />
                           ) : isCurrentListStudent || isRegisteredByOtherCoach ? (
-                            <Chip label='Nháp' color='warning' size='small' variant='tonal' />
+                            <Chip
+                              label={isFreeExam ? 'Đã đăng ký' : 'Nháp'}
+                              color={isFreeExam ? 'success' : 'warning'}
+                              size='small'
+                              variant='tonal'
+                            />
                           ) : (
                             <Chip label='Chưa đăng ký' color='default' size='small' variant='outlined' />
                           )}
@@ -658,10 +679,10 @@ const BeltExamRegisterClassPanel = ({ session, coachId, onBack }: Props) => {
         onEdit={
           studentPermissions.canUpdate
             ? student => {
-                setViewStudentOpen(false)
-                setSelectedStudent(student)
-                setEditStudentOpen(true)
-              }
+              setViewStudentOpen(false)
+              setSelectedStudent(student)
+              setEditStudentOpen(true)
+            }
             : undefined
         }
       />
