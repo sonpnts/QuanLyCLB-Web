@@ -232,7 +232,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   label='Ngày sinh'
                   type='date'
@@ -244,12 +244,12 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
               </Grid>
 
 
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid size={{ xs: 12 }}>
 
                 <Alert severity='warning'>Học viên chưa có mã, khi đăng ký thi bắt buộc phải có CCCD</Alert>
 
                 <TextField
-                  label='CCCD / Số định danh cá nhân'
+                  label='Số căn cước'
                   fullWidth
                   value={formData.personalIdNumber}
                   onChange={e => setFormData({ ...formData, personalIdNumber: e.target.value })}
