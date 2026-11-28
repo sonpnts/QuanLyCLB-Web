@@ -247,7 +247,7 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
 
               <Grid size={{ xs: 12 }}>
 
-                <Alert severity='warning'>Học viên chưa có mã, khi đăng ký thi bắt buộc phải có CCCD</Alert>
+                <Alert className="mb-2" severity='warning'>Học viên chưa có mã, khi đăng ký thi cấp bắt buộc phải có CCCD</Alert>
 
                 <TextField
                   label='Số căn cước'
