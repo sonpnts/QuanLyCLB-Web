@@ -242,7 +242,12 @@ const AddStudentDrawer = ({ open, handleClose, setData, classOptions = [], onStu
                   onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })}
                 />
               </Grid>
+
+
               <Grid size={{ xs: 12, sm: 6 }}>
+
+                <Alert severity='warning'>Học viên chưa có mã, khi đăng ký thi bắt buộc phải có CCCD</Alert>
+
                 <TextField
                   label='CCCD / Số định danh cá nhân'
                   fullWidth
